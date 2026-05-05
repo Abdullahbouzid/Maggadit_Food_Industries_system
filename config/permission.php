@@ -7,91 +7,29 @@ use Spatie\Permission\Models\Role;
 return [
 
     'models' => [
-
-        /*
-         * When using the "HasPermissions" trait from this package, we need to know which
-         * Eloquent model should be used to retrieve your permissions. Of course, it
-         * is often just the "Permission" model but you may use whatever you like.
-         *
-         * The model you want to use as a Permission model needs to implement the
-         * `Spatie\Permission\Contracts\Permission` contract.
-         */
-
-        'permission' => Permission::class,
-
-        /*
-         * When using the "HasRoles" trait from this package, we need to know which
-         * Eloquent model should be used to retrieve your roles. Of course, it
-         * is often just the "Role" model but you may use whatever you like.
-         *
-         * The model you want to use as a Role model needs to implement the
-         * `Spatie\Permission\Contracts\Role` contract.
-         */
-
-        'role' => Role::class,
-
-        /*
-         * When using the "Teams" feature from this package, we need to know which
-         * Eloquent model should be used to retrieve your teams. Of course, it
-         * is often just the "Team" model but you may use whatever you like.
-         */
-        'team' => null,
-
-        /*
-         * When using the "HasModels" trait and passing raw IDs to syncModels,
-         * attachModels, or detachModels, this model class will be used to
-         * resolve those IDs. If null, defaults to the guard's model.
-         */
-        'default_model' => null,
+        'permission' => Spatie\Permission\Models\Permission::class,
+        'role' => Spatie\Permission\Models\Role::class,
     ],
+   
+   
 
-    'table_names' => [
 
-        /*
-         * When using the "HasRoles" trait from this package, we need to know which
-         * table should be used to retrieve your roles. We have chosen a basic
-         * default value but you may easily change it to any table you like.
-         */
+    
 
+     'table_names' => [
         'roles' => 'roles',
-
-        /*
-         * When using the "HasPermissions" trait from this package, we need to know which
-         * table should be used to retrieve your permissions. We have chosen a basic
-         * default value but you may easily change it to any table you like.
-         */
-
         'permissions' => 'permissions',
-
-        /*
-         * When using the "HasPermissions" trait from this package, we need to know which
-         * table should be used to retrieve your models permissions. We have chosen a
-         * basic default value but you may easily change it to any table you like.
-         */
-
         'model_has_permissions' => 'model_has_permissions',
-
-        /*
-         * When using the "HasRoles" trait from this package, we need to know which
-         * table should be used to retrieve your models roles. We have chosen a
-         * basic default value but you may easily change it to any table you like.
-         */
-
         'model_has_roles' => 'model_has_roles',
-
-        /*
-         * When using the "HasRoles" trait from this package, we need to know which
-         * table should be used to retrieve your roles permissions. We have chosen a
-         * basic default value but you may easily change it to any table you like.
-         */
-
         'role_has_permissions' => 'role_has_permissions',
     ],
-
+      
     'column_names' => [
         /*
          * Change this if you want to name the related pivots other than defaults
          */
+                'team_foreign_key' => null,
+
         'role_pivot_key' => null, // default 'role_id',
         'permission_pivot_key' => null, // default 'permission_id',
 
@@ -129,10 +67,10 @@ return [
 
     /*
      * Events will fire when a role or permission is assigned/unassigned:
-     * \Spatie\Permission\Events\RoleAttachedEvent
-     * \Spatie\Permission\Events\RoleDetachedEvent
-     * \Spatie\Permission\Events\PermissionAttachedEvent
-     * \Spatie\Permission\Events\PermissionDetachedEvent
+     * \Spatie\Permission\Events\RoleAttached
+     * \Spatie\Permission\Events\RoleDetached
+     * \Spatie\Permission\Events\PermissionAttached
+     * \Spatie\Permission\Events\PermissionDetached
      *
      * To enable, set to true, and then create listeners to watch these events.
      */
