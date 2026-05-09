@@ -16,7 +16,8 @@ class Product extends Model
     public $translatable = ['name', 'description', 'technical_specs'];
     
     protected $table = 'products';
-    
+   
+
     protected $fillable = [
         'sku',
         'name',

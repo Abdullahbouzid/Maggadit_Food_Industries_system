@@ -3,157 +3,60 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PermissionResource\Pages;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
 use Spatie\Permission\Models\Permission;
+use Filament\Resources\Resource;
+use Filament\Forms;
+use Filament\Tables;
 
 class PermissionResource extends Resource
 {
     protected static ?string $model = Permission::class;
+    
     protected static ?string $navigationIcon = 'heroicon-o-key';
-    protected static ?string $navigationGroup = 'الصلاحيات والأدوار';
-    protected static ?int $navigationSort = 2;
-    protected static ?string $modelLabel = 'صلاحية';
-    protected static ?string $pluralModelLabel = 'الصلاحيات';
 
-    public static function form(Form $form): Form
+    protected static ?string $navigationLabel = 'الصلاحيات';
+    
+    protected static ?string $navigationGroup = 'إدارة المستخدمين';
+    
+    protected static ?int $navigationSort = 3;
+
+    public static function form(Forms\Form $form): Forms\Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('معلومات الصلاحية')
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('اسم الصلاحية')
-                            ->required()
-                            ->maxLength(255)
-                            ->unique(ignoreRecord: true)
-                            ->placeholder('مثال: view_users, create_products')
-                            ->helperText('يجب أن يكون اسم الصلاحية فريداً ويصف الإذن'),
-                            
-                        Forms\Components\TextInput::make('display_name')
-                            ->label('الاسم المعروض')
-                            ->maxLength(255)
-                            ->placeholder('مثال: عرض المستخدمين')
-                            ->helperText('الاسم الذي سيظهر في واجهة المستخدم'),
-                            
-                        Forms\Components\TextInput::make('description')
-                            ->label('الوصف')
-                            ->maxLength(255)
-                            ->placeholder('شرح مختصر للصلاحية'),
-                            
-                        Forms\Components\Select::make('guard_name')
-                            ->label('نوع الحماية')
-                            ->options([
-                                'web' => 'Web',
-                                'api' => 'API',
-                            ])
-                            ->default('web')
-                            ->required()
-                            ->disabled(fn ($record) => $record !== null)
-                            ->helperText('نظام الحماية المستخدم للصلاحية'),
-                            
-                        Forms\Components\Toggle::make('is_system')
-                            ->label('صلاحية نظامية')
-                            ->default(false)
-                            ->disabled(fn ($record) => $record !== null)
-                            ->helperText('الصلاحيات النظامية لا يمكن حذفها'),
-                    ])->columns(2),
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255)
+                    ->unique(ignoreRecord: true),
+                Forms\Components\TextInput::make('guard_name')
+                    ->default('web')
+                    ->required(),
             ]);
     }
 
-    public static function table(Table $table): Table
+    public static function table(Tables\Table $table): Tables\Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('#')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
                 Tables\Columns\TextColumn::make('name')
-                    ->label('اسم الصلاحية')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold')
-                    ->copyable()
-                    ->badge()
-                    ->color('info'),
-                    
-                Tables\Columns\TextColumn::make('display_name')
-                    ->label('الاسم المعروض')
-                    ->searchable()
-                    ->sortable(),
-                    
-                Tables\Columns\TextColumn::make('description')
-                    ->label('الوصف')
-                    ->limit(40)
-                    ->toggleable(),
-                    
-                Tables\Columns\TextColumn::make('guard_name')
-                    ->label('نوع الحماية')
-                    ->badge()
-                    ->color('success'),
-                    
-                Tables\Columns\TextColumn::make('roles_count')
-                    ->label('عدد الأدوار')
-                    ->counts('roles')
-                    ->badge()
-                    ->color('warning')
-                    ->sortable(),
-                    
-                Tables\Columns\IconColumn::make('is_system')
-                    ->label('نظامية')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-cog')
-                    ->falseIcon('heroicon-o-user'),
-                    
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('guard_name'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('تاريخ الإنشاء')
-                    ->dateTime('Y-m-d')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('guard_name')
-                    ->label('نوع الحماية')
-                    ->options([
-                        'web' => 'Web',
-                        'api' => 'API',
-                    ]),
-                Tables\Filters\TernaryFilter::make('is_system')
-                    ->label('صلاحية نظامية'),
+                //
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
-                        ->label('عرض'),
-                    Tables\Actions\EditAction::make()
-                        ->label('تعديل'),
-                    Tables\Actions\DeleteAction::make()
-                        ->label('حذف')
-                        ->requiresConfirmation()
-                        ->visible(fn ($record) => !$record->is_system),
-                ]),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->label('حذف المحددين')
-                        ->requiresConfirmation(),
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ])
-            ->defaultSort('name');
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            PermissionResource\RelationManagers\RolesRelationManager::class,
-            
-        ];
+            ]);
     }
 
     public static function getPages(): array
@@ -161,7 +64,6 @@ class PermissionResource extends Resource
         return [
             'index' => Pages\ListPermissions::route('/'),
             'create' => Pages\CreatePermission::route('/create'),
-            // 'view' => Pages\ViewPermission::route('/{record}'),
             'edit' => Pages\EditPermission::route('/{record}/edit'),
         ];
     }

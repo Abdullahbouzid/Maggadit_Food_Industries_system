@@ -3,151 +3,63 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RoleResource\Pages;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use Filament\Resources\Resource;
+use Filament\Forms;
+use Filament\Tables;
 
-class RoleResource extends Resource implements HasShieldPermissions
+class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
-    protected static ?string $navigationIcon = 'heroicon-o-shield-check';
-    protected static ?string $navigationGroup = 'الصلاحيات والأدوار';
-    protected static ?int $navigationSort = 1;
-    protected static ?string $modelLabel = 'دور';
-    protected static ?string $pluralModelLabel = 'الأدوار';
     
-    public static function getPermissionPrefixes(): array
-    {
-        return [
-            'view',
-            'view_any',
-            'create',
-            'update',
-            'delete',
-            'delete_any',
-        ];
-    }
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
-    public static function form(Form $form): Form
+    protected static ?string $navigationLabel = 'الأدوار';
+    
+    protected static ?string $navigationGroup = 'إدارة المستخدمين';
+    
+    
+    protected static ?int $navigationSort = 2;
+
+    public static function form(Forms\Form $form): Forms\Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('معلومات الدور')
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('اسم الدور')
-                            ->required()
-                            ->maxLength(255)
-                            ->unique(ignoreRecord: true)
-                            ->placeholder('مثال: admin, manager, user'),
-                            
-                        Forms\Components\TextInput::make('guard_name')
-                            ->label('نوع الحماية')
-                            ->default('web')
-                            ->required()
-                            ->disabled()
-                            ->helperText('نظام الحماية المستخدم للدور'),
-                    ])->columns(2),
-                    
-                Forms\Components\Section::make('الصلاحيات')
-                    ->schema([
-                        Forms\Components\CheckboxList::make('permissions')
-                            ->label('')
-                            ->relationship('permissions', 'name')
-                            ->columns(3)
-                            ->gridDirection('row')
-                            ->searchable()
-                            ->bulkToggleable()
-                            ->options(function () {
-                                $options = [];
-                                $permissions = Permission::orderBy('name')->get();
-                                foreach ($permissions as $permission) {
-                                    $options[$permission->name] = $permission->name;
-                                }
-                                return $options;
-                            }),
-                    ]),
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255)
+                    ->unique(ignoreRecord: true),
+                Forms\Components\Select::make('permissions')
+                    ->multiple()
+                    ->relationship('permissions', 'name')
+                    ->preload()
+                    ->searchable(),
             ]);
     }
 
-    public static function table(Table $table): Table
+    public static function table(Tables\Table $table): Tables\Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('#')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
                 Tables\Columns\TextColumn::make('name')
-                    ->label('اسم الدور')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold')
-                    ->badge()
-                    ->color(fn ($state) => match ($state) {
-                        'super_admin' => 'danger',
-                        'admin' => 'warning',
-                        'user_manager' => 'info',
-                        'product_manager' => 'success',
-                        'warehouse_manager' => 'primary',
-                        'sales_manager' => 'secondary',
-                        'viewer' => 'gray',
-                        default => 'primary',
-                    }),
-                    
-                Tables\Columns\TextColumn::make('guard_name')
-                    ->label('نوع الحماية')
-                    ->badge()
-                    ->color('info'),
-                    
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('permissions_count')
-                    ->label('عدد الصلاحيات')
                     ->counts('permissions')
-                    ->badge()
-                    ->color('success'),
-                    
-                Tables\Columns\TextColumn::make('users_count')
-                    ->label('عدد المستخدمين')
-                    ->counts('users')
-                    ->badge()
-                    ->color('warning'),
-                    
+                    ->label('عدد الصلاحيات'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('تاريخ الإنشاء')
-                    ->dateTime('Y-m-d')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('guard_name')
-                    ->label('نوع الحماية')
-                    ->options([
-                        'web' => 'Web',
-                        'api' => 'API',
-                    ]),
+                //
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
-                        ->label('عرض'),
-                    Tables\Actions\EditAction::make()
-                        ->label('تعديل'),
-                    Tables\Actions\DeleteAction::make()
-                        ->label('حذف')
-                        ->requiresConfirmation()
-                        ->visible(fn ($record) => !in_array($record->name, ['super_admin', 'admin'])),
-                ]),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->label('حذف المحددين'),
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -155,7 +67,7 @@ class RoleResource extends Resource implements HasShieldPermissions
     public static function getRelations(): array
     {
         return [
-            RoleResource\RelationManagers\UsersRelationManager::class,
+            //
         ];
     }
 
@@ -164,7 +76,6 @@ class RoleResource extends Resource implements HasShieldPermissions
         return [
             'index' => Pages\ListRoles::route('/'),
             'create' => Pages\CreateRole::route('/create'),
-            // 'view' => Pages\ViewRole::route('/{record}'),
             'edit' => Pages\EditRole::route('/{record}/edit'),
         ];
     }
