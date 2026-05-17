@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\OrganizationController;
+
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -23,6 +25,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+
+
+    // Custom routes for organizations must be defined before the resource route
+    Route::get('organizations/export', [OrganizationController::class, 'export'])->name('organizations.export');
+    Route::get('organizations/template', [OrganizationController::class, 'downloadTemplate'])->name('organizations.template');
+    Route::post('organizations/import', [OrganizationController::class, 'import'])->name('organizations.import');
+
+    // Resource routes for organizations
+    Route::resource('organizations', OrganizationController::class);
 });
 
 // require __DIR__.'/auth.php'; // تم إيقاف هذا السطر لتجنب التعارض مع مسارات تسجيل الدخول المخصصة
