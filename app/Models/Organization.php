@@ -20,4 +20,8 @@ class Organization extends Model
     {
         return $this->hasMany(Organization::class, 'parent_id');
     }
+    public function packageStatuses()
+    {
+        return $this->hasMany(PackageStatus::class);
+    }
 }

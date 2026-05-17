@@ -5,6 +5,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\PackageStatusController;
+use App\Http\Controllers\VendorController;
+
 
 
 Route::get('/', function () {
@@ -32,9 +35,25 @@ Route::middleware(['auth'])->group(function () {
     Route::get('organizations/export', [OrganizationController::class, 'export'])->name('organizations.export');
     Route::get('organizations/template', [OrganizationController::class, 'downloadTemplate'])->name('organizations.template');
     Route::post('organizations/import', [OrganizationController::class, 'import'])->name('organizations.import');
-
     // Resource routes for organizations
     Route::resource('organizations', OrganizationController::class);
+
+
+
+
+    Route::get('package-statuses/export', [PackageStatusController::class, 'export'])->name('package-statuses.export');
+    Route::get('package-statuses/template', [PackageStatusController::class, 'downloadTemplate'])->name('package-statuses.template');
+    Route::post('package-statuses/import', [PackageStatusController::class, 'import'])->name('package-statuses.import');
+    Route::resource('package-statuses', PackageStatusController::class);
+
+
+
+
+
+Route::resource('vendors', VendorController::class);
+Route::get('vendors/export', [VendorController::class, 'export'])->name('vendors.export');
+Route::get('vendors/template', [VendorController::class, 'downloadTemplate'])->name('vendors.template');
+Route::post('vendors/import', [VendorController::class, 'import'])->name('vendors.import');
 });
 
 // require __DIR__.'/auth.php'; // تم إيقاف هذا السطر لتجنب التعارض مع مسارات تسجيل الدخول المخصصة

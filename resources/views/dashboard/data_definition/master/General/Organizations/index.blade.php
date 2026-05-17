@@ -283,7 +283,7 @@
                                             <div class="btn-group btn-group-sm" role="group">
                                                 <a href="{{ route('organizations.show', $org) }}" class="btn btn-outline-info" title="View"><i data-feather="eye"></i></a>
                                                 <a href="{{ route('organizations.edit', $org) }}" class="btn btn-outline-warning" title="Edit"><i data-feather="edit"></i></a>
-                                                <button type="button" class="btn btn-outline-danger" title="Delete" onclick="confirmDelete({{ $org->id }}, '{{ addslashes($org->name) }}')">
+                                                <button type="button" class="btn btn-outline-danger" title="Delete" onclick="confirmDelete ({{ $org->id }}, '{{ addslashes($org->name) }}')">
                                                     <i data-feather="trash-2"></i>
                                                 </button>
                                             </div>
