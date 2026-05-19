@@ -55,17 +55,16 @@
                             <li class="sidebar-item {{ request()->routeIs('package-statuses.*') ? 'active' : '' }}">
                                 <a class="sidebar-link" href="{{ route('package-statuses.index') }}">Pack Statuses</a>
                             </li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Competitors</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('competitors.index') }}">Competitors</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">Visit Types</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">Fields Group</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Geographical Location Hierarchy</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Vehicle Type</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Sales Order Type</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('geographical.index') }}">Geographical Location Hierarchy</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('sales-order-types.index') }}">Sales Order Type</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">Stock Statuses</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">Item Model</a></li>
 
                             <li class="sidebar-header">Finance</li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Currencies</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('currencies.index') }}">Currencies</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">Currency Rates</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">Banks</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">Branches</a></li>

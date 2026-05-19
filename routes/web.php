@@ -7,6 +7,16 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PackageStatusController;
 use App\Http\Controllers\VendorController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\CompetitorController;
+
+use App\Http\Controllers\CountryController;
+use App\Http\Controllers\CityController;
+use App\Http\Controllers\SalesOrderTypeController;
+use App\Http\Controllers\CurrencyController;
+
+
+
 
 
 
@@ -28,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
 
 
@@ -54,6 +65,37 @@ Route::resource('vendors', VendorController::class);
 Route::get('vendors/export', [VendorController::class, 'export'])->name('vendors.export');
 Route::get('vendors/template', [VendorController::class, 'downloadTemplate'])->name('vendors.template');
 Route::post('vendors/import', [VendorController::class, 'import'])->name('vendors.import');
+
+
+Route::resource('competitors', CompetitorController::class);
+Route::get('competitors/export/data', [CompetitorController::class, 'export'])->name('competitors.export');
+Route::post('competitors/import', [CompetitorController::class, 'import'])->name('competitors.import');
+Route::get('competitors/template/download', [CompetitorController::class, 'downloadTemplate'])->name('competitors.template');
+
+
+
+// Geographical routes
+Route::prefix('geographical')->name('geographical.')->group(function () {
+    Route::get('/', [CountryController::class, 'index'])->name('index');
+});
+Route::resource('countries', CountryController::class)->except(['index']);
+Route::resource('cities', CityController::class);
+
+
+Route::resource('sales-order-types', SalesOrderTypeController::class);
+Route::get('sales-order-types/export/data', [SalesOrderTypeController::class, 'export'])->name('sales-order-types.export');
+Route::post('sales-order-types/import', [SalesOrderTypeController::class, 'import'])->name('sales-order-types.import');
+Route::get('sales-order-types/template/download', [SalesOrderTypeController::class, 'downloadTemplate'])->name('sales-order-types.template');
+
+
+
+Route::resource('currencies', CurrencyController::class);
+Route::get('currencies/export/data', [CurrencyController::class, 'export'])->name('currencies.export');
+Route::post('currencies/import', [CurrencyController::class, 'import'])->name('currencies.import');
+Route::get('currencies/template/download', [CurrencyController::class, 'downloadTemplate'])->name('currencies.template');
+
+
+Route::resource('employees', EmployeeController::class);
 });
 
 // require __DIR__.'/auth.php'; // تم إيقاف هذا السطر لتجنب التعارض مع مسارات تسجيل الدخول المخصصة
