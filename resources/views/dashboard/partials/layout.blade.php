@@ -1,6 +1,6 @@
 @include('dashboard.partials.header')
 
-<body >
+<body class="nativephp-safe-area" >
     <!-- Layout wrapper -->
   	<div class="wrapper">
                   @include('dashboard.partials.sidebar')
