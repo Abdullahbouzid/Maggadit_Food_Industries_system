@@ -10,7 +10,7 @@
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">الفئات</h2>
-                <a href="#" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
+                <a href="{{ route('categories.index') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div class="flex overflow-x-auto space-x-3 space-x-reverse pb-2">
                 @php
@@ -38,7 +38,7 @@
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">ماركات شهيرة</h2>
-                <a href="#" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
+                <a href="{{ route('customer.brands') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div class="flex overflow-x-auto space-x-3 space-x-reverse pb-2">
                 @php
@@ -65,7 +65,7 @@
         <div class="mb-5">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">أفضل المنتجات</h2>
-                <a href="#" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
+                <a href="{{ route('customer.products') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 @php
@@ -106,7 +106,7 @@
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">عروض حصرية</h2>
-                <a href="{{ route('customer.offers') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
+                <a href="{{ route('customer.offer') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div class="space-y-4">
                 @php

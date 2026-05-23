@@ -34,6 +34,27 @@ Route::get('/customer/offers', function () {
     return view('app_android.offers');
 })->name('customer.offers');
 
+Route::get('/categories', function () {
+    return view('app_android.categories.index');
+})->name('categories.index');
+
+Route::get('/categories/{id}', function ($id) {
+    return view('app_android.categories.show', ['categoryId' => $id]);
+})->name('categories.show');
+
+Route::get('/customer/brands', fn() => view('app_android.brands.index'))->name('customer.brands');
+Route::get('/customer/brands/{id}', fn($id) => view('app_android.brands.show', ['brandId' => $id]))->name('customer.brands.show');
+
+Route::get('/customer/products', function () {
+    return view('app_android.products.index');
+})->name('customer.products');
+
+Route::get('/customer/showoffers', function () {
+    return view('app_android.offers.index');
+})->name('customer.offer');
+
+
+
 Route::post('/mobile/login', function (Request $request) {
     $request->validate([
         'username' => 'required',
@@ -62,6 +83,7 @@ Route::get('/customer/favorite', function () {
     if (!session('logged_in')) return redirect()->route('mobile.login');
     return view('app_android.favorite');
 })->name('customer.favorite');
+
 
 Route::get('/admin', function () {
     return redirect()->route('login');

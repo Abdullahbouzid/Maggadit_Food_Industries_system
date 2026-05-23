@@ -234,6 +234,6 @@
             <h1 id="location-title" class="text-xl font-bold text-gray-800">شعبية طرابلس</h1>
             <p id="welcome-text" class="text-xs text-gray-500">مرحباً، ضيفنا العزيز</p>
         </div>
-        <div id="lang-switch" class="lang-switch">🇸🇦 العربية</div>
+            <div id="lang-switch" class="lang-switch">🇱🇾 العربية</div>
     </div>
 </div>
