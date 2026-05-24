@@ -53,7 +53,63 @@ Route::get('/customer/showoffers', function () {
     return view('app_android.offers.index');
 })->name('customer.offer');
 
+// تغيير المنظمة
+Route::get('/customer/change-organization', function () {
+    return view('app_android.more.change_organization');
+})->name('customer.change_organization');
 
+// كشف حساب مالي
+Route::get('/customer/financial-statement', function () {
+    return view('app_android.more.financial_statement');
+})->name('customer.financial_statement');
+
+// تغيير كلمة السر
+Route::get('/customer/change-password', function () {
+    return view('app_android.more.change_password');
+})->name('customer.change_password');
+
+// تاريخ الطلبات
+Route::get('/customer/order-history', function () {
+    return view('app_android.more.order_history');
+})->name('customer.order_history');
+Route::get('/customer/order/{id}', function ($id) {
+    return view('app_android.more.order_details', ['orderId' => $id]);
+})->name('customer.order_details');
+
+// معلوماتي
+Route::get('/customer/my-info', function () {
+    return view('app_android.more.my_info');
+})->name('customer.my_info');
+
+// استبيانات
+Route::get('/customer/surveys', function () {
+    return view('app_android.more.surveys');
+})->name('customer.surveys');
+
+// الإشعارات
+Route::get('/customer/notifications', function () {
+    return view('app_android.more.notifications');
+})->name('customer.notifications');
+
+// الأسئلة الشائعة
+Route::get('/customer/faq', function () {
+    return view('app_android.more.faq');
+})->name('customer.faq');
+
+// سياسة الخصوصية
+Route::get('/customer/privacy-policy', function () {
+    return view('app_android.more.privacy_policy');
+})->name('customer.privacy');
+
+// نبذة عنا
+Route::get('/customer/about-us', function () {
+    return view('app_android.more.about_us');
+})->name('customer.about');
+
+// التواصل معنا
+Route::get('/customer/contact-us', function () {
+    return view('app_android.more.contact_us');
+})->name('customer.contact');
 
 Route::post('/mobile/login', function (Request $request) {
     $request->validate([

@@ -231,8 +231,7 @@
 <div class="sticky top-0 bg-white/90 backdrop-blur-sm z-10 border-b border-gray-100" style=" border-radius: 20px 20px" >
     <div class="flex justify-between items-center px-5 py-4">
         <div>
-            <h1 id="location-title" class="text-xl font-bold text-gray-800">شعبية طرابلس</h1>
-            <p id="welcome-text" class="text-xs text-gray-500">مرحباً، ضيفنا العزيز</p>
+            <img src="{{ asset('img/logo/logo.ico') }}" alt="" class="w-12 h-12 rounded-full">
         </div>
             <div id="lang-switch" class="lang-switch">🇱🇾 العربية</div>
     </div>

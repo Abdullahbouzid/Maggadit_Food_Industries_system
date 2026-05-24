@@ -70,6 +70,10 @@
                 <p class="text-center text-gray-500 col-span-2">لا توجد منتجات لهذه الماركة حالياً</p>
             @endforelse
         </div>
+
+            <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+            <br><br>
+        </div>
     </div>
 
     <!-- Toast الإشعار -->

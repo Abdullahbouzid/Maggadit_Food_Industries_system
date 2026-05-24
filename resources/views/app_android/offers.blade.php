@@ -60,5 +60,8 @@
                 <span class="text-xs text-gray-600 font-medium">عروض حصرية للجوال · لا تفوت الفرصة</span>
             </div>
         </div>
+          <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+            <br><br>
+        </div>
     </div>
 @endsection

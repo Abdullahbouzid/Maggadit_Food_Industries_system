@@ -5,7 +5,7 @@
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => __('messages.cart_title')])
 
-    <div class="px-4 py-4 space-y-4" dir="rtl">
+    <div class="px-4 py-4 mb-5 space-y-4" dir="rtl">
         {{-- حالة السلة فارغة --}}
         <div id="empty-cart-state" class="hidden text-center py-10">
             <div class="w-32 h-32 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -47,6 +47,9 @@
             </div>
         </div>
         <br><br>
+      <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+            <br><br>
+        </div>
     </div>
 
     <!-- Toast إشعارات -->

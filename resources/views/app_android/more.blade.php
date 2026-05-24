@@ -5,7 +5,7 @@
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => __('messages.dashboard_title')])
 
-    <div class="px-4 py-4 space-y-4" style="direction: rtl;">
+    <div class="px-4 py-4 mb-5 space-y-4" style="direction: rtl;">
         <!-- User Info Card -->
         <div class="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-5 shadow-lg">
             <div class="flex justify-between items-start">
@@ -72,13 +72,114 @@
                 <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
             </div>
         </div>
+            <!-- معلوماتي -->
+            <div id="my-info" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                        <i class="fas fa-user-edit text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="my-info-title" class="font-bold text-gray-800">معلوماتي</h3>
+                        <p id="my-info-sub" class="text-xs text-gray-400">تحديث بيانات حسابك</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+            </div>
 
+            <!-- استبيانات -->
+            <div id="surveys" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                        <i class="fas fa-poll text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="surveys-title" class="font-bold text-gray-800">استبيانات</h3>
+                        <p id="surveys-sub" class="text-xs text-gray-400">شاركنا رأيك</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+            </div>
+
+            <!-- الإشعارات -->
+            <div id="notifications" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                        <i class="fas fa-bell text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="notifications-title" class="font-bold text-gray-800">الإشعارات</h3>
+                        <p id="notifications-sub" class="text-xs text-gray-400">آخر التنبيهات</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+            </div>
+
+            <!-- الأسئلة الشائعة -->
+            <div id="faq" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                        <i class="fas fa-question-circle text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="faq-title" class="font-bold text-gray-800">الأسئلة الشائعة</h3>
+                        <p id="faq-sub" class="text-xs text-gray-400">أجوبة لاستفساراتك</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+            </div>
+
+            <!-- سياسة الخصوصية -->
+            <div id="privacy-policy" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                        <i class="fas fa-lock text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="privacy-title" class="font-bold text-gray-800">سياسة الخصوصية</h3>
+                        <p id="privacy-sub" class="text-xs text-gray-400">كيف نحمي بياناتك</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+            </div>
+
+            <!-- نبذة عنا -->
+            <div id="about-us" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                        <i class="fas fa-store text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="about-title" class="font-bold text-gray-800">نبذة عنا</h3>
+                        <p id="about-sub" class="text-xs text-gray-400">تعرف على ماجديت</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+            </div>
+
+            <!-- التواصل معنا -->
+            <div id="contact-us" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600">
+                        <i class="fas fa-headset text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="contact-title" class="font-bold text-gray-800">التواصل معنا</h3>
+                        <p id="contact-sub" class="text-xs text-gray-400">الدعم وخدمة العملاء</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+            </div>
         <!-- زر تسجيل الخروج -->
         <div id="logout-btn" class="mt-6 bg-red-50 rounded-xl p-4 flex items-center justify-center gap-3 cursor-pointer transition-all duration-200 hover:bg-red-100 active:scale-[0.98] border border-red-200 shadow-sm">
             <i class="fas fa-sign-out-alt text-red-600 text-lg"></i>
             <span id="logout-text" class="font-bold text-red-700">تسجيل خروج</span>
         </div>
+
+        <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+            <br><br>
+        </div>
     </div>
+    <br>
 
     <!-- Toast الإشعار -->
     <div id="logout-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none" style="white-space: nowrap;">
@@ -138,7 +239,21 @@
                 modal_title: "Logout",
                 modal_message: "Are you sure you want to logout?",
                 modal_confirm: "Yes, Logout",
-                modal_cancel: "Cancel"
+                modal_cancel: "Cancel",
+                my_info_title: "My Info",
+                my_info_sub: "Update your profile",
+                surveys_title: "Surveys",
+                surveys_sub: "Share your feedback",
+                notifications_title: "Notifications",
+                notifications_sub: "Latest alerts",
+                faq_title: "FAQ",
+                faq_sub: "Frequently asked questions",
+                privacy_title: "Privacy Policy",
+                privacy_sub: "How we protect your data",
+                about_title: "About Us",
+                about_sub: "Learn about Maggadit",
+                contact_title: "Contact Us",
+                contact_sub: "Support & customer service",
             },
             ar: {
                 page_title: "المزيد",
@@ -166,7 +281,21 @@
                 modal_title: "تسجيل الخروج",
                 modal_message: "هل أنت متأكد من تسجيل الخروج؟",
                 modal_confirm: "نعم، تسجيل خروج",
-                modal_cancel: "إلغاء"
+                modal_cancel: "إلغاء",
+                my_info_title: "معلوماتي",
+                my_info_sub: "تحديث بيانات حسابك",
+                surveys_title: "استبيانات",
+                surveys_sub: "شاركنا رأيك",
+                notifications_title: "الإشعارات",
+                notifications_sub: "آخر التنبيهات",
+                faq_title: "الأسئلة الشائعة",
+                faq_sub: "أجوبة لاستفساراتك",
+                privacy_title: "سياسة الخصوصية",
+                privacy_sub: "كيف نحمي بياناتك",
+                about_title: "نبذة عنا",
+                about_sub: "تعرف على ماجديت",
+                contact_title: "التواصل معنا",
+                contact_sub: "الدعم وخدمة العملاء",
             }
         };
 
@@ -196,6 +325,20 @@
             document.getElementById('nav-favorite').innerText = t.nav_favorite;
             document.getElementById('nav-more').innerText = t.nav_more;
             document.getElementById('lang-switch').innerText = t.lang_switch_text;
+            document.getElementById('my-info-title').innerText = t.my_info_title;
+            document.getElementById('my-info-sub').innerText = t.my_info_sub;
+            document.getElementById('surveys-title').innerText = t.surveys_title;
+            document.getElementById('surveys-sub').innerText = t.surveys_sub;
+            document.getElementById('notifications-title').innerText = t.notifications_title;
+            document.getElementById('notifications-sub').innerText = t.notifications_sub;
+            document.getElementById('faq-title').innerText = t.faq_title;
+            document.getElementById('faq-sub').innerText = t.faq_sub;
+            document.getElementById('privacy-title').innerText = t.privacy_title;
+            document.getElementById('privacy-sub').innerText = t.privacy_sub;
+            document.getElementById('about-title').innerText = t.about_title;
+            document.getElementById('about-sub').innerText = t.about_sub;
+            document.getElementById('contact-title').innerText = t.contact_title;
+            document.getElementById('contact-sub').innerText = t.contact_sub;
 
             document.documentElement.setAttribute('dir', t.dir);
             document.documentElement.lang = lang === 'ar' ? 'ar' : 'en';
@@ -265,11 +408,53 @@
         });
 
         // أحداث القائمة
-        document.getElementById('change-org').addEventListener('click', () => alert('تغيير المنظمة - سيتم التوجيه لاحقاً'));
-        document.getElementById('financial-stmt').addEventListener('click', () => alert('كشف الحساب المالي - قيد التطوير'));
-        document.getElementById('change-pwd').addEventListener('click', () => alert('تغيير كلمة السر - سيتم فتح نموذج'));
-        document.getElementById('order-history').addEventListener('click', () => alert('تاريخ الطلبات - يعرض القائمة'));
-
+      // أحداث القائمة - الآن تنتقل إلى صفحات حقيقية
+        document.getElementById('change-org').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.change_organization') }}";
+        });
+        document.getElementById('financial-stmt').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.financial_statement') }}";
+        });
+        document.getElementById('change-pwd').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.change_password') }}";
+        });
+        document.getElementById('order-history').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.order_history') }}";
+        });
+        // أحداث القائمة
+        document.getElementById('change-org').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.change_organization') }}";
+        });
+        document.getElementById('financial-stmt').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.financial_statement') }}";
+        });
+        document.getElementById('change-pwd').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.change_password') }}";
+        });
+        document.getElementById('order-history').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.order_history') }}";
+        });
+        document.getElementById('my-info').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.my_info') }}";
+        });
+        document.getElementById('surveys').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.surveys') }}";
+        });
+        document.getElementById('notifications').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.notifications') }}";
+        });
+        document.getElementById('faq').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.faq') }}";
+        });
+        document.getElementById('privacy-policy').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.privacy') }}";
+        });
+        document.getElementById('about-us').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.about') }}";
+        });
+        document.getElementById('contact-us').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.contact') }}";
+        });
         // تسجيل الخروج باستخدام المودال الجميل
         document.getElementById('logout-btn').addEventListener('click', () => {
             showModal();

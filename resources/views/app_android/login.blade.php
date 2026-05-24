@@ -135,7 +135,7 @@
 <body class="flex items-center justify-center p-5 min-h-screen">
 
     <!-- زر تبديل اللغة -->
-    <div id="lang-switch" class="lang-switch">🇸🇦 العربية</div>
+    <div id="lang-switch" class="lang-switch">🇱🇾  العربية</div>
 
     <div class="w-full max-w-md login-card p-6 md:p-8">
         <div class="brand-icon">

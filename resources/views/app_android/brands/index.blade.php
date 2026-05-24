@@ -35,6 +35,9 @@
                 </a>
             @endforeach
         </div>
+            <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+            <br><br>
+        </div>
     </div>
 
     <!-- Fontawesome -->

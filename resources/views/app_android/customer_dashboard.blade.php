@@ -6,7 +6,41 @@
     @include('app_android.partials.mobile.header', ['title' => __('messages.dashboard_title')])
 
     <div class="p-4 space-y-6 mb-5" dir="rtl">
-        {{-- قسم الفئات (Categories) --}}
+        
+        {{-- ========== شريط الدعايات (Carousel) مع تمرير تلقائي ========== --}}
+        <div class="relative">
+            <div id="ad-carousel" class="flex overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar rounded-2xl shadow-md" style="scrollbar-width: none; -webkit-overflow-scrolling: touch;">
+                @php
+                    $ads = [
+                        ['id' => 1, 'title' => 'خصم 50% على الملابس', 'subtitle' => 'سارع بالشراء', 'icon' => '🛍️', 'bg' => 'from-pink-500 to-rose-600'],
+                        ['id' => 2, 'title' => 'عرض الإلكترونيات', 'subtitle' => 'خصم 30%', 'icon' => '📱', 'bg' => 'from-blue-500 to-cyan-600'],
+                        ['id' => 3, 'title' => 'توصيل مجاني', 'subtitle' => 'للطلبات فوق 200 ر.س', 'icon' => '🚚', 'bg' => 'from-green-500 to-emerald-600'],
+                    ];
+                @endphp
+                @foreach($ads as $ad)
+                    <div class="flex-shrink-0 w-full snap-start">
+                        <div class="bg-gradient-to-r {{ $ad['bg'] }} rounded-2xl p-5 text-white flex items-center justify-between mx-1">
+                            <div>
+                                <p class="text-lg font-bold">{{ $ad['title'] }}</p>
+                                <p class="text-sm opacity-90">{{ $ad['subtitle'] }}</p>
+                                <button class="mt-3 bg-white/20 backdrop-blur-sm text-white text-xs px-4 py-1.5 rounded-full">اشتري الآن</button>
+                            </div>
+                            <div class="text-6xl drop-shadow-lg">
+                                {{ $ad['icon'] }}
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            <!-- نقاط التنقل -->
+            <div class="flex justify-center gap-1 mt-3" id="ad-dots">
+                @foreach($ads as $index => $ad)
+                    <div class="w-2 h-2 rounded-full bg-gray-300 transition-all duration-300 {{ $index === 0 ? 'w-4 bg-purple-600' : '' }}" data-index="{{ $index }}"></div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- باقي أقسام الصفحة كما هي (الفئات، الماركات، المنتجات، العروض) --}}
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">الفئات</h2>
@@ -34,7 +68,7 @@
             </div>
         </div>
 
-        {{-- قسم الماركات (Brands) --}}
+        {{-- قسم الماركات --}}
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">ماركات شهيرة</h2>
@@ -61,7 +95,7 @@
             </div>
         </div>
 
-        {{-- قسم المنتجات (Products) --}}
+        {{-- قسم المنتجات --}}
         <div class="mb-5">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">أفضل المنتجات</h2>
@@ -102,7 +136,7 @@
             </div>
         </div>
         
-        {{-- قسم العروض (Offers) --}}
+        {{-- قسم العروض --}}
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">عروض حصرية</h2>
@@ -119,17 +153,12 @@
                     <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                         <div class="flex flex-row">
                             <div class="relative w-28 h-28 bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl overflow-hidden">
-                                <div class="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition"></div>
-                                <span class="transform transition-transform group-hover:scale-110">🛍️</span>
+                                <span>🛍️</span>
                                 <div class="absolute top-1 left-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md">{{ $offer['discount'] }}</div>
                             </div>
                             <div class="flex-1 p-3 text-right">
-                                <div class="flex justify-between items-start gap-1">
-                                    <h3 class="font-bold text-gray-800 text-base">{{ $offer['title'] }}</h3>
-                                </div>
-                                <p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">
-                                    {{ $offer['description'] }}
-                                </p>
+                                <h3 class="font-bold text-gray-800 text-base">{{ $offer['title'] }}</h3>
+                                <p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{{ $offer['description'] }}</p>
                                 <div class="flex justify-between items-center mt-3">
                                     <div class="flex items-center gap-1 text-[11px] text-gray-500">
                                         <span class="text-amber-500">⏰</span>
@@ -143,12 +172,113 @@
             </div>
             <br><br><br>
         </div>
+      <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+            <br><br>
+        </div>
+    </div>
 
-    {{-- إضافة Fontawesome (إذا لم تكن موجودة) --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <script>
-        // الكود الموجود مسبقاً للـ bottom navigation
+        // ========== CAROUSEL AUTO-SCROLL ==========
+        const carousel = document.getElementById('ad-carousel');
+        const dots = document.querySelectorAll('#ad-dots .rounded-full');
+
+        if (carousel && dots.length) {
+            let autoInterval = null;
+            let isUserInteracting = false;
+            let interactionTimeout = null;
+            const AUTO_SCROLL_DELAY = 4000; // 4 seconds
+
+            // تحديث النقاط بناءً على الموضع الحالي
+            const updateDots = () => {
+                const scrollPos = carousel.scrollLeft;
+                const itemWidth = carousel.clientWidth;
+                if (itemWidth === 0) return;
+                const activeIndex = Math.round(scrollPos / itemWidth);
+                dots.forEach((dot, idx) => {
+                    if (idx === activeIndex) {
+                        dot.classList.add('w-4', 'bg-purple-600');
+                        dot.classList.remove('w-2', 'bg-gray-300');
+                    } else {
+                        dot.classList.add('w-2', 'bg-gray-300');
+                        dot.classList.remove('w-4', 'bg-purple-600');
+                    }
+                });
+            };
+
+            // الانتقال إلى شريحة معينة
+            const scrollToIndex = (index) => {
+                if (!carousel) return;
+                const itemWidth = carousel.clientWidth;
+                if (itemWidth === 0) return;
+                carousel.scrollTo({
+                    left: index * itemWidth,
+                    behavior: 'smooth'
+                });
+                updateDots();
+            };
+
+            // التمرير التلقائي للشريحة التالية
+            const autoScroll = () => {
+                if (isUserInteracting) return;
+                const scrollPos = carousel.scrollLeft;
+                const itemWidth = carousel.clientWidth;
+                if (itemWidth === 0) return;
+                const totalSlides = dots.length;
+                let currentSlide = Math.round(scrollPos / itemWidth);
+                let nextSlide = (currentSlide + 1) % totalSlides;
+                scrollToIndex(nextSlide);
+            };
+
+            // بدء التمرير التلقائي
+            const startAutoScroll = () => {
+                if (autoInterval) clearInterval(autoInterval);
+                autoInterval = setInterval(autoScroll, AUTO_SCROLL_DELAY);
+            };
+
+            // إيقاف التمرير التلقائي مؤقتاً عند تفاعل المستخدم
+            const pauseAutoScroll = () => {
+                isUserInteracting = true;
+                if (interactionTimeout) clearTimeout(interactionTimeout);
+                interactionTimeout = setTimeout(() => {
+                    isUserInteracting = false;
+                    // إعادة تشغيل التمرير التلقائي إذا كان متوقفاً
+                    if (!autoInterval) startAutoScroll();
+                }, AUTO_SCROLL_DELAY + 1000);
+            };
+
+            // أحداث المستخدم
+            carousel.addEventListener('scroll', () => {
+                updateDots();
+                pauseAutoScroll();
+            });
+            carousel.addEventListener('touchstart', pauseAutoScroll);
+            carousel.addEventListener('mousedown', pauseAutoScroll);
+            // عند السحب أو التمرير بالماوس
+            carousel.addEventListener('wheel', pauseAutoScroll);
+
+            // الضغط على نقطة معينة
+            dots.forEach((dot, idx) => {
+                dot.addEventListener('click', () => {
+                    scrollToIndex(idx);
+                    pauseAutoScroll();
+                });
+            });
+
+            // تأخير بدء التمرير التلقائي لضمان تحميل العناصر
+            setTimeout(() => {
+                startAutoScroll();
+                updateDots(); // تحديث أولي
+            }, 500);
+
+            // تحديث النقاط عند تغيير حجم الشاشة (مثل تدوير الجهاز)
+            window.addEventListener('resize', () => {
+                setTimeout(updateDots, 200);
+            });
+        }
+
+        // ========== الكود الخاص بالـ bottom navigation ==========
         document.querySelectorAll('.nav-item-premium').forEach(item => {
             item.addEventListener('click', function() {
                 const nav = this.getAttribute('data-nav');
