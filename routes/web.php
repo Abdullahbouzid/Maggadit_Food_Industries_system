@@ -13,13 +13,62 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\SalesOrderTypeController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\BrandController;
 use Illuminate\Http\Request;
 
-// صفحة تسجيل الدخول (mobile)
-Route::get('/', function () {
+
+
+// ========== صفحة تسجيل الدخول (GET) و معالجة النموذج (POST) ==========
+Route::get('/mobile/login', function () {
     return view('app_android.login');
 })->name('mobile.login');
 
+Route::post('/mobile/login', function (Request $request) {
+    $request->validate([
+        'username' => 'required',
+        'password' => 'required',
+    ]);
+    // هنا يمكن إضافة منطق التحقق من بيانات المستخدم
+    session(['logged_in' => true, 'username' => $request->username]);
+    return redirect()->route('customer.dashboard');
+})->name('mobile.login.submit');
+
+// ========== تسجيل الخروج ==========
+Route::get('/logout', function () {
+    session()->forget('logged_in');
+    return redirect()->route('mobile.login');
+})->name('logout');
+
+// ========== الصفحة الرئيسية: إعادة توجيه إلى تسجيل الدخول ==========
+Route::get('/', function () {
+    return redirect()->route('mobile.login');
+});
+
+// ========== مسارات عامة (لا تحتاج تسجيل دخول) ==========
+// الفئات
+Route::get('/categories', function () {
+    return view('app_android.categories.index');
+})->name('categories.index');
+
+Route::get('/categories/{id}', function ($id) {
+    return view('app_android.categories.show', ['categoryId' => $id]);
+})->name('categories.show');
+
+// الماركات
+Route::get('/customer/brands', fn() => view('app_android.brands.index'))->name('customer.brands');
+Route::get('/customer/brands/{id}', fn($id) => view('app_android.brands.show', ['brandId' => $id]))->name('customer.brands.show');
+
+// المنتجات
+Route::get('/customer/products', function () {
+    return view('app_android.products.index');
+})->name('customer.products');
+
+// صفحة العروض (يمكن جعلها عامة)
+Route::get('/customer/showoffers', function () {
+    return view('app_android.offers.index');
+})->name('customer.offer');
+
+// ========== مسارات تتطلب تسجيل الدخول (مع التحقق من الجلسة) ==========
 Route::get('/customer/dashboard', function () {
     if (!session('logged_in')) return redirect()->route('mobile.login');
     return view('app_android.customer_dashboard');
@@ -29,101 +78,6 @@ Route::get('/customer/more', function () {
     if (!session('logged_in')) return redirect()->route('mobile.login');
     return view('app_android.more');
 })->name('customer.more');
-
-Route::get('/customer/offers', function () {
-    return view('app_android.offers');
-})->name('customer.offers');
-
-Route::get('/categories', function () {
-    return view('app_android.categories.index');
-})->name('categories.index');
-
-Route::get('/categories/{id}', function ($id) {
-    return view('app_android.categories.show', ['categoryId' => $id]);
-})->name('categories.show');
-
-Route::get('/customer/brands', fn() => view('app_android.brands.index'))->name('customer.brands');
-Route::get('/customer/brands/{id}', fn($id) => view('app_android.brands.show', ['brandId' => $id]))->name('customer.brands.show');
-
-Route::get('/customer/products', function () {
-    return view('app_android.products.index');
-})->name('customer.products');
-
-Route::get('/customer/showoffers', function () {
-    return view('app_android.offers.index');
-})->name('customer.offer');
-
-// تغيير المنظمة
-Route::get('/customer/change-organization', function () {
-    return view('app_android.more.change_organization');
-})->name('customer.change_organization');
-
-// كشف حساب مالي
-Route::get('/customer/financial-statement', function () {
-    return view('app_android.more.financial_statement');
-})->name('customer.financial_statement');
-
-// تغيير كلمة السر
-Route::get('/customer/change-password', function () {
-    return view('app_android.more.change_password');
-})->name('customer.change_password');
-
-// تاريخ الطلبات
-Route::get('/customer/order-history', function () {
-    return view('app_android.more.order_history');
-})->name('customer.order_history');
-Route::get('/customer/order/{id}', function ($id) {
-    return view('app_android.more.order_details', ['orderId' => $id]);
-})->name('customer.order_details');
-
-// معلوماتي
-Route::get('/customer/my-info', function () {
-    return view('app_android.more.my_info');
-})->name('customer.my_info');
-
-// استبيانات
-Route::get('/customer/surveys', function () {
-    return view('app_android.more.surveys');
-})->name('customer.surveys');
-
-// الإشعارات
-Route::get('/customer/notifications', function () {
-    return view('app_android.more.notifications');
-})->name('customer.notifications');
-
-// الأسئلة الشائعة
-Route::get('/customer/faq', function () {
-    return view('app_android.more.faq');
-})->name('customer.faq');
-
-// سياسة الخصوصية
-Route::get('/customer/privacy-policy', function () {
-    return view('app_android.more.privacy_policy');
-})->name('customer.privacy');
-
-// نبذة عنا
-Route::get('/customer/about-us', function () {
-    return view('app_android.more.about_us');
-})->name('customer.about');
-
-// التواصل معنا
-Route::get('/customer/contact-us', function () {
-    return view('app_android.more.contact_us');
-})->name('customer.contact');
-
-Route::post('/mobile/login', function (Request $request) {
-    $request->validate([
-        'username' => 'required',
-        'password' => 'required',
-    ]);
-    session(['logged_in' => true, 'username' => $request->username]);
-    return redirect()->route('customer.dashboard');
-})->name('mobile.login.submit');
-
-Route::get('/logout', function () {
-    session()->forget('logged_in');
-    return redirect()->route('mobile.login');
-})->name('logout');
 
 Route::get('/customer/offers', function () {
     if (!session('logged_in')) return redirect()->route('mobile.login');
@@ -139,6 +93,66 @@ Route::get('/customer/favorite', function () {
     if (!session('logged_in')) return redirect()->route('mobile.login');
     return view('app_android.favorite');
 })->name('customer.favorite');
+
+Route::get('/customer/change-organization', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.change_organization');
+})->name('customer.change_organization');
+
+Route::get('/customer/financial-statement', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.financial_statement');
+})->name('customer.financial_statement');
+
+Route::get('/customer/change-password', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.change_password');
+})->name('customer.change_password');
+
+Route::get('/customer/order-history', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.order_history');
+})->name('customer.order_history');
+
+Route::get('/customer/order/{id}', function ($id) {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.order_details', ['orderId' => $id]);
+})->name('customer.order_details');
+
+Route::get('/customer/my-info', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.my_info');
+})->name('customer.my_info');
+
+Route::get('/customer/surveys', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.surveys');
+})->name('customer.surveys');
+
+Route::get('/customer/notifications', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.notifications');
+})->name('customer.notifications');
+
+Route::get('/customer/faq', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.faq');
+})->name('customer.faq');
+
+Route::get('/customer/privacy-policy', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.privacy_policy');
+})->name('customer.privacy');
+
+Route::get('/customer/about-us', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.about_us');
+})->name('customer.about');
+
+Route::get('/customer/contact-us', function () {
+    if (!session('logged_in')) return redirect()->route('mobile.login');
+    return view('app_android.more.contact_us');
+})->name('customer.contact');
 
 
 Route::get('/admin', function () {
@@ -210,5 +224,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('currencies/export/data', [CurrencyController::class, 'export'])->name('currencies.export');
     Route::post('currencies/import', [CurrencyController::class, 'import'])->name('currencies.import');
     Route::get('currencies/template/download', [CurrencyController::class, 'downloadTemplate'])->name('currencies.template');
+
+    Route::resource('brands', BrandController::class);
+    Route::get('brands/export/data', [BrandController::class, 'export'])->name('brands.export');
 
 });

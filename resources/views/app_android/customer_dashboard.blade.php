@@ -7,7 +7,7 @@
 
     <div class="p-4 space-y-6 mb-5" dir="rtl">
         
-        {{-- ========== شريط الدعايات (Carousel) مع تمرير تلقائي ========== --}}
+        {{-- ========== شريط الدعايات (Carousel) مع 6 بطاقات وتمرير تلقائي ========== --}}
         <div class="relative">
             <div id="ad-carousel" class="flex overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar rounded-2xl shadow-md" style="scrollbar-width: none; -webkit-overflow-scrolling: touch;">
                 @php
@@ -15,6 +15,9 @@
                         ['id' => 1, 'title' => 'خصم 50% على الملابس', 'subtitle' => 'سارع بالشراء', 'icon' => '🛍️', 'bg' => 'from-pink-500 to-rose-600'],
                         ['id' => 2, 'title' => 'عرض الإلكترونيات', 'subtitle' => 'خصم 30%', 'icon' => '📱', 'bg' => 'from-blue-500 to-cyan-600'],
                         ['id' => 3, 'title' => 'توصيل مجاني', 'subtitle' => 'للطلبات فوق 200 ر.س', 'icon' => '🚚', 'bg' => 'from-green-500 to-emerald-600'],
+                        ['id' => 4, 'title' => 'عطور فاخرة', 'subtitle' => 'خصم 25%', 'icon' => '🌸', 'bg' => 'from-purple-500 to-indigo-600'],
+                        ['id' => 5, 'title' => 'أحذية رياضية', 'subtitle' => 'تخفيضات تصل 40%', 'icon' => '👟', 'bg' => 'from-amber-500 to-orange-600'],
+                        ['id' => 6, 'title' => 'ساعات ذكية', 'subtitle' => 'عرض خاص', 'icon' => '⌚', 'bg' => 'from-gray-500 to-gray-700'],
                     ];
                 @endphp
                 @foreach($ads as $ad)
@@ -40,7 +43,8 @@
             </div>
         </div>
 
-        {{-- باقي أقسام الصفحة كما هي (الفئات، الماركات، المنتجات، العروض) --}}
+        {{-- باقي الأقسام (الفئات، الماركات، المنتجات، العروض) تبقى كما هي --}}
+        {{-- قسم الفئات (Categories) --}}
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">الفئات</h2>
@@ -68,7 +72,7 @@
             </div>
         </div>
 
-        {{-- قسم الماركات --}}
+        {{-- قسم الماركات (Brands) --}}
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">ماركات شهيرة</h2>
@@ -95,7 +99,7 @@
             </div>
         </div>
 
-        {{-- قسم المنتجات --}}
+        {{-- قسم المنتجات (Products) --}}
         <div class="mb-5">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">أفضل المنتجات</h2>
@@ -136,7 +140,7 @@
             </div>
         </div>
         
-        {{-- قسم العروض --}}
+        {{-- قسم العروض (Offers) --}}
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">عروض حصرية</h2>
@@ -172,127 +176,92 @@
             </div>
             <br><br><br>
         </div>
-      <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
-            <br><br>
-        </div>
+
     </div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <script>
-        // ========== CAROUSEL AUTO-SCROLL ==========
+        // ========== Carousel with Auto-Scroll (6 slides) ==========
         const carousel = document.getElementById('ad-carousel');
         const dots = document.querySelectorAll('#ad-dots .rounded-full');
+        
+        let autoScrollInterval = null;
+        let isUserInteracting = false;
+        let interactionTimeout = null;
+        const AUTO_SCROLL_DELAY = 4000; // 4 seconds
 
-        if (carousel && dots.length) {
-            let autoInterval = null;
-            let isUserInteracting = false;
-            let interactionTimeout = null;
-            const AUTO_SCROLL_DELAY = 4000; // 4 seconds
+        function updateDots() {
+            if (!carousel || !dots.length) return;
+            const scrollPos = carousel.scrollLeft;
+            const itemWidth = carousel.clientWidth;
+            if (itemWidth === 0) return;
+            const activeIndex = Math.round(scrollPos / itemWidth);
+            dots.forEach((dot, idx) => {
+                if (idx === activeIndex) {
+                    dot.classList.add('w-4', 'bg-purple-600');
+                    dot.classList.remove('w-2', 'bg-gray-300');
+                } else {
+                    dot.classList.add('w-2', 'bg-gray-300');
+                    dot.classList.remove('w-4', 'bg-purple-600');
+                }
+            });
+        }
 
-            // تحديث النقاط بناءً على الموضع الحالي
-            const updateDots = () => {
-                const scrollPos = carousel.scrollLeft;
-                const itemWidth = carousel.clientWidth;
-                if (itemWidth === 0) return;
-                const activeIndex = Math.round(scrollPos / itemWidth);
-                dots.forEach((dot, idx) => {
-                    if (idx === activeIndex) {
-                        dot.classList.add('w-4', 'bg-purple-600');
-                        dot.classList.remove('w-2', 'bg-gray-300');
-                    } else {
-                        dot.classList.add('w-2', 'bg-gray-300');
-                        dot.classList.remove('w-4', 'bg-purple-600');
-                    }
-                });
-            };
+        function scrollToSlide(index) {
+            if (!carousel) return;
+            const itemWidth = carousel.clientWidth;
+            if (itemWidth === 0) return;
+            carousel.scrollTo({
+                left: index * itemWidth,
+                behavior: 'smooth'
+            });
+        }
 
-            // الانتقال إلى شريحة معينة
-            const scrollToIndex = (index) => {
-                if (!carousel) return;
-                const itemWidth = carousel.clientWidth;
-                if (itemWidth === 0) return;
-                carousel.scrollTo({
-                    left: index * itemWidth,
-                    behavior: 'smooth'
-                });
-                updateDots();
-            };
+        function autoScroll() {
+            if (!carousel || isUserInteracting) return;
+            const itemWidth = carousel.clientWidth;
+            if (itemWidth === 0) return;
+            const currentScroll = carousel.scrollLeft;
+            const totalSlides = dots.length;
+            let currentIndex = Math.round(currentScroll / itemWidth);
+            let nextIndex = (currentIndex + 1) % totalSlides;
+            scrollToSlide(nextIndex);
+        }
 
-            // التمرير التلقائي للشريحة التالية
-            const autoScroll = () => {
-                if (isUserInteracting) return;
-                const scrollPos = carousel.scrollLeft;
-                const itemWidth = carousel.clientWidth;
-                if (itemWidth === 0) return;
-                const totalSlides = dots.length;
-                let currentSlide = Math.round(scrollPos / itemWidth);
-                let nextSlide = (currentSlide + 1) % totalSlides;
-                scrollToIndex(nextSlide);
-            };
+        function startAutoScroll() {
+            if (autoScrollInterval) clearInterval(autoScrollInterval);
+            autoScrollInterval = setInterval(autoScroll, AUTO_SCROLL_DELAY);
+        }
 
-            // بدء التمرير التلقائي
-            const startAutoScroll = () => {
-                if (autoInterval) clearInterval(autoInterval);
-                autoInterval = setInterval(autoScroll, AUTO_SCROLL_DELAY);
-            };
+        function pauseAutoScroll() {
+            isUserInteracting = true;
+            if (interactionTimeout) clearTimeout(interactionTimeout);
+            interactionTimeout = setTimeout(() => {
+                isUserInteracting = false;
+            }, AUTO_SCROLL_DELAY + 500);
+        }
 
-            // إيقاف التمرير التلقائي مؤقتاً عند تفاعل المستخدم
-            const pauseAutoScroll = () => {
-                isUserInteracting = true;
-                if (interactionTimeout) clearTimeout(interactionTimeout);
-                interactionTimeout = setTimeout(() => {
-                    isUserInteracting = false;
-                    // إعادة تشغيل التمرير التلقائي إذا كان متوقفاً
-                    if (!autoInterval) startAutoScroll();
-                }, AUTO_SCROLL_DELAY + 1000);
-            };
-
-            // أحداث المستخدم
+        if (carousel) {
             carousel.addEventListener('scroll', () => {
                 updateDots();
                 pauseAutoScroll();
             });
             carousel.addEventListener('touchstart', pauseAutoScroll);
             carousel.addEventListener('mousedown', pauseAutoScroll);
-            // عند السحب أو التمرير بالماوس
-            carousel.addEventListener('wheel', pauseAutoScroll);
-
-            // الضغط على نقطة معينة
-            dots.forEach((dot, idx) => {
-                dot.addEventListener('click', () => {
-                    scrollToIndex(idx);
-                    pauseAutoScroll();
-                });
-            });
-
-            // تأخير بدء التمرير التلقائي لضمان تحميل العناصر
-            setTimeout(() => {
-                startAutoScroll();
-                updateDots(); // تحديث أولي
-            }, 500);
-
-            // تحديث النقاط عند تغيير حجم الشاشة (مثل تدوير الجهاز)
-            window.addEventListener('resize', () => {
-                setTimeout(updateDots, 200);
-            });
+            carousel.addEventListener('mouseenter', pauseAutoScroll);
+            updateDots();
+            startAutoScroll();
         }
 
-        // ========== الكود الخاص بالـ bottom navigation ==========
-        document.querySelectorAll('.nav-item-premium').forEach(item => {
-            item.addEventListener('click', function() {
-                const nav = this.getAttribute('data-nav');
-                if (nav === 'home') {
-                    // بالفعل في الصفحة الرئيسية
-                } else if (nav === 'more') {
-                    window.location.href = "{{ route('customer.more') }}";
-                } else {
-                    alert('سيتم توجيهك قريباً');
-                }
+        dots.forEach((dot, idx) => {
+            dot.addEventListener('click', () => {
+                scrollToSlide(idx);
+                pauseAutoScroll();
             });
         });
 
-        // التنقل الثاني (للتكامل)
+        // ========== Bottom Navigation ==========
         document.querySelectorAll('.nav-item-premium').forEach(item => {
             item.addEventListener('click', function() {
                 const target = this.getAttribute('data-nav');
@@ -302,9 +271,8 @@
                     more: "{{ route('customer.more') }}"
                 };
                 if (routes[target]) {
+                    if (target === 'home') return;
                     window.location.href = routes[target];
-                } else {
-                    alert('سيتم إضافة هذه الصفحة قريباً');
                 }
             });
         });

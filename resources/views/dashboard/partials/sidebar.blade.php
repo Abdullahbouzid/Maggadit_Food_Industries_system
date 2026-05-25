@@ -120,7 +120,7 @@
                         <ul id="productsSubmenu" class="sidebar-dropdown list-unstyled collapse">
                             <li class="sidebar-item"><a class="sidebar-link" href="#">product attributes</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">pricing & tax rules</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">inventory metadata</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('brands.index') }}">Brands</a></li>
                         </ul>
                     </li>
 
