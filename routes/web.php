@@ -7,18 +7,17 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PackageStatusController;
 use App\Http\Controllers\VendorController;
-use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CompetitorController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\SalesOrderTypeController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Customer\CustomerAppController;
 use Illuminate\Http\Request;
 
-
-
-// ========== صفحة تسجيل الدخول (GET) و معالجة النموذج (POST) ==========
+// ========== Customer App Login ==========
 Route::get('/mobile/login', function () {
     return view('app_android.login');
 })->name('mobile.login');
@@ -28,144 +27,113 @@ Route::post('/mobile/login', function (Request $request) {
         'username' => 'required',
         'password' => 'required',
     ]);
-    // هنا يمكن إضافة منطق التحقق من بيانات المستخدم
     session(['logged_in' => true, 'username' => $request->username]);
     return redirect()->route('customer.dashboard');
 })->name('mobile.login.submit');
 
-// ========== تسجيل الخروج ==========
 Route::get('/logout', function () {
     session()->forget('logged_in');
     return redirect()->route('mobile.login');
 })->name('logout');
 
-// ========== الصفحة الرئيسية: إعادة توجيه إلى تسجيل الدخول ==========
 Route::get('/', function () {
     return redirect()->route('mobile.login');
 });
 
-// ========== مسارات عامة (لا تحتاج تسجيل دخول) ==========
-// الفئات
-Route::get('/categories', function () {
-    return view('app_android.categories.index');
-})->name('categories.index');
+// ========== Customer App Routes (Mobile) ==========
+Route::prefix('customer')->name('customer.')->group(function () {
 
-Route::get('/categories/{id}', function ($id) {
-    return view('app_android.categories.show', ['categoryId' => $id]);
-})->name('categories.show');
+    // Public routes (no session required)
+    Route::get('/categories', [CustomerAppController::class, 'categoriesIndex'])->name('categories.index');
+    Route::get('/categories/{id}', [CustomerAppController::class, 'categoriesShow'])->name('categories.show');
 
-// الماركات
-Route::get('/customer/brands', fn() => view('app_android.brands.index'))->name('customer.brands');
-Route::get('/customer/brands/{id}', fn($id) => view('app_android.brands.show', ['brandId' => $id]))->name('customer.brands.show');
+    Route::get('/brands', [CustomerAppController::class, 'brandsIndex'])->name('brands');
+    Route::get('/brands/{id}', [CustomerAppController::class, 'brandsShow'])->name('brands.show');
 
-// المنتجات
-Route::get('/customer/products', function () {
-    return view('app_android.products.index');
-})->name('customer.products');
+    Route::get('/products', [CustomerAppController::class, 'productsIndex'])->name('products');
+    Route::get('/showoffers', [CustomerAppController::class, 'offersIndex'])->name('offer');
 
-// صفحة العروض (يمكن جعلها عامة)
-Route::get('/customer/showoffers', function () {
-    return view('app_android.offers.index');
-})->name('customer.offer');
+    // المسارات المحمية (تتطلب جلسة)
+    Route::middleware('check.customer.session')->group(function () {
+        Route::get('/dashboard', [CustomerAppController::class, 'dashboard'])->name('dashboard');
 
-// ========== مسارات تتطلب تسجيل الدخول (مع التحقق من الجلسة) ==========
-Route::get('/customer/dashboard', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.customer_dashboard');
-})->name('customer.dashboard');
+        // باقي المسارات كما هي (more, cart, favorite, change-organization ...)
+        Route::get('/more', function () {
+            return view('app_android.more');
+        })->name('more');
 
-Route::get('/customer/more', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more');
-})->name('customer.more');
+        Route::get('/offers', function () {
+            return view('app_android.offers');
+        })->name('offers');
 
-Route::get('/customer/offers', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.offers');
-})->name('customer.offers');
+        Route::get('/cart', function () {
+            return view('app_android.cart');
+        })->name('cart');
 
-Route::get('/customer/cart', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.cart');
-})->name('customer.cart');
+        Route::get('/favorite', function () {
+            return view('app_android.favorite');
+        })->name('favorite');
 
-Route::get('/customer/favorite', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.favorite');
-})->name('customer.favorite');
+        Route::get('/change-organization', function () {
+            return view('app_android.more.change_organization');
+        })->name('change_organization');
 
-Route::get('/customer/change-organization', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.change_organization');
-})->name('customer.change_organization');
+        Route::get('/financial-statement', function () {
+            return view('app_android.more.financial_statement');
+        })->name('financial_statement');
 
-Route::get('/customer/financial-statement', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.financial_statement');
-})->name('customer.financial_statement');
+        Route::get('/change-password', function () {
+            return view('app_android.more.change_password');
+        })->name('change_password');
 
-Route::get('/customer/change-password', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.change_password');
-})->name('customer.change_password');
+        Route::get('/order-history', function () {
+            return view('app_android.more.order_history');
+        })->name('order_history');
 
-Route::get('/customer/order-history', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.order_history');
-})->name('customer.order_history');
+        Route::get('/order/{id}', function ($id) {
+            return view('app_android.more.order_details', ['orderId' => $id]);
+        })->name('order_details');
 
-Route::get('/customer/order/{id}', function ($id) {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.order_details', ['orderId' => $id]);
-})->name('customer.order_details');
+        Route::get('/my-info', function () {
+            return view('app_android.more.my_info');
+        })->name('my_info');
 
-Route::get('/customer/my-info', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.my_info');
-})->name('customer.my_info');
+        Route::get('/surveys', function () {
+            return view('app_android.more.surveys');
+        })->name('surveys');
 
-Route::get('/customer/surveys', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.surveys');
-})->name('customer.surveys');
+        Route::get('/notifications', function () {
+            return view('app_android.more.notifications');
+        })->name('notifications');
 
-Route::get('/customer/notifications', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.notifications');
-})->name('customer.notifications');
+        Route::get('/faq', function () {
+            return view('app_android.more.faq');
+        })->name('faq');
 
-Route::get('/customer/faq', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.faq');
-})->name('customer.faq');
+        Route::get('/privacy-policy', function () {
+            return view('app_android.more.privacy_policy');
+        })->name('privacy');
 
-Route::get('/customer/privacy-policy', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.privacy_policy');
-})->name('customer.privacy');
+        Route::get('/about-us', function () {
+            return view('app_android.more.about_us');
+        })->name('about');
 
-Route::get('/customer/about-us', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.about_us');
-})->name('customer.about');
+        Route::get('/contact-us', function () {
+            return view('app_android.more.contact_us');
+        })->name('contact');
+    });
+});
 
-Route::get('/customer/contact-us', function () {
-    if (!session('logged_in')) return redirect()->route('mobile.login');
-    return view('app_android.more.contact_us');
-})->name('customer.contact');
-
-
+// ========== Admin Dashboard Routes (Laravel Auth) ==========
 Route::get('/admin', function () {
     return redirect()->route('login');
 });
 
-// Routes for guests (غير مسجل الدخول)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
 });
 
-// Routes for authenticated users (بعد تسجيل الدخول)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -175,11 +143,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
-    // ====================
-    // ROLES & PERMISSIONS MANAGEMENT (بدون prefix)
-    // ====================
+    // Roles & Permissions
     Route::resource('roles', \App\Http\Controllers\Admin\RolePermissionController::class)->except(['show']);
-    
     Route::get('permissions', [\App\Http\Controllers\Admin\RolePermissionController::class, 'permissionsIndex'])->name('permissions.index');
     Route::get('permissions/create', [\App\Http\Controllers\Admin\RolePermissionController::class, 'createPermission'])->name('permissions.create');
     Route::post('permissions', [\App\Http\Controllers\Admin\RolePermissionController::class, 'storePermission'])->name('permissions.store');
@@ -187,7 +152,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('permissions/{permission}', [\App\Http\Controllers\Admin\RolePermissionController::class, 'updatePermission'])->name('permissions.update');
     Route::delete('permissions/{permission}', [\App\Http\Controllers\Admin\RolePermissionController::class, 'destroyPermission'])->name('permissions.destroy');
 
-    // Custom routes for organizations
+    // Organizations
     Route::get('organizations/export', [OrganizationController::class, 'export'])->name('organizations.export');
     Route::get('organizations/template', [OrganizationController::class, 'downloadTemplate'])->name('organizations.template');
     Route::post('organizations/import', [OrganizationController::class, 'import'])->name('organizations.import');
@@ -208,7 +173,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('competitors/import', [CompetitorController::class, 'import'])->name('competitors.import');
     Route::get('competitors/template/download', [CompetitorController::class, 'downloadTemplate'])->name('competitors.template');
 
-    // Geographical routes
+    // Geographical
     Route::prefix('geographical')->name('geographical.')->group(function () {
         Route::get('/', [CountryController::class, 'index'])->name('index');
     });
@@ -225,7 +190,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('currencies/import', [CurrencyController::class, 'import'])->name('currencies.import');
     Route::get('currencies/template/download', [CurrencyController::class, 'downloadTemplate'])->name('currencies.template');
 
+    // Brands (Admin)
     Route::resource('brands', BrandController::class);
     Route::get('brands/export/data', [BrandController::class, 'export'])->name('brands.export');
+    Route::post('brands/import', [BrandController::class, 'import'])->name('brands.import');
 
+    // Categories (Admin)
+    Route::resource('categories', CategoryController::class);
+    Route::get('categories/export', [CategoryController::class, 'export'])->name('categories.export');
 });

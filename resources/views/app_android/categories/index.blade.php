@@ -14,28 +14,35 @@
             </button>
         </div>
 
+        <!-- قائمة الفئات ديناميكية -->
         <div class="grid grid-cols-2 gap-4">
-            @php
-                $categories = [
-                    ['id' => 1, 'name' => 'إلكترونيات', 'icon' => '📱', 'color' => 'bg-blue-100', 'product_count' => 24],
-                    ['id' => 2, 'name' => 'ملابس', 'icon' => '👕', 'color' => 'bg-green-100', 'product_count' => 18],
-                    ['id' => 3, 'name' => 'أحذية', 'icon' => '👟', 'color' => 'bg-yellow-100', 'product_count' => 12],
-                    ['id' => 4, 'name' => 'عطور', 'icon' => '🌸', 'color' => 'bg-pink-100', 'product_count' => 8],
-                    ['id' => 5, 'name' => 'كتب', 'icon' => '📚', 'color' => 'bg-purple-100', 'product_count' => 15],
-                    ['id' => 6, 'name' => 'ألعاب', 'icon' => '🎮', 'color' => 'bg-red-100', 'product_count' => 10],
-                ];
-            @endphp
-            @foreach($categories as $cat)
-                <a href="{{ route('categories.show', $cat['id']) }}" class="block bg-white rounded-2xl shadow-md p-4 text-center transition hover:shadow-lg">
-                    <div class="w-16 h-16 mx-auto {{ $cat['color'] }} rounded-full flex items-center justify-center text-3xl">
-                        {{ $cat['icon'] }}
+            @forelse($categories as $category)
+                <a href="{{ route('customer.categories.show', $category->id) }}" class="block bg-white rounded-2xl shadow-md p-4 text-center transition hover:shadow-lg">
+                    <div class="w-16 h-16 mx-auto rounded-full overflow-hidden bg-gray-100 flex items-center justify-center text-3xl shadow-sm">
+                        @if($category->image && file_exists(public_path('storage/' . $category->image)))
+                            <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
+                        @else
+                            <span>{{ $category->icon ?? '📁' }}</span>
+                        @endif
                     </div>
-                    <h3 class="font-bold text-gray-800 mt-2">{{ $cat['name'] }}</h3>
-                    <p class="text-xs text-gray-400">{{ $cat['product_count'] }} منتج</p>
+                    <h3 class="font-bold text-gray-800 mt-2">{{ $category->name }}</h3>
+                    <p class="text-xs text-gray-400">{{ $category->products_count ?? 0 }} منتج</p>
                 </a>
-            @endforeach
+            @empty
+                <div class="col-span-2 text-center text-gray-500 py-8">
+                    لا توجد فئات متاحة حالياً
+                </div>
+            @endforelse
         </div>
-            <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+
+        <!-- روابط التصفح (Pagination) إذا كنت تستخدم paginate -->
+        @if(method_exists($categories, 'links'))
+            <div class="mt-6">
+                {{ $categories->links() }}
+            </div>
+        @endif
+
+        <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3">
             <br><br>
         </div>
     </div>
