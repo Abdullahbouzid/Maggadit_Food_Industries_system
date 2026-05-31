@@ -12,7 +12,9 @@ class BrandController extends Controller
      * عرض قائمة العلامات التجارية مع البحث والفلاتر.
      */
     public function index(Request $request)
-    {
+    { 
+        rgd 
+        
         $query = Brand::query();
 
         // فلتر البحث بالاسم
