@@ -15,6 +15,11 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Customer\CustomerAppController;
+use App\Http\Controllers\ItemTypeController;
+use App\Http\Controllers\UomController;
+use App\Http\Controllers\PackOperationController;
+
+
 use Illuminate\Http\Request;
 
 // ========== Customer App Login ==========
@@ -198,4 +203,26 @@ Route::middleware(['auth'])->group(function () {
     // Categories (Admin)
     Route::resource('categories', CategoryController::class);
     Route::get('categories/export', [CategoryController::class, 'export'])->name('categories.export');
+    Route::get('categories/template', [CategoryController::class, 'downloadTemplate'])->name('categories.template');
+    Route::post('categories/import', [CategoryController::class, 'import'])->name('categories.import');
+
+    // Item Types (Admin)
+    Route::resource('item-types', ItemTypeController::class);
+    Route::get('item-types/export', [ItemTypeController::class, 'export'])->name('item-types.export');
+    Route::get('item-types/template', [ItemTypeController::class, 'downloadTemplate'])->name('item-types.template');
+    Route::post('item-types/import  ', [ItemTypeController::class, 'import'])->name('item-types.import');
+
+    // UOMs (Admin)
+
+    Route::resource('uoms', UomController::class);
+    Route::get('uoms/export/filtered', [UomController::class, 'export'])->name('uoms.export');
+    Route::post('uoms/import', [UomController::class, 'import'])->name('uoms.import');
+    Route::get('uoms/download-template', [UomController::class, 'downloadTemplate'])->name('uoms.template');
+
+    // Pack Operations (Admin)
+        Route::resource('pack-operations', PackOperationController::class);
+    Route::get('pack-operations/export/filtered', [PackOperationController::class, 'export'])->name('pack-operations.export');
+    Route::post('pack-operations/import', [PackOperationController::class, 'import'])->name('pack-operations.import');
+    Route::get('pack-operations/download-template', [PackOperationController::class, 'downloadTemplate'])->name('pack-operations.template');
+
 });

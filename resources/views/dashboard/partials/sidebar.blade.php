@@ -130,6 +130,9 @@
                             <li class="sidebar-item"><a class="sidebar-link" href="#">pricing & tax rules</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="{{ route('brands.index') }}">Brands</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="{{ route('categories.index') }}">Categories</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('item-types.index') }}">Item Types</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('uoms.index') }}">Units of Measure (UOMs)</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('pack-operations.index') }}">Pack Operations</a></li>
                         </ul>
                     </li>
 
