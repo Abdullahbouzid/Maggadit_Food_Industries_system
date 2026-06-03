@@ -1,0 +1,24 @@
+<?php
+// app/Models/ItemImage.php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class ItemImage extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['item_id', 'image_path', 'alt_text', 'sort_order'];
+
+    public function item()
+    {
+        return $this->belongsTo(Item::class);
+    }
+
+    public function getUrlAttribute()
+    {
+        return asset('storage/' . $this->image_path);
+    }
+}

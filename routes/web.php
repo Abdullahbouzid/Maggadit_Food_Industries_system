@@ -18,6 +18,16 @@ use App\Http\Controllers\Customer\CustomerAppController;
 use App\Http\Controllers\ItemTypeController;
 use App\Http\Controllers\UomController;
 use App\Http\Controllers\PackOperationController;
+use App\Http\Controllers\PackGroupController;
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\ItemPackController;
+use App\Http\Controllers\ItemImageController;
+use App\Http\Controllers\ItemModelController;
+use App\Http\Controllers\ItemPackPackGroupController;
+use App\Http\Controllers\ItemPackPackOperationController;
+use App\Http\Controllers\RolePermissionController;
+
+        
 
 
 use Illuminate\Http\Request;
@@ -224,5 +234,34 @@ Route::middleware(['auth'])->group(function () {
     Route::get('pack-operations/export/filtered', [PackOperationController::class, 'export'])->name('pack-operations.export');
     Route::post('pack-operations/import', [PackOperationController::class, 'import'])->name('pack-operations.import');
     Route::get('pack-operations/download-template', [PackOperationController::class, 'downloadTemplate'])->name('pack-operations.template');
+
+    // Pack Groups (Admin)
+    Route::resource('pack-groups', PackGroupController::class);
+    Route::get('pack-groups/export/filtered', [PackGroupController::class, 'export'])->name('pack-groups.export');
+    Route::post('pack-groups/import', [PackGroupController::class, 'import'])->name('pack-groups.import');
+    Route:: get('pack-groups/download-template', [PackGroupController::class, 'downloadTemplate'])->name('pack-groups.template');
+
+    // Items & Item Packs
+    Route::resource('items', ItemController::class);
+    Route::get('items/export/data', [ItemController::class, 'export'])->name('items.export');
+    Route::post('items/import', [ItemController::class, 'import '])->name('items.import');
+    Route::get('items/template/download', [ItemController::class, 'downloadTemplate'])->name('items.template');
+
+    // Item Packs
+    Route::resource('item-packs', ItemPackController::class);
+
+    // Item Images & Models
+    Route::resource('item-images', ItemImageController::class);
+
+    // Item Models
+    Route::resource('item-models', ItemModelController::class);
+
+    // Item Pack - Pack Group & Pack Operation Relations
+    Route::resource('item-pack-pack-groups', ItemPackPackGroupController::class)->only(['store', 'destroy']);
+    // تم إضافة مسارات إدارة العلاقات بين ItemPack و PackOperation
+    Route::resource('item-pack-pack-operations', ItemPackPackOperationController::class)->only(['store', 'destroy']);
+
+Route::post('item-pack-pack-groups', [ItemPackPackGroupController::class, 'store'])->name('item-pack-pack-groups.store');
+Route::delete('item-pack-pack-groups/{itemPackId}/{packGroupId}', [ItemPackPackGroupController::class, 'destroy'])->name('item-pack-pack-groups.destroy');
 
 });

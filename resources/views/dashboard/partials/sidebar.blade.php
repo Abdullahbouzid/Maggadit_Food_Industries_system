@@ -133,6 +133,11 @@
                             <li class="sidebar-item"><a class="sidebar-link" href="{{ route('item-types.index') }}">Item Types</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="{{ route('uoms.index') }}">Units of Measure (UOMs)</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="{{ route('pack-operations.index') }}">Pack Operations</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('pack-groups.index') }}">Pack Groups</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('items.index') }}">Items</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('item-packs.index') }}">Item Packs</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('item-images.index') }}">Item Images</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('item-models.index') }}">Item Models</a></li>   
                         </ul>
                     </li>
 
