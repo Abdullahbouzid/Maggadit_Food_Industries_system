@@ -91,27 +91,27 @@
             </div>
         </div>
 
-        {{-- ========== قسم المنتجات (Products) ديناميكي مع صور ========== --}}
+    {{-- ========== قسم المنتجات (Products) ديناميكي مع صور ========== --}}
         <div class="mb-5">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">أفضل المنتجات</h2>
                 <a href="{{ route('customer.products') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div class="grid grid-cols-2 gap-4">
-                @forelse($products ?? [] as $product)
+                @forelse($products as $product)
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg">
                         <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
-                            @if($product->image && file_exists(public_path('storage/' . $product->image)))
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                            @if($product->image)
+                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name_en }}" class="w-full h-full object-cover">
                             @else
-                                <span class="text-5xl">📦</span>
+                                <span class="text-5xl text-gray-400">📦</span>
                             @endif
                         </div>
                         <div class="p-3">
-                            <h3 class="font-bold text-gray-800 text-sm">{{ $product->name }}</h3>
+                            <h3 class="font-bold text-gray-800 text-sm">{{ $product->name_en }}</h3>
                             <div class="flex items-center gap-1 mt-1">
                                 <span class="text-yellow-500 text-xs">★</span>
-                                <span class="text-xs text-gray-600">{{ $product->rate ?? 0 }}</span>
+                                <span class="text-xs text-gray-600">{{ number_format($product->rate, 1) }}</span>
                             </div>
                             <div class="mt-2 flex items-center justify-between">
                                 <div>
@@ -120,43 +120,12 @@
                                         <span class="text-gray-400 text-xs line-through mr-1">{{ number_format($product->old_price) }} ر.س</span>
                                     @endif
                                 </div>
-                                <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition">شراء</button>
+                                <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" data-name="{{ $product->name_en }}" data-price="{{ $product->price }}">شراء</button>
                             </div>
                         </div>
                     </div>
                 @empty
-                    <!-- بيانات تجريبية ثابتة في حال عدم وجود منتجات -->
-                    @php
-                        $products = [
-                            ['id' => 1, 'name' => 'حذاء رياضي نيكي', 'price' => 299, 'old_price' => 399, 'image' => 'products/shoe.jpg', 'rate' => 4.5],
-                            ['id' => 2, 'name' => 'تي شيرت قطني', 'price' => 89, 'old_price' => 129, 'image' => 'products/tshirt.jpg', 'rate' => 4.2],
-                            ['id' => 3, 'name' => 'ساعة ابل', 'price' => 1299, 'old_price' => 1599, 'image' => 'products/watch.jpg', 'rate' => 4.8],
-                            ['id' => 4, 'name' => 'سماعات لاسلكية', 'price' => 199, 'old_price' => 299, 'image' => 'products/headphones.jpg', 'rate' => 4.3],
-                        ];
-                    @endphp
-                    @foreach($products as $product)
-                        <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg">
-                            <div class="h-32 bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-5xl">
-                                {{ $product['image'] }} <!-- في الواقع ستكون صورة -->
-                            </div>
-                            <div class="p-3">
-                                <h3 class="font-bold text-gray-800 text-sm">{{ $product['name'] }}</h3>
-                                <div class="flex items-center gap-1 mt-1">
-                                    <span class="text-yellow-500 text-xs">★</span>
-                                    <span class="text-xs text-gray-600">{{ $product['rate'] }}</span>
-                                </div>
-                                <div class="mt-2 flex items-center justify-between">
-                                    <div>
-                                        <span class="text-purple-700 font-bold">{{ $product['price'] }} ر.س</span>
-                                        @if($product['old_price'])
-                                            <span class="text-gray-400 text-xs line-through mr-1">{{ $product['old_price'] }} ر.س</span>
-                                        @endif
-                                    </div>
-                                    <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition">شراء</button>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                    <p class="text-center text-gray-500 col-span-2">لا توجد منتجات لعرضها</p>
                 @endforelse
             </div>
         </div>

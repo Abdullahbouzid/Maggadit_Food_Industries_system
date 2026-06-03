@@ -26,6 +26,10 @@ use App\Http\Controllers\ItemModelController;
 use App\Http\Controllers\ItemPackPackGroupController;
 use App\Http\Controllers\ItemPackPackOperationController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\WarehouseTypeController;
+use App\Http\Controllers\StateController;
+use App\Http\Controllers\AreaController;
+use App\Http\Controllers\WarehouseController;
 
         
 
@@ -261,7 +265,37 @@ Route::middleware(['auth'])->group(function () {
     // تم إضافة مسارات إدارة العلاقات بين ItemPack و PackOperation
     Route::resource('item-pack-pack-operations', ItemPackPackOperationController::class)->only(['store', 'destroy']);
 
-Route::post('item-pack-pack-groups', [ItemPackPackGroupController::class, 'store'])->name('item-pack-pack-groups.store');
-Route::delete('item-pack-pack-groups/{itemPackId}/{packGroupId}', [ItemPackPackGroupController::class, 'destroy'])->name('item-pack-pack-groups.destroy');
+    Route::post('item-pack-pack-groups', [ItemPackPackGroupController::class, 'store'])->name('item-pack-pack-groups.store');
+    Route::delete('item-pack-pack-groups/{itemPackId}/{packGroupId}', [ItemPackPackGroupController::class, 'destroy'])->name('item-pack-pack-groups.destroy');
 
+    Route::post('item-pack-pack-operations', [ItemPackPackOperationController::class, 'store'])->name('item-pack-pack-operations.store');
+    Route::delete('item-pack-pack-operations/{itemPackId}/{packOperationId}', [ItemPackPackOperationController::class, 'destroy'])->name('item-pack-pack-operations.destroy');      
+
+
+    // Warehouse Types
+    Route::get('warehouse-types/export', [WarehouseTypeController::class, 'export'])->name('warehouse-types.export');
+    Route::get('warehouse-types/template', [WarehouseTypeController::class, 'downloadTemplate'])->name('warehouse-types.template');
+    Route::post('warehouse-types/import', [WarehouseTypeController::class, 'import'])->name('warehouse-types.import');
+    Route::resource('warehouse-types', WarehouseTypeController::class);
+
+
+    // States
+    Route::get('states/export', [StateController::class, 'export'])->name('states.export');
+    Route::get('states/template', [StateController::class, 'downloadTemplate'])->name('states.template');
+    Route::post('states/import', [StateController::class, 'import'])->name('states.import');
+    Route::resource('states', StateController::class);
+    // Areas
+    Route::get('areas/export', [AreaController::class, 'export'])->name('areas.export');
+    Route::get('areas/template', [AreaController::class, 'downloadTemplate'])->name('areas.template');
+    Route::post('areas/import', [AreaController::class, 'import'])->name('areas.import');
+    Route::resource('areas', AreaController::class);
+
+    // Warehouses
+    Route::get('warehouses/export', [WarehouseController::class, 'export'])->name('warehouses.export');
+    Route::get('warehouses/template', [WarehouseController::class, 'downloadTemplate'])->name('warehouses.template');
+    Route::post('warehouses/import', [WarehouseController::class, 'import'])->name('warehouses.import');
+Route::get('warehouses/states/{countryId}', [WarehouseController::class, 'getStatesByCountry'])->name('warehouses.states');
+Route::get('warehouses/cities/{stateId}', [WarehouseController::class, 'getCitiesByState'])->name('warehouses.cities');
+Route::get('warehouses/areas/{cityId}', [WarehouseController::class, 'getAreasByCity'])->name('warehouses.areas');
+    Route::resource('warehouses', WarehouseController::class);
 });

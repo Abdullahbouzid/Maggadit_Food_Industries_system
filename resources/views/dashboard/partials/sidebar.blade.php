@@ -93,18 +93,7 @@
                         </ul>
                     </li>
 
-                    <!-- mahachin data definitions -->
-                    <li class="sidebar-item">
-                        <a data-bs-toggle="collapse" href="#mahachinSubmenu" class="sidebar-link collapsed" data-bs-parent="#dataDefinitionsMenu">
-                            mahachin data definitions
-                            <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                        </a>
-                        <ul id="mahachinSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">machine profiles</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">production parameters</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">maintenance records</a></li>
-                        </ul>
-                    </li>
+                  
 
                     <!-- customer data definitions -->
                     <li class="sidebar-item">
@@ -141,18 +130,7 @@
                         </ul>
                     </li>
 
-                    <!-- dynamic forms -->
-                    <li class="sidebar-item">
-                        <a data-bs-toggle="collapse" href="#dynamicFormsSubmenu" class="sidebar-link collapsed" data-bs-parent="#dataDefinitionsMenu">
-                            dynamic forms
-                            <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                        </a>
-                        <ul id="dynamicFormsSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">form builder schema</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">submission templates</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">validation rules</a></li>
-                        </ul>
-                    </li>
+                 
 
                     <!-- warehouse & vehicles -->
                     <li class="sidebar-item">
@@ -161,9 +139,10 @@
                             <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
                         </a>
                         <ul id="warehouseSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">storage zones</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">vehicle fleet data</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">logistics routes</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('warehouse-types.index') }}">warehouse types</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('states.index') }}">states</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('areas.index') }}">areas</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('warehouses.index') }}">warehouses</a></li>
                         </ul>
                     </li>
 

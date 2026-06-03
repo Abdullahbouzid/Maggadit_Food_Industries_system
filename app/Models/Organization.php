@@ -27,4 +27,9 @@ class Organization extends Model
     {
         return $this->hasMany(PackageStatus::class);
     }
+    public function warehouses()
+    {
+        return $this->hasMany(Warehouse::class);
+    }
+        
 }

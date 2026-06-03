@@ -72,6 +72,31 @@ class Item extends Model
         return $this->hasMany(ItemImage::class)->orderBy('sort_order');
     }
 
+
+    // داخل نموذج Item
+    public function getPriceAttribute()
+    {
+        // جلب أول حزمة (pack) افتراضية أو أصغر سعر (يمكن تعديل المنطق)
+        $defaultPack = $this->packs()->where('is_default_pack', true)->first();
+        if ($defaultPack) {
+            return $defaultPack->price ?? 0;
+        }
+        $firstPack = $this->packs()->first();
+        return $firstPack ? ($firstPack->price ?? 0) : 0;
+    }
+
+    public function getOldPriceAttribute()
+    {
+        // يمكن إضافة منطق للسعر القديم إذا وجد
+        return null;
+    }
+
+    public function getRateAttribute()
+    {
+        // يمكن جلب متوسط التقييمات من جدول آخر
+        return 0;
+    }
+
     public function getMainImageUrlAttribute()
     {
         return $this->image ? asset('storage/' . $this->image) : null;
