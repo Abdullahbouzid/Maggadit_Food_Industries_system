@@ -251,7 +251,7 @@
                                         @foreach($item->images as $image)
                                             <div class="col-md-3 existing-image-item" data-image-id="{{ $image->id }}">
                                                 <div class="position-relative">
-                                                    <img src="{{ asset('storage/'.$image->image_path) }}" class="img-thumbnail w-100" style="height: 150px; object-fit: cover;">
+                                                    <img src="{{ asset('uploads/'.$image->image_path) }}" class="img-thumbnail w-100" style="height: 150px; object-fit: cover;">
                                                     <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 remove-existing-image">×</button>
                                                     <input type="hidden" name="deleted_images[]" value="{{ $image->id }}" disabled>
                                                 </div>
@@ -272,7 +272,7 @@
                                 </div>
                                 <div class="card-body text-center">
                                     @if($item->image)
-                                        <img src="{{ asset('storage/'.$item->image) }}" class="img-fluid rounded mb-3" style="max-height: 200px;">
+                                        <img src="{{ asset('uploads/'.$item->image) }}" class="img-fluid rounded mb-3" style="max-height: 200px;">
                                     @else
                                         <div class="bg-light rounded p-3 mb-3">No image</div>
                                     @endif

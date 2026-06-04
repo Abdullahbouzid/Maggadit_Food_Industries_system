@@ -75,7 +75,7 @@ class UomController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('uoms', 'public');
+            $path = $request->file('image')->store('uoms', 'uploads');
             $validated['image'] = $path;
         }
 
@@ -111,9 +111,9 @@ class UomController extends Controller
 
         if ($request->hasFile('image')) {
             if ($uom->image) {
-                Storage::disk('public')->delete($uom->image);
+                Storage::disk('uploads')->delete($uom->image);
             }
-            $path = $request->file('image')->store('uoms', 'public');
+            $path = $request->file('image')->store('uoms', 'uploads');
             $validated['image'] = $path;
         }
 
@@ -127,7 +127,7 @@ class UomController extends Controller
     public function destroy(Uom $uom)
     {
         if ($uom->image) {
-            Storage::disk('public')->delete($uom->image);
+            Storage::disk('uploads')->delete($uom->image);
         }
         $uom->delete();
         return redirect()->route('uoms.index')->with('success', 'UOM deleted successfully.');

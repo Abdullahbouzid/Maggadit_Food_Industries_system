@@ -85,7 +85,7 @@ class CategoryController extends Controller
         $data = $request->only(['code', 'name', 'division', 'show_in_customer_app']);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('categories', 'public');
+           $path = $request->file('image')->store('categories', 'uploads');
             $data['image'] = $path;
         }
 
@@ -128,10 +128,10 @@ class CategoryController extends Controller
 
         if ($request->hasFile('image')) {
             // Delete old image
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
+            if ($category->image && Storage::disk('uploads')->exists($category->image)) {
+                Storage::disk('uploads')->delete($category->image);
             }
-            $path = $request->file('image')->store('categories', 'public');
+           $path = $request->file('image')->store('categories', 'uploads');
             $data['image'] = $path;
         }
 
@@ -146,8 +146,8 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        if ($category->image && Storage::disk('public')->exists($category->image)) {
-            Storage::disk('public')->delete($category->image);
+        if ($category->image && Storage::disk('uploads')->exists($category->image)) {
+            Storage::disk('uploads')->delete($category->image);
         }
         $category->delete();
 

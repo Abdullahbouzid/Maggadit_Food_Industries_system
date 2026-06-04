@@ -19,7 +19,7 @@
                         <div class="row">
                             <div class="col-md-3 text-center">
                                 @if($item->image)
-                                    <img src="{{ asset('storage/'.$item->image) }}" class="img-fluid rounded border" style="max-height: 200px;">
+                                    <img src="{{ asset('uploads/'.$item->image) }}" class="img-fluid rounded border" style="max-height: 200px;">
                                 @else
                                     <div class="bg-light p-5 text-muted">No Image</div>
                                 @endif

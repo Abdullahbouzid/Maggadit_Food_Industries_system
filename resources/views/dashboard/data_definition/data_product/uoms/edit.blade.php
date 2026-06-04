@@ -57,7 +57,7 @@
                                     <label class="form-label fw-semibold">Current Image</label>
                                     @if($uom->image)
                                         <div class="mb-2">
-                                            <img src="{{ asset('storage/' . $uom->image) }}" alt="{{ $uom->name_en }}" width="100" class="rounded border">
+                                            <img src="{{ asset('uploads/' . $uom->image) }}" alt="{{ $uom->name_en }}" width="100" class="rounded border">
                                         </div>
                                     @else
                                         <p class="text-muted">No image</p>

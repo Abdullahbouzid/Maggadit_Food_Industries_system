@@ -19,6 +19,6 @@ class ItemImage extends Model
 
     public function getUrlAttribute()
     {
-        return asset('storage/' . $this->image_path);
+        return asset('uploads/' . $this->image_path);
     }
 }

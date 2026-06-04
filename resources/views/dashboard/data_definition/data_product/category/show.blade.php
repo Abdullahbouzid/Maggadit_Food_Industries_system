@@ -21,7 +21,7 @@
                         <div class="row">
                             <div class="col-md-4 text-center">
                                 @if($category->image)
-                                    <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}" class="img-fluid rounded shadow-sm mb-3" style="max-height: 200px;">
+                                    <img src="{{ asset('uploads/' . $category->image) }}" alt="{{ $category->name }}" class="img-fluid rounded shadow-sm mb-3" style="max-height: 200px;">
                                 @else
                                     <div class="bg-light rounded p-5 text-muted">
                                         <i data-feather="image" style="width: 48px; height: 48px;"></i>

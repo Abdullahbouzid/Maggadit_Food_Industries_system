@@ -45,7 +45,7 @@
                                 <label class="form-label fw-semibold">Current Image</label>
                                 @if($category->image)
                                     <div class="mb-2">
-                                        <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}" width="100" class="rounded border shadow-sm">
+                                        <img src="{{ asset('uploads/' . $category->image) }}" alt="{{ $category->name }}" width="100" class="rounded border shadow-sm">
                                     </div>
                                 @else
                                     <p class="text-muted">No image uploaded yet.</p>

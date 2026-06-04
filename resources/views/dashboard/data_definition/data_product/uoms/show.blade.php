@@ -43,7 +43,7 @@
                             <div class="col-md-4">
                                 <h6 class="text-muted mb-1">Image</h6>
                                 @if($uom->image)
-                                    <img src="{{ asset('storage/' . $uom->image) }}" alt="{{ $uom->name_en }}" class="img-thumbnail" style="max-height: 200px;">
+                                    <img src="{{ asset('uploads/' . $uom->image) }}" alt="{{ $uom->name_en }}" class="img-thumbnail" style="max-height: 200px;">
                                 @else
                                     <p class="text-muted">— No image —</p>
                                 @endif

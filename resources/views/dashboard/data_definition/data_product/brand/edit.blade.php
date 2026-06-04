@@ -34,7 +34,7 @@
                                 <label class="form-label fw-semibold">Current Logo</label>
                                 @if($brand->logo)
                                     <div class="mb-2">
-                                        <img src="{{ asset('storage/' . $brand->logo) }}" alt="{{ $brand->name }}" width="100" class="rounded border shadow-sm">
+                                        <img src="{{ asset('uploads/' . $brand->logo) }}" alt="{{ $brand->name }}" width="100" class="rounded border shadow-sm">
                                     </div>
                                 @else
                                     <p class="text-muted">No logo uploaded yet.</p>

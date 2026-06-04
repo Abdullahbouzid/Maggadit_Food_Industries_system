@@ -139,7 +139,7 @@ class ItemController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('items', 'public');
+            $validated['image'] = $request->file('image')->store('items', 'uploads');
         }
 
         $item = Item::create($validated);
@@ -175,7 +175,7 @@ class ItemController extends Controller
         // Save additional images
         if ($request->hasFile('additional_images')) {
             foreach ($request->file('additional_images') as $index => $img) {
-                $path = $img->store('item_images', 'public');
+                $path = $img->store('item_images', 'uploads');
                 $item->images()->create([
                     'image_path' => $path,
                     'sort_order' => $index
@@ -265,10 +265,9 @@ class ItemController extends Controller
             'deleted_images.*' => 'nullable|exists:item_images,id',
         ]);
 
-        // معالجة الصورة الرئيسية
         if ($request->hasFile('image')) {
-            if ($item->image) Storage::disk('public')->delete($item->image);
-            $validated['image'] = $request->file('image')->store('items', 'public');
+            if ($item->image) Storage::disk('uploads')->delete($item->image);
+            $validated['image'] = $request->file('image')->store('items', 'uploads');
         }
 
         $item->update($validated);
@@ -307,22 +306,20 @@ class ItemController extends Controller
         }
 
         // === تحديث الصور الإضافية ===
-        // حذف الصور المحددة من قبل المستخدم
         if ($request->has('deleted_images')) {
             foreach ($request->deleted_images as $imageId) {
                 $img = $item->images()->find($imageId);
                 if ($img) {
-                    Storage::disk('public')->delete($img->image_path);
+                    Storage::disk('uploads')->delete($img->image_path);
                     $img->delete();
                 }
             }
         }
 
-        // إضافة صور جديدة مع الاحتفاظ بالقديمة
         if ($request->hasFile('additional_images')) {
             $maxOrder = $item->images()->max('sort_order') ?? -1;
             foreach ($request->file('additional_images') as $index => $img) {
-                $path = $img->store('item_images', 'public');
+                $path = $img->store('item_images', 'uploads');
                 $item->images()->create([
                     'image_path' => $path,
                     'sort_order' => $maxOrder + $index + 1,
@@ -335,9 +332,9 @@ class ItemController extends Controller
 
     public function destroy(Item $item)
     {
-        if ($item->image) Storage::disk('public')->delete($item->image);
+        if ($item->image) Storage::disk('uploads')->delete($item->image);
         foreach ($item->images as $img) {
-            Storage::disk('public')->delete($img->image_path);
+            Storage::disk('uploads')->delete($img->image_path);
         }
         $item->delete();
         return redirect()->route('items.index')->with('success', 'Item deleted successfully.');

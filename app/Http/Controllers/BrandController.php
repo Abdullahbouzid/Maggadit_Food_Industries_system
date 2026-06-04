@@ -60,7 +60,7 @@ class BrandController extends Controller
         $data = $request->only(['name', 'show_in_customer_app']);
 
         if ($request->hasFile('logo')) {
-            $logoPath = $request->file('logo')->store('brands', 'public');
+            $logoPath = $request->file('logo')->store('brands', 'uploads');
             $data['logo'] = $logoPath;
         }
 
@@ -101,10 +101,10 @@ class BrandController extends Controller
 
         if ($request->hasFile('logo')) {
             // حذف الشعار القديم إذا كان موجودًا
-            if ($brand->logo && Storage::disk('public')->exists($brand->logo)) {
-                Storage::disk('public')->delete($brand->logo);
+            if ($brand->logo && Storage::disk('uploads')->exists($brand->logo)) {
+                Storage::disk('uploads')->delete($brand->logo);
             }
-            $logoPath = $request->file('logo')->store('brands', 'public');
+            $logoPath = $request->file('logo')->store('brands', 'uploads');
             $data['logo'] = $logoPath;
         }
 
@@ -119,8 +119,8 @@ class BrandController extends Controller
      */
     public function destroy(Brand $brand)
     {
-        if ($brand->logo && Storage::disk('public')->exists($brand->logo)) {
-            Storage::disk('public')->delete($brand->logo);
+        if ($brand->logo && Storage::disk('uploads')->exists($brand->logo)) {
+            Storage::disk('uploads')->delete($brand->logo);
         }
         $brand->delete();
 

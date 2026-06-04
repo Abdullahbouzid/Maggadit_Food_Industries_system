@@ -176,7 +176,7 @@
                                         <td class="ps-4">{{ $loop->iteration + ($items->currentPage() - 1) * $items->perPage() }}</td>
                                         <td>
                                             @if($item->image)
-                                                <img src="{{ asset('storage/' . $item->image) }}" width="50" height="50" class="rounded border">
+                                                <img src="{{ asset('uploads/' . $item->image) }}" width="50" height="50" class="rounded border">
                                             @else
                                                 <span class="text-muted">—</span>
                                             @endif

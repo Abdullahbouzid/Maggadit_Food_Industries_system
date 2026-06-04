@@ -44,7 +44,7 @@
                                     <label class="form-label fw-semibold">Current Image</label>
                                     @if($itemType->image)
                                         <div class="mb-2">
-                                            <img src="{{ asset('storage/' . $itemType->image) }}" alt="{{ $itemType->name }}" width="100" class="rounded border">
+                                            <img src="{{ asset('uploads/' . $itemType->image) }}" alt="{{ $itemType->name }}" width="100" class="rounded border">
                                         </div>
                                     @else
                                         <p class="text-muted">No image</p>

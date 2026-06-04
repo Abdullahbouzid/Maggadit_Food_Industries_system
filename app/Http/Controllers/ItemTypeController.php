@@ -71,7 +71,7 @@ class ItemTypeController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('item_types', 'public');
+            $path = $request->file('image')->store('item_types', 'uploads');
             $validated['image'] = $path;
         }
 
@@ -106,9 +106,9 @@ class ItemTypeController extends Controller
         if ($request->hasFile('image')) {
             // حذف الصورة القديمة إن وجدت
             if ($itemType->image) {
-                Storage::disk('public')->delete($itemType->image);
+                Storage::disk('uploads')->delete($itemType->image);
             }
-            $path = $request->file('image')->store('item_types', 'public');
+            $path = $request->file('image')->store('item_types', 'uploads');
             $validated['image'] = $path;
         }
 
@@ -122,7 +122,7 @@ class ItemTypeController extends Controller
     public function destroy(ItemType $itemType)
     {
         if ($itemType->image) {
-            Storage::disk('public')->delete($itemType->image);
+            Storage::disk('uploads')->delete($itemType->image);
         }
         $itemType->delete();
         return redirect()->route('item-types.index')->with('success', 'Item Type deleted successfully.');

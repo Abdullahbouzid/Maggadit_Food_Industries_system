@@ -21,7 +21,7 @@
                         <div class="row">
                             <div class="col-md-4 text-center">
                                 @if($brand->logo)
-                                    <img src="{{ asset('storage/' . $brand->logo) }}" alt="{{ $brand->name }}" class="img-fluid rounded shadow-sm mb-3" style="max-height: 200px;">
+                                    <img src="{{ asset('uploads/' . $brand->logo) }}" alt="{{ $brand->name }}" class="img-fluid rounded shadow-sm mb-3" style="max-height: 200px;">
                                 @else
                                     <div class="bg-light rounded p-5 text-muted">
                                         <i data-feather="image" style="width: 48px; height: 48px;"></i>

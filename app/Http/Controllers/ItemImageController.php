@@ -39,7 +39,7 @@ class ItemImageController extends Controller
             'sort_order' => 'nullable|integer',
         ]);
 
-        $path = $request->file('image')->store('item_images', 'public');
+        $path = $request->file('image')->store('item_images', 'uploads');
         ItemImage::create([
             'item_id' => $validated['item_id'],
             'image_path' => $path,
@@ -71,8 +71,8 @@ class ItemImageController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            Storage::disk('public')->delete($itemImage->image_path);
-            $path = $request->file('image')->store('item_images', 'public');
+            Storage::disk('uploads')->delete($itemImage->image_path);
+            $path = $request->file('image')->store('item_images', 'uploads');
             $itemImage->image_path = $path;
         }
         $itemImage->item_id = $validated['item_id'];
@@ -85,7 +85,7 @@ class ItemImageController extends Controller
 
     public function destroy(ItemImage $itemImage)
     {
-        Storage::disk('public')->delete($itemImage->image_path);
+        Storage::disk('uploads')->delete($itemImage->image_path);
         $itemImage->delete();
         return redirect()->route('item-images.index')->with('success', 'Image deleted.');
     }

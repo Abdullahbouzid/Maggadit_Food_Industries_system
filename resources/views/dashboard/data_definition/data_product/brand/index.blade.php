@@ -160,7 +160,7 @@
                                         </td>
                                         <td>
                                             @if($brand->logo)
-                                                <img src="{{ asset('storage/' . $brand->logo) }}" alt="{{ $brand->name }}" width="50" height="50" class="rounded border shadow-sm">
+                                                <img src="{{ asset('uploads/' . $brand->logo) }}" alt="{{ $brand->name }}" width="50" height="50" class="rounded border shadow-sm">
                                             @else
                                                 <span class="text-muted fst-italic">— No Logo —</span>
                                             @endif

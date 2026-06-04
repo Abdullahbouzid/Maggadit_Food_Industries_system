@@ -210,7 +210,7 @@
                                         <td>{{ Str::limit($type->description, 50) }}</td>
                                         <td>
                                             @if($type->image)
-                                                <img src="{{ asset('storage/' . $type->image) }}" alt="{{ $type->name }}" width="50" height="50" class="rounded border shadow-sm">
+                                                <img src="{{ asset('uploads/' . $type->image) }}" alt="{{ $type->name }}" width="50" height="50" class="rounded border shadow-sm">
                                             @else
                                                 <span class="text-muted fst-italic">— No Image —</span>
                                             @endif

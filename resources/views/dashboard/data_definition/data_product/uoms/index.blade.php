@@ -216,7 +216,7 @@
                                         <td>@if($uom->uom_symbol)<span class="badge bg-info bg-opacity-10 text-dark px-3 py-2">{{ $uom->uom_symbol }}</span>@else<span class="text-muted">—</span>@endif</td>
                                         <td>
                                             @if($uom->image)
-                                                <img src="{{ asset('storage/' . $uom->image) }}" alt="{{ $uom->name_en }}" width="50" height="50" class="rounded border shadow-sm">
+                                                <img src="{{ asset('uploads/' . $uom->image) }}" alt="{{ $uom->name_en }}" width="50" height="50" class="rounded border shadow-sm">
                                             @else
                                                 <span class="text-muted fst-italic">—</span>
                                             @endif
