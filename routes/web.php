@@ -46,15 +46,23 @@ Route::post('/mobile/login', function (Request $request) {
         'username' => 'required',
         'password' => 'required',
     ]);
-    session(['logged_in' => true, 'username' => $request->username]);
-    return redirect()->route('customer.dashboard');
+    
+    if (\Illuminate\Support\Facades\Auth::guard('customer')->attempt($request->only('username', 'password'))) {
+        $request->session()->regenerate();
+        return redirect()->route('customer.dashboard');
+    }
+    
+    return back()->withErrors([
+        'username' => 'The provided credentials do not match our records.',
+    ])->onlyInput('username');
 })->name('mobile.login.submit');
 
-Route::get('/logout', function () {
-    session()->forget('logged_in');
+Route::get('/customer/logout', function (Request $request) {
+    \Illuminate\Support\Facades\Auth::guard('customer')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
     return redirect()->route('mobile.login');
-})->name('logout');
-
+})->name('customer.logout');
 Route::get('/', function () {
     return redirect()->route('mobile.login');
 });
@@ -155,7 +163,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/logout_submit', [LoginController::class, 'logout_submit'])->name('logout_submit');
+    Route::post('/logout', [LoginController::class, 'logout_submit'])->name('logout');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
