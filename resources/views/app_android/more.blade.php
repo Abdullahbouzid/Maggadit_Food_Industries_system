@@ -466,7 +466,7 @@
             const t = translations[currentLang];
             showLogoutToast(t.logout_toast_msg);
             setTimeout(() => {
-                window.location.href = "{{ route('logout') }}";
+                window.location.href = "{{ route('customer.logout') }}";
             }, 1200);
         });
 
