@@ -265,7 +265,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         initMap();
-        feather.replace();
+        if (typeof feather !== 'undefined') feather.replace();
 
         // Cascading dropdowns
         const countrySelect = document.getElementById('country_id');
@@ -289,14 +289,18 @@
                         if (selectedStateId == state.id) option.selected = true;
                         stateSelect.appendChild(option);
                     });
-                    if (selectedStateId) loadCities(selectedStateId, initialData.cityId);
+                    if (selectedStateId) {
+                        const oldCityId = "{{ old('city_id', $warehouse->city_id ?? '') }}" || initialData.cityId;
+                        const oldAreaId = "{{ old('area_id', $warehouse->area_id ?? '') }}" || initialData.areaId;
+                        loadCities(selectedStateId, oldCityId);
+                        loadAreas(selectedStateId, oldAreaId);
+                    }
                 })
                 .catch(err => console.error('Error loading states:', err));
         }
 
         function loadCities(stateId, selectedCityId = null) {
             citySelect.innerHTML = '<option value="">Select City</option>';
-            areaSelect.innerHTML = '<option value="">Select Area</option>';
             if (!stateId) return;
 
             fetch(`/warehouses/cities/${stateId}`)
@@ -309,16 +313,15 @@
                         if (selectedCityId == city.id) option.selected = true;
                         citySelect.appendChild(option);
                     });
-                    if (selectedCityId) loadAreas(selectedCityId, initialData.areaId);
                 })
                 .catch(err => console.error('Error loading cities:', err));
         }
 
-        function loadAreas(cityId, selectedAreaId = null) {
+        function loadAreas(stateId, selectedAreaId = null) {
             areaSelect.innerHTML = '<option value="">Select Area</option>';
-            if (!cityId) return;
+            if (!stateId) return;
 
-            fetch(`/warehouses/areas/${cityId}`)
+            fetch(`/warehouses/areas-by-state/${stateId}`)
                 .then(res => res.json())
                 .then(data => {
                     data.forEach(area => {
@@ -338,82 +341,15 @@
 
         stateSelect.addEventListener('change', function() {
             loadCities(this.value);
-        });
-
-        citySelect.addEventListener('change', function() {
             loadAreas(this.value);
         });
 
         // Initial population for edit
-        if (countrySelect.value) {
-            loadStates(countrySelect.value, initialData.stateId);
-        } else if (initialData.stateId) {
-            loadCities(initialData.stateId, initialData.cityId);
+        const oldCountryId = "{{ old('country_id', $warehouse->country_id ?? '') }}";
+        if (oldCountryId) {
+            const oldStateId = "{{ old('state_id', $warehouse->state_id ?? '') }}" || initialData.stateId;
+            loadStates(oldCountryId, oldStateId);
         }
     });
-    // بعد تحميل المدن (Cities)
-function loadCities(stateId, selectedCityId = null) {
-    citySelect.innerHTML = '<option value="">Loading cities...</option>';
-    if (!stateId) {
-        citySelect.innerHTML = '<option value="">Select City</option>';
-        return;
-    }
-    fetch(`/warehouses/cities/${stateId}`)
-        .then(res => res.json())
-        .then(data => {
-            citySelect.innerHTML = '<option value="">Select City</option>';
-            data.forEach(city => {
-                const option = document.createElement('option');
-                option.value = city.id;
-                option.textContent = city.name;
-                if (selectedCityId == city.id) option.selected = true;
-                citySelect.appendChild(option);
-            });
-        })
-        .catch(err => console.error('Error loading cities:', err));
-}
-
-// تحميل المناطق (Areas) بناءً على الولاية (State)
-function loadAreas(stateId, selectedAreaId = null) {
-    areaSelect.innerHTML = '<option value="">Loading areas...</option>';
-    if (!stateId) {
-        areaSelect.innerHTML = '<option value="">Select Area</option>';
-        return;
-    }
-    fetch(`/warehouses/areas-by-state/${stateId}`)
-        .then(res => res.json())
-        .then(data => {
-            areaSelect.innerHTML = '<option value="">Select Area</option>';
-            data.forEach(area => {
-                const option = document.createElement('option');
-                option.value = area.id;
-                option.textContent = area.name_en;
-                if (selectedAreaId == area.id) option.selected = true;
-                areaSelect.appendChild(option);
-            });
-        })
-        .catch(err => console.error('Error loading areas:', err));
-}
-
-// ربط الأحداث
-stateSelect.addEventListener('change', function() {
-    const stateId = this.value;
-    loadCities(stateId);
-    loadAreas(stateId);   // ← تحميل المناطق مباشرة عند اختيار الولاية
-});
-
-// عند تحميل الصفحة (في حالة edit)
-if (countrySelect.value) {
-    const oldStateId = "{{ old('state_id', $warehouse->state_id ?? '') }}";
-    const oldCityId = "{{ old('city_id', $warehouse->city_id ?? '') }}";
-    const oldAreaId = "{{ old('area_id', $warehouse->area_id ?? '') }}";
-    loadStates(countrySelect.value, oldStateId);
-    if (oldStateId) {
-        setTimeout(() => {
-            loadCities(oldStateId, oldCityId);
-            loadAreas(oldStateId, oldAreaId);
-        }, 300);
-    }
-}
 </script>
 @endpush

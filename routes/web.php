@@ -298,7 +298,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('warehouses/cities/{stateId}', [WarehouseController::class, 'getCitiesByState'])->name('warehouses.cities');
     
     Route::get('/warehouses/areas-by-state/{stateId}', [WarehouseController::class, 'getAreasByState']);
-    Route::get('warehouses/areas/{cityId}', [WarehouseController::class, 'getAreasByCity'])->name('warehouses.areas');
     Route::resource('warehouses', WarehouseController::class);
 
     // Vehicle Types

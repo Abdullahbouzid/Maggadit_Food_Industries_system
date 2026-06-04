@@ -130,172 +130,6 @@
                             </div>
                         </div>
 
-                            @push('scripts')
-                            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-                            <script>
-                                let map, marker;
-                                const latInput = document.getElementById('latitude');
-                                const lngInput = document.getElementById('longitude');
-
-                                function initMap() {
-                                    if (!latInput || !lngInput) return;
-                                    let lat = parseFloat(latInput.value) || 24.7136;
-                                    let lng = parseFloat(lngInput.value) || 46.6753;
-                                    map = L.map('map').setView([lat, lng], 13);
-                                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                        attribution: '&copy; OpenStreetMap contributors'
-                                    }).addTo(map);
-                                    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-                                    marker.on('dragend', function() {
-                                        const pos = marker.getLatLng();
-                                        latInput.value = pos.lat.toFixed(6);
-                                        lngInput.value = pos.lng.toFixed(6);
-                                    });
-                                    map.on('click', function(e) {
-                                        marker.setLatLng(e.latlng);
-                                        latInput.value = e.latlng.lat.toFixed(6);
-                                        lngInput.value = e.latlng.lng.toFixed(6);
-                                    });
-                                }
-
-                                document.getElementById('getLocationBtn')?.addEventListener('click', function() {
-                                    if (navigator.geolocation) {
-                                        navigator.geolocation.getCurrentPosition(function(position) {
-                                            const lat = position.coords.latitude;
-                                            const lng = position.coords.longitude;
-                                            latInput.value = lat.toFixed(6);
-                                            lngInput.value = lng.toFixed(6);
-                                            if (map) {
-                                                map.setView([lat, lng], 15);
-                                                marker.setLatLng([lat, lng]);
-                                            } else {
-                                                initMap();
-                                            }
-                                        }, function() {
-                                            alert('Unable to retrieve your location. Please check permissions.');
-                                        });
-                                    } else {
-                                        alert('Geolocation is not supported by this browser.');
-                                    }
-                                });
-
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    initMap();
-                                    feather.replace();
-
-                                    // Cascading dropdowns (Country → State → City, and Area based on State)
-                                    const countrySelect = document.getElementById('country_id');
-                                    const stateSelect = document.getElementById('state_id');
-                                    const citySelect = document.getElementById('city_id');
-                                    const areaSelect = document.getElementById('area_id');
-
-                                    function loadStates(countryId, selectedStateId = null) {
-                                        stateSelect.innerHTML = '<option value="">Loading states...</option>';
-                                        citySelect.innerHTML = '<option value="">Select City</option>';
-                                        areaSelect.innerHTML = '<option value="">Select Area</option>';
-                                        if (!countryId) {
-                                            stateSelect.innerHTML = '<option value="">Select State</option>';
-                                            return;
-                                        }
-                                        fetch(`/warehouses/states/${countryId}`)
-                                            .then(res => res.json())
-                                            .then(data => {
-                                                stateSelect.innerHTML = '<option value="">Select State</option>';
-                                                data.forEach(state => {
-                                                    const option = document.createElement('option');
-                                                    option.value = state.id;
-                                                    option.textContent = state.name_en;
-                                                    if (selectedStateId == state.id) option.selected = true;
-                                                    stateSelect.appendChild(option);
-                                                });
-                                                if (selectedStateId) {
-                                                    loadCities(selectedStateId);
-                                                    loadAreas(selectedStateId);
-                                                }
-                                            })
-                                            .catch(err => console.error('Error loading states:', err));
-                                    }
-
-                                    function loadCities(stateId, selectedCityId = null) {
-                                        citySelect.innerHTML = '<option value="">Loading cities...</option>';
-                                        if (!stateId) {
-                                            citySelect.innerHTML = '<option value="">Select City</option>';
-                                            return;
-                                        }
-                                        fetch(`/warehouses/cities/${stateId}`)
-                                            .then(res => res.json())
-                                            .then(data => {
-                                                citySelect.innerHTML = '<option value="">Select City</option>';
-                                                data.forEach(city => {
-                                                    const option = document.createElement('option');
-                                                    option.value = city.id;
-                                                    option.textContent = city.name;
-                                                    if (selectedCityId == city.id) option.selected = true;
-                                                    citySelect.appendChild(option);
-                                                });
-                                            })
-                                            .catch(err => console.error('Error loading cities:', err));
-                                    }
-
-                                    function loadAreas(stateId, selectedAreaId = null) {
-                                        areaSelect.innerHTML = '<option value="">Loading areas...</option>';
-                                        if (!stateId) {
-                                            areaSelect.innerHTML = '<option value="">Select Area</option>';
-                                            return;
-                                        }
-                                        fetch(`/warehouses/areas-by-state/${stateId}`)
-                                            .then(res => res.json())
-                                            .then(data => {
-                                                areaSelect.innerHTML = '<option value="">Select Area</option>';
-                                                data.forEach(area => {
-                                                    const option = document.createElement('option');
-                                                    option.value = area.id;
-                                                    option.textContent = area.name_en;
-                                                    if (selectedAreaId == area.id) option.selected = true;
-                                                    areaSelect.appendChild(option);
-                                                });
-                                            })
-                                            .catch(err => console.error('Error loading areas:', err));
-                                    }
-
-                                    // Events
-                                    countrySelect.addEventListener('change', function() {
-                                        loadStates(this.value);
-                                    });
-
-                                    stateSelect.addEventListener('change', function() {
-                                        const stateId = this.value;
-                                        loadCities(stateId);
-                                        loadAreas(stateId);
-                                    });
-
-                                    // Initial load if editing (old values)
-                                    @if(isset($warehouse) && $warehouse->country_id)
-                                        const oldStateId = "{{ old('state_id', $warehouse->state_id ?? '') }}";
-                                        const oldCityId = "{{ old('city_id', $warehouse->city_id ?? '') }}";
-                                        const oldAreaId = "{{ old('area_id', $warehouse->area_id ?? '') }}";
-                                        loadStates("{{ $warehouse->country_id }}", oldStateId);
-                                        if (oldStateId) {
-                                            setTimeout(() => {
-                                                loadCities(oldStateId, oldCityId);
-                                                loadAreas(oldStateId, oldAreaId);
-                                            }, 300);
-                                        }
-                                    @elseif(old('country_id'))
-                                        const oldStateId = "{{ old('state_id') }}";
-                                        const oldCityId = "{{ old('city_id') }}";
-                                        const oldAreaId = "{{ old('area_id') }}";
-                                        loadStates("{{ old('country_id') }}", oldStateId);
-                                        if (oldStateId) {
-                                            setTimeout(() => {
-                                                loadCities(oldStateId, oldCityId);
-                                                loadAreas(oldStateId, oldAreaId);
-                                            }, 300);
-                                        }
-                                    @endif
-                                });
-                            </script>
-                            @endpush
 
                             <!-- Destinations / Sources / Employees -->
                             <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -422,9 +256,8 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         initMap();
-        feather.replace();
+        if (typeof feather !== 'undefined') feather.replace();
 
-        // Cascading dropdowns (Country → State → City → Area)
         const countrySelect = document.getElementById('country_id');
         const stateSelect = document.getElementById('state_id');
         const citySelect = document.getElementById('city_id');
@@ -446,14 +279,18 @@
                         if (selectedStateId == state.id) option.selected = true;
                         stateSelect.appendChild(option);
                     });
-                    if (selectedStateId) loadCities(selectedStateId, null);
+                    if (selectedStateId) {
+                        const oldCityId = "{{ old('city_id') }}";
+                        const oldAreaId = "{{ old('area_id') }}";
+                        loadCities(selectedStateId, oldCityId);
+                        loadAreas(selectedStateId, oldAreaId);
+                    }
                 })
                 .catch(err => console.error('Error loading states:', err));
         }
 
         function loadCities(stateId, selectedCityId = null) {
             citySelect.innerHTML = '<option value="">Select City</option>';
-            areaSelect.innerHTML = '<option value="">Select Area</option>';
             if (!stateId) return;
 
             fetch(`/warehouses/cities/${stateId}`)
@@ -466,16 +303,15 @@
                         if (selectedCityId == city.id) option.selected = true;
                         citySelect.appendChild(option);
                     });
-                    if (selectedCityId) loadAreas(selectedCityId, null);
                 })
                 .catch(err => console.error('Error loading cities:', err));
         }
 
-        function loadAreas(cityId, selectedAreaId = null) {
+        function loadAreas(stateId, selectedAreaId = null) {
             areaSelect.innerHTML = '<option value="">Select Area</option>';
-            if (!cityId) return;
+            if (!stateId) return;
 
-            fetch(`/warehouses/areas/${cityId}`)
+            fetch(`/warehouses/areas-by-state/${stateId}`)
                 .then(res => res.json())
                 .then(data => {
                     data.forEach(area => {
@@ -495,81 +331,14 @@
 
         stateSelect.addEventListener('change', function() {
             loadCities(this.value);
-        });
-
-        citySelect.addEventListener('change', function() {
             loadAreas(this.value);
         });
 
-        // Initial load if a country is pre-selected (from old input)
-        if (countrySelect.value) {
-            loadStates(countrySelect.value);
+        const oldCountryId = "{{ old('country_id') }}";
+        if (oldCountryId) {
+            const oldStateId = "{{ old('state_id') }}";
+            loadStates(oldCountryId, oldStateId);
         }
     });
-
-    // بعد تحميل المدن (Cities)
-function loadCities(stateId, selectedCityId = null) {
-    citySelect.innerHTML = '<option value="">Loading cities...</option>';
-    if (!stateId) {
-        citySelect.innerHTML = '<option value="">Select City</option>';
-        return;
-    }
-    fetch(`/warehouses/cities/${stateId}`)
-        .then(res => res.json())
-        .then(data => {
-            citySelect.innerHTML = '<option value="">Select City</option>';
-            data.forEach(city => {
-                const option = document.createElement('option');
-                option.value = city.id;
-                option.textContent = city.name;
-                if (selectedCityId == city.id) option.selected = true;
-                citySelect.appendChild(option);
-            });
-        })
-        .catch(err => console.error('Error loading cities:', err));
-}
-
-// تحميل المناطق (Areas) بناءً على الولاية (State)
-function loadAreas(stateId, selectedAreaId = null) {
-    areaSelect.innerHTML = '<option value="">Loading areas...</option>';
-    if (!stateId) {
-        areaSelect.innerHTML = '<option value="">Select Area</option>';
-        return;
-    }
-    fetch(`/warehouses/areas-by-state/${stateId}`)
-        .then(res => res.json())
-        .then(data => {
-            areaSelect.innerHTML = '<option value="">Select Area</option>';
-            data.forEach(area => {
-                const option = document.createElement('option');
-                option.value = area.id;
-                option.textContent = area.name_en;
-                if (selectedAreaId == area.id) option.selected = true;
-                areaSelect.appendChild(option);
-            });
-        })
-        .catch(err => console.error('Error loading areas:', err));
-}
-
-// ربط الأحداث
-stateSelect.addEventListener('change', function() {
-    const stateId = this.value;
-    loadCities(stateId);
-    loadAreas(stateId);   // ← تحميل المناطق مباشرة عند اختيار الولاية
-});
-
-// عند تحميل الصفحة (في حالة edit)
-if (countrySelect.value) {
-    const oldStateId = "{{ old('state_id', $warehouse->state_id ?? '') }}";
-    const oldCityId = "{{ old('city_id', $warehouse->city_id ?? '') }}";
-    const oldAreaId = "{{ old('area_id', $warehouse->area_id ?? '') }}";
-    loadStates(countrySelect.value, oldStateId);
-    if (oldStateId) {
-        setTimeout(() => {
-            loadCities(oldStateId, oldCityId);
-            loadAreas(oldStateId, oldAreaId);
-        }, 300);
-    }
-}
 </script>
 @endpush
