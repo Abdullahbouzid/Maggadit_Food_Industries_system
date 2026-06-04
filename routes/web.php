@@ -294,16 +294,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('warehouses/export', [WarehouseController::class, 'export'])->name('warehouses.export');
     Route::get('warehouses/template', [WarehouseController::class, 'downloadTemplate'])->name('warehouses.template');
     Route::post('warehouses/import', [WarehouseController::class, 'import'])->name('warehouses.import');
-Route::get('warehouses/states/{countryId}', [WarehouseController::class, 'getStatesByCountry'])->name('warehouses.states');
-Route::get('warehouses/cities/{stateId}', [WarehouseController::class, 'getCitiesByState'])->name('warehouses.cities');
-Route::get('warehouses/areas/{cityId}', [WarehouseController::class, 'getAreasByCity'])->name('warehouses.areas');
+    Route::get('warehouses/states/{countryId}', [WarehouseController::class, 'getStatesByCountry'])->name('warehouses.states');
+    Route::get('warehouses/cities/{stateId}', [WarehouseController::class, 'getCitiesByState'])->name('warehouses.cities');
+    
+    Route::get('/warehouses/areas-by-state/{stateId}', [WarehouseController::class, 'getAreasByState']);
+    Route::get('warehouses/areas/{cityId}', [WarehouseController::class, 'getAreasByCity'])->name('warehouses.areas');
     Route::resource('warehouses', WarehouseController::class);
 
     // Vehicle Types
     Route::get('vehicle-types/export', [VehicleTypeController::class, 'export'])->name('vehicle-types.export');
-Route::get('vehicle-types/template', [VehicleTypeController::class, 'downloadTemplate'])->name('vehicle-types.template');
-Route::post('vehicle-types/import', [VehicleTypeController::class, 'import'])->name('vehicle-types.import');
-Route::resource('vehicle-types', VehicleTypeController::class);
+    Route::get('vehicle-types/template', [VehicleTypeController::class, 'downloadTemplate'])->name('vehicle-types.template');
+    Route::post('vehicle-types/import', [VehicleTypeController::class, 'import'])->name('vehicle-types.import');
+    Route::resource('vehicle-types', VehicleTypeController::class);
 
     // Vehicles
     Route::resource('vehicles', VehicleController::class);

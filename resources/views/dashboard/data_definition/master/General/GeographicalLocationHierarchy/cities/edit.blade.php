@@ -30,6 +30,20 @@
                         @error('country_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
+                                    <!-- State Selection -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">State <span class="text-danger">*</span></label>
+                        <select name="state_id" class="form-select @error('state_id') is-invalid @enderror" required>
+                            <option value="">-- Select State --</option>
+                            @foreach($states as $s)
+                                <option value="{{ $s->id }}" {{ old('state_id', $city->state_id) == $s->id ? 'selected' : '' }}>
+                                    {{ $s->name_en }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('state_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
                     <!-- City Name -->
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">City Name <span class="text-danger">*</span></label>

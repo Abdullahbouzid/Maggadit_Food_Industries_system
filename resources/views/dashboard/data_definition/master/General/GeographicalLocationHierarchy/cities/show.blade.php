@@ -45,6 +45,12 @@
                 </div>
                 <div class="col-md-4">
                     <div class="bg-light rounded-3 p-3">
+                        <div class="text-muted small text-uppercase mb-2">State</div>
+                        <div class="fs-5">{{ $city->state->name_en ?? '—' }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-light rounded-3 p-3">
                         <div class="text-muted small text-uppercase mb-2">City Code</div>
                         <div class="fs-5">{{ $city->code ?: '—' }}</div>
                     </div>

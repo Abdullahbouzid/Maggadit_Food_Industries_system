@@ -27,7 +27,9 @@
                         <th>City Name</th>
                         <th>Code</th>
                         <th>Country</th>
+                        <th>State</th>
                         <th>Coordinates</th>
+
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -38,6 +40,7 @@
                         <td>{{ $city->name }}</td>
                         <td>{{ $city->code ?? '—' }}</td>
                         <td>{{ $city->country->name ?? '—' }}</td>
+                        <td>{{ $city->state->name_en ?? '—' }}</td>
                         <td>
                             @if($city->latitude && $city->longitude)
                                 {{ $city->latitude }}, {{ $city->longitude }}
@@ -45,6 +48,7 @@
                                 <span class="text-muted">—</span>
                             @endif
                         </td>
+
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ route('cities.show', $city) }}" class="btn btn-outline-info" title="View">

@@ -351,5 +351,69 @@
             loadCities(initialData.stateId, initialData.cityId);
         }
     });
+    // بعد تحميل المدن (Cities)
+function loadCities(stateId, selectedCityId = null) {
+    citySelect.innerHTML = '<option value="">Loading cities...</option>';
+    if (!stateId) {
+        citySelect.innerHTML = '<option value="">Select City</option>';
+        return;
+    }
+    fetch(`/warehouses/cities/${stateId}`)
+        .then(res => res.json())
+        .then(data => {
+            citySelect.innerHTML = '<option value="">Select City</option>';
+            data.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.id;
+                option.textContent = city.name;
+                if (selectedCityId == city.id) option.selected = true;
+                citySelect.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error loading cities:', err));
+}
+
+// تحميل المناطق (Areas) بناءً على الولاية (State)
+function loadAreas(stateId, selectedAreaId = null) {
+    areaSelect.innerHTML = '<option value="">Loading areas...</option>';
+    if (!stateId) {
+        areaSelect.innerHTML = '<option value="">Select Area</option>';
+        return;
+    }
+    fetch(`/warehouses/areas-by-state/${stateId}`)
+        .then(res => res.json())
+        .then(data => {
+            areaSelect.innerHTML = '<option value="">Select Area</option>';
+            data.forEach(area => {
+                const option = document.createElement('option');
+                option.value = area.id;
+                option.textContent = area.name_en;
+                if (selectedAreaId == area.id) option.selected = true;
+                areaSelect.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error loading areas:', err));
+}
+
+// ربط الأحداث
+stateSelect.addEventListener('change', function() {
+    const stateId = this.value;
+    loadCities(stateId);
+    loadAreas(stateId);   // ← تحميل المناطق مباشرة عند اختيار الولاية
+});
+
+// عند تحميل الصفحة (في حالة edit)
+if (countrySelect.value) {
+    const oldStateId = "{{ old('state_id', $warehouse->state_id ?? '') }}";
+    const oldCityId = "{{ old('city_id', $warehouse->city_id ?? '') }}";
+    const oldAreaId = "{{ old('area_id', $warehouse->area_id ?? '') }}";
+    loadStates(countrySelect.value, oldStateId);
+    if (oldStateId) {
+        setTimeout(() => {
+            loadCities(oldStateId, oldCityId);
+            loadAreas(oldStateId, oldAreaId);
+        }, 300);
+    }
+}
 </script>
 @endpush

@@ -61,7 +61,7 @@
                 <div class="card-header"><i data-feather="map"></i> Cities</div>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light"><tr><th>#</th><th>Name</th><th>Country</th><th>Coordinates</th><th class="text-end">Actions</th></tr></thead>
+                        <thead class="table-light"><tr><th>#</th><th>Name</th><th>Country</th><th>Coordinates</th><th>State</th><th class="text-end">Actions</th></tr></thead>
                         <tbody>
                             @forelse($cities as $city)
                             <tr>
@@ -69,6 +69,7 @@
                                 <td>{{ $city->name }} @if($city->code)<small>({{ $city->code }})</small>@endif</td>
                                 <td>{{ $city->country->name ?? 'N/A' }}</td>
                                 <td>@if($city->latitude) {{ $city->latitude }}, {{ $city->longitude }} @else — @endif</td>
+                                <td>{{ $city->state->name_en ?? 'N/A' }}</td>
                                 <td class="text-end">
                                     <a href="{{ route('cities.show', $city) }}" class="btn btn-sm btn-outline-info"><i data-feather="eye"></i></a>
                                     <a href="{{ route('cities.edit', $city) }}" class="btn btn-sm btn-outline-warning"><i data-feather="edit"></i></a>

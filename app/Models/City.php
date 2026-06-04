@@ -11,7 +11,7 @@ class City extends Model
 {
     use HasFactory, HasRoles;
 
-    protected $fillable = ['country_id', 'name', 'code', 'latitude', 'longitude'];
+    protected $fillable = ['country_id', 'name','state_id', 'code', 'latitude', 'longitude', 'is_active', 'sort_order', 'created_by', 'updated_by'];
 
     public function country()
     {

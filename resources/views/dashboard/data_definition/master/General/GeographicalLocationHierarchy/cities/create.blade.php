@@ -44,6 +44,20 @@
                         @error('code') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
+                    <!-- State Selection -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">State <span class="text-danger">*</span></label>
+                        <select name="state_id" class="form-select">
+                            <option value="">Select State</option>
+                            @foreach($states as $state)
+                                <option value="{{ $state->id }}" {{ old('state_id') == $state->id ? 'selected' : '' }}>
+                                    {{ $state->name_en }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('state_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
                     <!-- Latitude & Longitude (hidden fields but visible) -->
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Latitude</label>
