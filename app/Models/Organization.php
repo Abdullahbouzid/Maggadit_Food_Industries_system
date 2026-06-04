@@ -31,5 +31,16 @@ class Organization extends Model
     {
         return $this->hasMany(Warehouse::class);
     }
-        
+    public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class);
+    }
+    public function areas()
+    {
+        return $this->hasMany(Area::class);
+    }
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

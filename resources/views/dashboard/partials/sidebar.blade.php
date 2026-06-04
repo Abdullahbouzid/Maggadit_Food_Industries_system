@@ -139,10 +139,12 @@
                             <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
                         </a>
                         <ul id="warehouseSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('warehouse-types.index') }}">warehouse types</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="{{ route('states.index') }}">states</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="{{ route('areas.index') }}">areas</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('warehouse-types.index') }}">warehouse types</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="{{ route('warehouses.index') }}">warehouses</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('vehicle-types.index') }}">vehicle types</a></li>
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('vehicles.index') }}">vehicles</a></li>
                         </ul>
                     </li>
 

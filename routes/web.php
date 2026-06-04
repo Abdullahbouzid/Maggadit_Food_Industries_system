@@ -30,8 +30,8 @@ use App\Http\Controllers\WarehouseTypeController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\WarehouseController;
-
-        
+use App\Http\Controllers\VehicleTypeController;
+use App\Http\Controllers\VehicleController;
 
 
 use Illuminate\Http\Request;
@@ -298,4 +298,16 @@ Route::get('warehouses/states/{countryId}', [WarehouseController::class, 'getSta
 Route::get('warehouses/cities/{stateId}', [WarehouseController::class, 'getCitiesByState'])->name('warehouses.cities');
 Route::get('warehouses/areas/{cityId}', [WarehouseController::class, 'getAreasByCity'])->name('warehouses.areas');
     Route::resource('warehouses', WarehouseController::class);
+
+    // Vehicle Types
+    Route::get('vehicle-types/export', [VehicleTypeController::class, 'export'])->name('vehicle-types.export');
+Route::get('vehicle-types/template', [VehicleTypeController::class, 'downloadTemplate'])->name('vehicle-types.template');
+Route::post('vehicle-types/import', [VehicleTypeController::class, 'import'])->name('vehicle-types.import');
+Route::resource('vehicle-types', VehicleTypeController::class);
+
+    // Vehicles
+    Route::resource('vehicles', VehicleController::class);
+    Route::get('vehicles/export/excel', [VehicleController::class, 'export'])->name('vehicles.export');
+    Route::post('vehicles/import', [VehicleController::class, 'import'])->name('vehicles.import');
+    Route::get('vehicles/template/download', [VehicleController::class, 'downloadTemplate'])->name('vehicles.template');
 });
