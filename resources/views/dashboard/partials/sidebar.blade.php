@@ -189,8 +189,8 @@
                     <span class="align-middle">Permissions</span>
                 </a>
             </li>
-            <li class="sidebar-item {{ request()->routeIs('logout') ? 'active' : '' }}">
-                <a class="sidebar-link" href="{{ route('logout') }}">
+            <li class="sidebar-item {{ request()->routeIs('logout_submit') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('logout_submit') }}">
                     <i class="align-middle" data-feather="log-out"></i>
                     <span class="align-middle">sign out</span>
                 </a>
