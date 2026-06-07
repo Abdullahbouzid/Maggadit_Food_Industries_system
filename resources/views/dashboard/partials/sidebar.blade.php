@@ -87,6 +87,7 @@
                             <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
                         </a>
                         <ul id="staffSubmenu" class="sidebar-dropdown list-unstyled collapse">
+                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('devices.index') }}">Devices</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">personal information</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">employment details</a></li>
                             <li class="sidebar-item"><a class="sidebar-link" href="#">attendance schema</a></li>

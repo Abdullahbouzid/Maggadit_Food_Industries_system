@@ -32,7 +32,7 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\VehicleTypeController;
 use App\Http\Controllers\VehicleController;
-
+use App\Http\Controllers\DeviceController;
 
 use Illuminate\Http\Request;
 
@@ -319,4 +319,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('vehicles/export/excel', [VehicleController::class, 'export'])->name('vehicles.export');
     Route::post('vehicles/import', [VehicleController::class, 'import'])->name('vehicles.import');
     Route::get('vehicles/template/download', [VehicleController::class, 'downloadTemplate'])->name('vehicles.template');
+
+
+    // Devices
+    Route::get('devices/export', [DeviceController::class, 'export'])->name('devices.export');
+    Route::get('devices/template', [DeviceController::class, 'downloadTemplate'])->name('devices.template');
+    Route::post('devices/import', [DeviceController::class, 'import'])->name('devices.import');
+    Route::resource('devices', DeviceController::class);
+
+    
 });
