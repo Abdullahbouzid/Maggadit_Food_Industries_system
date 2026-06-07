@@ -19,23 +19,19 @@ class DevicesExport implements FromQuery, WithHeadings, WithMapping
 
     public function query()
     {
-        $query = Device::with(['organization', 'brand']);
+        $query = Device::with('organization');
 
         if ($this->request->filled('search')) {
             $search = $this->request->search;
             $query->where(function($q) use ($search) {
-                $q->where('serial', 'like', "%{$search}%")
-                  ->orWhere('name_en', 'like', "%{$search}%")
-                  ->orWhere('name_ar', 'like', "%{$search}%");
+                $q->where('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%")
+                  ->orWhere('serial', 'like', "%{$search}%");
             });
         }
 
         if ($this->request->filled('organization_id')) {
             $query->where('organization_id', $this->request->organization_id);
-        }
-
-        if ($this->request->filled('brand_id')) {
-            $query->where('brand_id', $this->request->brand_id);
         }
 
         return $query;
@@ -44,8 +40,9 @@ class DevicesExport implements FromQuery, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'ID', 'Name EN', 'Name AR', 'Serial', 'Organization', 'Model No', 'Brand',
-            'Remark', 'Purchase Date', 'Warranty Expiry', 'Inactive', 'Sort Order', 'Created At'
+            'ID', 'Name (EN)', 'Name (AR)', 'Serial', 'Organization',
+            'Model No', 'Brand', 'Remark', 'Purchase Date',
+            'Warranty Expiry', 'Inactive', 'Created At'
         ];
     }
 
@@ -58,12 +55,11 @@ class DevicesExport implements FromQuery, WithHeadings, WithMapping
             $device->serial,
             $device->organization?->name,
             $device->model_no,
-            $device->brand?->name,
+            $device->brand,
             $device->remark,
             $device->purchase_date,
             $device->warranty_expiry,
             $device->is_inactive ? 'Yes' : 'No',
-            $device->sort_order,
             $device->created_at,
         ];
     }

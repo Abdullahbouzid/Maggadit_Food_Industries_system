@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Device;
 use App\Models\Organization;
-use App\Models\Brand;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\DevicesExport;
@@ -14,24 +13,21 @@ class DeviceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Device::with(['organization', 'brand']);
+        $query = Device::with('organization');
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('serial', 'like', "%{$search}%")
-                  ->orWhere('name_en', 'like', "%{$search}%")
+                $q->where('name_en', 'like', "%{$search}%")
                   ->orWhere('name_ar', 'like', "%{$search}%")
+                  ->orWhere('serial', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%")
                   ->orWhere('model_no', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('organization_id')) {
             $query->where('organization_id', $request->organization_id);
-        }
-
-        if ($request->filled('brand_id')) {
-            $query->where('brand_id', $request->brand_id);
         }
 
         if ($request->filled('status')) {
@@ -43,23 +39,21 @@ class DeviceController extends Controller
             $perPage = $query->count() ?: 1;
         }
 
-        $devices = $query->orderBy('sort_order')->orderBy('serial')->paginate($perPage)->appends($request->query());
+        $devices = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends($request->query());
 
         $total = Device::count();
         $active = Device::where('is_inactive', false)->count();
         $inactive = Device::where('is_inactive', true)->count();
 
         $organizations = Organization::orderBy('name')->get();
-        $brands = Brand::orderBy('name')->get();
 
-        return view('dashboard.data_definition.staff.device.index', compact('devices', 'total', 'active', 'inactive', 'organizations', 'brands'));
+        return view('dashboard.data_definition.staff.device.index', compact('devices', 'total', 'active', 'inactive', 'organizations'));
     }
 
     public function create()
     {
         $organizations = Organization::orderBy('name')->get();
-        $brands = Brand::orderBy('name')->get();
-        return view('dashboard.data_definition.staff.device.create', compact('organizations', 'brands'));
+        return view('dashboard.data_definition.staff.device.create', compact('organizations'));
     }
 
     public function store(Request $request)
@@ -69,13 +63,12 @@ class DeviceController extends Controller
             'name_ar' => 'required|string|max:255',
             'serial' => 'required|string|max:100|unique:devices,serial',
             'organization_id' => 'required|exists:organizations,id',
-            'model_no' => 'nullable|string|max:100',
-            'brand_id' => 'nullable|exists:brands,id',
+            'model_no' => 'nullable|string|max:255',
+            'brand' => 'nullable|string|max:255',
             'remark' => 'nullable|string',
             'purchase_date' => 'nullable|date',
-            'warranty_expiry' => 'nullable|date|after_or_equal:purchase_date',
+            'warranty_expiry' => 'nullable|date',
             'is_inactive' => 'boolean',
-            'sort_order' => 'nullable|integer',
         ]);
 
         $validated['is_inactive'] = $request->has('is_inactive') ? true : false;
@@ -87,15 +80,14 @@ class DeviceController extends Controller
 
     public function show(Device $device)
     {
-        $device->load(['organization', 'brand']);
+        $device->load('organization');
         return view('dashboard.data_definition.staff.device.show', compact('device'));
     }
 
     public function edit(Device $device)
     {
         $organizations = Organization::orderBy('name')->get();
-        $brands = Brand::orderBy('name')->get();
-        return view('dashboard.data_definition.staff.device.edit', compact('device', 'organizations', 'brands'));
+        return view('dashboard.data_definition.staff.device.edit', compact('device', 'organizations'));
     }
 
     public function update(Request $request, Device $device)
@@ -105,13 +97,12 @@ class DeviceController extends Controller
             'name_ar' => 'required|string|max:255',
             'serial' => 'required|string|max:100|unique:devices,serial,' . $device->id,
             'organization_id' => 'required|exists:organizations,id',
-            'model_no' => 'nullable|string|max:100',
-            'brand_id' => 'nullable|exists:brands,id',
+            'model_no' => 'nullable|string|max:255',
+            'brand' => 'nullable|string|max:255',
             'remark' => 'nullable|string',
             'purchase_date' => 'nullable|date',
-            'warranty_expiry' => 'nullable|date|after_or_equal:purchase_date',
+            'warranty_expiry' => 'nullable|date',
             'is_inactive' => 'boolean',
-            'sort_order' => 'nullable|integer',
         ]);
 
         $validated['is_inactive'] = $request->has('is_inactive') ? true : false;
@@ -145,8 +136,9 @@ class DeviceController extends Controller
                 public function collection() { return collect([]); }
                 public function headings(): array {
                     return [
-                        'name_en', 'name_ar', 'serial', 'organization_id', 'model_no', 'brand_id',
-                        'remark', 'purchase_date', 'warranty_expiry', 'is_inactive', 'sort_order'
+                        'name_en', 'name_ar', 'serial', 'organization_id',
+                        'model_no', 'brand', 'remark', 'purchase_date',
+                        'warranty_expiry', 'is_inactive'
                     ];
                 }
             };

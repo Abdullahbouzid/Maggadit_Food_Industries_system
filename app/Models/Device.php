@@ -11,8 +11,9 @@ class Device extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name_en', 'name_ar', 'serial', 'organization_id', 'model_no', 'brand_id',
-        'remark', 'purchase_date', 'warranty_expiry', 'is_inactive', 'sort_order'
+        'name_en', 'name_ar', 'serial', 'organization_id',
+        'model_no', 'brand', 'remark', 'purchase_date',
+        'warranty_expiry', 'is_inactive'
     ];
 
     protected $casts = [
@@ -24,10 +25,5 @@ class Device extends Model
     public function organization()
     {
         return $this->belongsTo(Organization::class);
-    }
-
-    public function brand()
-    {
-        return $this->belongsTo(Brand::class);
     }
 }

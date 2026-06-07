@@ -13,14 +13,13 @@ return new class extends Migration
             $table->string('name_en', 255);
             $table->string('name_ar', 255);
             $table->string('serial', 100)->unique();
-            $table->foreignId('organization_id')->constrained('organizations')->cascadeOnDelete();
-            $table->string('model_no', 100)->nullable();
-            $table->foreignId('brand_id')->nullable()->constrained('brands')->nullOnDelete();
+            $table->foreignId('organization_id')->constrained('organizations')->onDelete('cascade');
+            $table->string('model_no', 255)->nullable();
+            $table->string('brand', 255)->nullable(); // ماركة الجهاز (نصي)
             $table->text('remark')->nullable();
             $table->date('purchase_date')->nullable();
             $table->date('warranty_expiry')->nullable();
             $table->boolean('is_inactive')->default(false);
-            $table->integer('sort_order')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

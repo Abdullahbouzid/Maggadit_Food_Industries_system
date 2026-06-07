@@ -23,30 +23,23 @@ class DevicesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnE
             return null;
         }
 
-        $organizationId = $row['organization_id'] ?? null;
-        if ($organizationId && !\App\Models\Organization::find($organizationId)) {
-            $this->errors[] = "Organization ID {$organizationId} not found for serial {$row['serial']}.";
-            return null;
-        }
-
-        $brandId = $row['brand_id'] ?? null;
-        if ($brandId && !\App\Models\Brand::find($brandId)) {
-            $this->errors[] = "Brand ID {$brandId} not found for serial {$row['serial']}.";
+        // التحقق من وجود المنظمة
+        if (!\App\Models\Organization::find($row['organization_id'])) {
+            $this->errors[] = "Organization ID {$row['organization_id']} not found for serial {$row['serial']}";
             return null;
         }
 
         return new Device([
-            'name_en' => $row['name_en'],
-            'name_ar' => $row['name_ar'],
-            'serial' => $row['serial'],
-            'organization_id' => $organizationId,
-            'model_no' => $row['model_no'] ?? null,
-            'brand_id' => $brandId,
-            'remark' => $row['remark'] ?? null,
-            'purchase_date' => isset($row['purchase_date']) ? Carbon::parse($row['purchase_date']) : null,
+            'name_en'         => $row['name_en'],
+            'name_ar'         => $row['name_ar'],
+            'serial'          => $row['serial'],
+            'organization_id' => $row['organization_id'],
+            'model_no'        => $row['model_no'] ?? null,
+            'brand'           => $row['brand'] ?? null,
+            'remark'          => $row['remark'] ?? null,
+            'purchase_date'   => isset($row['purchase_date']) ? Carbon::parse($row['purchase_date']) : null,
             'warranty_expiry' => isset($row['warranty_expiry']) ? Carbon::parse($row['warranty_expiry']) : null,
-            'is_inactive' => filter_var($row['is_inactive'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            'sort_order' => $row['sort_order'] ?? 0,
+            'is_inactive'     => filter_var($row['is_inactive'] ?? false, FILTER_VALIDATE_BOOLEAN),
         ]);
     }
 
@@ -57,7 +50,6 @@ class DevicesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnE
             'name_ar' => 'required|string|max:255',
             'serial' => 'required|string|max:100|unique:devices,serial',
             'organization_id' => 'required|exists:organizations,id',
-            'brand_id' => 'nullable|exists:brands,id',
         ];
     }
 
