@@ -10,10 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 class CustomerAuthController extends Controller
 {
-    /**
-     * تسجيل دخول العميل وإرجاع token
-     * POST /api/customer/login
-     */
+    // تسجيل الدخول وإرجاع توكن Sanctum
     public function login(Request $request)
     {
         $request->validate([
@@ -21,64 +18,64 @@ class CustomerAuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $customer = Customer::where('username', $request->username)->first();
+        $customer = Customer::where('username', $request->username)
+            ->orWhere('email', $request->username)
+            ->first();
 
-        if (! $customer || ! Hash::check($request->password, $customer->password)) {
+        if (!$customer || !Hash::check($request->password, $customer->password)) {
             throw ValidationException::withMessages([
-                'username' => ['بيانات الاعتماد غير صحيحة.'],
+                'username' => ['بيانات الدخول غير صحيحة.'],
             ]);
         }
 
-        // حذف التوكنات القديمة (اختياري - لتسجيل دخول من جهاز واحد فقط)
-        // $customer->tokens()->delete();
+        // حذف التوكنات القديمة (اختياري)
+        $customer->tokens()->delete();
 
-        $token = $customer->createToken('customer-app')->plainTextToken;
+        $token = $customer->createToken('mobile-token')->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => 'تم تسجيل الدخول بنجاح',
-            'data' => [
-                'customer' => [
-                    'id' => $customer->id,
-                    'name' => $customer->name,
-                    'username' => $customer->username,
-                    'email' => $customer->email,
-                ],
-                'token' => $token,
-            ],
+            'token' => $token,
+            'customer' => $customer->only(['id', 'name', 'username', 'email']),
         ]);
     }
 
-    /**
-     * تسجيل خروج العميل (حذف التوكن الحالي)
-     * POST /api/customer/logout
-     */
+    // تسجيل جديد (إذا أردت)
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|unique:customers',
+            'email' => 'required|email|unique:customers',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $customer = Customer::create([
+            'name' => $request->name,
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        $token = $customer->createToken('mobile-token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+            'customer' => $customer->only(['id', 'name', 'username', 'email']),
+        ], 201);
+    }
+
+    // تسجيل الخروج (حذف التوكن الحالي)
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تسجيل الخروج بنجاح',
-        ]);
+        return response()->json(['success' => true, 'message' => 'Logged out']);
     }
 
-    /**
-     * جلب بيانات العميل الحالي
-     * GET /api/customer/profile
-     */
+    // جلب بيانات الملف الشخصي
     public function profile(Request $request)
     {
-        $customer = $request->user();
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $customer->id,
-                'name' => $customer->name,
-                'username' => $customer->username,
-                'email' => $customer->email,
-            ],
-        ]);
+        return response()->json($request->user()->only(['id', 'name', 'username', 'email']));
     }
 }

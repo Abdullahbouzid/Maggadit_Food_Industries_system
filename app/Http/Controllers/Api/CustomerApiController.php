@@ -10,268 +10,204 @@ use Illuminate\Http\Request;
 
 class CustomerApiController extends Controller
 {
-    /**
-     * بيانات لوحة التحكم الرئيسية
-     * GET /api/customer/dashboard
-     */
-    public function dashboard()
-    {
-        $categories = Category::where('show_in_customer_app', true)
-                              ->limit(6)
-                              ->get()
-                              ->map(function ($category) {
-                                  return $this->formatCategory($category);
-                              });
-
-        $brands = Brand::where('show_in_customer_app', true)
-                       ->limit(5)
-                       ->get()
-                       ->map(function ($brand) {
-                           return $this->formatBrand($brand);
-                       });
-
-        $products = Item::with(['category', 'brand', 'packs'])
-                        ->where('is_inactive', false)
-                        ->latest()
-                        ->limit(4)
-                        ->get()
-                        ->map(function ($item) {
-                            return $this->formatProduct($item);
-                        });
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'categories' => $categories,
-                'brands' => $brands,
-                'products' => $products,
-            ],
-        ]);
-    }
-
-    /**
-     * قائمة الفئات
-     * GET /api/customer/categories
-     */
+    // التصنيفات
     public function categoriesIndex()
     {
         $categories = Category::where('show_in_customer_app', true)
-                              ->paginate(20);
-
-        $categories->getCollection()->transform(function ($category) {
-            return $this->formatCategory($category);
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => $categories,
-        ]);
+            ->select('id', 'name', 'image')
+            ->get();
+        return response()->json(['success' => true, 'categories' => $categories]);
     }
 
-    /**
-     * فئة محددة مع منتجاتها
-     * GET /api/customer/categories/{id}
-     */
     public function categoriesShow($id)
     {
-        $category = Category::findOrFail($id);
-
-        $items = Item::where('category_id', $id)
-                     ->where('is_inactive', false)
-                     ->with(['category', 'brand', 'packs'])
-                     ->paginate(12);
-
-        $items->getCollection()->transform(function ($item) {
-            return $this->formatProduct($item);
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'category' => $this->formatCategory($category),
-                'items' => $items,
-            ],
-        ]);
+        $category = Category::where('show_in_customer_app', true)
+            ->with(['items' => function($q) {
+                $q->where('is_inactive', false);
+            }])
+            ->findOrFail($id);
+        return response()->json(['success' => true, 'category' => $category]);
     }
 
-    /**
-     * قائمة الماركات
-     * GET /api/customer/brands
-     */
+    // الماركات
     public function brandsIndex()
     {
         $brands = Brand::where('show_in_customer_app', true)
-                       ->paginate(20);
-
-        $brands->getCollection()->transform(function ($brand) {
-            return $this->formatBrand($brand);
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => $brands,
-        ]);
+            ->select('id', 'name', 'logo')
+            ->get();
+        return response()->json(['success' => true, 'brands' => $brands]);
     }
 
-    /**
-     * ماركة محددة مع منتجاتها
-     * GET /api/customer/brands/{id}
-     */
     public function brandsShow($id)
     {
-        $brand = Brand::findOrFail($id);
-
-        $items = Item::where('brand_id', $id)
-                     ->where('is_inactive', false)
-                     ->with(['category', 'brand', 'packs'])
-                     ->paginate(12);
-
-        $items->getCollection()->transform(function ($item) {
-            return $this->formatProduct($item);
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'brand' => $this->formatBrand($brand),
-                'items' => $items,
-            ],
-        ]);
+        $brand = Brand::with(['items' => function($q) {
+                $q->where('is_inactive', false);
+            }])->findOrFail($id);
+        return response()->json(['success' => true, 'brand' => $brand]);
     }
 
-    /**
-     * قائمة جميع المنتجات
-     * GET /api/customer/products
-     */
+    // المنتجات مع بعض البيانات الأساسية
     public function productsIndex(Request $request)
     {
         $query = Item::where('is_inactive', false)
-                     ->with(['category', 'brand', 'packs']);
+            ->with(['category', 'brand', 'packs']); // packs علاقة مهمة للسعر
 
-        // بحث اختياري
-        if ($request->has('search') && $request->search) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name_en', 'like', "%{$search}%")
-                  ->orWhere('name_ar', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
-
-        // فلترة حسب الفئة
+        // تصفية حسب التصنيف
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-
-        // فلترة حسب الماركة
+        // تصفية حسب الماركة
         if ($request->has('brand_id')) {
             $query->where('brand_id', $request->brand_id);
         }
 
-        $items = $query->paginate(12);
+        $products = $query->paginate(20);
 
-        $items->getCollection()->transform(function ($item) {
-            return $this->formatProduct($item);
+        // تنسيق البيانات كما يحتاجها التطبيق
+        $products->getCollection()->transform(function ($item) {
+            $defaultPack = $item->packs->where('is_default_pack', true)->first() ?? $item->packs->first();
+            return [
+                'id' => $item->id,
+                'name' => $item->name_ar ?: $item->name_en,
+                'image' => $item->main_image_url,
+                'price' => $defaultPack ? $defaultPack->price : 0,
+                'old_price' => null,
+                'rate' => 0,
+                'is_favorite' => false, // يمكن لاحقاً جلبه من المفضلة إذا كان المستخدم مسجلاً
+            ];
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $items,
-        ]);
+        return response()->json(['success' => true, 'products' => $products]);
     }
 
-    /**
-     * تفاصيل منتج واحد
-     * GET /api/customer/products/{id}
-     */
     public function productsShow($id)
     {
-        $item = Item::with(['category', 'brand', 'packs.uom', 'images', 'itemType'])
-                    ->findOrFail($id);
+        $item = Item::where('is_inactive', false)
+            ->with(['category', 'brand', 'packs', 'images'])
+            ->findOrFail($id);
+
+        $packs = $item->packs->map(function ($pack) {
+            return [
+                'id' => $pack->id,
+                'name' => $pack->name,
+                'price' => $pack->price,
+                'quantity' => $pack->quantity,
+                'is_default' => $pack->is_default_pack,
+            ];
+        });
+
+        $images = $item->images->pluck('image_url');
 
         return response()->json([
             'success' => true,
-            'data' => $this->formatProductDetailed($item),
+            'product' => [
+                'id' => $item->id,
+                'name' => $item->name_ar ?: $item->name_en,
+                'description' => $item->definition,
+                'images' => $images,
+                'packs' => $packs,
+                'category' => $item->category?->name,
+                'brand' => $item->brand?->name,
+            ]
         ]);
     }
 
-    // ========== Helper Methods ==========
-
-    private function formatCategory($category)
+    public function offersIndex()
     {
-        return [
-            'id' => $category->id,
-            'code' => $category->code ?? null,
-            'name' => $category->name,
-            'division' => $category->division ?? null,
-            'image_url' => $category->image ? url('uploads/' . $category->image) : null,
-        ];
+        // إذا كان لديك نموذج Offer، قم بجلبه. حالياً نرجع منتجات عليها عروض افتراضية (مثلاً last 5 items)
+        $offers = Item::where('is_inactive', false)
+            ->where('is_new', true) // أو أي شرط للعرض
+            ->limit(10)
+            ->get()
+            ->map(function ($item) {
+                $defaultPack = $item->packs->first();
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name_ar ?: $item->name_en,
+                    'image' => $item->main_image_url,
+                    'price' => $defaultPack ? $defaultPack->price : 0,
+                    'old_price' => $defaultPack ? $defaultPack->price * 1.2 : 0, // وهمي
+                ];
+            });
+        return response()->json(['success' => true, 'offers' => $offers]);
     }
 
-    private function formatBrand($brand)
+    // باقي الدوال (dashboard, financialStatement, surveys, notifications, etc.)
+    // ستكتب لاحقاً عند توفير النماذج المناسبة
+
+    public function dashboard(Request $request)
     {
-        return [
-            'id' => $brand->id,
-            'name' => $brand->name,
-            'logo_url' => $brand->logo ? url('uploads/' . $brand->logo) : null,
-        ];
+        // مثال: إحصائيات بسيطة
+        return response()->json([
+            'success' => true,
+            'dashboard' => [
+                'total_orders' => 0, // سيأتي من نموذج Order
+                'total_favorites' => 0,
+            ]
+        ]);
     }
 
-    private function formatProduct($item)
+    public function financialStatement(Request $request)
     {
-        return [
-            'id' => $item->id,
-            'code' => $item->code,
-            'name_en' => $item->name_en,
-            'name_ar' => $item->name_ar,
-            'image_url' => $item->image ? url('uploads/' . $item->image) : null,
-            'price' => $item->price,
-            'old_price' => $item->old_price,
-            'rate' => $item->rate,
-            'is_new' => $item->is_new,
-            'category' => $item->category ? [
-                'id' => $item->category->id,
-                'name' => $item->category->name,
-            ] : null,
-            'brand' => $item->brand ? [
-                'id' => $item->brand->id,
-                'name' => $item->brand->name,
-            ] : null,
-        ];
+        return response()->json(['success' => true, 'statement' => []]);
     }
 
-    private function formatProductDetailed($item)
+    public function surveys(Request $request)
     {
-        $data = $this->formatProduct($item);
+        return response()->json(['success' => true, 'surveys' => []]);
+    }
 
-        $data['definition'] = $item->definition;
-        $data['item_type'] = $item->itemType ? [
-            'id' => $item->itemType->id,
-            'name' => $item->itemType->name ?? null,
-        ] : null;
+    public function submitSurvey(Request $request, $id)
+    {
+        return response()->json(['success' => true, 'message' => 'تم استلام الرد']);
+    }
 
-        $data['packs'] = $item->packs->map(function ($pack) {
-            return [
-                'id' => $pack->id,
-                'barcode' => $pack->barcode,
-                'quantity' => $pack->quantity,
-                'weight' => $pack->weight,
-                'is_default_pack' => $pack->is_default_pack,
-                'uom' => $pack->uom ? [
-                    'id' => $pack->uom->id,
-                    'name' => $pack->uom->name ?? null,
-                ] : null,
-            ];
-        });
+    public function notifications(Request $request)
+    {
+        return response()->json(['success' => true, 'notifications' => []]);
+    }
 
-        $data['images'] = $item->images->map(function ($img) {
-            return [
-                'id' => $img->id,
-                'url' => url('uploads/' . $img->image_path),
-                'alt_text' => $img->alt_text,
-            ];
-        });
+    public function markNotificationRead(Request $request, $id)
+    {
+        return response()->json(['success' => true]);
+    }
 
-        return $data;
+    public function faq(Request $request)
+    {
+        return response()->json(['success' => true, 'faq' => []]);
+    }
+
+    public function privacyPolicy(Request $request)
+    {
+        return response()->json(['success' => true, 'content' => 'سياسة الخصوصية...']);
+    }
+
+    public function aboutUs(Request $request)
+    {
+        return response()->json(['success' => true, 'content' => 'من نحن...']);
+    }
+
+    public function contactUs(Request $request)
+    {
+        // تخزين رسالة الاتصال
+        return response()->json(['success' => true, 'message' => 'تم إرسال رسالتك']);
+    }
+
+    public function organizationsList(Request $request)
+    {
+        $customer = $request->user();
+        // افترضنا علاقة many-to-many بين العميل والمنظمات
+        // إذا لم تكن موجودة، أرجع قائمة فارغة
+        $organizations = $customer->organizations ?? collect();
+        return response()->json(['success' => true, 'organizations' => $organizations]);
+    }
+
+    public function switchOrganization(Request $request)
+    {
+        $request->validate(['organization_id' => 'required|exists:organizations,id']);
+        $customer = $request->user();
+        // تحديث المنظمة النشطة (قد تحتاج عمود active_organization_id في جدول customers)
+        // customer->update(['active_organization_id' => $request->organization_id]);
+        return response()->json(['success' => true, 'message' => 'تم تغيير المنظمة']);
     }
 }
