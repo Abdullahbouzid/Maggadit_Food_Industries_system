@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
-        Sanctum::usePersonalAccessTokenModel(...);
+        // Sanctum::usePersonalAccessTokenModel(...);
         //
         // ربط متغير $user مع view 'dashboard.partials.navbar'
         View::composer('dashboard.partials.navbar', function ($view) {
