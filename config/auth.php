@@ -6,18 +6,38 @@ return [
         'passwords' => 'users',
     ],
 
-  'guards' => [
-    'api' => [
-        'driver' => 'sanctum',
-        'provider' => 'customers',
+    'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        // guard خاص بالعملاء (لتطبيق الويب داخل APK)
+        'customer' => [
+            'driver' => 'session',
+            'provider' => 'customers',
+        ],
+
+        // guard خاص بـ API (للموبايل عبر Sanctum)
+        'api' => [
+            'driver' => 'sanctum',
+            'provider' => 'customers',
+        ],
     ],
-],
-'providers' => [
-    'customers' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\Customer::class,
+
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
+
+        // provider خاص بنموذج Customer
+        'customers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Customer::class,
+        ],
     ],
-],
+
     'passwords' => [
         'users' => [
             'provider' => 'users',
@@ -25,10 +45,9 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
-        // إذا أردت إعادة تعيين كلمة المرور للعملاء
         'customers' => [
             'provider' => 'customers',
-            'table' => 'customer_password_resets', // أنشئ هذا الجدول إذا احتجت
+            'table' => 'customer_password_resets',
             'expire' => 60,
             'throttle' => 60,
         ],
