@@ -6,35 +6,18 @@ return [
         'passwords' => 'users',
     ],
 
-    'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
-        // ✅ أضف هذا الـ guard الخاص بالعملاء لتطبيق الويب
-        'customer' => [
-            'driver' => 'session',
-            'provider' => 'customers',
-        ],
-        // ✅ هذا الـ guard الخاص بـ API (لـ Sanctum)
-        'api' => [
-            'driver' => 'sanctum',
-            'provider' => 'customers',
-        ],
+  'guards' => [
+    'api' => [
+        'driver' => 'sanctum',
+        'provider' => 'customers',
     ],
-
-    'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\User::class,
-        ],
-        // ✅ أضف هذا الـ provider الخاص بنموذج Customer
-        'customers' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Customer::class,
-        ],
+],
+'providers' => [
+    'customers' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Customer::class,
     ],
-
+],
     'passwords' => [
         'users' => [
             'provider' => 'users',
