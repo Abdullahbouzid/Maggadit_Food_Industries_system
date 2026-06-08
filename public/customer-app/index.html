@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="description" content="ماغاديت للصناعات الغذائية - تسجيل الدخول">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Maggadit - تسجيل الدخول</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="login-page">
+            <div class="login-card">
+                <!-- Logo -->
+                <div class="login-logo">
+                    <img src="../img/logo/logo.png" alt="Maggadit Logo" onerror="this.parentElement.innerHTML='<span style=&quot;font-size:2.5rem&quot;>🏭</span>'">
+                </div>
+
+                <h1 class="login-title" id="brand-title">ماغاديت</h1>
+                <p class="login-subtitle" id="brand-sub">ماغاديت للصناعات الغذائية</p>
+
+                <div class="login-divider"></div>
+
+                <!-- Error Message -->
+                <div id="login-error" class="form-error" style="display: none;"></div>
+
+                <!-- Login Form -->
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="form-label" id="lbl-username">اسم المستخدم</label>
+                        <input type="text" id="input-username" class="form-input" placeholder="أدخل اسم المستخدم" required autocomplete="username">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" id="lbl-password">كلمة المرور</label>
+                        <input type="password" id="input-password" class="form-input" placeholder="أدخل كلمة المرور" required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" id="btn-login" class="btn-primary">تسجيل الدخول</button>
+                </form>
+
+                <!-- Language Switch -->
+                <div style="text-align: center; margin-top: 20px;">
+                    <button id="btn-lang" style="background: none; border: 1px solid var(--border); padding: 6px 16px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: var(--secondary); cursor: pointer; font-family: var(--font);">🇬🇧 English</button>
+                </div>
+
+                <!-- Server URL Config (for APK) -->
+                <div style="text-align: center; margin-top: 16px;">
+                    <button id="btn-settings" style="background: none; border: none; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; font-family: var(--font);">⚙️ إعدادات السيرفر</button>
+                </div>
+
+                <!-- Settings Modal (hidden) -->
+                <div id="settings-modal" style="display: none; margin-top: 12px; padding: 12px; background: var(--border-light); border-radius: var(--radius-md);">
+                    <label class="form-label" style="font-size: 0.75rem;">عنوان السيرفر (API URL)</label>
+                    <input type="url" id="input-server-url" class="form-input" placeholder="https://your-domain.com" style="font-size: 0.8rem; margin-bottom: 8px;">
+                    <button id="btn-save-url" class="btn-primary" style="padding: 8px; font-size: 0.8rem;">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // إذا كان المستخدم مسجل دخوله بالفعل
+        if (API.isAuthenticated()) {
+            window.location.href = 'dashboard.html';
+        }
+
+        // ===== Language Toggle =====
+        let currentLang = localStorage.getItem('app_lang') || 'ar';
+        const translations = {
+            ar: {
+                title: 'ماغاديت',
+                subtitle: 'ماغاديت للصناعات الغذائية',
+                username: 'اسم المستخدم',
+                usernamePh: 'أدخل اسم المستخدم',
+                password: 'كلمة المرور',
+                passwordPh: 'أدخل كلمة المرور',
+                login: 'تسجيل الدخول',
+                langBtn: '🇬🇧 English',
+                dir: 'rtl',
+            },
+            en: {
+                title: 'Maggadit',
+                subtitle: 'Maggadit Food Industries',
+                username: 'Username',
+                usernamePh: 'Enter your username',
+                password: 'Password',
+                passwordPh: 'Enter your password',
+                login: 'Sign In',
+                langBtn: '🇸🇦 العربية',
+                dir: 'ltr',
+            }
+        };
+
+        function setLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('app_lang', lang);
+            const t = translations[lang];
+            document.getElementById('brand-title').textContent = t.title;
+            document.getElementById('brand-sub').textContent = t.subtitle;
+            document.getElementById('lbl-username').textContent = t.username;
+            document.getElementById('input-username').placeholder = t.usernamePh;
+            document.getElementById('lbl-password').textContent = t.password;
+            document.getElementById('input-password').placeholder = t.passwordPh;
+            document.getElementById('btn-login').textContent = t.login;
+            document.getElementById('btn-lang').textContent = t.langBtn;
+            document.documentElement.dir = t.dir;
+            document.documentElement.lang = lang;
+        }
+
+        document.getElementById('btn-lang').addEventListener('click', () => {
+            setLang(currentLang === 'ar' ? 'en' : 'ar');
+        });
+
+        setLang(currentLang);
+
+        // ===== Server URL Settings =====
+        document.getElementById('btn-settings').addEventListener('click', () => {
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('input-server-url').value = localStorage.getItem('api_base_url') || '';
+        });
+
+        document.getElementById('btn-save-url').addEventListener('click', () => {
+            const url = document.getElementById('input-server-url').value.trim();
+            if (url) {
+                API.setBaseUrl(url.replace(/\/$/, ''));
+                App.showToast('تم حفظ عنوان السيرفر ✓', 'success');
+                document.getElementById('settings-modal').style.display = 'none';
+            }
+        });
+
+        // ===== Login Form =====
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('input-username').value.trim();
+            const password = document.getElementById('input-password').value;
+            const errorDiv = document.getElementById('login-error');
+            const btn = document.getElementById('btn-login');
+
+            if (!username || !password) return;
+
+            errorDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = '⏳ جاري تسجيل الدخول...';
+
+            try {
+                await API.login(username, password);
+                App.showToast('تم تسجيل الدخول بنجاح ✓', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 500);
+            } catch (error) {
+                errorDiv.textContent = error.message || 'فشل تسجيل الدخول';
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = translations[currentLang].login;
+            }
+        });
+    </script>
+</body>
+</html>

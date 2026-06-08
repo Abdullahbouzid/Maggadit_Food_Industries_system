@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Country;
 use App\Models\City;
+use Laravel\Sanctum\Sanctum;
+use App\Models\Customer;
+// ثم أخبر Laravel أن يستخدم Customer model للمصادقة
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Sanctum::usePersonalAccessTokenModel(\Laravel\Sanctum\PersonalAccessToken::class);
+
         //
         // ربط متغير $user مع view 'dashboard.partials.navbar'
         View::composer('dashboard.partials.navbar', function ($view) {
