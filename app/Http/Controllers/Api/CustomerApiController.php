@@ -137,11 +137,40 @@ class CustomerApiController extends Controller
 
     public function dashboard(Request $request)
     {
-        // مثال: إحصائيات بسيطة
+        $categories = Category::where('show_in_customer_app', true)
+            ->select('id', 'name', 'image')
+            ->take(8)
+            ->get();
+
+        $brands = Brand::where('show_in_customer_app', true)
+            ->select('id', 'name', 'logo')
+            ->take(8)
+            ->get();
+
+        $products = Item::where('is_inactive', false)
+            ->with(['category', 'brand', 'packs'])
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                $defaultPack = $item->packs->where('is_default_pack', true)->first() ?? $item->packs->first();
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name_ar ?: $item->name_en,
+                    'image' => $item->main_image_url,
+                    'price' => $defaultPack ? $defaultPack->price : 0,
+                    'old_price' => null,
+                    'rate' => 0,
+                    'is_favorite' => false,
+                ];
+            });
+
         return response()->json([
             'success' => true,
+            'categories' => $categories,
+            'brands' => $brands,
+            'products' => $products,
             'dashboard' => [
-                'total_orders' => 0, // سيأتي من نموذج Order
+                'total_orders' => 0,
                 'total_favorites' => 0,
             ]
         ]);

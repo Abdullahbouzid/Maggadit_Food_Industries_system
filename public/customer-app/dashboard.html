@@ -53,7 +53,7 @@
         async function loadDashboard() {
             try {
                 const response = await API.getDashboard();
-                const { categories, brands, products } = response.data;
+                const { categories, brands, products } = response;
 
                 const content = document.getElementById('content');
                 content.innerHTML = '';

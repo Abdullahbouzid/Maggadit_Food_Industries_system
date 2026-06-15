@@ -116,9 +116,9 @@ const API = (() => {
             body: JSON.stringify({ username, password }),
         });
 
-        if (data.success && data.data) {
-            setToken(data.data.token);
-            setCustomerData(data.data.customer);
+        if (data.success && data.token) {
+            setToken(data.token);
+            setCustomerData(data.customer);
         }
 
         return data;
