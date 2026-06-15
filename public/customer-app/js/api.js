@@ -7,8 +7,8 @@
 const API = (() => {
     // عنوان الـ API - يتم تحديده تلقائياً أو يدوياً
     // إذا كان التطبيق يعمل على نفس السيرفر، سيستخدم العنوان الحالي
-    // إذا كان APK مستقل، غيّر هذا العنوان لعنوان السيرفر الخاص بك
-    let BASE_URL = '';
+    // إذا كان APK مستقل، غيّر هذا العنوان لعنوان السيرفر الخاص بك على الاستضافة
+    let BASE_URL = 'https://blue-beaver-923812.hostingersite.com'; // تم التعديل لربط التطبيق بالاستضافة بدلاً من السيرفر المحلي
 
     function getBaseUrl() {
         if (BASE_URL) return BASE_URL;
@@ -19,13 +19,16 @@ const API = (() => {
 
         // إذا كان يعمل على نفس السيرفر
         const origin = window.location.origin;
-        if (origin && !origin.includes('file://')) {
+        // تجاهل المسارات المحلية الخاصة بتطبيقات الهاتف (مثل file:// أو http://localhost في Capacitor)
+        const isLocalApp = origin.includes('file://') || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('capacitor://');
+        
+        if (origin && !isLocalApp) {
             return origin;
         }
 
-        // الافتراضي - عنوان جهاز الكمبيوتر المحلي الخاص بك
-        // تأكد من تشغيل: php artisan serve --host=0.0.0.0
-        return 'http://192.168.123.168:8000';
+        // الافتراضي في حالة الـ APK
+        // تأكد من وضع رابط الاستضافة الصحيح الخاص بك هنا
+        return 'https://blue-beaver-923812.hostingersite.com';
     }
 
     function setBaseUrl(url) {
