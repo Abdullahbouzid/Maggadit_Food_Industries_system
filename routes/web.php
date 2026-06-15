@@ -58,9 +58,20 @@ Route::post('/mobile/login', function (Request $request) {
     
     if (\Illuminate\Support\Facades\Auth::guard('customer')->attempt($request->only('username', 'password'))) {
         $request->session()->regenerate();
+        
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
+        }
         return redirect()->route('customer.dashboard');
     }
     
+    if ($request->expectsJson()) {
+        return response()->json([
+            'message' => 'بيانات الدخول غير صحيحة.',
+            'errors' => ['username' => ['بيانات الدخول غير صحيحة.']]
+        ], 422);
+    }
+
     return back()->withErrors([
         'username' => 'بيانات الدخول غير صحيحة.',
     ])->onlyInput('username');

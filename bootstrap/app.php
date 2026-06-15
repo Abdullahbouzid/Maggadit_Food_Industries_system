@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // ... other routing if any
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->validateCsrfTokens(except: [
+            'mobile/login',
+        ]);
         // Register route middleware aliases
         $middleware->alias([
             'check.customer.session' => CheckCustomerSession::class,

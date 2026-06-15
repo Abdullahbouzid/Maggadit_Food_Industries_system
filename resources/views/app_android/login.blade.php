@@ -161,7 +161,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('mobile.login.submit') }}" id="login-form">
+        <form method="POST" action="/mobile/login" id="login-form">
             @csrf
             <div class="mb-4">
                 <label id="username-label" class="block text-gray-700 text-sm font-semibold mb-2">Username</label>
@@ -276,22 +276,51 @@
             setLanguage(newLang);
         });
 
-        // إشعار تسجيل الدخول عند إرسال النموذج
+        // إشعار تسجيل الدخول عند إرسال النموذج باستخدام AJAX لتفادي مشاكل WebView
         const form = document.getElementById('login-form');
-        form.addEventListener('submit', function(e) {
-            // إظهار توست "جاري تسجيل الدخول"
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault(); // منع الإرسال الافتراضي
+
             const t = translations[currentLang];
             showToast(t.toast_logging, false);
-            // يمكنك أيضاً تعطيل الزر لتجنب النقر المتكرر
+            
             const btn = document.getElementById('signin-btn');
             btn.disabled = true;
             btn.style.opacity = '0.7';
-            // سيتم إعادة التوجيه بعد الإرسال الطبيعي، لكن إذا حدث خطأ (مثلاً بسبب تحقق الخادم)
-            // سنعرض التوست مع الخطأ إذا وجدنا رسالة الخطأ بعد التحميل.
-            // لا نمنع الإرسال، نسمح للمستخدم بإكمال العملية.
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/mobile/login', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        window.location.href = '/customer/dashboard';
+                    }
+                } else {
+                    // فشل الدخول (بيانات خاطئة 422)
+                    showToast(t.toast_error, true);
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                showToast(t.toast_error, true);
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
         });
 
-        // إذا كان هناك رسالة خطأ من الخادم (عند تحميل الصفحة مع session error)
+        // إذا كان هناك رسالة خطأ من الخادم (عند تحميل الصفحة لأول مرة مع session error)
         window.addEventListener('DOMContentLoaded', function() {
             const errorDiv = document.getElementById('server-error');
             if (errorDiv && errorDiv.innerText.trim() !== '') {
