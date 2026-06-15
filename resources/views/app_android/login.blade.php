@@ -180,10 +180,10 @@
             <button type="submit" id="signin-btn" class="btn-signin w-full text-white text-base font-semibold transition">Sign In</button>
         </form>
 
-        <!-- رسالة التسجيل (اختيارية - أضفها إذا أردت) -->
+        <!-- رسالة التسجيل -->
         <div class="text-center mt-6 text-sm text-gray-500">
             <span id="signup-text">Are you new user?</span>
-            <a href="#" id="signup-link" class="signup-link mr-1">Sign Up</a>
+            <a href="/mobile/register" id="signup-link" class="signup-link mr-1">Sign Up</a>
         </div>
     </div>
 

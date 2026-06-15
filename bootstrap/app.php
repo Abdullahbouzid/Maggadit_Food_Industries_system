@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [
             'mobile/login',
+            'mobile/register',
         ]);
         // Register route middleware aliases
         $middleware->alias([

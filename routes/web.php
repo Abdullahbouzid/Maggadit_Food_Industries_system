@@ -50,13 +50,43 @@ Route::get('/mobile/login', function () {
     return view('app_android.login');
 })->name('mobile.login');
 
+Route::get('/mobile/register', function () {
+    return view('app_android.register');
+})->name('mobile.register');
+
+Route::post('/mobile/register', function (Request $request) {
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'username' => 'required|string|unique:customers',
+        'email' => 'required|email|unique:customers',
+        'password' => 'required|string|min:6',
+    ]);
+
+    $customer = \App\Models\Customer::create([
+        'name' => $request->name,
+        'username' => $request->username,
+        'email' => $request->email,
+        'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+    ]);
+
+    \Illuminate\Support\Facades\Auth::guard('customer')->login($customer);
+    $request->session()->regenerate();
+
+    if ($request->expectsJson()) {
+        return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
+    }
+    return redirect()->route('customer.dashboard');
+})->name('mobile.register.submit');
+
 Route::post('/mobile/login', function (Request $request) {
     $request->validate([
         'username' => 'required',
         'password' => 'required',
     ]);
     
-    if (\Illuminate\Support\Facades\Auth::guard('customer')->attempt($request->only('username', 'password'))) {
+    $loginType = filter_var($request->username, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+    if (\Illuminate\Support\Facades\Auth::guard('customer')->attempt([$loginType => $request->username, 'password' => $request->password])) {
         $request->session()->regenerate();
         
         if ($request->expectsJson()) {
