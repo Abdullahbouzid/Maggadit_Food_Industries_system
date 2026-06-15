@@ -23,8 +23,9 @@ const API = (() => {
             return origin;
         }
 
-        // الافتراضي - غيّر هذا لعنوان السيرفر الخاص بك
-        return 'https://maggadit.com';
+        // الافتراضي - عنوان جهاز الكمبيوتر المحلي الخاص بك
+        // تأكد من تشغيل: php artisan serve --host=0.0.0.0
+        return 'http://192.168.123.168:8000';
     }
 
     function setBaseUrl(url) {
