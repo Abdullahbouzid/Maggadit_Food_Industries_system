@@ -290,10 +290,13 @@
 
             try {
                 const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
                 const response = await fetch('/mobile/login', {
                     method: 'POST',
-                    body: formData,
+                    body: JSON.stringify(data),
                     headers: {
+                        'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
                     }
