@@ -277,52 +277,51 @@
         });
 
         // إشعار تسجيل الدخول عند إرسال النموذج باستخدام AJAX لتفادي مشاكل WebView
-  const API_BASE = "https://blue-beaver-923812.hostingersite.com"; // إذا عندك دومين ضع هنا https://domain.com
+        const form = document.getElementById('login-form');
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault(); // منع الإرسال الافتراضي
 
-form.addEventListener('submit', async function(e) {
-    e.preventDefault();
+            const t = translations[currentLang];
+            showToast(t.toast_logging, false);
+            
+            const btn = document.getElementById('signin-btn');
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
 
-    const t = translations[currentLang];
-    showToast(t.toast_logging, false);
+            try {
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                const response = await fetch('/mobile/login', {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
 
-    const btn = document.getElementById('signin-btn');
-    btn.disabled = true;
-    btn.style.opacity = '0.7';
-
-    try {
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-
-        const response = await fetch(API_BASE + '/customer/login', {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        window.location.href = '/customer/dashboard';
+                    }
+                } else {
+                    // فشل الدخول (بيانات خاطئة 422)
+                    showToast(t.toast_error, true);
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                showToast(t.toast_error, true);
+                btn.disabled = false;
+                btn.style.opacity = '1';
             }
         });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            // حفظ التوكن (مهم للـ APK)
-            localStorage.setItem('token', result.token);
-
-            window.location.href = '/customer/dashboard';
-        } else {
-            showToast(t.toast_error, true);
-            btn.disabled = false;
-            btn.style.opacity = '1';
-        }
-
-    } catch (error) {
-        console.error(error);
-        showToast(t.toast_error, true);
-        btn.disabled = false;
-        btn.style.opacity = '1';
-    }
-});
 
         // إذا كان هناك رسالة خطأ من الخادم (عند تحميل الصفحة لأول مرة مع session error)
         window.addEventListener('DOMContentLoaded', function() {

@@ -274,15 +274,13 @@
             setLanguage(newLang);
         });
 
-    
-        const API_BASE = "https://blue-beaver-923812.hostingersite.com";
-
+        const form = document.getElementById('register-form');
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const t = translations[currentLang];
             showToast(t.toast_loading, false);
-
+            
             const btn = document.getElementById('signup-btn');
             btn.disabled = true;
             btn.style.opacity = '0.7';
@@ -290,8 +288,8 @@
             try {
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
-
-                const response = await fetch(API_BASE + '/customer/register', {
+                
+                const response = await fetch('/mobile/register', {
                     method: 'POST',
                     body: JSON.stringify(data),
                     headers: {
@@ -301,23 +299,26 @@
                     }
                 });
 
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    localStorage.setItem('token', result.token);
-                    window.location.href = '/customer/dashboard';
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        window.location.href = '/customer/dashboard';
+                    }
                 } else {
+                    // فشل التسجيل
+                    const errorData = await response.json();
                     let errMsg = t.toast_error;
-                    if (result.errors) {
-                        errMsg = Object.values(result.errors)[0][0];
+                    if(errorData.errors) {
+                        errMsg = Object.values(errorData.errors)[0][0] || t.toast_error;
                     }
                     showToast(errMsg, true);
                     btn.disabled = false;
                     btn.style.opacity = '1';
                 }
-
             } catch (error) {
-                console.error(error);
+                console.error("Register Error:", error);
                 showToast(t.toast_error, true);
                 btn.disabled = false;
                 btn.style.opacity = '1';
