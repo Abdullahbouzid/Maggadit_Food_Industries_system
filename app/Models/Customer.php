@@ -25,4 +25,5 @@ class Customer extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
     ];
+    
 }

@@ -183,149 +183,54 @@
     <div id="register-toast" class="toast-notification"></div>
 
     <script>
-        const translations = {
-            en: {
-                brand_title: "Create Account",
-                brand_sub: "Maggadit Food Industries",
-                name_label: "Full Name",
-                name_placeholder: "Enter your full name",
-                username_label: "Username",
-                username_placeholder: "Choose a username",
-                email_label: "Email Address",
-                email_placeholder: "Enter your email",
-                password_label: "Password",
-                password_placeholder: "Create a password",
-                signup_btn: "Sign Up",
-                login_text: "Already have an account?",
-                login_link: "Sign In",
-                lang_switch_text: "🇸🇦 العربية",
-                dir: "ltr",
-                text_align: "left",
-                toast_loading: "⏳ Creating account...",
-                toast_error: "❌ Error creating account. Try another username/email."
-            },
-            ar: {
-                brand_title: "إنشاء حساب",
-                brand_sub: "ماغاديت للصناعات الغذائية",
-                name_label: "الاسم الكامل",
-                name_placeholder: "أدخل اسمك الكامل",
-                username_label: "اسم المستخدم",
-                username_placeholder: "اختر اسم مستخدم",
-                email_label: "البريد الإلكتروني",
-                email_placeholder: "أدخل بريدك الإلكتروني",
-                password_label: "كلمة المرور",
-                password_placeholder: "أنشئ كلمة مرور",
-                signup_btn: "إنشاء الحساب",
-                login_text: "لديك حساب بالفعل؟",
-                login_link: "تسجيل الدخول",
-                lang_switch_text: "🇬🇧 English",
-                dir: "rtl",
-                text_align: "right",
-                toast_loading: "⏳ جاري إنشاء الحساب...",
-                toast_error: "❌ خطأ في إنشاء الحساب. تأكد من صحة البيانات."
-            }
-        };
+const API_BASE = "https://blue-beaver-923812.hostingersite.com";
 
-        let currentLang = localStorage.getItem('lang') || 'en';
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('register-toast');
-            toast.innerText = message;
-            toast.classList.add('show');
-            if (isError) {
-                toast.style.background = '#dc2626';
-            } else {
-                toast.style.background = '#1f2937';
-            }
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
+    const t = translations[currentLang];
+    showToast(t.toast_loading, false);
 
-        function setLanguage(lang) {
-            currentLang = lang;
-            localStorage.setItem('lang', lang);
-            const t = translations[lang];
+    const btn = document.getElementById('signup-btn');
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
 
-            document.getElementById('brand-title').innerText = t.brand_title;
-            document.getElementById('brand-sub').innerText = t.brand_sub;
-            document.getElementById('name-label').innerText = t.name_label;
-            document.getElementById('name-input').placeholder = t.name_placeholder;
-            document.getElementById('username-label').innerText = t.username_label;
-            document.getElementById('username-input').placeholder = t.username_placeholder;
-            document.getElementById('email-label').innerText = t.email_label;
-            document.getElementById('email-input').placeholder = t.email_placeholder;
-            document.getElementById('password-label').innerText = t.password_label;
-            document.getElementById('password-input').placeholder = t.password_placeholder;
-            document.getElementById('signup-btn').innerText = t.signup_btn;
-            document.getElementById('login-text').innerText = t.login_text;
-            document.getElementById('login-link').innerText = t.login_link;
-            document.getElementById('lang-switch').innerText = t.lang_switch_text;
+    try {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
 
-            document.documentElement.setAttribute('dir', t.dir);
-            document.documentElement.lang = lang === 'ar' ? 'ar' : 'en';
-            document.body.style.textAlign = t.text_align;
-            const card = document.querySelector('.login-card');
-            if (card) card.style.textAlign = t.text_align;
-        }
-
-        document.getElementById('lang-switch').addEventListener('click', () => {
-            const newLang = currentLang === 'en' ? 'ar' : 'en';
-            setLanguage(newLang);
-        });
-
-        const form = document.getElementById('register-form');
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const t = translations[currentLang];
-            showToast(t.toast_loading, false);
-            
-            const btn = document.getElementById('signup-btn');
-            btn.disabled = true;
-            btn.style.opacity = '0.7';
-
-            try {
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                
-                const response = await fetch('/mobile/register', {
-                    method: 'POST',
-                    body: JSON.stringify(data),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.redirect) {
-                        window.location.href = data.redirect;
-                    } else {
-                        window.location.href = '/customer/dashboard';
-                    }
-                } else {
-                    // فشل التسجيل
-                    const errorData = await response.json();
-                    let errMsg = t.toast_error;
-                    if(errorData.errors) {
-                        errMsg = Object.values(errorData.errors)[0][0] || t.toast_error;
-                    }
-                    showToast(errMsg, true);
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
-                }
-            } catch (error) {
-                console.error("Register Error:", error);
-                showToast(t.toast_error, true);
-                btn.disabled = false;
-                btn.style.opacity = '1';
+        const response = await fetch(API_BASE + '/customer/register', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         });
 
-        setLanguage(currentLang);
-    </script>
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            localStorage.setItem('token', result.token);
+            window.location.href = '/customer/dashboard';
+        } else {
+            let errMsg = t.toast_error;
+            if (result.errors) {
+                errMsg = Object.values(result.errors)[0][0];
+            }
+            showToast(errMsg, true);
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+
+    } catch (error) {
+        console.error(error);
+        showToast(t.toast_error, true);
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+});
+</script>
 </body>
 </html>
