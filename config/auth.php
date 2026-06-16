@@ -14,7 +14,7 @@ return [
 
         // guard خاص بالعملاء (لتطبيق الويب داخل APK)
         'customer' => [
-            'driver' => 'sanctum',
+            'driver' => 'session',
             'provider' => 'customers',
         ],
 

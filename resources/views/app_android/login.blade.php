@@ -189,8 +189,95 @@
 
     <!-- Toast الإشعار -->
     <div id="login-toast" class="toast-notification"></div>
-<script>
-const API_BASE = "https://blue-beaver-923812.hostingersite.com"; // إذا عندك دومين ضع هنا https://domain.com
+
+    <script>
+        // تعريف النصوص لكل لغة
+        const translations = {
+            en: {
+                brand_title: "Maggadit",
+                brand_sub: "Maggadit Food Industries",
+                brand_en: "MAGGADIT FOOD INDUSTRIES",
+                username_label: "Username",
+                username_placeholder: "Enter your username",
+                password_label: "Password",
+                password_placeholder: "Enter your password",
+                signin_btn: "Sign In",
+                signup_text: "Are you new user?",
+                signup_link: "Sign Up",
+                lang_switch_text: "🇸🇦 العربية",
+                dir: "ltr",
+                text_align: "left",
+                toast_logging: "🔐 Logging in, please wait...",
+                toast_error: "❌ Login failed. Please check your credentials."
+            },
+            ar: {
+                brand_title: "ماغاديت",
+                brand_sub: "ماغاديت للصناعات الغذائية",
+                brand_en: "ماغاديت للصناعات الغذائية",
+                username_label: "اسم المستخدم",
+                username_placeholder: "أدخل اسم المستخدم",
+                password_label: "كلمة المرور",
+                password_placeholder: "أدخل كلمة المرور",
+                signin_btn: "تسجيل الدخول",
+                signup_text: "ليس لديك حساب؟",
+                signup_link: "إنشاء حساب",
+                lang_switch_text: "🇬🇧 English",
+                dir: "rtl",
+                text_align: "right",
+                toast_logging: "🔐 جاري تسجيل الدخول، انتظر قليلاً...",
+                toast_error: "❌ فشل تسجيل الدخول. يرجى التحقق من بياناتك."
+            }
+        };
+
+        let currentLang = localStorage.getItem('lang') || 'en';
+
+        // دالة إظهار التوست
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('login-toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            if (isError) {
+                toast.style.background = '#dc2626';
+            } else {
+                toast.style.background = '#1f2937';
+            }
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            const t = translations[lang];
+
+            document.getElementById('brand-title').innerText = t.brand_title;
+            document.getElementById('brand-sub').innerText = t.brand_sub;
+            document.getElementById('brand-en').innerText = t.brand_en;
+            document.getElementById('username-label').innerText = t.username_label;
+            document.getElementById('username-input').placeholder = t.username_placeholder;
+            document.getElementById('password-label').innerText = t.password_label;
+            document.getElementById('password-input').placeholder = t.password_placeholder;
+            document.getElementById('signin-btn').innerText = t.signin_btn;
+            document.getElementById('signup-text').innerText = t.signup_text;
+            document.getElementById('signup-link').innerText = t.signup_link;
+            document.getElementById('lang-switch').innerText = t.lang_switch_text;
+
+            document.documentElement.setAttribute('dir', t.dir);
+            document.documentElement.lang = lang === 'ar' ? 'ar' : 'en';
+            document.body.style.textAlign = t.text_align;
+            const card = document.querySelector('.login-card');
+            if (card) card.style.textAlign = t.text_align;
+        }
+
+        // تبديل اللغة
+        document.getElementById('lang-switch').addEventListener('click', () => {
+            const newLang = currentLang === 'en' ? 'ar' : 'en';
+            setLanguage(newLang);
+        });
+
+        // إشعار تسجيل الدخول عند إرسال النموذج باستخدام AJAX لتفادي مشاكل WebView
+  const API_BASE = "https://blue-beaver-923812.hostingersite.com"; // إذا عندك دومين ضع هنا https://domain.com
 
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -236,6 +323,18 @@ form.addEventListener('submit', async function(e) {
         btn.style.opacity = '1';
     }
 });
-</script>
+
+        // إذا كان هناك رسالة خطأ من الخادم (عند تحميل الصفحة لأول مرة مع session error)
+        window.addEventListener('DOMContentLoaded', function() {
+            const errorDiv = document.getElementById('server-error');
+            if (errorDiv && errorDiv.innerText.trim() !== '') {
+                const t = translations[currentLang];
+                showToast(t.toast_error, true);
+            }
+        });
+
+        // تعيين اللغة الأولية
+        setLanguage(currentLang);
+    </script>
 </body>
 </html>
