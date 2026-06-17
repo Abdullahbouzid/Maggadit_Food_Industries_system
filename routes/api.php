@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CustomerApiController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+
 Route::prefix('customer')->name('api.customer.')->group(function () {
     // مسارات عامة
     Route::post('/login', [CustomerAuthController::class, 'login']);
