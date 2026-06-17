@@ -6,6 +6,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>@yield('title', 'Maggadit')</title>
+    <script>
+        // توجيه تطبيق الموبايل (NativePHP) إلى الخادم المباشر للاتصال بقاعدة البيانات الحقيقية
+        const liveDomain = 'blue-beaver-923812.hostingersite.com';
+        const liveUrl = 'https://' + liveDomain;
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        
+        if (isAndroid && window.location.hostname !== liveDomain) {
+            window.location.replace(liveUrl + window.location.pathname + window.location.search);
+        }
+    </script>
     @vite(['resources/css/app.css'])
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">

@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Maggadit - Sign In</title>
+    <script>
+        // توجيه تطبيق الموبايل (NativePHP) إلى الخادم المباشر للاتصال بقاعدة البيانات الحقيقية
+        const liveDomain = 'blue-beaver-923812.hostingersite.com';
+        const liveUrl = 'https://' + liveDomain;
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        
+        if (isAndroid && window.location.hostname !== liveDomain) {
+            window.location.replace(liveUrl + window.location.pathname + window.location.search);
+        }
+    </script>
     @vite(['resources/css/app.css'])
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
