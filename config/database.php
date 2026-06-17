@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => (env('NATIVEPHP_PLATFORM') === 'android') ? 'sqlite' : env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'sqlite'),
 
     /*
     |--------------------------------------------------------------------------
