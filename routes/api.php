@@ -9,6 +9,18 @@ Route::get('/testroot', function () {
     return response()->json(['test' => 'Root API working']);
 });
 
+Route::get('/testxyz', function () {
+    return response()->json(['test' => 'Test XYZ API working']);
+});
+
+Route::get('/testzzz', function () {
+    return response()->json(['test' => 'Test ZZZ API working']);
+});
+
+Route::post('/testapianother', function () {
+    return response()->json(['test' => 'API working']);
+});
+
 Route::prefix('customer')->name('api.customer.')->group(function () {
     // مسارات عامة
     Route::post('/login', [CustomerAuthController::class, 'login']);
@@ -43,5 +55,10 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::get('/contact-us', [CustomerApiController::class, 'contactUs']);
         Route::get('/organizations', [CustomerApiController::class, 'organizationsList']);
         Route::post('/change-organization', [CustomerApiController::class, 'switchOrganization']);
+    });
+
+    // Add test route inside customer group
+    Route::get('/testinside', function () {
+        return response()->json(['test' => 'Inside group API working']);
     });
 });
