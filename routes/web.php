@@ -291,11 +291,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('item-pack-pack-groups', ItemPackPackGroupController::class)->only(['store', 'destroy']);
     Route::resource('item-pack-pack-operations', ItemPackPackOperationController::class)->only(['store', 'destroy']);
 
-    Route::post('item-pack-pack-groups', [ItemPackPackGroupController::class, 'store'])->name('item-pack-pack-groups.store');
-    Route::delete('item-pack-pack-groups/{itemPackId}/{packGroupId}', [ItemPackPackGroupController::class, 'destroy'])->name('item-pack-pack-groups.destroy');
-    Route::post('item-pack-pack-operations', [ItemPackPackOperationController::class, 'store'])->name('item-pack-pack-operations.store');
-    Route::delete('item-pack-pack-operations/{itemPackId}/{packOperationId}', [ItemPackPackOperationController::class, 'destroy'])->name('item-pack-pack-operations.destroy');
-
     Route::get('warehouse-types/export', [WarehouseTypeController::class, 'export'])->name('warehouse-types.export');
     Route::get('warehouse-types/template', [WarehouseTypeController::class, 'downloadTemplate'])->name('warehouse-types.template');
     Route::post('warehouse-types/import', [WarehouseTypeController::class, 'import'])->name('warehouse-types.import');

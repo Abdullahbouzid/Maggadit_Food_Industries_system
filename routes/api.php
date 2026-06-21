@@ -5,11 +5,17 @@ use App\Http\Controllers\Api\CustomerApiController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/testroot', function () {
+    return response()->json(['test' => 'Root API working']);
+});
 
 Route::prefix('customer')->name('api.customer.')->group(function () {
     // مسارات عامة
     Route::post('/login', [CustomerAuthController::class, 'login']);
     Route::post('/register', [CustomerAuthController::class, 'register']);
+    Route::post('/testapi2', function () {
+        return response()->json(['test' => 'API working']);
+    });
 
     Route::get('/categories', [CustomerApiController::class, 'categoriesIndex']);
     Route::get('/categories/{id}', [CustomerApiController::class, 'categoriesShow']);
@@ -34,7 +40,7 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::get('/faq', [CustomerApiController::class, 'faq']);
         Route::get('/privacy-policy', [CustomerApiController::class, 'privacyPolicy']);
         Route::get('/about-us', [CustomerApiController::class, 'aboutUs']);
-        Route::post('/contact-us', [CustomerApiController::class, 'contactUs']);
+        Route::get('/contact-us', [CustomerApiController::class, 'contactUs']);
         Route::get('/organizations', [CustomerApiController::class, 'organizationsList']);
         Route::post('/change-organization', [CustomerApiController::class, 'switchOrganization']);
     });
