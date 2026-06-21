@@ -13,7 +13,7 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
     // مسارات عامة
     Route::post('/login', [CustomerAuthController::class, 'login']);
     Route::post('/register', [CustomerAuthController::class, 'register']);
-    Route::post('/testapi2', function () {
+    Route::post('/testapi3', function () {
         return response()->json(['test' => 'API working']);
     });
 
