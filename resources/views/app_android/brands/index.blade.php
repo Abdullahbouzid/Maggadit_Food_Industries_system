@@ -18,7 +18,7 @@
             @forelse($brands as $brand)
                 <a href="{{ route('customer.brands.show', $brand->id) }}" class="block bg-white rounded-2xl shadow-md p-4 text-center transition hover:shadow-lg">
                     <div class="w-20 h-20 mx-auto rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center text-4xl shadow-sm">
-                        @if($brand->logo && file_exists(public_path('uploads/' . $brand->logo)))
+                        @if($brand->logo)
                             <img src="{{ asset('uploads/' . $brand->logo) }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-2">
                         @else
                             <span>{{ $brand->logo_emoji ?? '🏷️' }}</span>

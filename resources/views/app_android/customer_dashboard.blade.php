@@ -6,7 +6,7 @@
     @include('app_android.partials.mobile.header', ['title' => __('messages.dashboard_title')])
 
     <div class="p-4 space-y-6 mb-5" dir="rtl">
-        
+
    {{-- ========== شريط الدعايات (Carousel) مع 6 بطاقات وتمرير تلقائي ========== --}}
         <div class="relative">
             <div id="ad-carousel" class="flex overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar rounded-2xl shadow-md" style="scrollbar-width: none; -webkit-overflow-scrolling: touch;">
@@ -42,7 +42,7 @@
                 @endforeach
             </div>
         </div>
-        
+
         {{-- ========== قسم الفئات (Categories) ديناميكي مع صور ========== --}}
         <div>
             <div class="flex justify-between items-center mb-3">
@@ -53,7 +53,7 @@
                 @forelse($categories as $category)
                     <div class="flex-shrink-0 text-center w-20 cursor-pointer" onclick="window.location='{{ route('customer.categories.show', $category->id) }}'">
                         <div class="w-16 h-16 mx-auto rounded-full overflow-hidden shadow-sm transition hover:scale-105 bg-gray-100 flex items-center justify-center">
-                            @if($category->image && file_exists(public_path('uploads/' . $category->image)))
+                            @if($category->image)
                                 <img src="{{ asset('uploads/' . $category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
                             @else
                                 <span class="text-2xl">{{ $category->icon ?? '📁' }}</span>
@@ -77,7 +77,7 @@
                 @forelse($brands as $brand)
                     <div class="flex-shrink-0 text-center w-24 cursor-pointer" onclick="window.location='{{ route('customer.brands.show', $brand->id) }}'">
                         <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition hover:shadow-md bg-gray-100 flex items-center justify-center">
-                            @if($brand->logo && file_exists(public_path('uploads/' . $brand->logo)))
+                            @if($brand->logo)
                                 <img src="{{ asset('uploads/' . $brand->logo) }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-2">
                             @else
                                 <span class="text-3xl">{{ $brand->logo_emoji ?? '🏷️' }}</span>
@@ -141,7 +141,7 @@
                     <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                         <div class="flex flex-row">
                             <div class="relative w-28 h-28 overflow-hidden">
-                                @if($offer->image && file_exists(public_path('uploads/' . $offer->image)))
+                                @if($offer->image)
                                     <img src="{{ asset('uploads/' . $offer->image) }}" alt="{{ $offer->title }}" class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl">
@@ -203,7 +203,7 @@
         // ========== Carousel with Auto-Scroll ==========
         const carousel = document.getElementById('ad-carousel');
         const dots = document.querySelectorAll('#ad-dots .rounded-full');
-        
+
         let autoScrollInterval = null;
         let isUserInteracting = false;
         let interactionTimeout = null;
