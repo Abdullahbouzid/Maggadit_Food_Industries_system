@@ -142,7 +142,7 @@
                         <div class="flex flex-row">
                             <div class="relative w-28 h-28 overflow-hidden">
                                 @if($offer->image)
-                                    <img src="{{ asset('uploads/' . $offer->image) }}" alt="{{ $offer->title }}" class="w-full h-full object-cover">
+                                    <img src="{{ asset('storage/'.$offer->image) }}" alt="{{ $offer->title }}" class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl">
                                         🛍️
