@@ -20,4 +20,12 @@ class Category extends Model
     protected $casts = [
         'show_in_customer_app' => 'boolean',
     ];
+
+    /**
+     * Get the items for the category.
+     */
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
 }

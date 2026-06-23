@@ -18,7 +18,7 @@
                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg">
                     <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                         @if($item->image)
-                            <img src="{{ asset('uploads/' . $item->image) }}" class="w-full h-full object-cover">
+                            <img src="{{ $item->image }}" alt="{{ $item->name_en }}" class="w-full h-full object-cover">
                         @else
                             <span class="text-5xl text-gray-400">📦</span>
                         @endif
@@ -47,7 +47,7 @@
             @endforelse
         </div>
 
-        @if(method_exists($items, 'links'))
+        @if($items instanceof \Illuminate\Pagination\LengthAwarePaginator)
             <div class="mt-6">
                 {{ $items->links() }}
             </div>

@@ -8,13 +8,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Permission\Traits\HasRoles;
 
-
 class Brand extends Model
-
 {
     use HasFactory, HasRoles;
     protected $fillable = ['name', 'logo', 'show_in_customer_app'];
 
-    
-
+    /**
+     * Get the items for the brand.
+     */
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
 }
