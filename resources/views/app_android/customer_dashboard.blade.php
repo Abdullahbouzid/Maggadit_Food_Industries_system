@@ -54,7 +54,7 @@
                     <div class="flex-shrink-0 text-center w-20 cursor-pointer" onclick="window.location='{{ route('customer.categories.show', $category->id) }}'">
                         <div class="w-16 h-16 mx-auto rounded-full overflow-hidden shadow-sm transition hover:scale-105 bg-gray-100 flex items-center justify-center">
                             @if($category->image)
-                                <img src="{{ asset('uploads/' . $category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
+                                <img src="https://blue-beaver-923812.hostingersite.com/uploads/{{ $category->image }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
                             @else
                                 <span class="text-2xl">{{ $category->icon ?? '📁' }}</span>
                             @endif
@@ -78,7 +78,7 @@
                     <div class="flex-shrink-0 text-center w-24 cursor-pointer" onclick="window.location='{{ route('customer.brands.show', $brand->id) }}'">
                         <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition hover:shadow-md bg-gray-100 flex items-center justify-center">
                             @if($brand->logo)
-                                <img src="{{ asset('uploads/' . $brand->logo) }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-2">
+                                <img src="https://blue-beaver-923812.hostingersite.com/uploads/{{ $brand->logo }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-2">
                             @else
                                 <span class="text-3xl">{{ $brand->logo_emoji ?? '🏷️' }}</span>
                             @endif
@@ -102,7 +102,7 @@
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg">
                         <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                             @if($product->image)
-                                <img src="{{ asset('uploads/' . $product->image) }}" alt="{{ $product->name_en }}" class="w-full h-full object-cover">
+                                <img src="https://blue-beaver-923812.hostingersite.com/uploads/{{ $product->image }}" alt="{{ $product->name_en }}" class="w-full h-full object-cover">
                             @else
                                 <span class="text-5xl text-gray-400">📦</span>
                             @endif

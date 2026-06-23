@@ -3,43 +3,36 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
-use App\Models\Brand;
-use App\Models\Item;        // استخدم نموذج Item بدلاً من Product
-use App\Models\Offer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class CustomerAppController extends Controller
 {
+    private $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
+
     /**
      * عرض لوحة التحكم الرئيسية (Dashboard)
      */
     public function dashboard()
     {
-        $categories = Category::where('show_in_customer_app', true)
-                              ->limit(6)
-                              ->get();
+        try {
+            $response = Http::get("{$this->baseUrl}/customer/dashboard");
+            if ($response->successful()) {
+                $data = $response->json();
+                $categories = json_decode(json_encode($data['categories']));
+                $brands = json_decode(json_encode($data['brands']));
+                $products = json_decode(json_encode($data['products']));
+                return view('app_android.customer_dashboard', compact('categories', 'brands', 'products'));
+            }
+        } catch (\Exception $e) {
+            // fallback if API fails
+        }
 
-        $brands = Brand::where('show_in_customer_app', true)
-                       ->limit(5)
-                       ->get();
-
-        // جلب أحدث 4 منتجات نشطة (is_inactive = false)
-        $products = Item::with(['category', 'brand'])
-                        ->where('is_inactive', false)
-                        ->latest()
-                        ->limit(4)
-                        ->get();
-
-        // جلب العروض النشطة (يمكنك تعديل حسب هيكل Offers لديك)
-        // $offers = Offer::where('is_active', true)
-        //                ->where('expiry_date', '>', now())
-        //                ->limit(2)
-        //                ->get();
-
-        return view('app_android.customer_dashboard', compact('categories', 'brands', 'products', 
-        // 'offers'
-        ));
+        return view('app_android.customer_dashboard', [
+            'categories' => collect(),
+            'brands' => collect(),
+            'products' => collect(),
+        ]);
     }
 
     /**
@@ -47,21 +40,24 @@ class CustomerAppController extends Controller
      */
     public function categoriesIndex()
     {
-        $categories = Category::where('show_in_customer_app', true)->paginate(20);
+        $response = Http::get("{$this->baseUrl}/customer/categories");
+        $categories = $response->successful() ? json_decode(json_encode($response->json()['categories'])) : collect();
         return view('app_android.categories.index', compact('categories'));
     }
 
     /**
-     * عرض فئة محددة مع منتجاتها (Items)
+     * عرض فئة محددة مع منتجاتها
      */
     public function categoriesShow($id)
     {
-        $category = Category::findOrFail($id);
-        $items = Item::where('category_id', $id)
-                     ->where('is_inactive', false)
-                     ->with(['category', 'brand', 'packs'])
-                     ->paginate(12);
-        return view('app_android.categories.show', compact('category', 'items'));
+        $response = Http::get("{$this->baseUrl}/customer/categories/{$id}");
+        if ($response->successful()) {
+            $data = $response->json();
+            $category = json_decode(json_encode($data['category']));
+            $items = json_decode(json_encode($category->items ?? []));
+            return view('app_android.categories.show', compact('category', 'items'));
+        }
+        abort(404);
     }
 
     /**
@@ -69,42 +65,33 @@ class CustomerAppController extends Controller
      */
     public function brandsIndex()
     {
-        $brands = Brand::where('show_in_customer_app', true)->paginate(20);
+        $response = Http::get("{$this->baseUrl}/customer/brands");
+        $brands = $response->successful() ? json_decode(json_encode($response->json()['brands'])) : collect();
         return view('app_android.brands.index', compact('brands'));
     }
 
     /**
-     * عرض ماركة محددة مع منتجاتها (Items)
+     * عرض ماركة محددة مع منتجاتها
      */
     public function brandsShow($id)
     {
-        $brand = Brand::findOrFail($id);
-        $items = Item::where('brand_id', $id)
-                     ->where('is_inactive', false)
-                     ->with(['category', 'brand', 'packs'])
-                     ->paginate(12);
-        return view('app_android.brands.show', compact('brand', 'items'));
+        $response = Http::get("{$this->baseUrl}/customer/brands/{$id}");
+        if ($response->successful()) {
+            $data = $response->json();
+            $brand = json_decode(json_encode($data['brand']));
+            $items = json_decode(json_encode($brand->items ?? []));
+            return view('app_android.brands.show', compact('brand', 'items'));
+        }
+        abort(404);
     }
 
     /**
-     * عرض قائمة جميع المنتجات (Items)
+     * عرض قائمة جميع المنتجات
      */
     public function productsIndex()
     {
-        $items = Item::where('is_inactive', false)
-                     ->with(['category', 'brand', 'packs'])
-                     ->paginate(12);
+        $response = Http::get("{$this->baseUrl}/customer/products");
+        $items = $response->successful() ? json_decode(json_encode($response->json()['products']['data'])) : collect();
         return view('app_android.products.index', compact('items'));
     }
-
-    /**
-     * عرض قائمة العروض (إذا كان لديك نموذج Offer)
-     */
-    // public function offersIndex()
-    // {
-    //     $offers = Offer::where('is_active', true)
-    //                    ->where('expiry_date', '>', now())
-    //                    ->paginate(10);
-    //     return view('app_android.offers.index', compact('offers'));
-    // }
 }

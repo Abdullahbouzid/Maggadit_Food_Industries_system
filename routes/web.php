@@ -83,28 +83,45 @@ Route::post('/mobile/login', function (Request $request) {
         'username' => 'required',
         'password' => 'required',
     ]);
-    
-    $loginType = filter_var($request->username, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-    if (\Illuminate\Support\Facades\Auth::guard('customer')->attempt([$loginType => $request->username, 'password' => $request->password])) {
-        $request->session()->regenerate();
-        
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
+    // إرسال طلب الدخول للاستضافة الحقيقية
+    try {
+        $response = \Illuminate\Support\Facades\Http::post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
+            'username' => $request->username,
+            'password' => $request->password,
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $remoteUser = $data['customer'];
+
+            // إنشاء أو تحديث المستخدم محلياً في الـ APK لمزامنة الجلسة
+            $customer = \App\Models\Customer::updateOrCreate(
+                ['username' => $remoteUser['username']],
+                [
+                    'name' => $remoteUser['name'],
+                    'email' => $remoteUser['email'],
+                    'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                ]
+            );
+
+            \Illuminate\Support\Facades\Auth::guard('customer')->login($customer);
+            $request->session()->regenerate();
+            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
+            }
+            return redirect()->route('customer.dashboard');
         }
-        return redirect()->route('customer.dashboard');
-    }
-    
-    if ($request->expectsJson()) {
-        return response()->json([
-            'message' => 'بيانات الدخول غير صحيحة.',
-            'errors' => ['username' => ['بيانات الدخول غير صحيحة.']]
-        ], 422);
+    } catch (\Exception $e) {
+        // خطأ في الاتصال
     }
 
-    return back()->withErrors([
-        'username' => 'بيانات الدخول غير صحيحة.',
-    ])->onlyInput('username');
+    if ($request->expectsJson()) {
+        return response()->json(['message' => 'فشل الاتصال بالسيرفر أو بيانات خاطئة'], 422);
+    }
+    return back()->withErrors(['username' => 'بيانات الدخول غير صحيحة أو السيرفر غير متاح.']);
 })->name('mobile.login.submit');
 
 Route::get('/customer/logout', function (Request $request) {
