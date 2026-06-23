@@ -49,6 +49,6 @@ class AppServiceProvider extends ServiceProvider
         }
         $view->with('markers', $markers);
     });
-        
+
     }
 }
