@@ -16,7 +16,7 @@ class CustomerAppController extends Controller
     public function dashboard()
     {
         try {
-            $response = Http::get("{$this->baseUrl}/customer/dashboard");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/dashboard");
             if ($response->successful()) {
                 $data = $response->json();
                 $categories = json_decode(json_encode($data['categories']));
@@ -25,7 +25,7 @@ class CustomerAppController extends Controller
                 return view('app_android.customer_dashboard', compact('categories', 'brands', 'products'));
             }
         } catch (\Exception $e) {
-            // fallback if API fails
+            \Illuminate\Support\Facades\Log::error("Dashboard API Error: " . $e->getMessage());
         }
 
         return view('app_android.customer_dashboard', [

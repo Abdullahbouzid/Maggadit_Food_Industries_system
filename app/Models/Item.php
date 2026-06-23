@@ -99,6 +99,9 @@ class Item extends Model
 
     public function getMainImageUrlAttribute()
     {
-        return $this->image ? asset('storage/' . $this->image) : null;
+        if (!$this->image) return null;
+
+        // إذا كان التطبيق يعمل كـ APK، نستخدم رابط الاستضافة دائماً
+        return 'https://blue-beaver-923812.hostingersite.com/storage/' . $this->image;
     }
 }
