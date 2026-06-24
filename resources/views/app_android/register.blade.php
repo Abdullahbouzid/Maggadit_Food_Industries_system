@@ -1,5 +1,4 @@
-
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -100,6 +99,7 @@
             color: white;
             border-color: #9879b6;
         }
+        /* Toast style */
         .toast-notification {
             position: fixed;
             bottom: 30px;
@@ -141,8 +141,7 @@
 
         <hr class="my-4">
 
-        <form id="register-form">
-            @csrf
+        <form method="POST" action="/mobile/register" id="register-form">
             <div class="mb-4">
                 <label id="name-label" class="block text-gray-700 text-sm font-semibold mb-2">Full Name</label>
                 <input type="text" name="name" id="name-input" required
@@ -164,18 +163,11 @@
                        placeholder="Enter your email">
             </div>
 
-            <div class="mb-4">
+            <div class="mb-5">
                 <label id="password-label" class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
                 <input type="password" name="password" id="password-input" required minlength="6"
                        class="input-field"
                        placeholder="Create a password">
-            </div>
-
-            <div class="mb-5">
-                <label id="confirm-password-label" class="block text-gray-700 text-sm font-semibold mb-2">Confirm Password</label>
-                <input type="password" name="password_confirmation" id="password-confirm-input" required minlength="6"
-                       class="input-field"
-                       placeholder="Confirm password">
             </div>
 
             <button type="submit" id="signup-btn" class="btn-signin w-full text-white text-base font-semibold transition">Sign Up</button>
@@ -187,6 +179,7 @@
         </div>
     </div>
 
+    <!-- Toast الإشعار -->
     <div id="register-toast" class="toast-notification"></div>
 
     <script>
@@ -202,8 +195,6 @@
                 email_placeholder: "Enter your email",
                 password_label: "Password",
                 password_placeholder: "Create a password",
-                confirm_password_label: "Confirm Password",
-                confirm_password_placeholder: "Confirm password",
                 signup_btn: "Sign Up",
                 login_text: "Already have an account?",
                 login_link: "Sign In",
@@ -224,8 +215,6 @@
                 email_placeholder: "أدخل بريدك الإلكتروني",
                 password_label: "كلمة المرور",
                 password_placeholder: "أنشئ كلمة مرور",
-                confirm_password_label: "تأكيد كلمة المرور",
-                confirm_password_placeholder: "تأكيد كلمة المرور",
                 signup_btn: "إنشاء الحساب",
                 login_text: "لديك حساب بالفعل؟",
                 login_link: "تسجيل الدخول",
@@ -268,8 +257,6 @@
             document.getElementById('email-input').placeholder = t.email_placeholder;
             document.getElementById('password-label').innerText = t.password_label;
             document.getElementById('password-input').placeholder = t.password_placeholder;
-            document.getElementById('confirm-password-label').innerText = t.confirm_password_label;
-            document.getElementById('password-confirm-input').placeholder = t.confirm_password_placeholder;
             document.getElementById('signup-btn').innerText = t.signup_btn;
             document.getElementById('login-text').innerText = t.login_text;
             document.getElementById('login-link').innerText = t.login_link;
@@ -286,50 +273,45 @@
             const newLang = currentLang === 'en' ? 'ar' : 'en';
             setLanguage(newLang);
         });
-const form = document.getElementById('register-form');
+
+        const form = document.getElementById('register-form');
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const t = translations[currentLang];
             showToast(t.toast_loading, false);
-
+            
             const btn = document.getElementById('signup-btn');
             btn.disabled = true;
             btn.style.opacity = '0.7';
 
             try {
                 const formData = new FormData(form);
-
-                // إرسال الطلب إلى مسار التسجيل في الويب
+                const data = Object.fromEntries(formData.entries());
+                
                 const response = await fetch('/mobile/register', {
                     method: 'POST',
-                    body: formData,
+                    body: JSON.stringify(data),
                     headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
                     }
                 });
 
                 if (response.ok) {
-                    const json = await response.json();
-                    if (json.success) {
-                        // التخزين المؤقت للتوكن إذا أردت (مع ملاحظة أن المسار الويب قد لا يعيد توكن API)
-                        // لكنه سنوجه المستخدم إلى لوحة التحكم
-                        window.location.href = '/customer/dashboard';
+                    const data = await response.json();
+                    if (data.success && data.redirect) {
+                        window.location.href = data.redirect;
                     } else {
-                        showToast(json.message || t.toast_error, true);
-                        btn.disabled = false;
-                        btn.style.opacity = '1';
+                        window.location.href = '/customer/dashboard';
                     }
                 } else {
-                    // معالجة أخطاء التحقق (مثل 422)
+                    // فشل التسجيل
                     const errorData = await response.json();
                     let errMsg = t.toast_error;
-                    if (errorData.errors) {
-                        const firstError = Object.values(errorData.errors)[0][0];
-                        errMsg = firstError || t.toast_error;
-                    } else if (errorData.message) {
-                        errMsg = errorData.message;
+                    if(errorData.errors) {
+                        errMsg = Object.values(errorData.errors)[0][0] || t.toast_error;
                     }
                     showToast(errMsg, true);
                     btn.disabled = false;
@@ -344,8 +326,6 @@ const form = document.getElementById('register-form');
         });
 
         setLanguage(currentLang);
-
-
     </script>
 </body>
 </html>
