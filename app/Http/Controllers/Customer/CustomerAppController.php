@@ -36,7 +36,7 @@ class CustomerAppController extends Controller
 
         try {
             $token = Session::get('api_token');
-            $response = Http::withToken($token)->withHeaders(['Accept' => 'application/json'])->withoutVerifying()->get("{$this->baseUrl}/customer/dashboard");
+            $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/dashboard");
             
             if ($response->successful()) {
                 $data = $response->json();
@@ -44,12 +44,7 @@ class CustomerAppController extends Controller
                 // تحويل البيانات إلى كائنات مع ضمان وجود الحقول المطلوبة
                 $categories = $this->parseData($data['categories'] ?? []);
                 $brands = $this->parseData($data['brands'] ?? []);
-                
-                $productsArray = $data['products'] ?? [];
-                if (isset($productsArray['data'])) {
-                    $productsArray = $productsArray['data'];
-                }
-                $products = $this->parseData($productsArray);
+                $products = $this->parseData($data['products'] ?? []);
             } else {
                 Log::warning("Dashboard API returned non-success status: " . $response->status());
             }
@@ -83,11 +78,10 @@ class CustomerAppController extends Controller
     public function categoriesIndex()
     {
         try {
-            $response = Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->get("{$this->baseUrl}/customer/categories");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/categories");
             if ($response->successful()) {
                 $data = $response->json();
-                $categoriesData = $data['categories'] ?? ($data['data'] ?? $data);
-                $categories = $this->parseData(is_array($categoriesData) ? $categoriesData : []);
+                $categories = $this->parseData($data['data'] ?? $data);
                 if ($categories->isNotEmpty()) {
                     return view('app_android.categories.index', compact('categories'));
                 }
@@ -113,7 +107,7 @@ class CustomerAppController extends Controller
         $items = collect();
 
         try {
-            $response = Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->get("{$this->baseUrl}/customer/categories/{$id}");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/categories/{$id}");
             if ($response->successful()) {
                 $categoryData = $response->json();
                 $category = (object) $categoryData;
@@ -145,11 +139,10 @@ class CustomerAppController extends Controller
     public function brandsIndex()
     {
         try {
-            $response = Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->get("{$this->baseUrl}/customer/brands");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands");
             if ($response->successful()) {
                 $data = $response->json();
-                $brandsData = $data['brands'] ?? ($data['data'] ?? $data);
-                $brands = $this->parseData(is_array($brandsData) ? $brandsData : []);
+                $brands = $this->parseData($data['data'] ?? $data);
                 if ($brands->isNotEmpty()) {
                     return view('app_android.brands.index', compact('brands'));
                 }
@@ -175,7 +168,7 @@ class CustomerAppController extends Controller
         $items = collect();
 
         try {
-            $response = Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->get("{$this->baseUrl}/customer/brands/{$id}");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands/{$id}");
             if ($response->successful()) {
                 $brandData = $response->json();
                 $brand = (object) $brandData;
@@ -206,19 +199,16 @@ class CustomerAppController extends Controller
      public function productsIndex()
     {
         try {
-            $response = Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->get("{$this->baseUrl}/customer/products");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/products");
             if ($response->successful()) {
                 $data = $response->json();
                 // Try to get the products array from common structures
-                $productsData = $data['products'] ?? ($data['data'] ?? $data);
-                if (isset($productsData['data'])) {
-                    $productsData = $productsData['data'];
-                }
+                $products = $data['products'] ?? ($data['data'] ?? $data);
                 // Ensure we have an array
-                if (!is_array($productsData)) {
-                    $productsData = [];
+                if (!is_array($products)) {
+                    $products = [];
                 }
-                $items = $this->parseData($productsData);
+                $items = $this->parseData($products);
                 if ($items->isNotEmpty()) {
                     return view('app_android.products.index', compact('items'));
                 }
@@ -240,14 +230,10 @@ class CustomerAppController extends Controller
     public function offersIndex()
     {
         try {
-            $response = Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->get("{$this->baseUrl}/customer/offers");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/offers");
             if ($response->successful()) {
                 $data = $response->json();
-                $offersData = $data['offers'] ?? ($data['data'] ?? $data);
-                if (isset($offersData['data'])) {
-                    $offersData = $offersData['data'];
-                }
-                $offers = $this->parseData(is_array($offersData) ? $offersData : []);
+                $offers = $this->parseData($data['data'] ?? $data);
                 if ($offers->isNotEmpty()) {
                     return view('app_android.offers.index', compact('offers'));
                 }
@@ -340,17 +326,46 @@ class CustomerAppController extends Controller
 
         // Remove leading slash if present for consistent processing
         $cleanPath = ltrim($path, '/');
-        
-        // جلب مسار السيرفر الأساسي
-        $serverUrl = rtrim($this->baseUrl, '/api');
 
-        // 2. معالجة المسارات التي تبدأ بـ 'storage/' أو 'uploads/'
-        if (str_starts_with($cleanPath, 'storage/') || str_starts_with($cleanPath, 'uploads/')) {
-            return $serverUrl . '/' . $cleanPath;
+        // 2. معالجة المسارات التي تبدأ بـ 'storage/'
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $relativePath = substr($cleanPath, 8); // Remove 'storage/' prefix
+            // التحقق من وجود الملف في القرص العام
+            if (Storage::disk('public')->exists($relativePath)) {
+                return asset('storage/' . $relativePath);
+            } else {
+                // إذا لم يوجد، نسجل خطأ ونعيد null
+                Log::warning("Image not found in storage: " . $relativePath);
+                return null;
+            }
         }
 
-        // 3. افتراضياً: نعتبره اسم ملف داخل مجلد uploads على السيرفر
-        return $serverUrl . '/uploads/' . $cleanPath;
+        // 3. معالجة المسارات التي تبدأ بـ 'uploads/'
+        if (str_starts_with($cleanPath, 'uploads/')) {
+            $relativePath = substr($cleanPath, 8); // Remove 'uploads/' prefix
+            $fullPath = public_path('uploads/' . $relativePath);
+            if (file_exists($fullPath)) {
+                return asset('uploads/' . $relativePath);
+            } else {
+                Log::warning("Image not found in uploads: " . $relativePath);
+                return null;
+            }
+        }
+
+        // 4. افتراضياً: نعتبره اسم ملف داخل مجلد uploads
+        $fullPath = public_path('uploads/' . $cleanPath);
+        if (file_exists($fullPath)) {
+            return asset('uploads/' . $cleanPath);
+        }
+
+        // 5. محاولة البحث في storage أيضاً كحل أخير
+        if (Storage::disk('public')->exists($cleanPath)) {
+            return asset('storage/' . $cleanPath);
+        }
+
+        // 6. إذا لم يوجد، نسجل خطأ ونعيد null
+        Log::warning("Image not found: " . $path);
+        return null;
     }
 
     /**
