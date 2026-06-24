@@ -99,7 +99,6 @@
             color: white;
             border-color: #9879b6;
         }
-        /* Toast style */
         .toast-notification {
             position: fixed;
             bottom: 30px;
@@ -141,7 +140,8 @@
 
         <hr class="my-4">
 
-        <form method="POST" action="/mobile/register" id="register-form">
+        <form id="register-form">
+            @csrf
             <div class="mb-4">
                 <label id="name-label" class="block text-gray-700 text-sm font-semibold mb-2">Full Name</label>
                 <input type="text" name="name" id="name-input" required
@@ -163,11 +163,18 @@
                        placeholder="Enter your email">
             </div>
 
-            <div class="mb-5">
+            <div class="mb-4">
                 <label id="password-label" class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
                 <input type="password" name="password" id="password-input" required minlength="6"
                        class="input-field"
                        placeholder="Create a password">
+            </div>
+
+            <div class="mb-5">
+                <label id="confirm-password-label" class="block text-gray-700 text-sm font-semibold mb-2">Confirm Password</label>
+                <input type="password" name="password_confirmation" id="password-confirm-input" required minlength="6"
+                       class="input-field"
+                       placeholder="Confirm password">
             </div>
 
             <button type="submit" id="signup-btn" class="btn-signin w-full text-white text-base font-semibold transition">Sign Up</button>
@@ -179,7 +186,6 @@
         </div>
     </div>
 
-    <!-- Toast الإشعار -->
     <div id="register-toast" class="toast-notification"></div>
 
     <script>
@@ -195,6 +201,8 @@
                 email_placeholder: "Enter your email",
                 password_label: "Password",
                 password_placeholder: "Create a password",
+                confirm_password_label: "Confirm Password",
+                confirm_password_placeholder: "Confirm password",
                 signup_btn: "Sign Up",
                 login_text: "Already have an account?",
                 login_link: "Sign In",
@@ -215,6 +223,8 @@
                 email_placeholder: "أدخل بريدك الإلكتروني",
                 password_label: "كلمة المرور",
                 password_placeholder: "أنشئ كلمة مرور",
+                confirm_password_label: "تأكيد كلمة المرور",
+                confirm_password_placeholder: "تأكيد كلمة المرور",
                 signup_btn: "إنشاء الحساب",
                 login_text: "لديك حساب بالفعل؟",
                 login_link: "تسجيل الدخول",
@@ -257,6 +267,8 @@
             document.getElementById('email-input').placeholder = t.email_placeholder;
             document.getElementById('password-label').innerText = t.password_label;
             document.getElementById('password-input').placeholder = t.password_placeholder;
+            document.getElementById('confirm-password-label').innerText = t.confirm_password_label;
+            document.getElementById('password-confirm-input').placeholder = t.confirm_password_placeholder;
             document.getElementById('signup-btn').innerText = t.signup_btn;
             document.getElementById('login-text').innerText = t.login_text;
             document.getElementById('login-link').innerText = t.login_link;
@@ -288,30 +300,39 @@
             try {
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
-                
-                const response = await fetch('/mobile/register', {
+
+                // إرسال الطلب إلى API التسجيل
+                const response = await fetch('/api/customer/register', {
                     method: 'POST',
                     body: JSON.stringify(data),
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
 
                 if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.redirect) {
-                        window.location.href = data.redirect;
-                    } else {
+                    const json = await response.json();
+                    if (json.success) {
+                        // تخزين التوكن إذا أردت
+                        localStorage.setItem('token', json.token);
+                        // التوجيه إلى لوحة التحكم
                         window.location.href = '/customer/dashboard';
+                    } else {
+                        showToast(json.message || t.toast_error, true);
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
                     }
                 } else {
-                    // فشل التسجيل
+                    // معالجة أخطاء التحقق (مثل 422)
                     const errorData = await response.json();
                     let errMsg = t.toast_error;
-                    if(errorData.errors) {
-                        errMsg = Object.values(errorData.errors)[0][0] || t.toast_error;
+                    if (errorData.errors) {
+                        const firstError = Object.values(errorData.errors)[0][0];
+                        errMsg = firstError || t.toast_error;
+                    } else if (errorData.message) {
+                        errMsg = errorData.message;
                     }
                     showToast(errMsg, true);
                     btn.disabled = false;

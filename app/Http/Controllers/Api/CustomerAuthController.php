@@ -10,7 +10,6 @@ use Illuminate\Validation\ValidationException;
 
 class CustomerAuthController extends Controller
 {
-    // تسجيل الدخول وإرجاع توكن Sanctum
     public function login(Request $request)
     {
         $request->validate([
@@ -28,9 +27,7 @@ class CustomerAuthController extends Controller
             ]);
         }
 
-        // حذف التوكنات القديمة (اختياري)
         $customer->tokens()->delete();
-
         $token = $customer->createToken('mobile-token')->plainTextToken;
 
         return response()->json([
@@ -40,21 +37,21 @@ class CustomerAuthController extends Controller
         ]);
     }
 
-    // تسجيل جديد (إذا أردت)
     public function register(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|unique:customers',
             'email' => 'required|email|unique:customers',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6|confirmed', // نترك confirmed إذا أضفنا حقل confirm
         ]);
 
+        // إنشاء العميل (سيتم تشفير كلمة المرور تلقائياً بسبب $casts)
         $customer = Customer::create([
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => $request->password, // لا نستخدم Hash::make
         ]);
 
         $token = $customer->createToken('mobile-token')->plainTextToken;
@@ -66,14 +63,12 @@ class CustomerAuthController extends Controller
         ], 201);
     }
 
-    // تسجيل الخروج (حذف التوكن الحالي)
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['success' => true, 'message' => 'Logged out']);
     }
 
-    // جلب بيانات الملف الشخصي
     public function profile(Request $request)
     {
         return response()->json($request->user()->only(['id', 'name', 'username', 'email']));

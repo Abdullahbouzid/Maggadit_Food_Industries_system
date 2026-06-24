@@ -22,8 +22,8 @@ class Customer extends Authenticatable
         'remember_token',
     ];
 
+    // هام: التشفير التلقائي لكلمة المرور
     protected $casts = [
         'password' => 'hashed',
     ];
-    
 }
