@@ -33,6 +33,10 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\DeviceController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+use App\Models\Customer;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,137 +50,98 @@ use Illuminate\Http\Request;
 // ========== الجزء الأول: تطبيق العميل (الويب) ==========
 // جميع مسارات العميل تبدأ بـ /customer وتستخدم جلسات PHP العادية
 
+// ** مسار عرض نموذج التسجيل (GET) **
+Route::get('/mobile/register', function () {
+    return view('app_android.login'); // أو قم بإنشاء view منفصلة للتسجيل
+})->name('mobile.register');
+
+// مسار عرض نموذج تسجيل الدخول
 Route::get('/mobile/login', function () {
     return view('app_android.login');
 })->name('mobile.login');
+
+// ** مسار معالجة التسجيل (POST) - معدل ليعمل محلياً **
 Route::post('/mobile/register', function (Request $request) {
     $request->validate([
-        'name' => 'required|string|max:255',
-        'username' => 'required|string|unique:customers',
-        'email' => 'required|email|unique:customers',
-        'password' => 'required|string|min:6',
+        'name'     => 'required|string|max:255',
+        'username' => 'required|string|unique:customers,username',
+        'email'    => 'required|email|unique:customers,email',
+        'password' => 'required|string|min:6|confirmed',
     ]);
 
     try {
-        $response = \Illuminate\Support\Facades\Http::post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
-            'name' => $request->name,
+        // إنشاء المستخدم محلياً مباشرة
+        $customer = Customer::create([
+            'name'     => $request->name,
             'username' => $request->username,
-            'email' => $request->email,
-            'password' => $request->password,
-            'password_confirmation' => $request->password,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
         ]);
 
-        if ($response->successful()) {
-            $data = $response.json();
-            $remoteUser = $data['customer'];
+        // تسجيل الدخول
+        Auth::guard('customer')->login($customer);
+        $request->session()->regenerate();
 
-            // إنشاء أو تحديث المستخدم محلياً في الـ APK لمزامنة الجلسة
-            $customer = \App\Models\Customer::updateOrCreate(
-                ['username' => $remoteUser['username']],
-                [
-                    'name' => $remoteUser['name'],
-                    'email' => $remoteUser['email'],
-                    'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-                ]
-            );
+        // يمكنك أيضاً حفظ توكن وهمي أو حقيقي إذا أردت
+        // $request->session()->put('api_token', 'dummy_token');
 
-            \Illuminate\Support\Facades\Auth::guard('customer')->login($customer);
-            $request->session()->regenerate();
-            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
-
-            if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
-            }
-            return redirect()->route('customer.dashboard');
-        }
-
-        // إذا فشل التسجيل على الخادم البعيد
         if ($request->expectsJson()) {
-            return response()->json(['message' => 'فشل التسجيل على الخادم'], 422);
+            return response()->json([
+                'success'  => true,
+                'redirect' => route('customer.dashboard', [], false)
+            ]);
         }
-        return back()->withInput()->withErrors(['username' => 'فشل التسجيل على الخادم']);
+
+        return redirect()->route('customer.dashboard');
+
     } catch (\Exception $e) {
-        // خطأ في الاتصال
+        // في حالة الخطأ
         if ($request->expectsJson()) {
-            return response()->json(['message' => 'فشل الاتصال بالخادم'], 500);
+            return response()->json([
+                'message' => 'حدث خطأ أثناء التسجيل: ' . $e->getMessage()
+            ], 500);
         }
-        return back()->withInput()->withErrors(['username' => 'فشل الاتصال بالخادم']);
+
+        return back()->withInput()->withErrors(['username' => 'حدث خطأ، يرجى المحاولة مرة أخرى.']);
     }
 })->name('mobile.register.submit');
 
-
-Route::post('/mobile/register', function (Request $request) {
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'username' => 'required|string|unique:customers',
-        'email' => 'required|email|unique:customers',
-        'password' => 'required|string|min:6',
-    ]);
-
-    $customer = \App\Models\Customer::create([
-        'name' => $request->name,
-        'username' => $request->username,
-        'email' => $request->email,
-        'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-    ]);
-
-    \Illuminate\Support\Facades\Auth::guard('customer')->login($customer);
-    $request->session()->regenerate();
-
-    if ($request->expectsJson()) {
-        return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
-    }
-    return redirect()->route('customer.dashboard');
-})->name('mobile.register.submit');
-
+// مسار معالجة تسجيل الدخول
 Route::post('/mobile/login', function (Request $request) {
     $request->validate([
         'username' => 'required',
         'password' => 'required',
     ]);
 
-    // إرسال طلب الدخول للاستضافة الحقيقية
-    try {
-        $response = \Illuminate\Support\Facades\Http::post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
-            'username' => $request->username,
-            'password' => $request->password,
-        ]);
+    // محاولة تسجيل الدخول محلياً
+    if (Auth::guard('customer')->attempt([
+        'username' => $request->username,
+        'password' => $request->password
+    ])) {
+        $request->session()->regenerate();
+        // يمكنك إضافة جلب التوكن من API خارجي إذا لزم الأمر
 
-        if ($response->successful()) {
-            $data = $response->json();
-            $remoteUser = $data['customer'];
-
-            // إنشاء أو تحديث المستخدم محلياً في الـ APK لمزامنة الجلسة
-            $customer = \App\Models\Customer::updateOrCreate(
-                ['username' => $remoteUser['username']],
-                [
-                    'name' => $remoteUser['name'],
-                    'email' => $remoteUser['email'],
-                    'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-                ]
-            );
-
-            \Illuminate\Support\Facades\Auth::guard('customer')->login($customer);
-            $request->session()->regenerate();
-            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
-
-            if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
-            }
-            return redirect()->route('customer.dashboard');
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success'  => true,
+                'redirect' => route('customer.dashboard', [], false)
+            ]);
         }
-    } catch (\Exception $e) {
-        // خطأ في الاتصال
+
+        return redirect()->route('customer.dashboard');
     }
 
+    // فشل تسجيل الدخول
     if ($request->expectsJson()) {
-        return response()->json(['message' => 'فشل الاتصال بالسيرفر أو بيانات خاطئة'], 422);
+        return response()->json(['message' => 'بيانات الدخول غير صحيحة'], 422);
     }
-    return back()->withErrors(['username' => 'بيانات الدخول غير صحيحة أو السيرفر غير متاح.']);
+
+    return back()->withErrors(['username' => 'بيانات الدخول غير صحيحة.']);
 })->name('mobile.login.submit');
 
+// تسجيل الخروج
 Route::get('/customer/logout', function (Request $request) {
-    \Illuminate\Support\Facades\Auth::guard('customer')->logout();
+    Auth::guard('customer')->logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
     return redirect()->route('mobile.login');
