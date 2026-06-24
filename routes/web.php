@@ -163,9 +163,17 @@ Route::get('/customer/logout', function (Request $request) {
     return redirect()->route('mobile.login');
 })->name('customer.logout');
 
-// الصفحة الرئيسية توجه إلى تسجيل دخول العميل
-Route::get('/', function () {
-    return redirect()->route('mobile.login');
+// الصفحة الرئيسية توجه بناءً على الجهاز (ويب أو تطبيق)
+Route::get('/', function (Request $request) {
+    $userAgent = strtolower($request->header('User-Agent'));
+    
+    // التحقق مما إذا كان الطلب قادماً من تطبيق الموبايل (APK) أو متصفح هاتف
+    if (str_contains($userAgent, 'android') || str_contains($userAgent, 'mobile') || str_contains($userAgent, 'wv')) {
+        return redirect()->route('mobile.login');
+    }
+    
+    // إذا كان من متصفح الويب العادي (سطح المكتب)
+    return redirect('/admin');
 });
 
 // مجموعة مسارات العميل (تستخدم middleware للتحقق من الجلسة)
