@@ -62,20 +62,52 @@ Route::post('/mobile/register', function (Request $request) {
         'password' => 'required|string|min:6',
     ]);
 
-    $customer = \App\Models\Customer::create([
-        'name' => $request->name,
-        'username' => $request->username,
-        'email' => $request->email,
-        'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-    ]);
+    // إرسال طلب التسجيل للاستضافة الحقيقية
+    try {
+        $response = \Illuminate\Support\Facades\Http::post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
+            'name' => $request->name,
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => $request->password,
+            'password_confirmation' => $request->password, // مهم لتجاوز التحقق confirmed في الاستضافة
+        ]);
 
-    \Illuminate\Support\Facades\Auth::guard('customer')->login($customer);
-    $request->session()->regenerate();
+        if ($response->successful()) {
+            $data = $response->json();
+            $remoteUser = $data['customer'];
 
-    if ($request->expectsJson()) {
-        return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
+            // إنشاء المستخدم محلياً في الـ APK لمزامنة الجلسة
+            $customer = \App\Models\Customer::create([
+                'name' => $remoteUser['name'],
+                'username' => $remoteUser['username'],
+                'email' => $remoteUser['email'],
+                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            ]);
+
+            \Illuminate\Support\Facades\Auth::guard('customer')->login($customer);
+            $request->session()->regenerate();
+            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
+            }
+            return redirect()->route('customer.dashboard');
+        }
+        
+        // في حال وجود أخطاء تحقق من السيرفر
+        $errors = $response->json('errors') ?? ['error' => ['فشل التسجيل في السيرفر']];
+        if ($request->expectsJson()) {
+            return response()->json(['errors' => $errors], 422);
+        }
+        return back()->withErrors($errors);
+        
+    } catch (\Exception $e) {
+        // خطأ في الاتصال
+        if ($request->expectsJson()) {
+            return response()->json(['errors' => ['error' => ['فشل الاتصال بالسيرفر']]], 422);
+        }
+        return back()->withErrors(['error' => 'فشل الاتصال بالسيرفر']);
     }
-    return redirect()->route('customer.dashboard');
 })->name('mobile.register.submit');
 
 Route::post('/mobile/login', function (Request $request) {
