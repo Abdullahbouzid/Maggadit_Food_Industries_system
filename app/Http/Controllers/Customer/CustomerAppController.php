@@ -35,7 +35,8 @@ class CustomerAppController extends Controller
         $products = collect();
 
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/dashboard");
+            $token = Session::get('api_token');
+            $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/dashboard");
             
             if ($response->successful()) {
                 $data = $response->json();
@@ -77,7 +78,7 @@ class CustomerAppController extends Controller
     public function categoriesIndex()
     {
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/categories");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/categories");
             if ($response->successful()) {
                 $data = $response->json();
                 $categories = $this->parseData($data['data'] ?? $data);
@@ -106,7 +107,7 @@ class CustomerAppController extends Controller
         $items = collect();
 
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/categories/{$id}");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/categories/{$id}");
             if ($response->successful()) {
                 $categoryData = $response->json();
                 $category = (object) $categoryData;
@@ -138,7 +139,7 @@ class CustomerAppController extends Controller
     public function brandsIndex()
     {
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/brands");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands");
             if ($response->successful()) {
                 $data = $response->json();
                 $brands = $this->parseData($data['data'] ?? $data);
@@ -167,7 +168,7 @@ class CustomerAppController extends Controller
         $items = collect();
 
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/brands/{$id}");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands/{$id}");
             if ($response->successful()) {
                 $brandData = $response->json();
                 $brand = (object) $brandData;
@@ -198,7 +199,7 @@ class CustomerAppController extends Controller
      public function productsIndex()
     {
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/products");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/products");
             if ($response->successful()) {
                 $data = $response->json();
                 // Try to get the products array from common structures
@@ -229,7 +230,7 @@ class CustomerAppController extends Controller
     public function offersIndex()
     {
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/offers");
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/offers");
             if ($response->successful()) {
                 $data = $response->json();
                 $offers = $this->parseData($data['data'] ?? $data);

@@ -54,7 +54,7 @@
                     <div class="flex-shrink-0 text-center w-20 cursor-pointer" onclick="window.location='{{ route('customer.categories.show', $category->id) }}'">
                         <div class="w-16 h-16 mx-auto rounded-full overflow-hidden shadow-sm transition hover:scale-105 bg-gray-100 flex items-center justify-center">
                             @if($category->image)
-                                <img src="{{ asset('uploads/' . $category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
+                                <img src="{{ $category->image }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
                             @else
                                 <span class="text-2xl">{{ $category->icon ?? '📁' }}</span>
                             @endif
@@ -78,7 +78,7 @@
                     <div class="flex-shrink-0 text-center w-24 cursor-pointer" onclick="window.location='{{ route('customer.brands.show', $brand->id) }}'">
                         <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition hover:shadow-md bg-gray-100 flex items-center justify-center">
                             @if($brand->logo)
-                                <img src="{{ asset('uploads/' . $brand->logo) }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-2">
+                                <img src="{{ $brand->logo }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-2">
                             @else
                                 <span class="text-3xl">{{ $brand->logo_emoji ?? '🏷️' }}</span>
                             @endif
@@ -102,13 +102,13 @@
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg">
                         <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                             @if($product->image)
-                                <img src="{{ asset('uploads/' . $product->image) }}" alt="{{ $product->name_en }}" class="w-full h-full object-cover">
+                                <img src="{{ $product->image }}" alt="{{ $product->name ?? $product->name_en }}" class="w-full h-full object-cover">
                             @else
                                 <span class="text-5xl text-gray-400">📦</span>
                             @endif
                         </div>
                         <div class="p-3">
-                            <h3 class="font-bold text-gray-800 text-sm">{{ $product->name_en }}</h3>
+                            <h3 class="font-bold text-gray-800 text-sm">{{ $product->name ?? $product->name_en }}</h3>
                             <div class="flex items-center gap-1 mt-1">
                                 <span class="text-yellow-500 text-xs">★</span>
                                 <span class="text-xs text-gray-600">{{ number_format($product->rate, 1) }}</span>
@@ -120,7 +120,7 @@
                                         <span class="text-gray-400 text-xs line-through mr-1">{{ number_format($product->old_price) }} ر.س</span>
                                     @endif
                                 </div>
-                                <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" data-name="{{ $product->name_en }}" data-price="{{ $product->price }}">شراء</button>
+                                <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" data-name="{{ $product->name ?? $product->name_en }}" data-price="{{ $product->price }}">شراء</button>
                             </div>
                         </div>
                     </div>
@@ -142,7 +142,7 @@
                         <div class="flex flex-row">
                             <div class="relative w-28 h-28 overflow-hidden">
                                 @if($offer->image)
-                                    <img src="{{ asset('uploads/' . $offer->image) }}" alt="{{ $offer->title }}" class="w-full h-full object-cover">
+                                    <img src="{{ $offer->image }}" alt="{{ $offer->title }}" class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl">
                                         🛍️
