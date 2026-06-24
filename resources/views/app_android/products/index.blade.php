@@ -18,13 +18,13 @@
                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg">
                     <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                         @if($item->image)
-                            <img src="{{ $item->image }}" alt="{{ $item->name ?? '' }}" class="w-full h-full object-cover">
+                            <img src="{{ asset('uploads/' . $item->image) }}" class="w-full h-full object-cover">
                         @else
                             <span class="text-5xl text-gray-400">📦</span>
                         @endif
                     </div>
                     <div class="p-3">
-                        <h3 class="font-bold text-gray-800 text-sm">{{ $item->name ?? '' }}</h3>
+                        <h3 class="font-bold text-gray-800 text-sm">{{ $item->name_en }}</h3>
                         <div class="flex items-center gap-1 mt-1">
                             <span class="text-yellow-500 text-xs">★</span>
                             <span class="text-xs text-gray-600">{{ number_format($item->rate, 1) }}</span>
@@ -36,7 +36,7 @@
                             @endif
                         </div>
                         <button class="add-to-cart mt-2 w-full bg-purple-600 text-white text-xs py-2 rounded-full hover:bg-purple-700 transition" 
-                                data-name="{{ $item->name ?? '' }}" 
+                                data-name="{{ $item->name_en }}" 
                                 data-price="{{ $item->price }}">
                             <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
                         </button>
@@ -47,7 +47,7 @@
             @endforelse
         </div>
 
-        @if($items instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        @if(method_exists($items, 'links'))
             <div class="mt-6">
                 {{ $items->links() }}
             </div>

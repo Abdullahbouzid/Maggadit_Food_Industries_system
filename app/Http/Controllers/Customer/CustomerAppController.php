@@ -53,13 +53,19 @@ class CustomerAppController extends Controller
 
         // إذا كانت البيانات فارغة، نستخدم البيانات المحلية كـ Fallback
         if ($categories->isEmpty()) {
-            $categories = Category::all();
+            $categories = Category::all()->map(function ($category) {
+                return $this->applyImagePath($category, 'image');
+            });
         }
         if ($brands->isEmpty()) {
-            $brands = Brand::all();
+            $brands = Brand::all()->map(function ($brand) {
+                return $this->applyImagePath($brand, 'logo');
+            });
         }
         if ($products->isEmpty()) {
-            $products = Item::all();
+            $products = Item::all()->map(function ($item) {
+                return $this->applyImagePath($item, 'image');
+            });
         }
 
         return view('app_android.customer_dashboard', compact('categories', 'brands', 'products'));
@@ -74,14 +80,7 @@ class CustomerAppController extends Controller
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/categories");
             if ($response->successful()) {
                 $data = $response->json();
-                // افترض أن البيانات تأتي في مفتاح 'data' أو مباشرة كمصفوفة
                 $categories = $this->parseData($data['data'] ?? $data);
-                $categories = $categories->map(function ($category) {
-                    if (isset($category->image)) {
-                        $category->image = $this->normalizeImagePath($category->image);
-                    }
-                    return $category;
-                });
                 if ($categories->isNotEmpty()) {
                     return view('app_android.categories.index', compact('categories'));
                 }
@@ -92,10 +91,7 @@ class CustomerAppController extends Controller
 
         // Fallback إلى قاعدة البيانات المحلية
         $categories = Category::all()->map(function ($category) {
-            if (isset($category->image)) {
-                $category->image = $this->normalizeImagePath($category->image);
-            }
-            return $category;
+            return $this->applyImagePath($category, 'image');
         });
 
         return view('app_android.categories.index', compact('categories'));
@@ -110,39 +106,27 @@ class CustomerAppController extends Controller
         $items = collect();
 
         try {
-            // جلب بيانات الفئة من الـ API
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/categories/{$id}");
             if ($response->successful()) {
                 $categoryData = $response->json();
                 $category = (object) $categoryData;
-                // تطبيع مسار الصورة
-                if (isset($category->image)) {
-                    $category->image = $this->normalizeImagePath($category->image);
-                }
-                // محاولة جلب المنتجات من API إن وجدت، وإلا سنستخدم المحلي
-                // يمكن إضافة endpoint مخصص لجلب منتجات الفئة، لكننا نعتمد على المحلي كبديل
+                $category = $this->applyImagePath($category, 'image');
             }
         } catch (\Exception $e) {
             Log::error("Category Show API Error: " . $e->getMessage());
         }
 
-        // إذا لم يتم جلب الفئة من API، نستخدم المحلي
         if (!$category) {
             $category = Category::find($id);
             if (!$category) {
                 abort(404, 'الفئة غير موجودة');
             }
+            $category = $this->applyImagePath($category, 'image');
         }
 
-        // جلب المنتجات التابعة لهذه الفئة (من قاعدة البيانات المحلية)
-        $items = Item::where('category_id', $id)->get();
-
-        // تطبيع مسارات الصور للمنتجات
-        $items = $items->map(function ($item) {
-            if (isset($item->image)) {
-                $item->image = $this->normalizeImagePath($item->image);
-            }
-            return $item;
+        // جلب المنتجات التابعة لهذه الفئة
+        $items = Item::where('category_id', $id)->get()->map(function ($item) {
+            return $this->applyImagePath($item, 'image');
         });
 
         return view('app_android.categories.show', compact('category', 'items'));
@@ -158,12 +142,6 @@ class CustomerAppController extends Controller
             if ($response->successful()) {
                 $data = $response->json();
                 $brands = $this->parseData($data['data'] ?? $data);
-                $brands = $brands->map(function ($brand) {
-                    if (isset($brand->logo)) {
-                        $brand->logo = $this->normalizeImagePath($brand->logo);
-                    }
-                    return $brand;
-                });
                 if ($brands->isNotEmpty()) {
                     return view('app_android.brands.index', compact('brands'));
                 }
@@ -172,12 +150,11 @@ class CustomerAppController extends Controller
             Log::error("Brands API Error: " . $e->getMessage());
         }
 
-        $brands = Brand::all()->map(function ($brand) use ($this) {
-            if (isset($brand->logo)) {
-                $brand->logo = $this->normalizeImagePath($brand->logo);
-            }
-            return $brand;
+        // Fallback: استخدام البيانات المحلية مع تطبيع المسار
+        $brands = Brand::all()->map(function ($brand) {
+            return $this->applyImagePath($brand, 'logo');
         });
+
         return view('app_android.brands.index', compact('brands'));
     }
 
@@ -194,9 +171,7 @@ class CustomerAppController extends Controller
             if ($response->successful()) {
                 $brandData = $response->json();
                 $brand = (object) $brandData;
-                if (isset($brand->logo)) {
-                    $brand->logo = $this->normalizeImagePath($brand->logo);
-                }
+                $brand = $this->applyImagePath($brand, 'logo');
             }
         } catch (\Exception $e) {
             Log::error("Brand Show API Error: " . $e->getMessage());
@@ -207,15 +182,11 @@ class CustomerAppController extends Controller
             if (!$brand) {
                 abort(404, 'الماركة غير موجودة');
             }
+            $brand = $this->applyImagePath($brand, 'logo');
         }
 
-        // جلب المنتجات التابعة لهذه الماركة (من المحلي)
-        $items = Item::where('brand_id', $id)->get();
-        $items = $items->map(function ($item) {
-            if (isset($item->image)) {
-                $item->image = $this->normalizeImagePath($item->image);
-            }
-            return $item;
+        $items = Item::where('brand_id', $id)->get()->map(function ($item) {
+            return $this->applyImagePath($item, 'image');
         });
 
         return view('app_android.brands.show', compact('brand', 'items'));
@@ -224,30 +195,34 @@ class CustomerAppController extends Controller
     /**
      * عرض جميع المنتجات
      */
-    public function productsIndex()
+     public function productsIndex()
     {
         try {
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/products");
             if ($response->successful()) {
                 $data = $response->json();
-                $products = $this->parseData($data['data'] ?? $data);
-                if ($products->isNotEmpty()) {
-                    return view('app_android.products.index', compact('products'));
+                // Try to get the products array from common structures
+                $products = $data['products'] ?? ($data['data'] ?? $data);
+                // Ensure we have an array
+                if (!is_array($products)) {
+                    $products = [];
+                }
+                $items = $this->parseData($products);
+                if ($items->isNotEmpty()) {
+                    return view('app_android.products.index', compact('items'));
                 }
             }
         } catch (\Exception $e) {
             Log::error("Products API Error: " . $e->getMessage());
         }
 
-        $products = Item::all()->map(function ($item) {
-            if (isset($item->image)) {
-                $item->image = $this->normalizeImagePath($item->image);
-            }
-            return $item;
+        // Fallback: جلب من قاعدة البيانات المحلية
+        $items = Item::all()->map(function ($item) {
+            return $this->applyImagePath($item, 'image');
         });
-        return view('app_android.products.index', compact('products'));
-    }
 
+        return view('app_android.products.index', compact('items'));
+    }
     /**
      * عرض العروض
      */
@@ -266,7 +241,7 @@ class CustomerAppController extends Controller
             Log::error("Offers API Error: " . $e->getMessage());
         }
 
-        // بيانات عروض وهمية (أو يمكن جلبها من نموذج Offer إن وُجد)
+        // بيانات عروض وهمية
         $offers = collect([
             (object) [
                 'id' => 1,
@@ -285,30 +260,24 @@ class CustomerAppController extends Controller
                 'image' => null,
             ],
         ]);
+
         return view('app_android.offers.index', compact('offers'));
     }
 
     /**
      * تحويل مصفوفة البيانات إلى مجموعة من الكائنات مع توحيد مسار الصور
      */
-    private function parseData(array $items)
+     private function parseData(array $items)
     {
         return collect($items)->map(function ($item) {
             $item = (object) $item;
 
-            // معالجة صورة الفئة (category)
+            // معالجة الصور حسب الحقل المتاح
             if (isset($item->image)) {
                 $item->image = $this->normalizeImagePath($item->image);
             }
-
-            // معالجة شعار الماركة (brand)
             if (isset($item->logo)) {
                 $item->logo = $this->normalizeImagePath($item->logo);
-            }
-
-            // معالجة صورة المنتج (product)
-            if (isset($item->image)) {
-                $item->image = $this->normalizeImagePath($item->image);
             }
 
             return $item;
@@ -316,20 +285,90 @@ class CustomerAppController extends Controller
     }
 
     /**
+     * تطبيق تطبيع مسار الصورة على نموذج أو كائن معين
+     * @param mixed $model  النموذج أو الكائن
+     * @param string $field اسم الحقل الذي يحوي المسار (image, logo, ...)
+     * @return mixed
+     */
+    private function applyImagePath($model, string $field)
+    {
+        if (is_object($model) && property_exists($model, $field)) {
+            $value = $model->$field;
+            if (!empty($value)) {
+                $model->$field = $this->normalizeImagePath($value);
+            } else {
+                $model->$field = null;
+            }
+        } elseif (is_array($model) && isset($model[$field])) {
+            $value = $model[$field];
+            if (!empty($value)) {
+                $model[$field] = $this->normalizeImagePath($value);
+            } else {
+                $model[$field] = null;
+            }
+        }
+        return $model;
+    }
+    /**
      * توحيد مسار الصورة: إذا كان رابطاً كاملاً نستخدمه، وإلا نضيفه إلى مجلد uploads
      */
-    private function normalizeImagePath($path)
+  private function normalizeImagePath($path)
     {
         if (empty($path)) {
             return null;
         }
 
-        // إذا كان المسار يبدأ بـ http أو https فهو رابط كامل
+        // 1. إذا كان رابطاً كاملاً (http/https)
         if (filter_var($path, FILTER_VALIDATE_URL)) {
             return $path;
         }
 
-        // نعتبره اسم ملف داخل مجلد uploads
-        return asset('uploads/' . ltrim($path, '/'));
+        // Remove leading slash if present for consistent processing
+        $cleanPath = ltrim($path, '/');
+
+        // 2. معالجة المسارات التي تبدأ بـ 'storage/'
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $relativePath = substr($cleanPath, 8); // Remove 'storage/' prefix
+            // التحقق من وجود الملف في القرص العام
+            if (Storage::disk('public')->exists($relativePath)) {
+                return asset('storage/' . $relativePath);
+            } else {
+                // إذا لم يوجد، نسجل خطأ ونعيد null
+                Log::warning("Image not found in storage: " . $relativePath);
+                return null;
+            }
+        }
+
+        // 3. معالجة المسارات التي تبدأ بـ 'uploads/'
+        if (str_starts_with($cleanPath, 'uploads/')) {
+            $relativePath = substr($cleanPath, 8); // Remove 'uploads/' prefix
+            $fullPath = public_path('uploads/' . $relativePath);
+            if (file_exists($fullPath)) {
+                return asset('uploads/' . $relativePath);
+            } else {
+                Log::warning("Image not found in uploads: " . $relativePath);
+                return null;
+            }
+        }
+
+        // 4. افتراضياً: نعتبره اسم ملف داخل مجلد uploads
+        $fullPath = public_path('uploads/' . $cleanPath);
+        if (file_exists($fullPath)) {
+            return asset('uploads/' . $cleanPath);
+        }
+
+        // 5. محاولة البحث في storage أيضاً كحل أخير
+        if (Storage::disk('public')->exists($cleanPath)) {
+            return asset('storage/' . $cleanPath);
+        }
+
+        // 6. إذا لم يوجد، نسجل خطأ ونعيد null
+        Log::warning("Image not found: " . $path);
+        return null;
     }
+
+    /**
+     * تطبيق تطبيع مسار الصورة على نموذج أو كائن معين
+     */
+ 
 }
