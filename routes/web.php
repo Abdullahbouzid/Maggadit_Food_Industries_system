@@ -64,7 +64,7 @@ Route::post('/mobile/register', function (Request $request) {
 
     // إرسال طلب التسجيل للاستضافة الحقيقية
     try {
-        $response = \Illuminate\Support\Facades\Http::post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
+        $response = \Illuminate\Support\Facades\Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
@@ -118,7 +118,7 @@ Route::post('/mobile/login', function (Request $request) {
 
     // إرسال طلب الدخول للاستضافة الحقيقية
     try {
-        $response = \Illuminate\Support\Facades\Http::post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
+        $response = \Illuminate\Support\Facades\Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
             'username' => $request->username,
             'password' => $request->password,
         ]);
