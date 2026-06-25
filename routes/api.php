@@ -42,6 +42,7 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::post('/logout', [CustomerAuthController::class, 'logout']);
         Route::get('/profile', [ProfileController::class, 'show']);
         Route::put('/profile', [ProfileController::class, 'update']);
+        Route::post('/profile/update', [ProfileController::class, 'updateProfile']);
         Route::post('/change-password', [ProfileController::class, 'changePassword']);
         Route::get('/dashboard', [CustomerApiController::class, 'dashboard']);
         Route::get('/financial-statement', [CustomerApiController::class, 'financialStatement']);

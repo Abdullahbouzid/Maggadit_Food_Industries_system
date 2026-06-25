@@ -386,11 +386,12 @@ class CustomerAppController extends Controller
     public function updateInfo(Request $request)
     {
         $customer = Auth::guard('customer')->user();
+        $token = Session::get('api_token');
 
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:customers,email,' . $customer->id,
-            'username' => 'required|string|max:255|unique:customers,username,' . $customer->id,
+            'email' => 'required|email|max:255',
+            'username' => 'required|string|max:255',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ];
 
@@ -403,35 +404,63 @@ class CustomerAppController extends Controller
         $validator = ValidatorFacade::make($request->all(), $rules);
 
         if ($validator->fails()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        if ($request->filled('old_password')) {
-            if (!\Illuminate\Support\Facades\Hash::check($request->old_password, $customer->password)) {
-                return redirect()->back()->withErrors(['old_password' => 'كلمة المرور القديمة غير صحيحة'])->withInput();
-            }
-            $customer->password = $request->password; // it will be hashed by the model casts
-        }
-
+        // إرسال التحديث إلى السيرفر الرئيسي
+        $http = Http::withToken($token)->withoutVerifying();
+        
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/customers'), $filename);
-            
-            // Delete old avatar if exists
-            if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
-                @unlink(public_path('uploads/customers/' . $customer->avatar));
-            }
-            
-            $customer->avatar = $filename;
+            $http->attach(
+                'avatar', file_get_contents($file->getRealPath()), $file->getClientOriginalName()
+            );
         }
 
-        $customer->name = $request->name;
-        $customer->email = $request->email;
-        $customer->username = $request->username;
-        
-        $customer->save();
+        $response = $http->post("{$this->baseUrl}/customer/profile/update", $request->except(['avatar']));
 
-        return redirect()->back()->with('success', 'تم تحديث البيانات بنجاح');
+        if ($response->successful()) {
+            $data = $response->json();
+            $remoteUser = $data['customer'];
+
+            // Save avatar locally too if present
+            if ($request->hasFile('avatar')) {
+                // If remote server returns the generated filename, use it. Otherwise use new one.
+                $filename = $remoteUser['avatar'] ?? (time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension());
+                $request->file('avatar')->move(public_path('uploads/customers'), $filename);
+                
+                if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
+                    @unlink(public_path('uploads/customers/' . $customer->avatar));
+                }
+                
+                $customer->avatar = $filename;
+            } elseif (isset($remoteUser['avatar'])) {
+                $customer->avatar = $remoteUser['avatar'];
+            }
+
+            $customer->name = $remoteUser['name'];
+            $customer->email = $remoteUser['email'];
+            $customer->username = $remoteUser['username'];
+            
+            if ($request->filled('password')) {
+                $customer->password = \Illuminate\Support\Facades\Hash::make($request->password);
+            }
+            
+            $customer->save();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'تم تحديث البيانات بنجاح', 'customer' => $customer]);
+            }
+            return redirect()->back()->with('success', 'تم تحديث البيانات بنجاح');
+        }
+
+        $errors = $response->json('errors') ?? ['error' => ['فشل تحديث البيانات في السيرفر']];
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['errors' => $errors], 422);
+        }
+        return redirect()->back()->withErrors($errors)->withInput();
     }
 }
