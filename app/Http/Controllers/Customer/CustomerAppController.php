@@ -494,7 +494,9 @@ class CustomerAppController extends Controller
             if ($response->successful()) {
                 $data = $response->json();
                 if (isset($data['faq'])) {
-                    $faqs = collect($data['faq']);
+                    $faqs = collect($data['faq'])->map(function($item) {
+                        return (object) $item;
+                    });
                 }
             }
         } catch (\Exception $e) {
