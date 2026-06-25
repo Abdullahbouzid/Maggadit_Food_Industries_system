@@ -11,18 +11,24 @@
             <i class="fas fa-arrow-right"></i> <span>رجوع</span>
         </button>
 
+        <!-- التنبيهات ستظهر عن طريق الـ Toast في الأسفل -->
+
         <!-- الصورة الشخصية ومرحب -->
         <div class="text-center mb-6">
-            <div class="relative inline-block">
-                <div class="w-24 h-24 mx-auto bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full flex items-center justify-center shadow-lg cursor-pointer" id="profile-avatar-btn">
-                    <i class="fas fa-user text-white text-4xl"></i>
-                </div>
-                <button id="edit-avatar-btn" class="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-md">
+            <div class="relative inline-block cursor-pointer" onclick="openModal()">
+                @if($customer->avatar)
+                    <img src="{{ asset('uploads/customers/' . $customer->avatar) }}" alt="Avatar" class="w-24 h-24 mx-auto rounded-full object-cover shadow-lg">
+                @else
+                    <div class="w-24 h-24 mx-auto bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full flex items-center justify-center shadow-lg">
+                        <i class="fas fa-user text-white text-4xl"></i>
+                    </div>
+                @endif
+                <button class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md">
                     <i class="fas fa-camera text-purple-600 text-xs"></i>
                 </button>
             </div>
-            <h2 class="text-xl font-bold text-gray-800 mt-2" id="display-name">تمر القوي</h2>
-            <p class="text-xs text-gray-400">عضو منذ 2023</p>
+            <h2 class="text-xl font-bold text-gray-800 mt-2">{{ $customer->name ?? 'مستخدم' }}</h2>
+            <p class="text-xs text-gray-400">عضو منذ {{ $customer->created_at ? $customer->created_at->format('Y') : date('Y') }}</p>
         </div>
 
         <!-- بطاقات البيانات الشخصية -->
@@ -30,41 +36,25 @@
             <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between">
                 <div>
                     <p class="text-xs text-gray-400">الاسم الكامل</p>
-                    <p class="font-semibold text-gray-800" id="info-name">تمر القوي</p>
+                    <p class="font-semibold text-gray-800">{{ $customer->name }}</p>
                 </div>
                 <i class="fas fa-user text-gray-300 text-lg"></i>
             </div>
 
             <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between">
                 <div>
+                    <p class="text-xs text-gray-400">اسم المستخدم</p>
+                    <p class="font-semibold text-gray-800">{{ $customer->username }}</p>
+                </div>
+                <i class="fas fa-user-tag text-gray-300 text-lg"></i>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between">
+                <div>
                     <p class="text-xs text-gray-400">البريد الإلكتروني</p>
-                    <p class="font-semibold text-gray-800" id="info-email">tamer@example.com</p>
+                    <p class="font-semibold text-gray-800">{{ $customer->email }}</p>
                 </div>
                 <i class="fas fa-envelope text-gray-300 text-lg"></i>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-400">رقم الجوال</p>
-                    <p class="font-semibold text-gray-800" id="info-phone">05xxxxxxxx</p>
-                </div>
-                <i class="fas fa-phone-alt text-gray-300 text-lg"></i>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-400">المنظمة</p>
-                    <p class="font-semibold text-gray-800" id="info-org">ماجديت للصناعات الغذائية</p>
-                </div>
-                <i class="fas fa-building text-gray-300 text-lg"></i>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-400">تاريخ الميلاد</p>
-                    <p class="font-semibold text-gray-800" id="info-dob">15 مارس 1985</p>
-                </div>
-                <i class="fas fa-calendar-alt text-gray-300 text-lg"></i>
             </div>
         </div>
 
@@ -72,14 +62,14 @@
         <button id="edit-info-btn" class="mt-6 w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition transform hover:scale-[1.02] active:scale-95">
             <i class="fas fa-edit ml-2"></i> تعديل البيانات الشخصية
         </button>
-       <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+        <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3">
             <br><br>
         </div>
     </div>
 
     <!-- مودال تعديل البيانات -->
-    <div id="edit-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
-        <div class="bg-white rounded-2xl w-11/12 max-w-md p-5 transform scale-95 transition-all duration-300 shadow-2xl" dir="rtl">
+    <div id="edit-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 {{ $errors->any() ? 'opacity-100' : 'opacity-0 pointer-events-none' }}">
+        <div class="bg-white rounded-2xl w-11/12 max-w-md p-5 transform {{ $errors->any() ? 'scale-100' : 'scale-95' }} transition-all duration-300 shadow-2xl max-h-screen overflow-y-auto" dir="rtl">
             <div class="text-center mb-4">
                 <div class="w-14 h-14 mx-auto bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-2xl">
                     <i class="fas fa-user-edit"></i>
@@ -87,23 +77,65 @@
                 <h3 class="text-lg font-bold text-gray-800 mt-2">تعديل المعلومات</h3>
             </div>
 
-            <form id="edit-info-form" class="space-y-4">
+            <form id="edit-info-form" action="{{ route('customer.my_info.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                @csrf
+                
+                <!-- رفع الصورة -->
+                <div class="text-center mb-4">
+                    <div class="relative inline-block cursor-pointer" onclick="document.getElementById('avatar-input').click()">
+                        @if($customer->avatar)
+                            <img id="avatar-preview" src="{{ asset('uploads/customers/' . $customer->avatar) }}" class="w-20 h-20 mx-auto rounded-full object-cover shadow-md border-2 border-purple-200">
+                        @else
+                            <div id="avatar-preview-container" class="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center shadow-md border-2 border-dashed border-gray-300">
+                                <i class="fas fa-camera text-gray-400 text-2xl"></i>
+                            </div>
+                            <img id="avatar-preview" src="" class="w-20 h-20 mx-auto rounded-full object-cover shadow-md border-2 border-purple-200 hidden">
+                        @endif
+                        <div class="absolute bottom-0 right-0 bg-purple-600 rounded-full p-1.5 shadow-md">
+                            <i class="fas fa-plus text-white text-[10px]"></i>
+                        </div>
+                    </div>
+                    <input type="file" name="avatar" id="avatar-input" class="hidden" accept="image/*" onchange="previewImage(event)">
+                    <p class="text-xs text-gray-500 mt-2">تغيير الصورة الشخصية</p>
+                </div>
+
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">الاسم الكامل</label>
-                    <input type="text" id="edit-name" class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                    <input type="text" name="name" value="{{ old('name', $customer->name) }}" required class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">اسم المستخدم</label>
+                    <input type="text" name="username" value="{{ old('username', $customer->username) }}" required class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">البريد الإلكتروني</label>
-                    <input type="email" id="edit-email" class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                    <input type="email" name="email" value="{{ old('email', $customer->email) }}" required class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">رقم الجوال</label>
-                    <input type="tel" id="edit-phone" class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                <hr class="my-4 border-gray-200">
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <p class="text-sm font-bold text-gray-800 mb-3"><i class="fas fa-lock text-purple-600 ml-1"></i> تغيير كلمة المرور <span class="text-xs text-gray-400 font-normal">(اختياري)</span></p>
+                    
+                  
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">كلمة المرور الجديدة</label>
+                        <div class="relative">
+                            <input type="password" id="new_password" name="password" autocomplete="new-password" class="w-full p-3 pl-10 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
+                            <button type="button" onclick="togglePassword('new_password')" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 focus:outline-none">
+                                <i class="fas fa-eye" id="icon-new_password"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">تأكيد كلمة المرور</label>
+                        <div class="relative">
+                            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" class="w-full p-3 pl-10 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
+                            <button type="button" onclick="togglePassword('password_confirmation')" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 focus:outline-none">
+                                <i class="fas fa-eye" id="icon-password_confirmation"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">تاريخ الميلاد</label>
-                    <input type="date" id="edit-dob" class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
-                </div>
+
                 <div class="flex gap-3 pt-2">
                     <button type="button" id="cancel-edit" class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-xl">إلغاء</button>
                     <button type="submit" class="flex-1 bg-purple-600 text-white py-2 rounded-xl">حفظ التغييرات</button>
@@ -112,46 +144,96 @@
         </div>
     </div>
 
-    <!-- Toast الإشعار -->
-    <div id="info-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
+    <!-- Custom Mobile Toast Container -->
+    <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 w-[90%] max-w-sm z-[60] flex flex-col gap-2 pointer-events-none"></div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <script>
-        // بيانات المستخدم الحالية
-        let userData = {
-            name: "تمر القوي",
-            email: "tamer@example.com",
-            phone: "05xxxxxxxx",
-            org: "ماجديت للصناعات الغذائية",
-            dob: "1985-03-15"
-        };
+        // دالة عرض الإشعارات
+        function showMobileToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const isSuccess = type === 'success';
+            const bgColor = isSuccess ? 'bg-green-600' : 'bg-red-600';
+            const iconClass = isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 transform -translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto`;
+            toast.innerHTML = `
+                <i class="fas ${iconClass} text-lg"></i>
+                <span class="text-sm font-medium flex-1">${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-white/80 hover:text-white focus:outline-none">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animation in
+            requestAnimationFrame(() => {
+                toast.classList.remove('-translate-y-10', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('-translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
 
+        // دالة التبديل لإظهار وإخفاء كلمة المرور
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById('icon-' + inputId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash', 'text-purple-600');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash', 'text-purple-600');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // عرض الإشعارات القادمة من السيرفر
+        @if(session('success'))
+            setTimeout(() => showMobileToast("{{ session('success') }}", 'success'), 500);
+        @endif
+
+        @if($errors->any())
+            setTimeout(() => {
+                @foreach($errors->all() as $error)
+                    showMobileToast("{{ $error }}", 'error');
+                @endforeach
+            }, 500);
+        @endif
+
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function(){
+                const output = document.getElementById('avatar-preview');
+                const container = document.getElementById('avatar-preview-container');
+                output.src = reader.result;
+                output.classList.remove('hidden');
+                if(container) {
+                    container.classList.add('hidden');
+                }
+            };
+            if(event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
         // عناصر DOM
         const modal = document.getElementById('edit-modal');
         const editBtn = document.getElementById('edit-info-btn');
         const cancelBtn = document.getElementById('cancel-edit');
-        const editForm = document.getElementById('edit-info-form');
-        const toast = document.getElementById('info-toast');
-
-        function showToast(msg, isError = false) {
-            toast.innerText = msg;
-            toast.style.background = isError ? '#dc2626' : '#1f2937';
-            toast.classList.remove('opacity-0', 'translate-y-10');
-            toast.classList.add('opacity-100', 'translate-y-0');
-            setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', 'translate-y-10');
-            }, 3000);
-        }
 
         function openModal() {
-            // ملء الحقول بالقيم الحالية
-            document.getElementById('edit-name').value = userData.name;
-            document.getElementById('edit-email').value = userData.email;
-            document.getElementById('edit-phone').value = userData.phone;
-            document.getElementById('edit-dob').value = userData.dob;
-            
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modal.classList.add('opacity-100');
             document.querySelector('#edit-modal .bg-white').classList.remove('scale-95');
@@ -165,47 +247,9 @@
             document.querySelector('#edit-modal .bg-white').classList.add('scale-95');
         }
 
-        function updateUI() {
-            document.getElementById('display-name').innerText = userData.name;
-            document.getElementById('info-name').innerText = userData.name;
-            document.getElementById('info-email').innerText = userData.email;
-            document.getElementById('info-phone').innerText = userData.phone;
-            document.getElementById('info-org').innerText = userData.org;
-            // تنسيق التاريخ للعرض
-            const dateObj = new Date(userData.dob);
-            const formattedDate = dateObj.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-            document.getElementById('info-dob').innerText = formattedDate;
-        }
-
         editBtn.addEventListener('click', openModal);
         cancelBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-        editForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newName = document.getElementById('edit-name').value.trim();
-            const newEmail = document.getElementById('edit-email').value.trim();
-            const newPhone = document.getElementById('edit-phone').value.trim();
-            const newDob = document.getElementById('edit-dob').value;
-
-            if (!newName || !newEmail || !newPhone) {
-                showToast('❌ الرجاء ملء جميع الحقول', true);
-                return;
-            }
-            if (!newEmail.includes('@')) {
-                showToast('❌ البريد الإلكتروني غير صحيح', true);
-                return;
-            }
-
-            // تحديث البيانات
-            userData.name = newName;
-            userData.email = newEmail;
-            userData.phone = newPhone;
-            userData.dob = newDob;
-            updateUI();
-            closeModal();
-            showToast('✅ تم تحديث بياناتك بنجاح');
-        });
 
         // إغلاق المودال عند الضغط على Escape
         document.addEventListener('keydown', (e) => {

@@ -391,6 +391,7 @@ class CustomerAppController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:customers,email,' . $customer->id,
             'username' => 'required|string|max:255|unique:customers,username,' . $customer->id,
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ];
 
         // If the user provided old_password, they want to change their password
@@ -410,6 +411,19 @@ class CustomerAppController extends Controller
                 return redirect()->back()->withErrors(['old_password' => 'كلمة المرور القديمة غير صحيحة'])->withInput();
             }
             $customer->password = $request->password; // it will be hashed by the model casts
+        }
+
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/customers'), $filename);
+            
+            // Delete old avatar if exists
+            if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
+                @unlink(public_path('uploads/customers/' . $customer->avatar));
+            }
+            
+            $customer->avatar = $filename;
         }
 
         $customer->name = $request->name;
