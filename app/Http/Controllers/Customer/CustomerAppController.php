@@ -371,5 +371,53 @@ class CustomerAppController extends Controller
     /**
      * تطبيق تطبيع مسار الصورة على نموذج أو كائن معين
      */
- 
+    /**
+     * عرض صفحة بياناتي
+     */
+    public function myInfo()
+    {
+        $customer = Auth::guard('customer')->user();
+        return view('app_android.more.my_info', compact('customer'));
+    }
+
+    /**
+     * تحديث بيانات المستخدم
+     */
+    public function updateInfo(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:customers,email,' . $customer->id,
+            'username' => 'required|string|max:255|unique:customers,username,' . $customer->id,
+        ];
+
+        // If the user provided old_password, they want to change their password
+        if ($request->filled('old_password') || $request->filled('password')) {
+            $rules['old_password'] = 'required';
+            $rules['password'] = 'required|min:6|confirmed';
+        }
+
+        $validator = ValidatorFacade::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        if ($request->filled('old_password')) {
+            if (!\Illuminate\Support\Facades\Hash::check($request->old_password, $customer->password)) {
+                return redirect()->back()->withErrors(['old_password' => 'كلمة المرور القديمة غير صحيحة'])->withInput();
+            }
+            $customer->password = $request->password; // it will be hashed by the model casts
+        }
+
+        $customer->name = $request->name;
+        $customer->email = $request->email;
+        $customer->username = $request->username;
+        
+        $customer->save();
+
+        return redirect()->back()->with('success', 'تم تحديث البيانات بنجاح');
+    }
 }

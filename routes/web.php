@@ -217,9 +217,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/order/{id}', function ($id) {
             return view('app_android.more.order_details', ['orderId' => $id]);
         })->name('order_details');
-        Route::get('/my-info', function () {
-            return view('app_android.more.my_info');
-        })->name('my_info');
+        Route::get('/my-info', [CustomerAppController::class, 'myInfo'])->name('my_info');
+        Route::post('/my-info', [CustomerAppController::class, 'updateInfo'])->name('my_info.update');
         Route::get('/surveys', function () {
             return view('app_android.more.surveys');
         })->name('surveys');
