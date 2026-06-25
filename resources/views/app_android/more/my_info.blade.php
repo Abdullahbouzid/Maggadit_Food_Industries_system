@@ -263,38 +263,74 @@
 
                 try {
                     const formData = new FormData(this);
-                    const response = await fetch(this.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
+                    const data = Object.fromEntries(formData.entries());
+                    
+                    // تحويل الصورة إلى Base64 في حال تم تحديد صورة جديدة حتى يتم إرسالها بصيغة JSON
+                    const fileInput = document.getElementById('avatar-input');
+                    if (fileInput.files && fileInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(fileInput.files[0]);
+                        reader.onload = async function() {
+                            data.avatar = reader.result;
+                            await sendProfileData(data, submitBtn, originalText, editForm.action);
+                        };
+                        reader.onerror = async function(error) {
+                            console.error('Error reading file:', error);
+                            delete data.avatar;
+                            await sendProfileData(data, submitBtn, originalText, editForm.action);
                         }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        showMobileToast(data.message || 'تم تحديث البيانات بنجاح', 'success');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
                     } else {
-                        const errorData = await response.json();
-                        let errMsg = 'حدث خطأ غير متوقع';
-                        if(errorData.errors) {
-                            errMsg = Object.values(errorData.errors)[0][0] || 'تأكد من صحة البيانات';
-                        }
-                        showMobileToast(errMsg, 'error');
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalText;
+                        delete data.avatar; // إذا لم تكن هناك صورة، نحذف الحقل لتجنب إرسال قيمة فارغة
+                        await sendProfileData(data, submitBtn, originalText, editForm.action);
                     }
                 } catch (error) {
-                    console.error("Update Error:", error);
-                    showMobileToast('فشل الاتصال بالسيرفر', 'error');
+                    console.error("Preparation Error:", error);
+                    showMobileToast('فشل تجهيز البيانات', 'error');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalText;
                 }
             });
+        }
+
+        async function sendProfileData(data, submitBtn, originalText, actionUrl) {
+            try {
+                // إضافة توكن الحماية للترويسة إذا كان موجوداً
+                const csrfTokenMeta = document.querySelector('input[name="_token"]');
+                const csrfToken = csrfTokenMeta ? csrfTokenMeta.value : '';
+
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                if (response.ok) {
+                    const resData = await response.json();
+                    showMobileToast(resData.message || 'تم تحديث البيانات بنجاح', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    const errorData = await response.json();
+                    let errMsg = 'حدث خطأ غير متوقع';
+                    if(errorData.errors) {
+                        errMsg = Object.values(errorData.errors)[0][0] || 'تأكد من صحة البيانات';
+                    }
+                    showMobileToast(errMsg, 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            } catch (error) {
+                console.error("Update Error:", error);
+                showMobileToast('فشل الاتصال بالسيرفر', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
 
         // إغلاق المودال عند الضغط على Escape

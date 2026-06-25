@@ -392,7 +392,6 @@ class CustomerAppController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'username' => 'required|string|max:255',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ];
 
         // If the user provided old_password, they want to change their password
@@ -418,6 +417,12 @@ class CustomerAppController extends Controller
             $http->attach(
                 'avatar', file_get_contents($file->getRealPath()), $file->getClientOriginalName()
             );
+        } elseif ($request->filled('avatar') && preg_match('/^data:image\/(\w+);base64,/', $request->avatar)) {
+            $data = substr($request->avatar, strpos($request->avatar, ',') + 1);
+            $decodedData = base64_decode($data);
+            $extension = explode('/', explode(':', substr($request->avatar, 0, strpos($request->avatar, ';')))[1])[1];
+            $filename = time() . '_' . uniqid() . '.' . $extension;
+            $http->attach('avatar', $decodedData, $filename);
         }
 
         $response = $http->post("{$this->baseUrl}/customer/profile/update", $request->except(['avatar']));
@@ -431,6 +436,18 @@ class CustomerAppController extends Controller
                 // If remote server returns the generated filename, use it. Otherwise use new one.
                 $filename = $remoteUser['avatar'] ?? (time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension());
                 $request->file('avatar')->move(public_path('uploads/customers'), $filename);
+                
+                if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
+                    @unlink(public_path('uploads/customers/' . $customer->avatar));
+                }
+                
+                $customer->avatar = $filename;
+            } elseif ($request->filled('avatar') && preg_match('/^data:image\/(\w+);base64,/', $request->avatar)) {
+                $extension = explode('/', explode(':', substr($request->avatar, 0, strpos($request->avatar, ';')))[1])[1];
+                $data = substr($request->avatar, strpos($request->avatar, ',') + 1);
+                $decodedData = base64_decode($data);
+                $filename = $remoteUser['avatar'] ?? (time() . '_' . uniqid() . '.' . $extension);
+                file_put_contents(public_path('uploads/customers/' . $filename), $decodedData);
                 
                 if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
                     @unlink(public_path('uploads/customers/' . $customer->avatar));
