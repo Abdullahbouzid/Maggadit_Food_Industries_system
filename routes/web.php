@@ -13,6 +13,7 @@ use App\Http\Controllers\SalesOrderTypeController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\Customer\CustomerAppController;
 use App\Http\Controllers\ItemTypeController;
 use App\Http\Controllers\UomController;
@@ -225,9 +226,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/notifications', function () {
             return view('app_android.more.notifications');
         })->name('notifications');
-        Route::get('/faq', function () {
-            return view('app_android.more.faq');
-        })->name('faq');
+        Route::get('/faq', [CustomerAppController::class, 'faqIndex'])->name('faq');
         Route::get('/privacy-policy', function () {
             return view('app_android.more.privacy_policy');
         })->name('privacy');
@@ -315,6 +314,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('categories/export', [CategoryController::class, 'export'])->name('categories.export');
     Route::get('categories/template', [CategoryController::class, 'downloadTemplate'])->name('categories.template');
     Route::post('categories/import', [CategoryController::class, 'import'])->name('categories.import');
+
+    Route::resource('faqs', FaqController::class);
 
     Route::resource('item-types', ItemTypeController::class);
     Route::get('item-types/export', [ItemTypeController::class, 'export'])->name('item-types.export');

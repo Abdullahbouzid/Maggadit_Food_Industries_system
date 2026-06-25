@@ -203,7 +203,8 @@ class CustomerApiController extends Controller
 
     public function faq(Request $request)
     {
-        return response()->json(['success' => true, 'faq' => []]);
+        $faqs = \App\Models\Faq::all();
+        return response()->json(['success' => true, 'faq' => $faqs]);
     }
 
     public function privacyPolicy(Request $request)

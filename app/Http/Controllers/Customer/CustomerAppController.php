@@ -480,4 +480,35 @@ class CustomerAppController extends Controller
         }
         return redirect()->back()->withErrors($errors)->withInput();
     }
+
+    /**
+     * عرض صفحة الأسئلة الشائعة
+     */
+    public function faqIndex()
+    {
+        $faqs = collect();
+        try {
+            $token = Session::get('api_token');
+            $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/faq");
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['faq'])) {
+                    $faqs = collect($data['faq']);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("FAQ API Error: " . $e->getMessage());
+        }
+
+        // Fallback إلى قاعدة البيانات المحلية
+        if ($faqs->isEmpty()) {
+            $faqs = \App\Models\Faq::all();
+        }
+
+        // تجميع الأسئلة حسب الفئة
+        $faqsByCategory = $faqs->groupBy('category');
+
+        return view('app_android.more.faq', compact('faqsByCategory'));
+    }
 }

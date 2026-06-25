@@ -19,37 +19,32 @@
         </div>
 
         <!-- تبويب الفئات -->
-        <div class="flex gap-2 overflow-x-auto pb-2 mb-4">
+        <div class="flex gap-2 overflow-x-auto pb-2 mb-4 hide-scrollbar">
             <button data-cat="all" class="cat-filter active px-4 py-2 rounded-full text-sm font-semibold bg-purple-600 text-white whitespace-nowrap">الكل</button>
-            <button data-cat="account" class="cat-filter px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-700 whitespace-nowrap">الحساب</button>
-            <button data-cat="orders" class="cat-filter px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-700 whitespace-nowrap">الطلبات</button>
-            <button data-cat="payment" class="cat-filter px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-700 whitespace-nowrap">الدفع والشحن</button>
-            <button data-cat="returns" class="cat-filter px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-700 whitespace-nowrap">الإرجاع والاستبدال</button>
+            @foreach($faqsByCategory as $category => $items)
+                <button data-cat="{{ $category ?: 'عام' }}" class="cat-filter px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-700 whitespace-nowrap">
+                    {{ $category ?: 'عام' }}
+                </button>
+            @endforeach
         </div>
 
         <!-- قائمة الأسئلة الشائعة -->
         <div id="faq-container" class="space-y-3">
-            @php
-                $faqs = [
-                    ['id' => 1, 'question' => 'كيف يمكنني تغيير كلمة المرور؟', 'answer' => 'يمكنك تغيير كلمة المرور من خلال الذهاب إلى "المزيد" ثم اختيار "تغيير كلمة السر"، ثم إدخال كلمة المرور الجديدة وتأكيدها.', 'category' => 'account'],
-                    ['id' => 2, 'question' => 'ماذا أفعل إذا تأخر الطلب؟', 'answer' => 'في حالة تأخر الطلب، يمكنك التواصل مع خدمة العملاء عبر الواتساب أو الهاتف، وسيتم متابعة طلبك.', 'category' => 'orders'],
-                    ['id' => 3, 'question' => 'هل توجد رسوم توصيل؟', 'answer' => 'رسوم التوصيل تعتمد على قيمة الطلب. الطلبات التي تزيد عن 200 ريال توصيل مجاني، وأقل من ذلك برسوم 15 ريالاً.', 'category' => 'payment'],
-                    ['id' => 4, 'question' => 'كيف يمكنني إرجاع منتج؟', 'answer' => 'يمكنك إرجاع المنتج خلال 14 يوماً من تاريخ الاستلام بشرط أن يكون بحالته الأصلية. تواصل مع خدمة العملاء لإنشاء طلب إرجاع.', 'category' => 'returns'],
-                    ['id' => 5, 'question' => 'ما هي طرق الدفع المتاحة؟', 'answer' => 'نقبل الدفع عبر بطاقات الائتمان (فيزا، ماستركارد)، والمحافظ الرقمية، والتحويل البنكي، والدفع عند الاستلام.', 'category' => 'payment'],
-                    ['id' => 6, 'question' => 'كيف يمكنني متابعة طلبي؟', 'answer' => 'يمكنك متابعة طلبك من خلال قسم "تاريخ الطلبات" في قائمة "المزيد"، ستجد حالة الطلب وتفاصيله.', 'category' => 'orders'],
-                ];
-            @endphp
-
-            @foreach($faqs as $faq)
-                <div class="faq-item bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300" data-category="{{ $faq['category'] }}" data-question="{{ $faq['question'] }}" data-answer="{{ $faq['answer'] }}">
-                    <div class="faq-question p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition">
-                        <h3 class="font-semibold text-gray-800 text-sm">{{ $faq['question'] }}</h3>
-                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+            @foreach($faqsByCategory as $category => $items)
+                @foreach($items as $faq)
+                    <div class="faq-item bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300" 
+                         data-category="{{ $category ?: 'عام' }}" 
+                         data-question="{{ $faq->question }}" 
+                         data-answer="{{ $faq->answer }}">
+                        <div class="faq-question p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition">
+                            <h3 class="font-semibold text-gray-800 text-sm">{{ $faq->question }}</h3>
+                            <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                        </div>
+                        <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 px-4 pb-0">
+                            <p class="text-gray-600 text-sm leading-relaxed pb-4 border-t border-gray-100 pt-3">{{ $faq->answer }}</p>
+                        </div>
                     </div>
-                    <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 px-4 pb-0">
-                        <p class="text-gray-600 text-sm leading-relaxed pb-4 border-t border-gray-100 pt-3">{{ $faq['answer'] }}</p>
-                    </div>
-                </div>
+                @endforeach
             @endforeach
         </div>
 
@@ -64,7 +59,15 @@
     </div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+    <style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
     <script>
         // ========== البحث والتصفية ==========
         const searchInput = document.getElementById('search-faq');
@@ -82,6 +85,7 @@
                 const category = item.getAttribute('data-category');
                 const matchesSearch = currentSearch === '' || question.includes(currentSearch) || answer.includes(currentSearch);
                 const matchesCategory = currentCategory === 'all' || category === currentCategory;
+                
                 if (matchesSearch && matchesCategory) {
                     item.classList.remove('hidden');
                     anyVisible = true;
@@ -139,7 +143,7 @@
         style.textContent = `
             .rotate-180 { transform: rotate(180deg); }
             .faq-question i { transition: transform 0.3s ease; }
-            .faq-item.hidden { display: none; }
+            .faq-item.hidden { display: none !important; }
         `;
         document.head.appendChild(style);
     </script>

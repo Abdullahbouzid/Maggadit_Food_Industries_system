@@ -177,6 +177,14 @@
                 </ul>
             </li>
 
+            <li class="sidebar-header">Application Content</li>
+            <li class="sidebar-item {{ request()->routeIs('faqs.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('faqs.index') }}">
+                    <i class="align-middle" data-feather="help-circle"></i>
+                    <span class="align-middle">الأسئلة الشائعة (FAQ)</span>
+                </a>
+            </li>
+
             <li class="sidebar-header">Permissions & Roles</li>
             <li class="sidebar-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('roles.index') }}">
