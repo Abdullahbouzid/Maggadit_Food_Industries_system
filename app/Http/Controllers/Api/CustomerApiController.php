@@ -223,21 +223,57 @@ class CustomerApiController extends Controller
         return response()->json(['success' => true, 'message' => 'تم إرسال رسالتك']);
     }
 
-    public function organizationsList(Request $request)
+    
+
+
+     public function organizationsList(Request $request)
     {
         $customer = $request->user();
-        // افترضنا علاقة many-to-many بين العميل والمنظمات
-        // إذا لم تكن موجودة، أرجع قائمة فارغة
-        $organizations = $customer->organizations ?? collect();
-        return response()->json(['success' => true, 'organizations' => $organizations]);
+        
+        // جلب المنظمات المرتبطة بالعميل مع حالة النشاط
+        $organizations = $customer->organizations()->get()->map(function ($org) use ($customer) {
+            return [
+                'id' => $org->id,
+                'name' => $org->name,
+                'code' => $org->code,
+                'is_active' => $customer->active_organization_id == $org->id,
+                'parent_id' => $org->parent_id,
+                'organization_type' => $org->organization_type,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'organizations' => $organizations,
+            'active_organization_id' => $customer->active_organization_id,
+        ]);
     }
 
+    // تبديل المنظمة النشطة
     public function switchOrganization(Request $request)
     {
-        $request->validate(['organization_id' => 'required|exists:organizations,id']);
+        $request->validate([
+            'organization_id' => 'required|exists:organizations,id'
+        ]);
+
         $customer = $request->user();
-        // تحديث المنظمة النشطة (قد تحتاج عمود active_organization_id في جدول customers)
-        // customer->update(['active_organization_id' => $request->organization_id]);
-        return response()->json(['success' => true, 'message' => 'تم تغيير المنظمة']);
+        $organizationId = $request->organization_id;
+
+        // التحقق من أن العميل مرتبط بهذه المنظمة
+        if (!$customer->organizations()->where('organization_id', $organizationId)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'أنت غير مرتبط بهذه المنظمة'
+            ], 403);
+        }
+
+        // تعيين المنظمة النشطة
+        $customer->setActiveOrganization($organizationId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تغيير المنظمة بنجاح',
+            'active_organization_id' => $organizationId
+        ]);
     }
 }

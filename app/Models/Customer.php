@@ -1,4 +1,5 @@
 <?php
+// app/Models/Customer.php
 
 namespace App\Models;
 
@@ -15,6 +16,8 @@ class Customer extends Authenticatable
         'username',
         'email',
         'password',
+        'avatar',
+        'active_organization_id',
     ];
 
     protected $hidden = [
@@ -22,8 +25,50 @@ class Customer extends Authenticatable
         'remember_token',
     ];
 
-    // هام: التشفير التلقائي لكلمة المرور
     protected $casts = [
         'password' => 'hashed',
     ];
+
+    // العلاقة مع المنظمات (many-to-many)
+    public function organizations()
+    {
+        return $this->belongsToMany(Organization::class, 'customer_organization')
+                    ->withPivot('is_active')
+                    ->withTimestamps();
+    }
+
+    // المنظمة النشطة حالياً
+    public function activeOrganization()
+    {
+        return $this->belongsTo(Organization::class, 'active_organization_id');
+    }
+
+    // الحصول على المنظمات النشطة للعميل (حيث is_active = true)
+    public function activeOrganizations()
+    {
+        return $this->belongsToMany(Organization::class, 'customer_organization')
+                    ->wherePivot('is_active', true)
+                    ->withTimestamps();
+    }
+
+    // تعيين منظمة نشطة
+    public function setActiveOrganization($organizationId)
+    {
+        // التأكد من أن العميل مرتبط بهذه المنظمة
+        if ($this->organizations()->where('organization_id', $organizationId)->exists()) {
+            // تحديث العمود في جدول العملاء
+            $this->update(['active_organization_id' => $organizationId]);
+            
+            // تحديث حالة is_active في جدول الربط
+            // إلغاء تفعيل جميع المنظمات
+            $this->organizations()->updateExistingPivot($this->organizations->pluck('id')->toArray(), ['is_active' => false]);
+            
+            // تفعيل المنظمة المختارة
+            $this->organizations()->updateExistingPivot($organizationId, ['is_active' => true]);
+            
+            return true;
+        }
+        
+        return false;
+    }
 }
