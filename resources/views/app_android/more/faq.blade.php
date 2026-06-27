@@ -14,7 +14,7 @@
         <!-- شريط البحث -->
         <div class="relative mb-5">
             <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-            <input type="text" id="search-faq" placeholder="ابحث في الأسئلة الشائعة..." 
+            <input type="text" id="search-faq" placeholder="ابحث في الأسئلة الشائعة..."
                    class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
         </div>
 
@@ -32,9 +32,9 @@
         <div id="faq-container" class="space-y-3">
             @foreach($faqsByCategory as $category => $items)
                 @foreach($items as $faq)
-                    <div class="faq-item bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300" 
-                         data-category="{{ $category ?: 'عام' }}" 
-                         data-question="{{ $faq->question }}" 
+                    <div class="faq-item bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300"
+                         data-category="{{ $category ?: 'عام' }}"
+                         data-question="{{ $faq->question }}"
                          data-answer="{{ $faq->answer }}">
                         <div class="faq-question p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition">
                             <h3 class="font-semibold text-gray-800 text-sm">{{ $faq->question }}</h3>
@@ -53,7 +53,7 @@
             <i class="fas fa-search text-gray-300 text-5xl mb-3"></i>
             <p class="text-gray-400">لا توجد أسئلة مطابقة لبحثك</p>
         </div>
-        <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+        <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3">
             <br><br>
         </div>
     </div>
@@ -67,84 +67,118 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-    </style>
-    <script>
-        // ========== البحث والتصفية ==========
-        const searchInput = document.getElementById('search-faq');
-        const categoryBtns = document.querySelectorAll('.cat-filter');
-        const faqItems = document.querySelectorAll('.faq-item');
-        const noResults = document.getElementById('no-results');
-        let currentCategory = 'all';
-        let currentSearch = '';
-
-        function filterFaqs() {
-            let anyVisible = false;
-            faqItems.forEach(item => {
-                const question = item.getAttribute('data-question').toLowerCase();
-                const answer = item.getAttribute('data-answer').toLowerCase();
-                const category = item.getAttribute('data-category');
-                const matchesSearch = currentSearch === '' || question.includes(currentSearch) || answer.includes(currentSearch);
-                const matchesCategory = currentCategory === 'all' || category === currentCategory;
-                
-                if (matchesSearch && matchesCategory) {
-                    item.classList.remove('hidden');
-                    anyVisible = true;
-                } else {
-                    item.classList.add('hidden');
-                }
-            });
-            noResults.classList.toggle('hidden', anyVisible);
+        .rotate-180 {
+            transform: rotate(180deg);
         }
+        .faq-question i {
+            transition: transform 0.3s ease;
+        }
+        .faq-item.hidden {
+            display: none !important;
+        }
+    </style>
 
-        searchInput.addEventListener('input', function(e) {
-            currentSearch = e.target.value.trim().toLowerCase();
-            filterFaqs();
-        });
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ===== عناصر DOM =====
+            const searchInput = document.getElementById('search-faq');
+            const categoryBtns = document.querySelectorAll('.cat-filter');
+            const faqItems = document.querySelectorAll('.faq-item');
+            const noResults = document.getElementById('no-results');
+            let currentCategory = 'all';
+            let currentSearch = '';
 
-        categoryBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                categoryBtns.forEach(b => {
-                    b.classList.remove('active', 'bg-purple-600', 'text-white');
-                    b.classList.add('bg-gray-100', 'text-gray-700');
+            // ===== دالة لإغلاق جميع الإجابات المفتوحة =====
+            function closeAllAnswers() {
+                document.querySelectorAll('.faq-answer').forEach(ans => {
+                    ans.style.maxHeight = null;
+                    ans.style.paddingBottom = '0px';
                 });
-                btn.classList.add('active', 'bg-purple-600', 'text-white');
-                btn.classList.remove('bg-gray-100', 'text-gray-700');
-                currentCategory = btn.getAttribute('data-cat');
+                document.querySelectorAll('.faq-question i').forEach(icon => {
+                    icon.classList.remove('rotate-180');
+                });
+            }
+
+            // ===== دالة التصفية والبحث =====
+            function filterFaqs() {
+                // إغلاق جميع الإجابات أولاً لتجنب التداخل
+                closeAllAnswers();
+
+                let anyVisible = false;
+                faqItems.forEach(item => {
+                    const question = item.getAttribute('data-question').toLowerCase();
+                    const answer = item.getAttribute('data-answer').toLowerCase();
+                    const category = item.getAttribute('data-category');
+                    const matchesSearch = currentSearch === '' || question.includes(currentSearch) || answer.includes(currentSearch);
+                    const matchesCategory = currentCategory === 'all' || category === currentCategory;
+
+                    if (matchesSearch && matchesCategory) {
+                        item.classList.remove('hidden');
+                        anyVisible = true;
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+                noResults.classList.toggle('hidden', anyVisible);
+            }
+
+            // ===== حدث البحث =====
+            searchInput.addEventListener('input', function(e) {
+                currentSearch = e.target.value.trim().toLowerCase();
                 filterFaqs();
             });
-        });
 
-        // ========== خاصية الإظهار/الإخفاء (accordion) ==========
-        document.querySelectorAll('.faq-question').forEach(question => {
-            question.addEventListener('click', () => {
-                const parent = question.parentElement;
-                const answerDiv = parent.querySelector('.faq-answer');
-                const icon = question.querySelector('i');
-                const isOpen = answerDiv.style.maxHeight && answerDiv.style.maxHeight !== '0px';
-                
-                // إغلاق جميع الفقرات المفتوحة (اختياري - يمكن إلغاء تعليق السطر التالي لفتح واحدة فقط)
-                // document.querySelectorAll('.faq-answer').forEach(ans => { ans.style.maxHeight = null; ans.style.paddingBottom = '0px'; });
-                // document.querySelectorAll('.faq-question i').forEach(ic => ic.classList.remove('rotate-180'));
-                
-                if (!isOpen) {
-                    answerDiv.style.maxHeight = answerDiv.scrollHeight + 'px';
-                    answerDiv.style.paddingBottom = '12px';
-                    icon.classList.add('rotate-180');
-                } else {
-                    answerDiv.style.maxHeight = null;
-                    answerDiv.style.paddingBottom = '0px';
-                    icon.classList.remove('rotate-180');
-                }
+            // ===== أزرار الفئات =====
+            categoryBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // إزالة التفعيل عن الكل
+                    categoryBtns.forEach(b => {
+                        b.classList.remove('active', 'bg-purple-600', 'text-white');
+                        b.classList.add('bg-gray-100', 'text-gray-700');
+                    });
+                    // تفعيل الزر المضغوط
+                    this.classList.add('active', 'bg-purple-600', 'text-white');
+                    this.classList.remove('bg-gray-100', 'text-gray-700');
+
+                    currentCategory = this.getAttribute('data-cat');
+                    filterFaqs();
+                });
             });
-        });
 
-        // إضافة كلاس للدوران
-        const style = document.createElement('style');
-        style.textContent = `
-            .rotate-180 { transform: rotate(180deg); }
-            .faq-question i { transition: transform 0.3s ease; }
-            .faq-item.hidden { display: none !important; }
-        `;
-        document.head.appendChild(style);
+            // ===== خاصية الإظهار/الإخفاء (Accordion) =====
+            document.querySelectorAll('.faq-question').forEach(question => {
+                question.addEventListener('click', function(e) {
+                    const parent = this.closest('.faq-item');
+                    // تأكد من أن العنصر غير مخفي (مرئي)
+                    if (parent.classList.contains('hidden')) return;
+
+                    const answerDiv = parent.querySelector('.faq-answer');
+                    const icon = this.querySelector('i');
+                    const isOpen = answerDiv.style.maxHeight && answerDiv.style.maxHeight !== '0px';
+
+                    // (اختياري) إغلاق جميع الإجابات الأخرى - يمكن تفعيله بإزالة التعليق
+                    // document.querySelectorAll('.faq-answer').forEach(ans => {
+                    //     if (ans !== answerDiv) {
+                    //         ans.style.maxHeight = null;
+                    //         ans.style.paddingBottom = '0px';
+                    //         ans.closest('.faq-item').querySelector('.faq-question i').classList.remove('rotate-180');
+                    //     }
+                    // });
+
+                    if (!isOpen) {
+                        answerDiv.style.maxHeight = answerDiv.scrollHeight + 'px';
+                        answerDiv.style.paddingBottom = '12px';
+                        icon.classList.add('rotate-180');
+                    } else {
+                        answerDiv.style.maxHeight = null;
+                        answerDiv.style.paddingBottom = '0px';
+                        icon.classList.remove('rotate-180');
+                    }
+                });
+            });
+
+            // ===== تنفيذ التصفية الأولية (تأكد من أن الكل ظاهر) =====
+            filterFaqs();
+        });
     </script>
 @endsection
