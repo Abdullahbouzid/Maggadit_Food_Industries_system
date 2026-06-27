@@ -334,6 +334,42 @@
 
         // تعيين اللغة الأولية
         setLanguage(currentLang);
+
+
+        // في صفحة login.blade.php أو في ملف JavaScript الخاص بتسجيل الدخول
+async function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // حفظ التوكن في localStorage
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('customer', JSON.stringify(data.customer));
+            
+            // توجيه المستخدم إلى الصفحة الرئيسية
+            window.location.href = '/dashboard';
+        } else {
+            showToast(data.message || 'فشل تسجيل الدخول', true);
+        }
+    } catch (error) {
+        showToast('حدث خطأ في الاتصال', true);
+    }
+}
     </script>
 </body>
 </html>

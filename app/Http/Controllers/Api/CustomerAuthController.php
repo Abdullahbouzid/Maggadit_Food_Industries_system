@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 class CustomerAuthController extends Controller
 {
     // تسجيل الدخول وإرجاع توكن Sanctum
-    public function login(Request $request)
+   public function login(Request $request)
     {
         $request->validate([
             'username' => 'required|string',
@@ -28,7 +28,7 @@ class CustomerAuthController extends Controller
             ]);
         }
 
-        // حذف التوكنات القديمة (اختياري)
+        // حذف التوكنات القديمة
         $customer->tokens()->delete();
 
         $token = $customer->createToken('mobile-token')->plainTextToken;
@@ -36,7 +36,20 @@ class CustomerAuthController extends Controller
         return response()->json([
             'success' => true,
             'token' => $token,
-            'customer' => $customer->only(['id', 'name', 'username', 'email']),
+            'customer' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'username' => $customer->username,
+                'email' => $customer->email,
+                'active_organization_id' => $customer->active_organization_id,
+            ],
+            'organizations' => $customer->organizations()->get()->map(function ($org) use ($customer) {
+                return [
+                    'id' => $org->id,
+                    'name' => $org->name,
+                    'is_active' => $customer->active_organization_id == $org->id,
+                ];
+            }),
         ]);
     }
 

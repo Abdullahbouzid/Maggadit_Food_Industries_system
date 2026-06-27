@@ -184,5 +184,92 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadOrganizations();
         });
+
+        // في change_organization.blade.php
+
+function getToken() {
+    const token = localStorage.getItem('token');
+    console.log('Token found:', token ? 'Yes' : 'No'); // للتأكد
+    return token || null;
+}
+
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        // التوجيه إلى صفحة تسجيل الدخول
+        window.location.href = '/login';
+        return false;
+    }
+    return true;
+}
+
+// تحديث دالة loadOrganizations
+async function loadOrganizations() {
+    if (!checkAuth()) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        const response = await fetch('/api/organizations', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (response.status === 401) {
+            // التوكن منتهي أو غير صحيح
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('فشل في تحميل المنظمات');
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+            renderOrganizations(data.organizations, data.active_organization_id);
+        } else {
+            throw new Error(data.message || 'حدث خطأ');
+        }
+    } catch (error) {
+        document.getElementById('organizations-list').innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-3"></i>
+                <p class="text-gray-500">${error.message}</p>
+                <button onclick="loadOrganizations()" class="mt-3 bg-purple-600 text-white px-4 py-2 rounded-full text-sm">
+                    <i class="fas fa-sync-alt ml-2"></i> إعادة المحاولة
+                </button>
+            </div>
+        `;
+    }
+}
+
+// التحقق من التوكن عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    console.log('Token exists:', token ? 'Yes' : 'No');
+    
+    if (!token) {
+        // عرض رسالة وإعادة التوجيه
+        document.getElementById('organizations-list').innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-3"></i>
+                <p class="text-gray-600 mb-3">الرجاء تسجيل الدخول أولاً</p>
+                <a href="/login" class="bg-purple-600 text-white px-6 py-2 rounded-full inline-block">
+                    <i class="fas fa-sign-in-alt ml-2"></i> تسجيل الدخول
+                </a>
+            </div>
+        `;
+        return;
+    }
+    
+    loadOrganizations();
+});
     </script>
 @endsection
