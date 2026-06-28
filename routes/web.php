@@ -189,7 +189,32 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/products', [CustomerAppController::class, 'productsIndex'])->name('products');
     Route::get('/showoffers', [CustomerAppController::class, 'offersIndex'])->name('offer');
 
-    // مسارات محمية (تتطلب تسجيل دخول)
+    // ===================================================================
+    // مسارات APK التي تحمي نفسها عبر JavaScript (getToken + redirect)
+    // لا تحتاج middleware الخادم لأن الـ session cookies قد لا تعمل
+    // بشكل صحيح في WebView عندما يختلف APP_URL عن عنوان الجهاز
+    // ===================================================================
+    Route::get('/change-organization', function () {
+        return view('app_android.more.change_organization');
+    })->name('change_organization');
+    Route::get('/surveys', function () {
+        return view('app_android.more.surveys');
+    })->name('surveys');
+    Route::get('/notifications', function () {
+        return view('app_android.more.notifications');
+    })->name('notifications');
+    Route::get('/privacy-policy', function () {
+        return view('app_android.more.privacy_policy');
+    })->name('privacy');
+    Route::get('/about-us', function () {
+        return view('app_android.more.about_us');
+    })->name('about');
+    Route::get('/contact-us', function () {
+        return view('app_android.more.contact_us');
+    })->name('contact');
+    Route::get('/faq', [CustomerAppController::class, 'faqIndex'])->name('faq');
+
+    // مسارات محمية (تتطلب تسجيل دخول بجلسة PHP)
     Route::middleware('check.customer.session')->group(function () {
         Route::get('/dashboard', [CustomerAppController::class, 'dashboard'])->name('dashboard');
         Route::get('/more', function () {
@@ -204,13 +229,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/favorite', function () {
             return view('app_android.favorite');
         })->name('favorite');
-        Route::get('/change-organization', function () {
-            return view('app_android.more.change_organization');
-        })->name('change_organization');
         Route::get('/financial-statement', function () {
             return view('app_android.more.financial_statement');
         })->name('financial_statement');
-   
         Route::get('/order-history', function () {
             return view('app_android.more.order_history');
         })->name('order_history');
@@ -219,22 +240,6 @@ Route::prefix('customer')->name('customer.')->group(function () {
         })->name('order_details');
         Route::get('/my-info', [CustomerAppController::class, 'myInfo'])->name('my_info');
         Route::post('/my-info', [CustomerAppController::class, 'updateInfo'])->name('my_info.update');
-        Route::get('/surveys', function () {
-            return view('app_android.more.surveys');
-        })->name('surveys');
-        Route::get('/notifications', function () {
-            return view('app_android.more.notifications');
-        })->name('notifications');
-        Route::get('/faq', [CustomerAppController::class, 'faqIndex'])->name('faq');
-        Route::get('/privacy-policy', function () {
-            return view('app_android.more.privacy_policy');
-        })->name('privacy');
-        Route::get('/about-us', function () {
-            return view('app_android.more.about_us');
-        })->name('about');
-        Route::get('/contact-us', function () {
-            return view('app_android.more.contact_us');
-        })->name('contact');
     });
 });
 
