@@ -97,19 +97,9 @@
 
     <script>
     // ========== الإعدادات ==========
-    const API_BASE = '/api/customer';
+    const API_BASE = '/customer/proxy';
     let currentSurveyData = null;
     let answers = {};
-
-    // ========== الأدوات ==========
-    function getToken() {
-        let sessionToken = "{{ session('api_token') }}";
-        if (sessionToken && sessionToken.trim() !== '' && sessionToken !== 'null') {
-            localStorage.setItem('token', sessionToken);
-            return sessionToken;
-        }
-        return localStorage.getItem('token') || null;
-    }
 
     function showToast(msg, isError = false) {
         const t = document.getElementById('survey-toast');
@@ -125,29 +115,22 @@
 
     // ========== تحميل الاستبيانات ==========
     async function loadSurveys() {
-        const token = getToken();
         const container = document.getElementById('surveys-list');
         const loading = document.getElementById('surveys-loading');
 
-        if (!token) {
-            loading.remove();
-            container.innerHTML = `
-                <div class="text-center py-10">
-                    <i class="fas fa-lock text-gray-300 text-4xl mb-3"></i>
-                    <p class="text-gray-500 mb-3">الرجاء تسجيل الدخول لعرض الاستبيانات</p>
-                    <a href="/mobile/login" class="bg-purple-600 text-white px-6 py-2 rounded-full text-sm">تسجيل الدخول</a>
-                </div>`;
-            return;
-        }
-
         try {
             const res = await fetch(`${API_BASE}/surveys`, {
-                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
             });
 
             if (res.status === 401) {
-                localStorage.removeItem('token');
-                window.location.href = '/mobile/login';
+                loading.remove();
+                container.innerHTML = `
+                    <div class="text-center py-10">
+                        <i class="fas fa-lock text-gray-300 text-4xl mb-3"></i>
+                        <p class="text-gray-500 mb-3">الرجاء تسجيل الدخول لعرض الاستبيانات</p>
+                        <a href="/mobile/login" class="bg-purple-600 text-white px-6 py-2 rounded-full text-sm">تسجيل الدخول</a>
+                    </div>`;
                 return;
             }
 
@@ -233,8 +216,6 @@
 
     // ========== فتح مودال الاستبيان ==========
     async function openSurvey(id, title, desc) {
-        const token = getToken();
-        if (!token) { showToast('الرجاء تسجيل الدخول أولاً', true); return; }
 
         // عرض المودال مع loading
         document.getElementById('modal-title').textContent = title;
@@ -248,7 +229,7 @@
 
         try {
             const res = await fetch(`${API_BASE}/surveys/${id}`, {
-                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
             });
             const data = await res.json();
 
@@ -399,8 +380,7 @@
     // ========== إرسال الاستبيان ==========
     async function submitSurvey() {
         collectAnswers();
-        const token = getToken();
-        if (!token || !currentSurveyData) return;
+        if (!currentSurveyData) return;
 
         // التحقق من الإجابات الإجبارية
         const requiredBlocks = document.querySelectorAll('.question-block[data-required="1"]');
@@ -424,9 +404,9 @@
             const res = await fetch(`${API_BASE}/surveys/${currentSurveyData.id}/respond`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify({ answers })
             });

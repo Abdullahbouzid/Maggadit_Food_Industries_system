@@ -200,6 +200,89 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/surveys', function () {
         return view('app_android.more.surveys');
     })->name('surveys');
+
+    // ===================================================================
+    // مسارات Proxy للـ APK - تستخدم توكن الجلسة للاتصال بالسيرفر الخارجي
+    // هذه المسارات تحل محل استدعاء API المباشر من المتصفح بالتوكن
+    // ===================================================================
+    Route::prefix('proxy')->name('proxy.')->group(function () {
+        $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
+
+        // جلب قائمة الاستبيانات
+        Route::get('/surveys', function () use ($baseUrl) {
+            $token = session('api_token');
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
+                    ->get("{$baseUrl}/customer/surveys");
+                return response()->json($response->json(), $response->status());
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
+            }
+        })->name('surveys.index');
+
+        // جلب تفاصيل استبيان
+        Route::get('/surveys/{id}', function ($id) use ($baseUrl) {
+            $token = session('api_token');
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
+                    ->get("{$baseUrl}/customer/surveys/{$id}");
+                return response()->json($response->json(), $response->status());
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
+            }
+        })->name('surveys.show');
+
+        // إرسال إجابات استبيان
+        Route::post('/surveys/{id}/respond', function (\Illuminate\Http\Request $request, $id) use ($baseUrl) {
+            $token = session('api_token');
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
+                    ->post("{$baseUrl}/customer/surveys/{$id}/respond", $request->all());
+                return response()->json($response->json(), $response->status());
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
+            }
+        })->name('surveys.respond');
+
+        // جلب قائمة المنظمات
+        Route::get('/organizations', function () use ($baseUrl) {
+            $token = session('api_token');
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
+                    ->get("{$baseUrl}/customer/organizations");
+                return response()->json($response->json(), $response->status());
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
+            }
+        })->name('organizations.index');
+
+        // تبديل المنظمة
+        Route::post('/change-organization', function (\Illuminate\Http\Request $request) use ($baseUrl) {
+            $token = session('api_token');
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
+                    ->post("{$baseUrl}/customer/change-organization", $request->all());
+                return response()->json($response->json(), $response->status());
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
+            }
+        })->name('organizations.switch');
+    });
     Route::get('/notifications', function () {
         return view('app_android.more.notifications');
     })->name('notifications');

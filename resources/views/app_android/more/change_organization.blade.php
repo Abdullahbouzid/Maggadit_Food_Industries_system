@@ -48,48 +48,27 @@
             }, 3000);
         }
 
-        // الحصول على التوكن (متوافق مع جلسات الويب ونسخة الـ APK)
-        function getToken() {
-            let sessionToken = "{{ session('api_token') }}";
-            if (sessionToken && sessionToken.trim() !== '') {
-                localStorage.setItem('token', sessionToken);
-                return sessionToken;
-            }
-            const token = localStorage.getItem('token');
-            console.log('Token found:', token ? 'Yes' : 'No');
-            return token || null;
-        }
-
-        function checkAuth() {
-            const token = getToken();
-            if (!token) {
-                // التوجيه إلى صفحة تسجيل الدخول
-                window.location.href = '/mobile/login';
-                return false;
-            }
-            return true;
-        }
-
-        // جلب المنظمات من الـ API
+        // جلب المنظمات من الـ Proxy (Web Route)
         async function loadOrganizations() {
-            if (!checkAuth()) return;
-            
-            const token = getToken();
-            
             try {
-                const response = await fetch('/api/customer/organizations', {
+                const response = await fetch('/customer/proxy/organizations', {
                     method: 'GET',
                     headers: {
-                        'Authorization': 'Bearer ' + token,
                         'Accept': 'application/json',
-                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     }
                 });
 
                 if (response.status === 401) {
-                    // التوكن منتهي أو غير صحيح
-                    localStorage.removeItem('token');
-                    window.location.href = '/mobile/login';
+                    document.getElementById('organizations-list').innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-3"></i>
+                            <p class="text-gray-600 mb-3">الرجاء تسجيل الدخول أولاً</p>
+                            <a href="/mobile/login" class="bg-purple-600 text-white px-6 py-2 rounded-full inline-block">
+                                <i class="fas fa-sign-in-alt ml-2"></i> تسجيل الدخول
+                            </a>
+                        </div>
+                    `;
                     return;
                 }
 
@@ -160,20 +139,17 @@
             });
         }
 
-        // تبديل المنظمة عبر API
+        // تبديل المنظمة عبر Proxy (Web Route)
         async function switchOrganization(organizationId, organizationName) {
-            if (!checkAuth()) return;
-            const token = getToken();
-
             showToast('جاري التبديل...', false);
 
             try {
-                const response = await fetch('/api/customer/change-organization', {
+                const response = await fetch('/customer/proxy/change-organization', {
                     method: 'POST',
                     headers: {
-                        'Authorization': 'Bearer ' + token,
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     },
                     body: JSON.stringify({
                         organization_id: organizationId
@@ -181,7 +157,6 @@
                 });
 
                 if (response.status === 401) {
-                    localStorage.removeItem('token');
                     window.location.href = '/mobile/login';
                     return;
                 }
@@ -202,24 +177,8 @@
             }
         }
 
-        // التحقق من التوكن عند تحميل الصفحة
+        // تحميل المنظمات عند بدء الصفحة
         document.addEventListener('DOMContentLoaded', function() {
-            const token = getToken();
-            
-            if (!token) {
-                // عرض رسالة وإعادة التوجيه
-                document.getElementById('organizations-list').innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-3"></i>
-                        <p class="text-gray-600 mb-3">الرجاء تسجيل الدخول أولاً</p>
-                        <a href="/mobile/login" class="bg-purple-600 text-white px-6 py-2 rounded-full inline-block">
-                            <i class="fas fa-sign-in-alt ml-2"></i> تسجيل الدخول
-                        </a>
-                    </div>
-                `;
-                return;
-            }
-            
             loadOrganizations();
         });
     </script>
