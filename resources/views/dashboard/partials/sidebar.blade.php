@@ -184,6 +184,13 @@
                     <span class="align-middle">الأسئلة الشائعة (FAQ)</span>
                 </a>
             </li>
+            <li class="sidebar-item {{ request()->routeIs('surveys.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('surveys.index') }}">
+                    <i class="align-middle" data-feather="clipboard"></i>
+                    <span class="align-middle">الاستبيانات</span>
+                </a>
+            </li>
+
 
             <li class="sidebar-header">Permissions & Roles</li>
             <li class="sidebar-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">

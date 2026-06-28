@@ -16,6 +16,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\Customer\CustomerAppController;
 use App\Http\Controllers\ItemTypeController;
+use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\UomController;
 use App\Http\Controllers\PackOperationController;
 use App\Http\Controllers\PackGroupController;
@@ -209,9 +210,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/financial-statement', function () {
             return view('app_android.more.financial_statement');
         })->name('financial_statement');
-        Route::get('/change-password', function () {
-            return view('app_android.more.change_password');
-        })->name('change_password');
+   
         Route::get('/order-history', function () {
             return view('app_android.more.order_history');
         })->name('order_history');
@@ -316,6 +315,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('categories/import', [CategoryController::class, 'import'])->name('categories.import');
 
     Route::resource('faqs', FaqController::class);
+
+    // الاستبيانات
+    Route::resource('surveys', SurveyController::class);
+    Route::patch('surveys/{survey}/toggle', [SurveyController::class, 'toggle'])->name('surveys.toggle');
 
     Route::resource('item-types', ItemTypeController::class);
     Route::get('item-types/export', [ItemTypeController::class, 'export'])->name('item-types.export');

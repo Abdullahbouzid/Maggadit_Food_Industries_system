@@ -43,10 +43,11 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show']);
         Route::put('/profile', [ProfileController::class, 'update']);
         Route::post('/profile/update', [ProfileController::class, 'updateProfile']);
-        Route::post('/change-password', [ProfileController::class, 'changePassword']);
+      
         Route::get('/dashboard', [CustomerApiController::class, 'dashboard']);
         Route::get('/financial-statement', [CustomerApiController::class, 'financialStatement']);
         Route::get('/surveys', [CustomerApiController::class, 'surveys']);
+        Route::get('/surveys/{id}', [CustomerApiController::class, 'getSurvey']);
         Route::post('/surveys/{id}/respond', [CustomerApiController::class, 'submitSurvey']);
         Route::get('/notifications', [CustomerApiController::class, 'notifications']);
         Route::post('/notifications/{id}/read', [CustomerApiController::class, 'markNotificationRead']);

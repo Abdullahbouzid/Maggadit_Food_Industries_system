@@ -6,7 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Brand;
 use App\Models\Item;
+use App\Models\Survey;
+use App\Models\SurveyResponse;
+use App\Models\SurveyAnswer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomerApiController extends Controller
 {
@@ -181,14 +185,108 @@ class CustomerApiController extends Controller
         return response()->json(['success' => true, 'statement' => []]);
     }
 
+    // جلب قائمة الاستبيانات النشطة مع حالة العميل
     public function surveys(Request $request)
     {
-        return response()->json(['success' => true, 'surveys' => []]);
+        $customer = $request->user();
+
+        $surveys = Survey::active()
+            ->withCount('questions')
+            ->latest()
+            ->get()
+            ->map(function ($survey) use ($customer) {
+                $answered = $survey->isAnsweredByCustomer($customer->id);
+                return [
+                    'id'                => $survey->id,
+                    'title'             => $survey->title,
+                    'description'       => $survey->description,
+                    'estimated_minutes' => $survey->estimated_minutes,
+                    'questions_count'   => $survey->questions_count,
+                    'is_answered'       => $answered,
+                    'starts_at'         => $survey->starts_at?->toDateTimeString(),
+                    'ends_at'           => $survey->ends_at?->toDateTimeString(),
+                ];
+            });
+
+        return response()->json(['success' => true, 'surveys' => $surveys]);
     }
 
+    // جلب استبيان واحد مع أسئلته الكاملة
+    public function getSurvey(Request $request, $id)
+    {
+        $customer = $request->user();
+        $survey = Survey::active()->with('questions')->findOrFail($id);
+
+        if ($survey->isAnsweredByCustomer($customer->id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لقد أجبت على هذا الاستبيان مسبقاً'
+            ], 409);
+        }
+
+        $questions = $survey->questions->map(function ($q) {
+            return [
+                'id'            => $q->id,
+                'question_text' => $q->question_text,
+                'question_type' => $q->question_type,
+                'options'       => $q->options,
+                'is_required'   => $q->is_required,
+                'sort_order'    => $q->sort_order,
+            ];
+        });
+
+        return response()->json([
+            'success'  => true,
+            'survey'   => [
+                'id'                => $survey->id,
+                'title'             => $survey->title,
+                'description'       => $survey->description,
+                'estimated_minutes' => $survey->estimated_minutes,
+            ],
+            'questions' => $questions,
+        ]);
+    }
+
+    // إرسال إجابات الاستبيان
     public function submitSurvey(Request $request, $id)
     {
-        return response()->json(['success' => true, 'message' => 'تم استلام الرد']);
+        $customer = $request->user();
+        $survey = Survey::active()->with('questions')->findOrFail($id);
+
+        // التحقق من عدم الإجابة مسبقاً
+        if ($survey->isAnsweredByCustomer($customer->id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لقد أجبت على هذا الاستبيان مسبقاً'
+            ], 409);
+        }
+
+        $request->validate([
+            'answers'   => 'required|array',
+            'answers.*' => 'nullable|string|max:2000',
+        ]);
+
+        DB::transaction(function () use ($request, $survey, $customer) {
+            $response = SurveyResponse::create([
+                'survey_id'    => $survey->id,
+                'customer_id'  => $customer->id,
+                'submitted_at' => now(),
+            ]);
+
+            foreach ($survey->questions as $question) {
+                $answerValue = $request->answers[$question->id] ?? null;
+                SurveyAnswer::create([
+                    'survey_response_id'  => $response->id,
+                    'survey_question_id'  => $question->id,
+                    'answer_text'         => $answerValue,
+                ]);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إرسال إجاباتك بنجاح! شكراً لمشاركتك.'
+        ]);
     }
 
     public function notifications(Request $request)

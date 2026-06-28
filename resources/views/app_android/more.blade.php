@@ -46,18 +46,7 @@
                 <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
             </div>
 
-            <div id="change-pwd" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                        <i class="fas fa-key text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 id="change-pwd-title" class="font-bold text-gray-800">تغيير كلمة السر</h3>
-                        <p id="change-pwd-sub" class="text-xs text-gray-400">تحديث كلمة المرور</p>
-                    </div>
-                </div>
-                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
-            </div>
+          
 
             <div id="order-history" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
                 <div class="flex items-center gap-4">
@@ -314,8 +303,7 @@
             document.getElementById('change-org-sub').innerText = t.change_org_sub;
             document.getElementById('financial-title').innerText = t.financial_title;
             document.getElementById('financial-sub').innerText = t.financial_sub;
-            document.getElementById('change-pwd-title').innerText = t.change_pwd_title;
-            document.getElementById('change-pwd-sub').innerText = t.change_pwd_sub;
+           
             document.getElementById('order-title').innerText = t.order_title;
             document.getElementById('order-sub').innerText = t.order_sub;
             document.getElementById('logout-text').innerText = t.logout_text;
@@ -415,9 +403,7 @@
         document.getElementById('financial-stmt').addEventListener('click', () => {
             window.location.href = "{{ route('customer.financial_statement') }}";
         });
-        document.getElementById('change-pwd').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.change_password') }}";
-        });
+    
         document.getElementById('order-history').addEventListener('click', () => {
             window.location.href = "{{ route('customer.order_history') }}";
         });
@@ -428,9 +414,7 @@
         document.getElementById('financial-stmt').addEventListener('click', () => {
             window.location.href = "{{ route('customer.financial_statement') }}";
         });
-        document.getElementById('change-pwd').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.change_password') }}";
-        });
+   
         document.getElementById('order-history').addEventListener('click', () => {
             window.location.href = "{{ route('customer.order_history') }}";
         });
