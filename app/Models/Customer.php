@@ -58,17 +58,30 @@ class Customer extends Authenticatable
         if ($this->organizations()->where('organization_id', $organizationId)->exists()) {
             // تحديث العمود في جدول العملاء
             $this->update(['active_organization_id' => $organizationId]);
-            
+
             // تحديث حالة is_active في جدول الربط
             // إلغاء تفعيل جميع المنظمات
             $this->organizations()->updateExistingPivot($this->organizations->pluck('id')->toArray(), ['is_active' => false]);
-            
+
             // تفعيل المنظمة المختارة
             $this->organizations()->updateExistingPivot($organizationId, ['is_active' => true]);
-            
+
             return true;
         }
-        
+
         return false;
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        if (!$this->avatar) {
+            return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
+        }
+
+        if (filter_var($this->avatar, FILTER_VALIDATE_URL)) {
+            return $this->avatar;
+        }
+
+        return 'https://blue-beaver-923812.hostingersite.com/uploads/customers/' . $this->avatar;
     }
 }

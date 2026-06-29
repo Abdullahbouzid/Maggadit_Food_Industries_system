@@ -99,9 +99,17 @@ class Item extends Model
 
     public function getMainImageUrlAttribute()
     {
-        if (!$this->image) return null;
+        if ($this->image) {
+            // إذا كان التطبيق يعمل كـ APK، نستخدم رابط الاستضافة دائماً
+            return 'https://blue-beaver-923812.hostingersite.com/uploads/' . $this->image;
+        }
 
-        // إذا كان التطبيق يعمل كـ APK، نستخدم رابط الاستضافة دائماً
-        return 'https://blue-beaver-923812.hostingersite.com/storage/' . $this->image;
+        // محاولة جلب أول صورة من الصور الإضافية
+        $firstImage = $this->images()->first();
+        if ($firstImage) {
+            return 'https://blue-beaver-923812.hostingersite.com/uploads/' . $firstImage->image_path;
+        }
+
+        return null;
     }
 }

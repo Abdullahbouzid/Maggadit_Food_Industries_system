@@ -21,6 +21,6 @@ class ItemType extends Model
     // يمكنك إضافة accessor لصورة كاملة الرابط
     public function getImageUrlAttribute()
     {
-        return $this->image ? asset('storage/' . $this->image) : null;
+        return $this->image ? asset('uploads/' . $this->image) : null;
     }
 }

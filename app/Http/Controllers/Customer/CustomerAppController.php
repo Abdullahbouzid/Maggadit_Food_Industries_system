@@ -159,8 +159,10 @@ class CustomerAppController extends Controller
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands");
             if ($response->successful()) {
                 $data = $response->json();
+                // جلب المصفوفة الصحيحة من الرد
                 $rawData = $data['brands'] ?? ($data['data'] ?? $data);
 
+                // إذا كان الرد يحتوي على success ولم نجد مفتاحاً للماركات، فهذا يعني أننا حصلنا على الرد كاملاً
                 if (isset($data['success']) && !isset($data['data']) && !isset($data['brands'])) {
                     $rawData = [];
                 }
@@ -175,7 +177,7 @@ class CustomerAppController extends Controller
             Log::error("Brands API Error: " . $e->getMessage());
         }
 
-        // Fallback: استخدام البيانات المحلية مع تطبيع المسار
+        // Fallback إلى قاعدة البيانات المحلية
         $brands = Brand::all()->map(function ($brand) {
             return $this->applyImagePath($brand, 'logo');
         });
@@ -195,7 +197,12 @@ class CustomerAppController extends Controller
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands/{$id}");
             if ($response->successful()) {
                 $data = $response->json();
+                // جلب بيانات الماركة من المفتاح الصحيح
                 $brandData = $data['brand'] ?? $data;
+
+                if (isset($data['success']) && !isset($data['brand'])) {
+                    // معالجة
+                }
 
                 $brand = (object) $brandData;
                 $brand = $this->applyImagePath($brand, 'logo');
@@ -212,6 +219,7 @@ class CustomerAppController extends Controller
             $brand = $this->applyImagePath($brand, 'logo');
         }
 
+        // جلب المنتجات التابعة لهذه الماركة
         $items = Item::where('brand_id', $id)->get()->map(function ($item) {
             return $this->applyImagePath($item, 'image');
         });
@@ -268,6 +276,7 @@ class CustomerAppController extends Controller
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/offers");
             if ($response->successful()) {
                 $data = $response->json();
+                // جلب المصفوفة الصحيحة من الرد
                 $rawData = $data['offers'] ?? ($data['data'] ?? $data);
 
                 if (isset($data['success']) && !isset($data['data']) && !isset($data['offers'])) {
@@ -284,39 +293,16 @@ class CustomerAppController extends Controller
             Log::error("Offers API Error: " . $e->getMessage());
         }
 
-        // بيانات عروض وهمية
-        $offers = collect([
-            (object) [
-                'id' => 1,
-                'title' => 'تخفيضات الصيف الكبرى',
-                'description' => 'خصم يصل إلى 50% على جميع الملابس الصيفية والإكسسوارات الأصلية. سارع بالشراء!',
-                'discount' => '-50%',
-                'expiry_date' => '2025-07-31',
-                'image' => null,
-            ],
-            (object) [
-                'id' => 2,
-                'title' => 'عرض خاص على الإلكترونيات',
-                'description' => 'احصل على خصم 30% على أحدث الأجهزة الإلكترونية لفترة محدودة.',
-                'discount' => '-30%',
-                'expiry_date' => '2025-08-15',
-                'image' => null,
-            ],
-        ]);
-
+        // Fallback: بيانات افتراضية
+        $offers = collect();
         return view('app_android.offers.index', compact('offers'));
     }
 
     /**
-     * تحويل مصفوفة البيانات إلى مجموعة من الكائنات مع توحيد مسار الصور
+     * تحويل البيانات الخام إلى كولكشن من الكائنات مع معالجة الصور
      */
-    private function parseData(array $items)
+    private function parseData($items)
     {
-        // إذا كانت المصفوفة تحتوي على مفتاح 'data'، فمن المحتمل أنها استجابة مغلفة أو مرقمة
-        if (isset($items['data']) && is_array($items['data'])) {
-            return $this->parseData($items['data']);
-        }
-
         return collect($items)->filter(function($item) {
             // التأكد من أن العنصر هو مصفوفة أو كائن ويحتوي على معرف (id)
             if (is_array($item)) {
@@ -349,12 +335,15 @@ class CustomerAppController extends Controller
      */
     private function applyImagePath($model, string $field)
     {
-        if (is_object($model) && property_exists($model, $field)) {
-            $value = $model->$field;
-            if (!empty($value)) {
-                $model->$field = $this->normalizeImagePath($value);
-            } else {
-                $model->$field = null;
+        if (is_object($model)) {
+            // التحقق مما إذا كان كائناً عادياً أو نموذج Eloquent
+            if (isset($model->$field) || (method_exists($model, 'getAttribute') && $model->getAttribute($field) !== null)) {
+                $value = $model->$field;
+                if (!empty($value)) {
+                    $model->$field = $this->normalizeImagePath($value);
+                } else {
+                    $model->$field = null;
+                }
             }
         } elseif (is_array($model) && isset($model[$field])) {
             $value = $model[$field];
@@ -366,10 +355,11 @@ class CustomerAppController extends Controller
         }
         return $model;
     }
+
     /**
-     * توحيد مسار الصورة: إذا كان رابطاً كاملاً نستخدمه، وإلا نضيفه إلى مجلد uploads
+     * توحيد مسار الصورة: إذا كان رابطاً كاملاً نستخدمه، وإلا نضيفه إلى مجلد uploads أو نربطه بالسيرفر الرئيسي
      */
-  private function normalizeImagePath($path)
+    private function normalizeImagePath($path)
     {
         if (empty($path)) {
             return null;
@@ -377,56 +367,55 @@ class CustomerAppController extends Controller
 
         // 1. إذا كان رابطاً كاملاً (http/https)
         if (filter_var($path, FILTER_VALIDATE_URL)) {
+            // إذا كان الرابط يشير للسيرفر الرئيسي بمسار storage للصور التي نعلم أنها في uploads، نحاول تصحيحه
+            if (str_contains($path, 'hostingersite.com/storage/')) {
+                if (str_contains($path, '/items/') || str_contains($path, '/categories/') || str_contains($path, '/brands/')) {
+                    return str_replace('/storage/', '/uploads/', $path);
+                }
+            }
             return $path;
         }
 
-        // Remove leading slash if present for consistent processing
         $cleanPath = ltrim($path, '/');
+        $baseUrlDomain = 'https://blue-beaver-923812.hostingersite.com';
 
         // 2. معالجة المسارات التي تبدأ بـ 'storage/'
         if (str_starts_with($cleanPath, 'storage/')) {
-            $relativePath = substr($cleanPath, 8); // Remove 'storage/' prefix
-            // التحقق من وجود الملف في القرص العام
+            $relativePath = substr($cleanPath, 8);
             if (Storage::disk('public')->exists($relativePath)) {
                 return asset('storage/' . $relativePath);
-            } else {
-                // إذا لم يوجد، نسجل خطأ ونعيد null
-                Log::warning("Image not found in storage: " . $relativePath);
-                return null;
             }
+            // إذا لم يوجد محلياً، نرجعه من السيرفر الرئيسي
+            return $baseUrlDomain . '/storage/' . $relativePath;
         }
 
         // 3. معالجة المسارات التي تبدأ بـ 'uploads/'
         if (str_starts_with($cleanPath, 'uploads/')) {
-            $relativePath = substr($cleanPath, 8); // Remove 'uploads/' prefix
-            $fullPath = public_path('uploads/' . $relativePath);
-            if (file_exists($fullPath)) {
+            $relativePath = substr($cleanPath, 8);
+            if (file_exists(public_path('uploads/' . $relativePath))) {
                 return asset('uploads/' . $relativePath);
-            } else {
-                Log::warning("Image not found in uploads: " . $relativePath);
-                return null;
             }
+            return $baseUrlDomain . '/uploads/' . $relativePath;
         }
 
-        // 4. افتراضياً: نعتبره اسم ملف داخل مجلد uploads
-        $fullPath = public_path('uploads/' . $cleanPath);
-        if (file_exists($fullPath)) {
+        // 4. البحث الافتراضي في uploads ثم storage
+        if (file_exists(public_path('uploads/' . $cleanPath))) {
             return asset('uploads/' . $cleanPath);
         }
 
-        // 5. محاولة البحث في storage أيضاً كحل أخير
         if (Storage::disk('public')->exists($cleanPath)) {
             return asset('storage/' . $cleanPath);
         }
 
-        // 6. إذا لم يوجد، نسجل خطأ ونعيد null
-        Log::warning("Image not found: " . $path);
-        return null;
+        // 5. الحل الأخير: ربط المسار بالسيرفر الرئيسي (بما أن معظم الصور مخزنة هناك في uploads)
+        // إذا كان المسار يحتوي على 'items' أو 'categories' أو 'brands'، نرجحه من uploads السيرفر
+        if (str_contains($cleanPath, 'items/') || str_contains($cleanPath, 'categories/') || str_contains($cleanPath, 'brands/')) {
+            return $baseUrlDomain . '/uploads/' . $cleanPath;
+        }
+
+        return $baseUrlDomain . '/storage/' . $cleanPath;
     }
 
-    /**
-     * تطبيق تطبيع مسار الصورة على نموذج أو كائن معين
-     */
     /**
      * عرض صفحة بياناتي
      */
@@ -437,104 +426,99 @@ class CustomerAppController extends Controller
     }
 
     /**
-     * تحديث بيانات المستخدم
+     * تحديث بيانات العميل
      */
     public function updateInfo(Request $request)
     {
         $customer = Auth::guard('customer')->user();
         $token = Session::get('api_token');
 
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'username' => 'required|string|max:255',
+        // تجهيز البيانات للإرسال للسيرفر
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'username' => $request->username,
         ];
 
-        // If the user provided old_password, they want to change their password
-        if ($request->filled('old_password') || $request->filled('password')) {
-            $rules['old_password'] = 'required';
-            $rules['password'] = 'required|min:6|confirmed';
+        if ($request->filled('password')) {
+            $data['password'] = $request->password;
+            $data['password_confirmation'] = $request->password_confirmation;
         }
 
-        $validator = ValidatorFacade::make($request->all(), $rules);
+        try {
+            $requestHttp = Http::withToken($token)->withoutVerifying();
 
-        if ($validator->fails()) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['errors' => $validator->errors()], 422);
-            }
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        // إرسال التحديث إلى السيرفر الرئيسي
-        $http = Http::withToken($token)->withoutVerifying();
-
-        if ($request->hasFile('avatar')) {
-            $file = $request->file('avatar');
-            $http->attach(
-                'avatar', file_get_contents($file->getRealPath()), $file->getClientOriginalName()
-            );
-        } elseif ($request->filled('avatar') && preg_match('/^data:image\/(\w+);base64,/', $request->avatar)) {
-            $data = substr($request->avatar, strpos($request->avatar, ',') + 1);
-            $decodedData = base64_decode($data);
-            $extension = explode('/', explode(':', substr($request->avatar, 0, strpos($request->avatar, ';')))[1])[1];
-            $filename = time() . '_' . uniqid() . '.' . $extension;
-            $http->attach('avatar', $decodedData, $filename);
-        }
-
-        $response = $http->post("{$this->baseUrl}/customer/profile/update", $request->except(['avatar']));
-
-        if ($response->successful()) {
-            $data = $response->json();
-            $remoteUser = $data['customer'];
-
-            // Save avatar locally too if present
+            // إذا كان هناك ملف أفتار
             if ($request->hasFile('avatar')) {
-                // If remote server returns the generated filename, use it. Otherwise use new one.
-                $filename = $remoteUser['avatar'] ?? (time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension());
-                $request->file('avatar')->move(public_path('uploads/customers'), $filename);
-
-                if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
-                    @unlink(public_path('uploads/customers/' . $customer->avatar));
-                }
-
-                $customer->avatar = $filename;
-            } elseif ($request->filled('avatar') && preg_match('/^data:image\/(\w+);base64,/', $request->avatar)) {
-                $extension = explode('/', explode(':', substr($request->avatar, 0, strpos($request->avatar, ';')))[1])[1];
-                $data = substr($request->avatar, strpos($request->avatar, ',') + 1);
-                $decodedData = base64_decode($data);
-                $filename = $remoteUser['avatar'] ?? (time() . '_' . uniqid() . '.' . $extension);
-                file_put_contents(public_path('uploads/customers/' . $filename), $decodedData);
-
-                if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
-                    @unlink(public_path('uploads/customers/' . $customer->avatar));
-                }
-
-                $customer->avatar = $filename;
-            } elseif (isset($remoteUser['avatar'])) {
-                $customer->avatar = $remoteUser['avatar'];
+                $response = $requestHttp->attach(
+                    'avatar',
+                    file_get_contents($request->file('avatar')->getRealPath()),
+                    $request->file('avatar')->getClientOriginalName()
+                )->post("{$this->baseUrl}/customer/profile/update", $data);
+            } else {
+                $response = $requestHttp->post("{$this->baseUrl}/customer/profile/update", $data);
             }
 
-            $customer->name = $remoteUser['name'];
-            $customer->email = $remoteUser['email'];
-            $customer->username = $remoteUser['username'];
+            if ($response->successful()) {
+                $remoteUser = $response->json('customer');
 
-            if ($request->filled('password')) {
-                $customer->password = \Illuminate\Support\Facades\Hash::make($request->password);
+                // تحديث المستخدم محلياً
+                // معالجة صورة الأفتار محلياً إذا تغيرت
+                if ($request->hasFile('avatar')) {
+                    $file = $request->file('avatar');
+                    $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path('uploads/customers'), $filename);
+
+                    if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
+                        @unlink(public_path('uploads/customers/' . $customer->avatar));
+                    }
+
+                    $customer->avatar = $filename;
+                } elseif ($request->filled('avatar') && preg_match('/^data:image\/(\w+);base64,/', $request->avatar)) {
+                    $extension = explode('/', explode(':', substr($request->avatar, 0, strpos($request->avatar, ';')))[1])[1];
+                    $dataBase64 = substr($request->avatar, strpos($request->avatar, ',') + 1);
+                    $decodedData = base64_decode($dataBase64);
+                    $filename = $remoteUser['avatar'] ?? (time() . '_' . uniqid() . '.' . $extension);
+                    file_put_contents(public_path('uploads/customers/' . $filename), $decodedData);
+
+                    if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
+                        @unlink(public_path('uploads/customers/' . $customer->avatar));
+                    }
+
+                    $customer->avatar = $filename;
+                } elseif (isset($remoteUser['avatar'])) {
+                    $customer->avatar = $remoteUser['avatar'];
+                }
+
+                $customer->name = $remoteUser['name'];
+                $customer->email = $remoteUser['email'];
+                $customer->username = $remoteUser['username'];
+
+                if ($request->filled('password')) {
+                    $customer->password = \Illuminate\Support\Facades\Hash::make($request->password);
+                }
+
+                $customer->save();
+
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => true, 'message' => 'تم تحديث البيانات بنجاح', 'customer' => $customer]);
+                }
+                return redirect()->back()->with('success', 'تم تحديث البيانات بنجاح');
             }
 
-            $customer->save();
-
+            $errors = $response->json('errors') ?? ['error' => ['فشل تحديث البيانات في السيرفر']];
             if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => true, 'message' => 'تم تحديث البيانات بنجاح', 'customer' => $customer]);
+                return response()->json(['errors' => $errors], 422);
             }
-            return redirect()->back()->with('success', 'تم تحديث البيانات بنجاح');
-        }
+            return redirect()->back()->withErrors($errors)->withInput();
 
-        $errors = $response->json('errors') ?? ['error' => ['فشل تحديث البيانات في السيرفر']];
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json(['errors' => $errors], 422);
+        } catch (\Exception $e) {
+            Log::error("Update Profile Error: " . $e->getMessage());
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['errors' => ['error' => ['حدث خطأ أثناء الاتصال بالسيرفر']]], 500);
+            }
+            return redirect()->back()->with('error', 'حدث خطأ أثناء الاتصال بالسيرفر');
         }
-        return redirect()->back()->withErrors($errors)->withInput();
     }
 
     /**

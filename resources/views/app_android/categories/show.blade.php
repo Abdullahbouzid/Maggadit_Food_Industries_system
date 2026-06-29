@@ -24,20 +24,20 @@
                         @endif
                     </div>
                     <div class="p-3">
-                        <h3 class="font-bold text-gray-800 text-sm">{{ $item->name_en }}</h3>
+                        <h3 class="font-bold text-gray-800 text-sm">{{ $item->name ?? ($item->name_ar ?? $item->name_en) }}</h3>
                         <div class="flex items-center gap-1 mt-1">
                             <span class="text-yellow-500 text-xs">★</span>
-                            <span class="text-xs text-gray-600">{{ number_format($item->rate, 1) }}</span>
+                            <span class="text-xs text-gray-600">{{ number_format($item->rate ?? 0, 1) }}</span>
                         </div>
                         <div class="mt-2">
-                            <span class="text-purple-700 font-bold">{{ number_format($item->price) }} ر.س</span>
-                            @if($item->old_price)
+                            <span class="text-purple-700 font-bold">{{ number_format($item->price ?? 0) }} ر.س</span>
+                            @if(isset($item->old_price) && $item->old_price)
                                 <span class="text-gray-400 text-xs line-through mr-1">{{ number_format($item->old_price) }} ر.س</span>
                             @endif
                         </div>
                         <button class="add-to-cart mt-2 w-full bg-purple-600 text-white text-xs py-2 rounded-full hover:bg-purple-700 transition"
-                                data-name="{{ $item->name_en }}"
-                                data-price="{{ $item->price }}">
+                                data-name="{{ $item->name ?? ($item->name_ar ?? $item->name_en) }}"
+                                data-price="{{ $item->price ?? 0 }}">
                             <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
                         </button>
                     </div>
