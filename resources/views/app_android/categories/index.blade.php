@@ -19,8 +19,8 @@
             @forelse($categories as $category)
                 <a href="{{ route('customer.categories.show', $category->id) }}" class="block bg-white rounded-2xl shadow-md p-4 text-center transition hover:shadow-lg">
                     <div class="w-16 h-16 mx-auto rounded-full overflow-hidden bg-gray-100 flex items-center justify-center text-3xl shadow-sm">
-                          @if($category->image && file_exists(public_path('uploads/' . $category->image)))
-                            <img src="{{ asset('uploads/' . $category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
+                        @if($category->image)
+                            <img src="{{ $category->image }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
                         @else
                             <span>{{ $category->icon ?? '📁' }}</span>
                         @endif

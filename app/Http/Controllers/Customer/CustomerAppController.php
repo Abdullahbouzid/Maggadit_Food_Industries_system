@@ -37,10 +37,10 @@ class CustomerAppController extends Controller
         try {
             $token = Session::get('api_token');
             $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/dashboard");
-            
+
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 // تحويل البيانات إلى كائنات مع ضمان وجود الحقول المطلوبة
                 $categories = $this->parseData($data['categories'] ?? []);
                 $brands = $this->parseData($data['brands'] ?? []);
@@ -81,7 +81,16 @@ class CustomerAppController extends Controller
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/categories");
             if ($response->successful()) {
                 $data = $response->json();
-                $categories = $this->parseData($data['data'] ?? $data);
+                // جلب المصفوفة الصحيحة من الرد
+                $rawData = $data['categories'] ?? ($data['data'] ?? $data);
+
+                // التأكد أننا لا نمرر المصفوفة الكاملة إذا كانت تحتوي على success
+                if (isset($data['success']) && !isset($data['data']) && !isset($data['categories'])) {
+                     $rawData = []; // أو تعامل خاص
+                }
+
+                $categories = $this->parseData(is_array($rawData) ? $rawData : []);
+
                 if ($categories->isNotEmpty()) {
                     return view('app_android.categories.index', compact('categories'));
                 }
@@ -109,7 +118,15 @@ class CustomerAppController extends Controller
         try {
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/categories/{$id}");
             if ($response->successful()) {
-                $categoryData = $response->json();
+                $data = $response->json();
+                // جلب بيانات الفئة من المفتاح الصحيح
+                $categoryData = $data['category'] ?? $data;
+
+                // التأكد من أنها ليست الاستجابة الكاملة
+                if (isset($data['success']) && !isset($data['category'])) {
+                     // محاولة إيجاد البيانات إذا كانت الاستجابة غير مباشرة
+                }
+
                 $category = (object) $categoryData;
                 $category = $this->applyImagePath($category, 'image');
             }
@@ -142,7 +159,14 @@ class CustomerAppController extends Controller
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands");
             if ($response->successful()) {
                 $data = $response->json();
-                $brands = $this->parseData($data['data'] ?? $data);
+                $rawData = $data['brands'] ?? ($data['data'] ?? $data);
+
+                if (isset($data['success']) && !isset($data['data']) && !isset($data['brands'])) {
+                    $rawData = [];
+                }
+
+                $brands = $this->parseData(is_array($rawData) ? $rawData : []);
+
                 if ($brands->isNotEmpty()) {
                     return view('app_android.brands.index', compact('brands'));
                 }
@@ -170,7 +194,9 @@ class CustomerAppController extends Controller
         try {
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands/{$id}");
             if ($response->successful()) {
-                $brandData = $response->json();
+                $data = $response->json();
+                $brandData = $data['brand'] ?? $data;
+
                 $brand = (object) $brandData;
                 $brand = $this->applyImagePath($brand, 'logo');
             }
@@ -196,19 +222,28 @@ class CustomerAppController extends Controller
     /**
      * عرض جميع المنتجات
      */
-     public function productsIndex()
+    public function productsIndex()
     {
         try {
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/products");
             if ($response->successful()) {
                 $data = $response->json();
-                // Try to get the products array from common structures
-                $products = $data['products'] ?? ($data['data'] ?? $data);
-                // Ensure we have an array
-                if (!is_array($products)) {
-                    $products = [];
+
+                // جلب المصفوفة الصحيحة من الرد
+                $rawData = $data['products'] ?? ($data['data'] ?? $data);
+
+                // إذا كان الرد يحتوي على success ولم نجد مفتاحاً للمنتجات، فهذا يعني أننا حصلنا على الرد كاملاً
+                if (isset($data['success']) && !isset($data['data']) && !isset($data['products'])) {
+                    $rawData = [];
                 }
-                $items = $this->parseData($products);
+
+                // معالجة حالة الترقيم (Pagination)
+                if (is_array($rawData) && isset($rawData['data']) && is_array($rawData['data'])) {
+                    $rawData = $rawData['data'];
+                }
+
+                $items = $this->parseData(is_array($rawData) ? $rawData : []);
+
                 if ($items->isNotEmpty()) {
                     return view('app_android.products.index', compact('items'));
                 }
@@ -233,7 +268,14 @@ class CustomerAppController extends Controller
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/offers");
             if ($response->successful()) {
                 $data = $response->json();
-                $offers = $this->parseData($data['data'] ?? $data);
+                $rawData = $data['offers'] ?? ($data['data'] ?? $data);
+
+                if (isset($data['success']) && !isset($data['data']) && !isset($data['offers'])) {
+                    $rawData = [];
+                }
+
+                $offers = $this->parseData(is_array($rawData) ? $rawData : []);
+
                 if ($offers->isNotEmpty()) {
                     return view('app_android.offers.index', compact('offers'));
                 }
@@ -268,9 +310,23 @@ class CustomerAppController extends Controller
     /**
      * تحويل مصفوفة البيانات إلى مجموعة من الكائنات مع توحيد مسار الصور
      */
-     private function parseData(array $items)
+    private function parseData(array $items)
     {
-        return collect($items)->map(function ($item) {
+        // إذا كانت المصفوفة تحتوي على مفتاح 'data'، فمن المحتمل أنها استجابة مغلفة أو مرقمة
+        if (isset($items['data']) && is_array($items['data'])) {
+            return $this->parseData($items['data']);
+        }
+
+        return collect($items)->filter(function($item) {
+            // التأكد من أن العنصر هو مصفوفة أو كائن ويحتوي على معرف (id)
+            if (is_array($item)) {
+                return isset($item['id']);
+            }
+            if (is_object($item)) {
+                return isset($item->id);
+            }
+            return false;
+        })->map(function ($item) {
             $item = (object) $item;
 
             // معالجة الصور حسب الحقل المتاح
@@ -411,7 +467,7 @@ class CustomerAppController extends Controller
 
         // إرسال التحديث إلى السيرفر الرئيسي
         $http = Http::withToken($token)->withoutVerifying();
-        
+
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
             $http->attach(
@@ -436,11 +492,11 @@ class CustomerAppController extends Controller
                 // If remote server returns the generated filename, use it. Otherwise use new one.
                 $filename = $remoteUser['avatar'] ?? (time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension());
                 $request->file('avatar')->move(public_path('uploads/customers'), $filename);
-                
+
                 if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
                     @unlink(public_path('uploads/customers/' . $customer->avatar));
                 }
-                
+
                 $customer->avatar = $filename;
             } elseif ($request->filled('avatar') && preg_match('/^data:image\/(\w+);base64,/', $request->avatar)) {
                 $extension = explode('/', explode(':', substr($request->avatar, 0, strpos($request->avatar, ';')))[1])[1];
@@ -448,11 +504,11 @@ class CustomerAppController extends Controller
                 $decodedData = base64_decode($data);
                 $filename = $remoteUser['avatar'] ?? (time() . '_' . uniqid() . '.' . $extension);
                 file_put_contents(public_path('uploads/customers/' . $filename), $decodedData);
-                
+
                 if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
                     @unlink(public_path('uploads/customers/' . $customer->avatar));
                 }
-                
+
                 $customer->avatar = $filename;
             } elseif (isset($remoteUser['avatar'])) {
                 $customer->avatar = $remoteUser['avatar'];
@@ -461,11 +517,11 @@ class CustomerAppController extends Controller
             $customer->name = $remoteUser['name'];
             $customer->email = $remoteUser['email'];
             $customer->username = $remoteUser['username'];
-            
+
             if ($request->filled('password')) {
                 $customer->password = \Illuminate\Support\Facades\Hash::make($request->password);
             }
-            
+
             $customer->save();
 
             if ($request->expectsJson() || $request->ajax()) {
@@ -490,7 +546,7 @@ class CustomerAppController extends Controller
         try {
             $token = Session::get('api_token');
             $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/faq");
-            
+
             if ($response->successful()) {
                 $data = $response->json();
                 if (isset($data['faq'])) {

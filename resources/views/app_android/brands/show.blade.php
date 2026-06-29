@@ -18,7 +18,7 @@
                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg">
                     <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                            @if($item->image)
-                            <img src="{{ asset('uploads/' . $item->image) }}" class="w-full h-full object-cover">
+                            <img src="{{ $item->image }}" class="w-full h-full object-cover">
                         @else
                             <span class="text-5xl text-gray-400">📦</span>
                         @endif
@@ -35,8 +35,8 @@
                                 <span class="text-gray-400 text-xs line-through mr-1">{{ number_format($item->old_price) }} ر.س</span>
                             @endif
                         </div>
-                        <button class="add-to-cart mt-2 w-full bg-purple-600 text-white text-xs py-2 rounded-full hover:bg-purple-700 transition" 
-                                data-name="{{ $item->name_en }}" 
+                        <button class="add-to-cart mt-2 w-full bg-purple-600 text-white text-xs py-2 rounded-full hover:bg-purple-700 transition"
+                                data-name="{{ $item->name_en }}"
                                 data-price="{{ $item->price }}">
                             <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
                         </button>
