@@ -118,7 +118,7 @@
                     <div class="mb-3">
                         <label class="block text-xs font-semibold text-gray-700 mb-1">كلمة المرور الجديدة</label>
                         <div class="relative">
-                            <input type="password" id="new_password" name="password" autocomplete="new-password" class="w-full p-3 pl-10 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
+                            <input type="password" id="new_password" name="password" autocomplete="new-password" class="w-full p-3 pl-10 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-prague-200 transition text-sm">
                             <button type="button" onclick="togglePassword('new_password')" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 focus:outline-none">
                                 <i class="fas fa-eye" id="icon-new_password"></i>
                             </button>
@@ -127,8 +127,8 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">تأكيد كلمة المرور</label>
                         <div class="relative">
-                            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" class="w-full p-3 pl-10 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
-                            <button type="button" onclick="togglePassword('password_confirmation')" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 focus:outline-none">
+                            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" class="w-full p-3 pl-10 border border-gray-200 rounded-xl focus:border-prague-200 focus:ring-2 focus:ring-prague-200 transition text-sm">
+                            <button type="button" onclick="togglePassword('password_confirmation')" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-prague-600 focus:outline-none">
                                 <i class="fas fa-eye" id="icon-password_confirmation"></i>
                             </button>
                         </div>
@@ -275,10 +275,6 @@
                     formData.append('_token', token);
                 }
 
-                // Store selected file for preview update
-                const fileInput = document.getElementById('avatar-input');
-                const selectedFile = fileInput.files[0] ?? null;
-
                 try {
                     const response = await fetch(this.action, {
                         method: 'POST',
@@ -294,23 +290,9 @@
 
                     if (data.success || data.message) {
                         showMobileToast(data.message || 'تم تحديث البيانات بنجاح', 'success');
-
-                        // Update avatar preview immediately if a new file was selected
-                        if (selectedFile) {
-                            const url = URL.createObjectURL(selectedFile);
-                            const avatarPreview = document.getElementById('avatar-preview');
-                            avatarPreview.src = url;
-                            // Also update main avatar image if visible
-                            const mainAvatar = document.getElementById('main-avatar');
-                            if (mainAvatar) {
-                                mainAvatar.src = url;
-                            }
-                        }
-
-                        // Close modal and optionally reload after a short delay to ensure consistency
+                        // Close modal and reload to reflect any server-side changes (like updated avatar)
                         setTimeout(() => {
                             closeModal();
-                            // Reload to fetch any server-side changes (e.g., cropped image)
                             window.location.reload();
                         }, 1500);
                     } else {
