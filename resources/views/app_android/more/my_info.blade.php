@@ -17,7 +17,7 @@
         <div class="text-center mb-6">
             <div class="relative inline-block cursor-pointer" onclick="openModal()">
                 @if($customer->avatar)
-                    <img src="{{ asset('uploads/customers/' . $customer->avatar) }}" alt="Avatar" class="w-24 h-24 mx-auto rounded-full object-cover shadow-lg">
+                    <img src="{{ asset('uploads/customers/' . $customer->avatar) }}" alt="Avatar" class="w-24 h-24 mx-auto rounded-full object-cover shadow-lg" id="main-avatar">
                 @else
                     <div class="w-24 h-24 mx-auto bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full flex items-center justify-center shadow-lg">
                         <i class="fas fa-user text-white text-4xl"></i>
@@ -109,7 +109,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">البريد الإلكتروني</label>
-                    <input type="email" name="email" value="{{ old('email', $customer->email) }}" required class="w-20 h-20 mx-auto rounded-full object-cover shadow-md border-2 border-purple-200">
+                    <input type="email" name="email" value="{{ old('email', $customer->email) }}" required class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
                 </div>
                 <hr class="my-4 border-gray-200">
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
@@ -149,18 +149,68 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <script>
-        function openModal() {
-            document.getElementById('edit-modal').classList.remove('opacity-0', 'pointer-events-none');
-            document.getElementById('edit-modal').classList.add('opacity-100');
-            document.getElementById('edit-modal').classList.remove('scale-95');
-            document.getElementById('edit-modal').classList.add('scale-100');
+        // دالة عرض الإشعارات
+        function showMobileToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const isSuccess = type === 'success';
+            const bgColor = isSuccess ? 'bg-green-600' : 'bg-red-600';
+            const iconClass = isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 transform -translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto`;
+            toast.innerHTML = `
+                <i class="fas ${iconClass} text-lg"></i>
+                <span class="text-sm font-medium flex-1">${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-white/80 hover:text-white focus:outline-none">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Animation in
+            requestAnimationFrame(() => {
+                toast.classList.remove('-translate-y-10', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('-translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
-        function closeModal() {
-            document.getElementById('edit-modal').classList.add('opacity-0', 'pointer-events-none');
-            document.getElementById('edit-modal').classList.remove('opacity-100', 'scale-100');
-            document.getElementById('edit-modal').classList.add('scale-95');
+        // دالة التبديل لإظهار وإخفاء كلمة المرور
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById('icon-' + inputId);
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash', 'text-purple-600');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash', 'text-purple-600');
+                icon.classList.add('fa-eye');
+            }
         }
+
+        // عرض الإشعارات القادمة من السيرفر
+        @if(session('success'))
+            setTimeout(() => showMobileToast("{{ session('success') }}", 'success'), 500);
+        @endif
+
+        @if($errors->any())
+            setTimeout(() => {
+                @foreach($errors->all() as $error)
+                    showMobileToast("{{ $error }}", 'error');
+                @endforeach
+            }, 500);
+        @endif
 
         function previewImage(event) {
             const input = event.target;
@@ -182,90 +232,108 @@
             }
         }
 
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            const icon = document.getElementById('icon-' + inputId);
+        // عناصر DOM
+        const modal = document.getElementById('edit-modal');
+        const editBtn = document.getElementById('edit-info-btn');
+        const cancelBtn = document.getElementById('cancel-edit');
 
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash', 'text-purple-600');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash', 'text-purple-600');
-                icon.classList.add('fa-eye');
-            }
+        function openModal() {
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+            document.querySelector('#edit-modal .bg-white').classList.remove('scale-95');
+            document.querySelector('#edit-modal .bg-white').classList.add('scale-100');
         }
 
-        document.getElementById('edit-info-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function closeModal() {
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.querySelector('#edit-modal .bg-white').classList.remove('scale-100');
+            document.querySelector('#edit-modal .bg-white').classList.add('scale-95');
+        }
 
-            const submitBtn = document.getElementById('edit-info-btn');
-            const originalText = submitBtn.innerHTML;
-            const editForm = this;
-            const modal = document.getElementById('edit-modal');
+        editBtn.addEventListener('click', openModal);
+        cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحفظ...';
+        const editForm = document.getElementById('edit-info-form');
+        if (editForm) {
+            editForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
 
-            const formData = new FormData(editForm);
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                const modal = document.getElementById('edit-modal');
 
-            // Add CSRF token
-            const token = document.querySelector('input[name="_token"]')?.value;
-            if (token) {
-                formData.append('_token', token);
-            }
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحفظ...';
 
-            fetch(editForm.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                    // Let browser set Content-Type for multipart/form-data
+                const formData = new FormData(this);
+
+                // Add CSRF token
+                const token = document.querySelector('input[name="_token"]')?.value;
+                if (token) {
+                    formData.append('_token', token);
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success || data.message) {
-                    showMobileToast(data.message || 'تم تحديث البيانات بنجاح', 'success');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    let errMsg = 'حدث خطأ غير متوقع';
-                    if (data.errors) {
-                        errMsg = Object.values(data.errors)[0][0] || 'تأكد من صحة البيانات';
+
+                // Store selected file for preview update
+                const fileInput = document.getElementById('avatar-input');
+                const selectedFile = fileInput.files[0] ?? null;
+
+                try {
+                    const response = await fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                            // Let browser set Content-Type for multipart/form-data
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success || data.message) {
+                        showMobileToast(data.message || 'تم تحديث البيانات بنجاح', 'success');
+
+                        // Update avatar preview immediately if a new file was selected
+                        if (selectedFile) {
+                            const url = URL.createObjectURL(selectedFile);
+                            const avatarPreview = document.getElementById('avatar-preview');
+                            avatarPreview.src = url;
+                            // Also update main avatar image if visible
+                            const mainAvatar = document.getElementById('main-avatar');
+                            if (mainAvatar) {
+                                mainAvatar.src = url;
+                            }
+                        }
+
+                        // Close modal and optionally reload after a short delay to ensure consistency
+                        setTimeout(() => {
+                            closeModal();
+                            // Reload to fetch any server-side changes (e.g., cropped image)
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        let errMsg = 'حدث خطأ غير متوقع';
+                        if (data.errors) {
+                            errMsg = Object.values(data.errors)[0][0] || 'تأكد من صحة البيانات';
+                        }
+                        showMobileToast(errMsg, 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
                     }
-                    showMobileToast(errMsg, 'error');
+                } catch (error) {
+                    console.error('Update Error:', error);
+                    showMobileToast('فشل الاتصال بالسيرفر', 'error');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalText;
                 }
-            })
-            .catch(error => {
-                console.error('Update Error:', error);
-                showMobileToast('فشل الاتصال بالسيرفر', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
             });
-        });
-
-        function showMobileToast(message, type = 'success') {
-            // Simple toast implementation; adjust as needed to match your UI
-            const toast = document.createElement('div');
-            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md text-white ${
-                type === 'success' ? 'bg-green-500' : 'bg-red-500'
-            }`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
         }
 
-        // Close modal on Escape
+        // إغلاق المودال عند الضغط على Escape
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !document.getElementById('edit-modal').classList.contains('opacity-0')) {
+            if (e.key === 'Escape' && !modal.classList.contains('opacity-0')) {
                 closeModal();
             }
         });
