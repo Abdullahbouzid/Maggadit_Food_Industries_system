@@ -160,12 +160,12 @@
         <div class="row w-100">
             <!-- Main Categories Cards (shown initially) -->
             <div id="main-categories-container" class="col-12">
-                <div class="row g-4 justify-content-center">
+                <div class="row g-4 justify-content-center" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1.25rem; width: 100%;">
                     @foreach ($definitions as $key => $data)
-                        <div class="col-md-2 col-sm-4">
-                            <a href="javascript:void(0);" class="card h-100 text-center main-category-card" data-target="{{ $key }}">
+                        <div class="col">
+                            <a href="javascript:void(0);" class="card h-100 text-center main-category-card" data-target="{{ $key }}" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
                                 <div class="card-body d-flex flex-column align-items-center py-4">
-                                    <i data-feather="{{ $data['icon'] }}" class="mb-3" style="font-size:2.5rem;"></i>
+                                    <i data-feather="{{ $data['icon'] }}" class="mb-3 main-icon"></i>
                                     <h5 class="card-title">{{ $data['title'] }}</h5>
                                 </div>
                             </a>
@@ -180,9 +180,9 @@
                     <button id="back-to-main" class="btn btn-outline-light btn-sm">
                         <i data-feather="arrow-left"></i> Back
                     </button>
-                    <h5 id="subcategory-title" class="mb-0"></h5>
+                    <h5 id="subcategory-title" class="mb-0" style="color: #e2e8f0;"></h5>
                 </div>
-                <div class="row g-3" id="subcards-grid">
+                <div id="subcards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem;">
                     <!-- Subcards will be injected here via JS -->
                 </div>
             </div>
@@ -295,7 +295,7 @@
     font-size: 0.85rem;
 }
 
-/* элементы уровня второго и третьего */
+/* elements second and third level */
 .sidebar-dropdown .sidebar-dropdown {
     margin-left: 20px;
     border-left-color: rgba(255,255,255,0.05);
@@ -308,17 +308,17 @@
     color: #475569;
 }
 
-/* состояние коллапса */
+/* collapse state */
 .collapse:not(.show) {
     display: none;
 }
 
-/* плавное переход при открытии/закрытии */
+/* smooth transition when opening/closing */
 .collapsing {
     transition: height 0.2s ease;
 }
 
-/* кастомный ползунок прокрутки */
+/* custom scrollbar */
 .custom-scroll {
     overflow-y: auto !important;
     height: 100vh;
@@ -339,14 +339,153 @@
     background: #818cf8;
 }
 
-/* предотвращение прокрутки фона при открытом модальном окне */
+/* prevent background scroll when modal open */
 body.modal-open {
     overflow: hidden;
 }
 
-/* Убедиться, что вид карточек определений находится поверх всего */
+/* Ensure definitions card view is on top */
 #definitions-card-view {
     z-index: 9999 !important;
+}
+
+/* ===== IMPROVED CARD STYLES ===== */
+/* Main categories container uses grid */
+#main-categories-container .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1.25rem;
+    width: 100%;
+}
+
+/* Cards - main & sub */
+.card.main-category-card,
+.card.subcard-link {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    height: 100%;
+    min-height: 160px;
+    text-decoration: none;
+}
+
+.card.main-category-card:hover,
+.card.subcard-link:hover:not(.disabled) {
+    transform: translateY(-6px) scale(1.02);
+    background: rgba(255,255,255,0.15);
+    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.3);
+}
+
+/* ------ أيقونات البطاقات (بحجم أكبر) ------ */
+.card.main-category-card .main-icon,
+.card.subcard-link .sub-icon {
+    font-size: 4rem;          /* الحجم الجديد الرئيسي */
+    width: auto;
+    height: 100%;
+    color: #a5b4fc;
+    margin-bottom: 0.75rem;
+    filter: drop-shadow(0 4px 8px rgba(99,102,241,0.2));
+    transition: all 0.3s ease;
+}
+
+.card.subcard-link .sub-icon {
+    font-size: 3.5rem;        /* الحجم الجديد للفرعية */
+}
+
+/* عند hover نعطي توهجاً إضافياً */
+.card.main-category-card:hover .main-icon,
+.card.subcard-link:hover:not(.disabled) .sub-icon {
+    filter: drop-shadow(0 0 20px rgba(99,102,241,0.6));
+    transform: scale(1.05);
+}
+
+.card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-top: 0.25rem;
+}
+
+.subcard-link small {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+}
+
+/* Disabled subcards */
+.card.subcard-link.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+}
+.card.subcard-link.disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+.card.subcard-link.disabled .sub-icon {
+    filter: none !important;
+}
+
+/* Subcards grid */
+#subcards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 1rem;
+}
+
+/* Responsive fine-tune */
+@media (max-width: 576px) {
+    #main-categories-container .row {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.75rem;
+    }
+    #subcards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.75rem;
+    }
+    .card.main-category-card .main-icon {
+        font-size: 3rem;       /* تصغير متناسب */
+    }
+    .card.subcard-link .sub-icon {
+        font-size: 2.5rem;
+    }
+    .card.main-category-card {
+        min-height: 120px;
+    }
+    .card.subcard-link {
+        min-height: 110px;
+    }
+    .card-title {
+        font-size: 0.75rem;
+    }
+    .subcard-link small {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 400px) {
+    #main-categories-container .row {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 0.5rem;
+    }
+    #subcards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+    .card.main-category-card .main-icon {
+        font-size: 2.5rem;
+    }
+    .card.subcard-link .sub-icon {
+        font-size: 2rem;
+    }
+    .card.main-category-card {
+        min-height: 100px;
+    }
+    .card.subcard-link {
+        min-height: 90px;
+    }
 }
 </style>
 
@@ -371,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show definitions view when clicking the header
     document.getElementById('data-definitions-header').addEventListener('click', function() {
         definitionsView.classList.remove('d-none');
-        document.body.classList.add('modal-open'); // prevent background scroll
+        document.body.classList.add('modal-open');
         // Reset to main view
         mainContainer.classList.remove('d-none');
         subContainer.classList.add('d-none');
@@ -379,7 +518,7 @@ document.addEventListener('DOMContentLoaded', function() {
         subTitle.textContent = '';
     });
 
-    // Hide definitions view when clicking outside the content (optional)
+    // Hide definitions view when clicking outside the content
     definitionsView.addEventListener('click', function(e) {
         if (e.target === definitionsView) {
             definitionsView.classList.add('d-none');
@@ -390,48 +529,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle main category card clicks
     document.querySelectorAll('.main-category-card').forEach(card => {
         card.addEventListener('click', function() {
-            console.log('Main category card clicked');
             const target = this.getAttribute('data-target');
             if (!target) return;
 
             const subcategoryData = window.subcategoryData || {};
             const categoryData = subcategoryData[target] || {};
             const data = categoryData.items || [];
-            console.log('Target:', target, 'Data length:', data.length);
 
             subTitle.textContent = this.querySelector('.card-title').textContent;
-            // Build sub‑cards
-            subcardsGrid.innerHTML = ''; // clear previous
+            subcardsGrid.innerHTML = '';
             data.forEach(item => {
                 const col = document.createElement('div');
-                col.className = 'col-md-2 col-sm-4';
+                col.className = 'col';
 
                 const link = document.createElement('a');
 
-                // For enabled items with actual routes, use explicit navigation
-                // For disabled items or items with '#' route, stay in place
                 if (!item.disabled && item.route && item.route !== '#') {
                     link.href = 'javascript:void(0);';
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
-                        console.log('Subcard link clicked, navigating to:', item.route);
                         window.location.href = item.route;
                     });
                 } else {
                     link.href = item.disabled || !item.route ? '#' : item.route;
                 }
 
-                // Build class name without trailing spaces
                 const baseClasses = 'card h-100 text-center subcard-link';
                 link.className = item.disabled ? `${baseClasses} disabled` : baseClasses;
 
                 link.innerHTML = `
                     <div class="card-body d-flex flex-column align-items-center py-3">
-                        <i data-feather="${item.icon}" class="mb-2" style="font-size:1.75rem;"></i>
+                        <i data-feather="${item.icon}" class="mb-2 sub-icon"></i>
                         <small>${item.label}</small>
                     </div>
                 `;
-                // Disable interaction for disabled items
+
                 if (item.disabled) {
                     link.style.cursor = 'not-allowed';
                     link.title = 'هذا العنصر غير مفعل حاليًا';
@@ -441,12 +573,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 subcardsGrid.appendChild(col);
             });
 
-            // Re‑render Feather icons for newly added icons
             if (typeof feather !== 'undefined') {
                 feather.replace();
             }
 
-            // Switch view: hide main categories, show sub‑categories
             mainContainer.classList.add('d-none');
             subContainer.classList.remove('d-none');
         });
@@ -458,7 +588,6 @@ document.addEventListener('DOMContentLoaded', function() {
         subContainer.classList.add('d-none');
         subcardsGrid.innerHTML = '';
         subTitle.textContent = '';
-        // Keep modal-open class; only removed when backdrop clicked
     });
 });
 </script>
