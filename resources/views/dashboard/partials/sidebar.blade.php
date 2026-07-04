@@ -13,168 +13,10 @@
                 </a>
             </li>
 
-            <li class="sidebar-header">Data Definitions</li>
-
-            @php
-                $isMasterActive = request()->routeIs('organizations.*') || request()->routeIs('package-statuses.*');
-                $isStaffActive = false;
-                $isMahachinActive = false;
-                $isCustomerActive = false;
-                $isProductsActive = false;
-                $isDynamicFormsActive = false;
-                $isWarehouseActive = false;
-                $isMobileActive = false;
-                $isDisplayUnitsActive = false;
-            @endphp
-
-            <li class="sidebar-item">
-                <a data-bs-toggle="collapse" href="#dataDefinitionsMenu" 
-                   class="sidebar-link {{ request()->routeIs('organizations.*') || request()->routeIs('package-statuses.*') ? '' : 'collapsed' }}" 
-                   aria-expanded="{{ request()->routeIs('organizations.*') || request()->routeIs('package-statuses.*') ? 'true' : 'false' }}">
-                    <i class="align-middle" data-feather="database"></i>
-                    <span class="align-middle">Data Definitions</span>
-                    <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                </a>
-
-                <!-- تم إضافة data-bs-parent="#dataDefinitionsMenu" هنا -->
-                <ul id="dataDefinitionsMenu" class="sidebar-dropdown list-unstyled collapse {{ request()->routeIs('organizations.*') || request()->routeIs('package-statuses.*') ? 'show' : '' }}" data-bs-parent="#sidebar">
-                    
-                    <!-- master data definitions -->
-                    <li class="sidebar-item">
-                        <a data-bs-toggle="collapse" href="#masterSubmenu" 
-                           class="sidebar-link {{ request()->routeIs('organizations.*') || request()->routeIs('package-statuses.*') ? '' : 'collapsed' }}" 
-                           aria-expanded="{{ request()->routeIs('organizations.*') || request()->routeIs('package-statuses.*') ? 'true' : 'false' }}"
-                           data-bs-parent="#dataDefinitionsMenu">
-                            master data definitions
-                            <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                        </a>
-                        <ul id="masterSubmenu" class="sidebar-dropdown list-unstyled collapse {{ request()->routeIs('organizations.*') || request()->routeIs('package-statuses.*') ? 'show' : '' }}">
-                            <li class="sidebar-header">General</li>
-                            <li class="sidebar-item {{ request()->routeIs('organizations.*') ? 'active' : '' }}">
-                                <a class="sidebar-link" href="{{ route('organizations.index') }}">Organizations</a>
-                            </li>
-                            <li class="sidebar-item {{ request()->routeIs('vendors.*') ? 'active' : '' }}">
-                                <a class="sidebar-link" href="{{ route('vendors.index') }}">Vendors</a>
-                            </li>
-                            <li class="sidebar-item {{ request()->routeIs('package-statuses.*') ? 'active' : '' }}">
-                                <a class="sidebar-link" href="{{ route('package-statuses.index') }}">Pack Statuses</a>
-                            </li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('competitors.index') }}">Competitors</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Visit Types</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Fields Group</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('geographical.index') }}">Geographical Location Hierarchy</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('sales-order-types.index') }}">Sales Order Type</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Stock Statuses</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Item Model</a></li>
-
-                            <li class="sidebar-header">Finance</li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('currencies.index') }}">Currencies</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Currency Rates</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Banks</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Branches</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Tax Type</a></li>
-
-                            <li class="sidebar-header">Reasons Definition</li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Reasons</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">Reason Groups</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- staff data definitions -->
-                    <li class="sidebar-item">
-                        <a data-bs-toggle="collapse" href="#staffSubmenu" class="sidebar-link collapsed" data-bs-parent="#dataDefinitionsMenu">
-                            staff data definitions
-                            <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                        </a>
-                        <ul id="staffSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('devices.index') }}">Devices</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">personal information</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">employment details</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">attendance schema</a></li>
-                        </ul>
-                    </li>
-
-                  
-
-                    <!-- customer data definitions -->
-                    <li class="sidebar-item">
-                        <a data-bs-toggle="collapse" href="#customerSubmenu" class="sidebar-link collapsed" data-bs-parent="#dataDefinitionsMenu">
-                            customer data definitions
-                            <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                        </a>
-                        <ul id="customerSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">customer demographics</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">contact information</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">loyalty & segments</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- products data definitions -->
-                    <li class="sidebar-item">
-                        <a data-bs-toggle="collapse" href="#productsSubmenu" class="sidebar-link collapsed" data-bs-parent="#dataDefinitionsMenu">
-                            products data definitions
-                            <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                        </a>
-                        <ul id="productsSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">product attributes</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">pricing & tax rules</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('brands.index') }}">Brands</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('categories.index') }}">Categories</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('item-types.index') }}">Item Types</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('uoms.index') }}">Units of Measure (UOMs)</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('pack-operations.index') }}">Pack Operations</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('pack-groups.index') }}">Pack Groups</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('items.index') }}">Items</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('item-packs.index') }}">Item Packs</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('item-images.index') }}">Item Images</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('item-models.index') }}">Item Models</a></li>   
-                        </ul>
-                    </li>
-
-                 
-
-                    <!-- warehouse & vehicles -->
-                    <li class="sidebar-item">
-                        <a data-bs-toggle="collapse" href="#warehouseSubmenu" class="sidebar-link collapsed" data-bs-parent="#dataDefinitionsMenu">
-                            warehouse & vehicles
-                            <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                        </a>
-                        <ul id="warehouseSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('states.index') }}">states</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('areas.index') }}">areas</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('warehouse-types.index') }}">warehouse types</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('warehouses.index') }}">warehouses</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('vehicle-types.index') }}">vehicle types</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="{{ route('vehicles.index') }}">vehicles</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- mobile customization -->
-                    <li class="sidebar-item">
-                        <a data-bs-toggle="collapse" href="#mobileSubmenu" class="sidebar-link collapsed" data-bs-parent="#dataDefinitionsMenu">
-                            mobile customization
-                            <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                        </a>
-                        <ul id="mobileSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">UI layouts</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">offline forms</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">push notification schemas</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- display units -->
-                    <li class="sidebar-item">
-                        <a data-bs-toggle="collapse" href="#displayUnitsSubmenu" class="sidebar-link collapsed" data-bs-parent="#dataDefinitionsMenu">
-                            display units
-                            <i class="chevron-icon align-middle" data-feather="chevron-down"></i>
-                        </a>
-                        <ul id="displayUnitsSubmenu" class="sidebar-dropdown list-unstyled collapse">
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">screen layouts</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">widget definitions</a></li>
-                            <li class="sidebar-item"><a class="sidebar-link" href="#">real-time dashboards</a></li>
-                        </ul>
-                    </li>
-                </ul>
+            <!-- Data Definitions Header (click to show cards) -->
+            <li class="sidebar-header cursor-pointer" id="data-definitions-header" data-bs-toggle="tooltip" data-bs-placement="right" title="تعريفات البيانات">
+                <i data-feather="database"></i>
+                <span class="align-middle">Data Definitions</span>
             </li>
 
             <li class="sidebar-header">Application Content</li>
@@ -190,7 +32,6 @@
                     <span class="align-middle">الاستبيانات</span>
                 </a>
             </li>
-
 
             <li class="sidebar-header">Permissions & Roles</li>
             <li class="sidebar-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
@@ -215,11 +56,139 @@
                 </form>
             </li>
         </ul>
-
-
-        
     </div>
 </nav>
+
+@php
+    $definitions = [
+        'master' => [
+            'title' => 'master data definitions',
+            'icon' => 'database',
+            'items' => [
+                ['label' => 'Organizations', 'icon' => 'users', 'route' => route('organizations.index'), 'disabled' => false],
+                ['label' => 'Vendors', 'icon' => 'truck', 'route' => route('vendors.index'), 'disabled' => false],
+                ['label' => 'Pack Statuses', 'icon' => 'package', 'route' => route('package-statuses.index'), 'disabled' => false],
+                ['label' => 'Visit Types', 'icon' => 'map-pin', 'route' => '#', 'disabled' => false],
+                ['label' => 'Fields Group', 'icon' => 'layers', 'route' => '#', 'disabled' => false],
+                ['label' => 'Geographical Location Hierarchy', 'icon' => 'map', 'route' => route('geographical.index'), 'disabled' => false],
+                ['label' => 'Sales Order Type', 'icon' => 'truck', 'route' => route('sales-order-types.index'), 'disabled' => false],
+                ['label' => 'Stock Statuses', 'icon' => 'package', 'route' => '#', 'disabled' => false],
+                ['label' => 'Item Model', 'icon' => 'box', 'route' => '#', 'disabled' => false],
+                ['label' => 'Currencies', 'icon' => 'dollar-sign', 'route' => route('currencies.index'), 'disabled' => false],
+                ['label' => 'Currency Rates', 'icon' => 'repeat', 'route' => '#', 'disabled' => false],
+                ['label' => 'Banks', 'icon' => 'bank', 'route' => '#', 'disabled' => false],
+                ['label' => 'Branches', 'icon' => 'building', 'route' => '#', 'disabled' => false],
+                ['label' => 'Tax Type', 'icon' => 'percent', 'route' => '#', 'disabled' => false],
+                ['label' => 'Reasons', 'icon' => 'alert-triangle', 'route' => '#', 'disabled' => false],
+                ['label' => 'Reason Groups', 'icon' => 'list', 'route' => '#', 'disabled' => false],
+            ]
+        ],
+        'staff' => [
+            'title' => 'staff data definitions',
+            'icon' => 'users',
+            'items' => [
+                ['label' => 'Devices', 'icon' => 'phone', 'route' => route('devices.index'), 'disabled' => false],
+                ['label' => 'personal information', 'icon' => 'user', 'route' => '#', 'disabled' => false],
+                ['label' => 'employment details', 'icon' => 'briefcase', 'route' => '#', 'disabled' => false],
+                ['label' => 'attendance schema', 'icon' => 'calendar-check', 'route' => '#', 'disabled' => false],
+            ]
+        ],
+        'customer' => [
+            'title' => 'customer data definitions',
+            'icon' => 'users',
+            'items' => [
+                ['label' => 'customer demographics', 'icon' => 'user-plus', 'route' => '#', 'disabled' => false],
+                ['label' => 'contact information', 'icon' => 'phone', 'route' => '#', 'disabled' => false],
+                ['label' => 'loyalty & segments', 'icon' => 'award', 'route' => '#', 'disabled' => false],
+            ]
+        ],
+        'products' => [
+            'title' => 'products data definitions',
+            'icon' => 'box',
+            'items' => [
+                ['label' => 'product attributes', 'icon' => 'sliders', 'route' => '#', 'disabled' => false],
+                ['label' => 'pricing & tax rules', 'icon' => 'percent', 'route' => '#', 'disabled' => false],
+                ['label' => 'Brands', 'icon' => 'tag', 'route' => route('brands.index'), 'disabled' => false],
+                ['label' => 'Categories', 'icon' => 'layers', 'route' => route('categories.index'), 'disabled' => false],
+                ['label' => 'Item Types', 'icon' => 'box', 'route' => route('item-types.index'), 'disabled' => false],
+                ['label' => 'Units of Measure (UOMs)', 'icon' => 'arrows-alt', 'route' => route('uoms.index'), 'disabled' => false],
+                ['label' => 'Pack Operations', 'icon' => 'shift', 'route' => route('pack-operations.index'), 'disabled' => false],
+                ['label' => 'Pack Groups', 'icon' => 'layers', 'route' => route('pack-groups.index'), 'disabled' => false],
+                ['label' => 'Items', 'icon' => 'box', 'route' => route('items.index'), 'disabled' => false],
+                ['label' => 'Item Packs', 'icon' => 'package', 'route' => route('item-packs.index'), 'disabled' => false],
+                ['label' => 'Item Images', 'icon' => 'image', 'route' => route('item-images.index'), 'disabled' => false],
+                ['label' => 'Item Models', 'icon' => 'box', 'route' => route('item-models.index'), 'disabled' => false],
+            ]
+        ],
+        'warehouse' => [
+            'title' => 'warehouse & vehicles',
+            'icon' => 'truck',
+            'items' => [
+                ['label' => 'states', 'icon' => 'map-pin', 'route' => route('states.index'), 'disabled' => false],
+                ['label' => 'areas', 'icon' => 'map-pin', 'route' => route('areas.index'), 'disabled' => false],
+                ['label' => 'warehouse types', 'icon' => 'warehouse', 'route' => route('warehouse-types.index'), 'disabled' => false],
+                ['label' => 'warehouses', 'icon' => 'warehouse', 'route' => route('warehouses.index'), 'disabled' => false],
+                ['label' => 'vehicle types', 'icon' => 'truck', 'route' => route('vehicle-types.index'), 'disabled' => false],
+                ['label' => 'vehicles', 'icon' => 'truck', 'route' => route('vehicles.index'), 'disabled' => false],
+            ]
+        ],
+        'mobile' => [
+            'title' => 'mobile customization',
+            'icon' => 'smartphone',
+            'items' => [
+                ['label' => 'UI layouts', 'icon' => 'layout', 'route' => '#', 'disabled' => false],
+                ['label' => 'offline forms', 'icon' => 'save', 'route' => '#', 'disabled' => false],
+                ['label' => 'push notification schemas', 'icon' => 'bell', 'route' => '#', 'disabled' => false],
+            ]
+        ],
+        'display' => [
+            'title' => 'display units',
+            'icon' => 'monitor',
+            'items' => [
+                ['label' => 'screen layouts', 'icon' => 'layout', 'route' => '#', 'disabled' => false],
+                ['label' => 'widget definitions', 'icon' => 'sliders', 'route' => '#', 'disabled' => false],
+                ['label' => 'real-time dashboards', 'icon' => 'monitor', 'route' => '#', 'disabled' => false],
+            ]
+        ],
+    ];
+@endphp
+<div id="definitions-data" style="display:none;" data-json='{!! json_encode($definitions) !!}'></div>
+
+<!-- Dedicated Card View (hidden by default, shown when clicking Data Definitions header) -->
+<div id="definitions-card-view" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-none z-index-1050">
+    <div class="container h-100 d-flex align-items-center justify-content-center">
+        <div class="row w-100">
+            <!-- Main Categories Cards (shown initially) -->
+            <div id="main-categories-container" class="col-12">
+                <div class="row g-4 justify-content-center">
+                    @foreach ($definitions as $key => $data)
+                        <div class="col-md-2 col-sm-4">
+                            <a href="javascript:void(0);" class="card h-100 text-center main-category-card" data-target="{{ $key }}">
+                                <div class="card-body d-flex flex-column align-items-center py-4">
+                                    <i data-feather="{{ $data['icon'] }}" class="mb-3" style="font-size:2.5rem;"></i>
+                                    <h5 class="card-title">{{ $data['title'] }}</h5>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Subcategory Cards (hidden initially) -->
+            <div id="subcategories-container" class="col-12 d-none">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button id="back-to-main" class="btn btn-outline-light btn-sm">
+                        <i data-feather="arrow-left"></i> Back
+                    </button>
+                    <h5 id="subcategory-title" class="mb-0"></h5>
+                </div>
+                <div class="row g-3" id="subcards-grid">
+                    <!-- Subcards will be injected here via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
 /* ========== تحسين شامل للـ Sidebar مع الحفاظ على الكلاسات ========== */
@@ -326,7 +295,7 @@
     font-size: 0.85rem;
 }
 
-/* عناصر المستوى الثاني والثالث */
+/* элементы уровня второго и третьего */
 .sidebar-dropdown .sidebar-dropdown {
     margin-left: 20px;
     border-left-color: rgba(255,255,255,0.05);
@@ -339,17 +308,17 @@
     color: #475569;
 }
 
-/* حالة collapse */
+/* состояние коллапса */
 .collapse:not(.show) {
     display: none;
 }
 
-/* transition سلس عند الفتح/الغلق */
+/* плавное переход при открытии/закрытии */
 .collapsing {
     transition: height 0.2s ease;
 }
 
-/* شريط التمرير المخصص */
+/* кастомный ползунок прокрутки */
 .custom-scroll {
     overflow-y: auto !important;
     height: 100vh;
@@ -369,61 +338,127 @@
 .custom-scroll::-webkit-scrollbar-thumb:hover {
     background: #818cf8;
 }
+
+/* предотвращение прокрутки фона при открытом модальном окне */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Убедиться, что вид карточек определений находится поверх всего */
+#definitions-card-view {
+    z-index: 9999 !important;
+}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // تطبيق سلوك الـ Accordion على القوائم الرئيسية داخل #dataDefinitionsMenu
-    const menuContainer = document.getElementById('dataDefinitionsMenu');
-    if (menuContainer) {
-        // استهداف جميع عناصر التبديل المباشرة (الأولى) فقط
-        const mainToggles = menuContainer.querySelectorAll(':scope > li > a[data-bs-toggle="collapse"]');
-        
-        mainToggles.forEach(toggle => {
-            // تعيين الـ parent لضمان إغلاق الآخرين
-            toggle.setAttribute('data-bs-parent', '#dataDefinitionsMenu');
-            
-            // إدارة أيقونة السهم باستخدام أحداث Bootstrap
-            const targetId = toggle.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                // عند بدء الفتح
-                targetElement.addEventListener('show.bs.collapse', function() {
-                    const chevron = toggle.querySelector('.chevron-icon');
-                    if (chevron) chevron.style.transform = 'rotate(180deg)';
-                });
-                // عند بدء الإغلاق
-                targetElement.addEventListener('hide.bs.collapse', function() {
-                    const chevron = toggle.querySelector('.chevron-icon');
-                    if (chevron) chevron.style.transform = 'rotate(0deg)';
-                });
-                // ضبط الحالة الأولية
-                if (targetElement.classList.contains('show')) {
-                    const chevron = toggle.querySelector('.chevron-icon');
-                    if (chevron) chevron.style.transform = 'rotate(180deg)';
-                }
-            }
-        });
+    // Feather icons replacement
+    if (typeof feather !== 'undefined') {
+        feather.replace();
     }
 
-    // معالجة الأسهم للعنصر الرئيسي "Data Definitions" نفسه
-    const mainToggle = document.querySelector('[data-bs-toggle="collapse"][href="#dataDefinitionsMenu"]');
-    if (mainToggle) {
-        const mainTarget = document.querySelector('#dataDefinitionsMenu');
-        if (mainTarget) {
-            mainTarget.addEventListener('show.bs.collapse', function() {
-                const chevron = mainToggle.querySelector('.chevron-icon');
-                if (chevron) chevron.style.transform = 'rotate(180deg)';
-            });
-            mainTarget.addEventListener('hide.bs.collapse', function() {
-                const chevron = mainToggle.querySelector('.chevron-icon');
-                if (chevron) chevron.style.transform = 'rotate(0deg)';
-            });
-            if (mainTarget.classList.contains('show')) {
-                const chevron = mainToggle.querySelector('.chevron-icon');
-                if (chevron) chevron.style.transform = 'rotate(180deg)';
-            }
+    // Load definitions data from hidden div
+    const dataEl = document.getElementById('definitions-data');
+    window.subcategoryData = dataEl ? JSON.parse(dataEl.dataset.json) : {};
+
+    const definitionsView = document.getElementById('definitions-card-view');
+    const mainContainer   = document.getElementById('main-categories-container');
+    const subContainer    = document.getElementById('subcategories-container');
+    const backBtn         = document.getElementById('back-to-main');
+    const subTitle        = document.getElementById('subcategory-title');
+    const subcardsGrid    = document.getElementById('subcards-grid');
+
+    // Show definitions view when clicking the header
+    document.getElementById('data-definitions-header').addEventListener('click', function() {
+        definitionsView.classList.remove('d-none');
+        document.body.classList.add('modal-open'); // prevent background scroll
+        // Reset to main view
+        mainContainer.classList.remove('d-none');
+        subContainer.classList.add('d-none');
+        subcardsGrid.innerHTML = '';
+        subTitle.textContent = '';
+    });
+
+    // Hide definitions view when clicking outside the content (optional)
+    definitionsView.addEventListener('click', function(e) {
+        if (e.target === definitionsView) {
+            definitionsView.classList.add('d-none');
+            document.body.classList.remove('modal-open');
         }
-    }
+    });
+
+    // Handle main category card clicks
+    document.querySelectorAll('.main-category-card').forEach(card => {
+        card.addEventListener('click', function() {
+            console.log('Main category card clicked');
+            const target = this.getAttribute('data-target');
+            if (!target) return;
+
+            const subcategoryData = window.subcategoryData || {};
+            const categoryData = subcategoryData[target] || {};
+            const data = categoryData.items || [];
+            console.log('Target:', target, 'Data length:', data.length);
+
+            subTitle.textContent = this.querySelector('.card-title').textContent;
+            // Build sub‑cards
+            subcardsGrid.innerHTML = ''; // clear previous
+            data.forEach(item => {
+                const col = document.createElement('div');
+                col.className = 'col-md-2 col-sm-4';
+
+                const link = document.createElement('a');
+
+                // For enabled items with actual routes, use explicit navigation
+                // For disabled items or items with '#' route, stay in place
+                if (!item.disabled && item.route && item.route !== '#') {
+                    link.href = 'javascript:void(0);';
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Subcard link clicked, navigating to:', item.route);
+                        window.location.href = item.route;
+                    });
+                } else {
+                    link.href = item.disabled || !item.route ? '#' : item.route;
+                }
+
+                // Build class name without trailing spaces
+                const baseClasses = 'card h-100 text-center subcard-link';
+                link.className = item.disabled ? `${baseClasses} disabled` : baseClasses;
+
+                link.innerHTML = `
+                    <div class="card-body d-flex flex-column align-items-center py-3">
+                        <i data-feather="${item.icon}" class="mb-2" style="font-size:1.75rem;"></i>
+                        <small>${item.label}</small>
+                    </div>
+                `;
+                // Disable interaction for disabled items
+                if (item.disabled) {
+                    link.style.cursor = 'not-allowed';
+                    link.title = 'هذا العنصر غير مفعل حاليًا';
+                }
+
+                col.appendChild(link);
+                subcardsGrid.appendChild(col);
+            });
+
+            // Re‑render Feather icons for newly added icons
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+
+            // Switch view: hide main categories, show sub‑categories
+            mainContainer.classList.add('d-none');
+            subContainer.classList.remove('d-none');
+        });
+    });
+
+    // Back button
+    backBtn.addEventListener('click', function() {
+        mainContainer.classList.remove('d-none');
+        subContainer.classList.add('d-none');
+        subcardsGrid.innerHTML = '';
+        subTitle.textContent = '';
+        // Keep modal-open class; only removed when backdrop clicked
+    });
 });
 </script>
