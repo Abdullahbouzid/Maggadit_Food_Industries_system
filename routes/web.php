@@ -15,6 +15,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\Customer\CustomerAppController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ItemTypeController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\UomController;
@@ -361,6 +362,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('organizations/template', [OrganizationController::class, 'downloadTemplate'])->name('organizations.template');
     Route::post('organizations/import', [OrganizationController::class, 'import'])->name('organizations.import');
     Route::resource('organizations', OrganizationController::class);
+    Route::resource('customers', CustomerController::class);
 
     Route::get('package-statuses/export', [PackageStatusController::class, 'export'])->name('package-statuses.export');
     Route::get('package-statuses/template', [PackageStatusController::class, 'downloadTemplate'])->name('package-statuses.template');

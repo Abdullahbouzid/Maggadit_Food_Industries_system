@@ -97,7 +97,7 @@
             'title' => 'customer data definitions',
             'icon' => 'users',
             'items' => [
-                ['label' => 'customer demographics', 'icon' => 'user-plus', 'route' => '#', 'disabled' => false],
+                ['label' => 'customer demographics', 'icon' => 'user-plus', 'route' => route('customers.index'), 'disabled' => false],
                 ['label' => 'contact information', 'icon' => 'phone', 'route' => '#', 'disabled' => false],
                 ['label' => 'loyalty & segments', 'icon' => 'award', 'route' => '#', 'disabled' => false],
             ]

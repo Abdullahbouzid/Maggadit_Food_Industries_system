@@ -55,6 +55,7 @@ class Organization extends Model
                     ->withPivot('is_active')
                     ->withTimestamps();
     }
+    
 
     // العملاء النشطون في هذه المنظمة
     public function activeCustomers()
