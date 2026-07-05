@@ -277,6 +277,11 @@ class NotificationController extends Controller
     private function sendPushNotification(Notification $notification)
     {
         try {
+            if (!class_exists(\Kreait\Firebase\Factory::class)) {
+                \Illuminate\Support\Facades\Log::error("FCM Send Error: Kreait\Firebase\Factory class not found. Please run 'composer require kreait/firebase-php' on your server.");
+                return;
+            }
+
             $factory = (new \Kreait\Firebase\Factory)
                 ->withServiceAccount(storage_path('app/firebase/google-services.json')); // المسار لملف الخدمة
 
@@ -314,7 +319,7 @@ class NotificationController extends Controller
                     }
                 }
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error("FCM Send Error: " . $e->getMessage());
         }
     }
