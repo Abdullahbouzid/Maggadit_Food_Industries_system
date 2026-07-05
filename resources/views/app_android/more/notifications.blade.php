@@ -110,8 +110,8 @@
         }
         
         function formatDate(dateStr) {
-            let date = new Date(dateStr);
-            return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            // dateStr is already formatted from backend (e.g. diffForHumans)
+            return dateStr;
         }
         
         function updateUI() {
@@ -145,7 +145,7 @@
                                 </div>
                                 <p class="text-gray-500 text-xs line-clamp-1">${notif.message}</p>
                                 <div class="flex justify-between items-center text-[10px]">
-                                    <p class="text-gray-400">${new Date(notif.date).toLocaleDateString('ar-EG')}</p>
+                                    <p class="text-gray-400">${notif.date}</p>
                                     <button onclick="resendNotification(event, ${notif.id})" class="resend-btn flex items-center gap-1 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded hover:bg-purple-100 transition">
                                         <i class="fas fa-redo"></i> إعادة الإرسال
                                     </button>
@@ -185,7 +185,7 @@
             }
             modalTitle.innerText = notif.title;
             modalMessage.innerText = notif.message;
-            modalDate.innerText = formatDate(notif.date);
+            modalDate.innerText = notif.date;
             // تحديث الأيقونة في المودال
             modalIcon.innerHTML = `<i class="fas ${getIconClass(notif.type)}"></i>`;
             modalIcon.className = `w-14 h-14 mx-auto rounded-full flex items-center justify-center text-2xl ${getIconColor(notif.type)}`;

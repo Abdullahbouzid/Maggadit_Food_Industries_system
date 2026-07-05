@@ -64,6 +64,11 @@
 
         // طلب صلاحية الإشعارات
         function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                console.log('This environment does not support Web Notifications (likely an Android WebView).');
+                return;
+            }
+
             Notification.requestPermission().then((permission) => {
                 if (permission === 'granted') {
                     console.log('Notification permission granted.');
