@@ -17,6 +17,7 @@ class Customer extends Authenticatable
         'email',
         'password',
         'avatar',
+        'fcm_token',
         'active_organization_id',
     ];
 

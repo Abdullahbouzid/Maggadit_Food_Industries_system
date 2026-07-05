@@ -72,9 +72,9 @@
             </div>
 
             <!-- زر الإشعارات مع عداد -->
-            <div id="notification-bell" class="header-icon-btn lang-switch !p-2 !rounded-full relative">
+            <div id="notification-bell" class="header-icon-btn lang-switch !p-2 !rounded-full relative" onclick="window.location.href='{{ route('customer.notifications') }}'">
                 <i class="far fa-bell text-purple-600 text-lg"></i>
-                <span id="notif-badge" class="notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                <span id="notif-badge" class="notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center {{ (isset($unreadCount) && $unreadCount > 0) ? '' : 'hidden' }}">{{ $unreadCount ?? 0 }}</span>
             </div>
 
             <!-- زر تبديل اللغة -->
@@ -148,14 +148,38 @@
     // ========== 2. الإشعارات (Notification Bell) ==========
     const notifBell = document.getElementById('notification-bell');
     const notifBadge = document.getElementById('notif-badge');
-    if (notifBell) {
-        let notifCount = 3;
-        notifBell.addEventListener('click', () => {
-            notifBadge.classList.add('active');
-            setTimeout(() => notifBadge.classList.remove('active'), 500);
-            showToast(`🔔 لديك ${notifCount} إشعارات جديدة`, 'info');
-        });
+    
+    // جلب عدد الإشعارات الغير مقروءة عبر API
+    async function fetchUnreadNotifications() {
+        try {
+            const token = '{{ session("api_token") }}';
+            if (!token) return;
+            
+            const response = await fetch('https://blue-beaver-923812.hostingersite.com/api/customer/notifications', {
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/json'
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                const count = data.unread_count || 0;
+                if (notifBadge) {
+                    if (count > 0) {
+                        notifBadge.innerText = count;
+                        notifBadge.classList.remove('hidden');
+                    } else {
+                        notifBadge.classList.add('hidden');
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('Failed to fetch unread notifications');
+        }
     }
+    
+    // تشغيل عند التحميل
+    fetchUnreadNotifications();
 
     // ========== 3. البحث (Search Bar) ==========
     const searchToggle = document.getElementById('search-toggle');

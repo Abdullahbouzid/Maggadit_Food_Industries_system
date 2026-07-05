@@ -304,7 +304,48 @@ class CustomerApiController extends Controller
 
     public function notifications(Request $request)
     {
-        return response()->json(['success' => true, 'notifications' => []]);
+        $customer = $request->user();
+        
+        $notifications = \App\Models\Notification::where(function($query) use ($customer) {
+            $query->where('group', 'all')
+                  ->orWhere(function($q) use ($customer) {
+                      $q->whereJsonContains('customers', (string)$customer->id)
+                        ->orWhereJsonContains('customers', $customer->id);
+                  });
+        })
+        ->where('is_sent', true)
+        ->latest()
+        ->get()
+        ->map(function($notif) {
+            return [
+                'id' => $notif->id,
+                'subject' => $notif->subject_ar ?: $notif->subject_en,
+                'body' => $notif->body_ar ?: $notif->body_en,
+                'image' => $notif->image_url,
+                'icon_type' => $notif->icon_type ?? 'notification',
+                'created_at' => $notif->created_at->diffForHumans(),
+            ];
+        });
+
+        // لحساب الغير مقروء، نحتاج جدول pivot ولكن الآن يمكن اعتباره فقط لجلب الإشعارات
+        // للتبسيط، نرسل كل الإشعارات
+        return response()->json([
+            'success' => true, 
+            'notifications' => $notifications,
+            'unread_count' => count($notifications) // مؤقتاً
+        ]);
+    }
+
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string'
+        ]);
+
+        $customer = $request->user();
+        $customer->update(['fcm_token' => $request->fcm_token]);
+
+        return response()->json(['success' => true, 'message' => 'FCM Token updated successfully']);
     }
 
     public function markNotificationRead(Request $request, $id)

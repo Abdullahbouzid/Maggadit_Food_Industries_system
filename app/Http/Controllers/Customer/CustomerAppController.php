@@ -561,4 +561,32 @@ class CustomerAppController extends Controller
 
         return view('app_android.more.faq', compact('faqsByCategory'));
     }
+
+    /**
+     * عرض صفحة الإشعارات
+     */
+    public function notificationsIndex()
+    {
+        $notifications = collect();
+        $unreadCount = 0;
+        try {
+            $token = Session::get('api_token');
+            // تأكد من تمرير التوكن لجلب إشعارات المستخدم الفعلي
+            $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/notifications");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['notifications'])) {
+                    $notifications = collect($data['notifications'])->map(function($item) {
+                        return (object) $item;
+                    });
+                }
+                $unreadCount = $data['unread_count'] ?? 0;
+            }
+        } catch (\Exception $e) {
+            Log::error("Notifications API Error: " . $e->getMessage());
+        }
+
+        return view('app_android.more.notifications', compact('notifications', 'unreadCount'));
+    }
 }

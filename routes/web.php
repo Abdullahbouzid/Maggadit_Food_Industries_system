@@ -36,6 +36,8 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\DeviceController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\NotificationController;
+
 
 use Illuminate\Http\Request;
 
@@ -287,9 +289,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('organizations.switch');
     });
-    Route::get('/notifications', function () {
-        return view('app_android.more.notifications');
-    })->name('notifications');
+    Route::get('/notifications', [CustomerAppController::class, 'notificationsIndex'])->name('notifications');
     Route::get('/privacy-policy', function () {
         return view('app_android.more.privacy_policy');
     })->name('privacy');
@@ -487,7 +487,11 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-Route::resource('banners', BannerController::class);
-Route::get('banners/export', [BannerController::class, 'export'])->name('banners.export');
+    Route::resource('banners', BannerController::class);
+    Route::get('banners/export', [BannerController::class, 'export'])->name('banners.export');
 
+
+    Route::resource('notifications', NotificationController::class);
+    Route::post('notifications/{notification}/resend', [NotificationController::class, 'resend'])->name('notifications.resend');
+    Route::get('notifications/export', [NotificationController::class, 'export'])->name('notifications.export');
 });

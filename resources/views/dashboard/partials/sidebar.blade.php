@@ -186,7 +186,7 @@
     </div>
 </div>
 
-<!-- ========== عرض بطاقات Customer App Properties (مع إضافة Banners) ========== -->
+<!-- ========== عرض بطاقات Customer App Properties (مع إضافة Send Notification) ========== -->
 <div id="customer-app-card-view" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-none z-index-1050">
     <div class="container h-100 d-flex align-items-center justify-content-center">
         <div class="row w-100">
@@ -198,27 +198,39 @@
                     <h5 class="mb-0" style="color: #e2e8f0;">Customer App Properties</h5>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.5rem; justify-content: center;">
-                    <!-- FAQ -->
+                    
+                    <!-- 1. FAQ -->
                     <a href="{{ route('faqs.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
                         <div class="card-body d-flex flex-column align-items-center py-4">
                             <i data-feather="help-circle" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
                             <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">الأسئلة الشائعة</small>
                         </div>
                     </a>
-                    <!-- Surveys -->
+
+                    <!-- 2. Surveys -->
                     <a href="{{ route('surveys.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
                         <div class="card-body d-flex flex-column align-items-center py-4">
                             <i data-feather="clipboard" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
                             <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">الاستبيانات</small>
                         </div>
                     </a>
-                    <!-- Banners (جديد) -->
+
+                    <!-- 3. Banners -->
                     <a href="{{ route('banners.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
                         <div class="card-body d-flex flex-column align-items-center py-4">
                             <i data-feather="image" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
                             <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">Banners</small>
                         </div>
                     </a>
+
+                    <!-- 4. Send Notification (جديد) -->
+                    <a href="{{ route('notifications.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
+                        <div class="card-body d-flex flex-column align-items-center py-4">
+                            <i data-feather="bell" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
+                            <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">إرسال إشعار</small>
+                        </div>
+                    </a>
+
                 </div>
             </div>
         </div>

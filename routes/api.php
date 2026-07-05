@@ -50,6 +50,7 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::get('/surveys/{id}', [CustomerApiController::class, 'getSurvey']);
         Route::post('/surveys/{id}/respond', [CustomerApiController::class, 'submitSurvey']);
         Route::get('/notifications', [CustomerApiController::class, 'notifications']);
+        Route::post('/fcm-token', [CustomerApiController::class, 'updateFcmToken']);
         Route::post('/notifications/{id}/read', [CustomerApiController::class, 'markNotificationRead']);
         Route::get('/faq', [CustomerApiController::class, 'faq']);
         Route::get('/privacy-policy', [CustomerApiController::class, 'privacyPolicy']);

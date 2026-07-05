@@ -22,40 +22,20 @@
         <!-- حاوية الإشعارات -->
         <div id="notifications-container" class="space-y-4">
             @php
-                $notifications = [
-                    ['id' => 1, 'title' => 'خصم 30% على الإلكترونيات', 'message' => 'سارع بالشراء، العرض ينتهي قريباً!', 'type' => 'offer', 'date' => '2025-05-23 10:30:00', 'is_read' => false],
-                    ['id' => 2, 'title' => 'تم توصيل طلبك #1001', 'message' => 'طلبك رقم 1001 تم توصيله بنجاح. نأمل أن ينال إعجابك.', 'type' => 'delivery', 'date' => '2025-05-22 15:45:00', 'is_read' => false],
-                    ['id' => 3, 'title' => 'عروض الصيف تبدأ غداً', 'message' => 'استعد لأكبر تخفيضات الصيف. خصومات تصل إلى 50%', 'type' => 'offer', 'date' => '2025-05-21 08:00:00', 'is_read' => true],
-                    ['id' => 4, 'title' => 'تم إضافة منتج جديد إلى مفضلتك', 'message' => 'منتج "ساعة ذكية" أصبح متوفراً بالسعر المطلوب', 'type' => 'update', 'date' => '2025-05-20 20:15:00', 'is_read' => true],
-                ];
+                // تحويل بيانات الخادم (collection) إلى مصفوفة لتتمكن الجافاسكربت من قراءتها
+                $mappedNotifications = $notifications->map(function($notif) {
+                    return [
+                        'id' => $notif->id ?? rand(100, 900),
+                        'title' => $notif->subject ?? 'إشعار جديد',
+                        'message' => $notif->body ?? '',
+                        'type' => $notif->icon_type ?? 'notification',
+                        'date' => $notif->created_at ?? date('Y-m-d H:i:s'),
+                        'is_read' => false, // حالياً كل الإشعارات الواردة تعتبر غير مقروءة حتى نطبق نظام التتبع
+                    ];
+                })->toArray();
             @endphp
 
-            @foreach($notifications as $notif)
-                <div class="notification-item bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md" data-id="{{ $notif['id'] }}" data-read="{{ $notif['is_read'] ? 'true' : 'false' }}">
-                    <div class="flex p-3 gap-3 cursor-pointer" onclick="showNotificationDetails(this)">
-                        <!-- أيقونة حسب النوع -->
-                        <div class="flex-shrink-0">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center 
-                                {{ $notif['type'] == 'offer' ? 'bg-amber-100 text-amber-600' : 
-                                   ($notif['type'] == 'delivery' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600') }}">
-                                <i class="fas {{ $notif['type'] == 'offer' ? 'fa-tags' : ($notif['type'] == 'delivery' ? 'fa-truck' : 'fa-bell') }} text-lg"></i>
-                            </div>
-                        </div>
-                        <!-- المحتوى -->
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-gray-800 text-sm {{ $notif['is_read'] ? '' : 'text-purple-700' }}">{{ $notif['title'] }}</h3>
-                                @if(!$notif['is_read'])
-                                    <span class="w-2 h-2 bg-purple-600 rounded-full"></span>
-                                @endif
-                            </div>
-                            <p class="text-gray-500 text-xs mt-0.5 line-clamp-1">{{ $notif['message'] }}</p>
-                            <p class="text-gray-400 text-[10px] mt-1">{{ \Carbon\Carbon::parse($notif['date'])->diffForHumans() }}</p>
-                        </div>
-                        <i class="fas fa-chevron-left text-gray-300 text-xs self-center"></i>
-                    </div>
-                </div>
-            @endforeach
+            {{-- سيتم رسم الإشعارات عبر جافاسكربت لتسهيل التفاعل --}}
         </div>
 
         <!-- رسالة عند عدم وجود إشعارات -->
@@ -93,8 +73,8 @@
         }
     </style>
     <script>
-        // بيانات الإشعارات (محاكاة)
-        let notificationsData = @json($notifications);
+        // بيانات الإشعارات القادمة من السيرفر
+        let notificationsData = @json($mappedNotifications);
         
         // عناصر DOM
         const container = document.getElementById('notifications-container');
@@ -113,6 +93,8 @@
             switch(type) {
                 case 'offer': return 'fa-tags';
                 case 'delivery': return 'fa-truck';
+                case 'payment': return 'fa-credit-card';
+                case 'receive': return 'fa-box-open';
                 default: return 'fa-bell';
             }
         }
@@ -121,7 +103,9 @@
             switch(type) {
                 case 'offer': return 'bg-amber-100 text-amber-600';
                 case 'delivery': return 'bg-green-100 text-green-600';
-                default: return 'bg-blue-100 text-blue-600';
+                case 'payment': return 'bg-red-100 text-red-600';
+                case 'receive': return 'bg-blue-100 text-blue-600';
+                default: return 'bg-purple-100 text-purple-600';
             }
         }
         
@@ -148,21 +132,25 @@
                     card.setAttribute('data-id', notif.id);
                     card.setAttribute('data-read', notif.is_read);
                     card.innerHTML = `
-                        <div class="flex p-3 gap-3 cursor-pointer" onclick='showNotificationDetails(${JSON.stringify(notif)})'>
+                        <div class="flex p-3 gap-3 items-start">
                             <div class="flex-shrink-0">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center ${getIconColor(notif.type)}">
                                     <i class="fas ${getIconClass(notif.type)} text-lg"></i>
                                 </div>
                             </div>
-                            <div class="flex-1">
+                            <div class="flex-1 space-y-2">
                                 <div class="flex justify-between items-start">
                                     <h3 class="font-bold text-gray-800 text-sm ${notif.is_read ? '' : 'text-purple-700'}">${notif.title}</h3>
                                     ${!notif.is_read ? '<span class="w-2 h-2 bg-purple-600 rounded-full"></span>' : ''}
                                 </div>
-                                <p class="text-gray-500 text-xs mt-0.5 line-clamp-1">${notif.message}</p>
-                                <p class="text-gray-400 text-[10px] mt-1">${new Date(notif.date).toLocaleDateString('ar-EG')}</p>
+                                <p class="text-gray-500 text-xs line-clamp-1">${notif.message}</p>
+                                <div class="flex justify-between items-center text-[10px]">
+                                    <p class="text-gray-400">${new Date(notif.date).toLocaleDateString('ar-EG')}</p>
+                                    <button onclick="resendNotification(event, ${notif.id})" class="resend-btn flex items-center gap-1 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded hover:bg-purple-100 transition">
+                                        <i class="fas fa-redo"></i> إعادة الإرسال
+                                    </button>
+                                </div>
                             </div>
-                            <i class="fas fa-chevron-left text-gray-300 text-xs self-center"></i>
                         </div>
                     `;
                     container.appendChild(card);
@@ -201,13 +189,52 @@
             // تحديث الأيقونة في المودال
             modalIcon.innerHTML = `<i class="fas ${getIconClass(notif.type)}"></i>`;
             modalIcon.className = `w-14 h-14 mx-auto rounded-full flex items-center justify-center text-2xl ${getIconColor(notif.type)}`;
-            
+
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modal.classList.add('opacity-100');
             document.querySelector('#notification-modal .bg-white').classList.remove('scale-95');
             document.querySelector('#notification-modal .bg-white').classList.add('scale-100');
         }
-        
+
+        function resendNotification(event, notifId) {
+            // منع transpa
+            event.stopPropagation();
+
+            // العثور على الإشعار
+            const notif = notificationsData.find(n => n.id == notifId);
+            if (!notif) return;
+
+            // طلب تأكيد من المستخدم
+            if (!confirm('هل أنت متأكد من إعادة إرسال هذا الإشعار؟')) {
+                return;
+            }
+
+            // أظهر حالة التحميل
+            const btn = event.target;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+            btn.disabled = true;
+
+            // محاكاة عملية إعادة الإرسال (في التطبيق الحقيقي، سيستدعي هذا نهاية適절ه)
+            setTimeout(() => {
+                // في تطبيق حقيقي، ستستدعي هنا نقطة نهاية لإعادة الإرسال
+                // مثال: await fetch('/api/resend-notification/' + notifId, { method: 'POST' });
+
+                // محاكاة النجاح
+                btn.innerHTML = '<i class="fas fa-check"></i> تم الإرسال';
+                btn.style.backgroundColor = '#dcfce7';
+                btn.style.color = '#166534';
+
+                // إعادة الحالة بعد ثانيتين
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            }, 1000);
+        }
+
         function closeModal() {
             modal.classList.remove('opacity-100');
             modal.classList.add('opacity-0', 'pointer-events-none');
