@@ -21,6 +21,9 @@
                         <a href="{{ route('customers.create') }}" class="btn btn-primary btn-lg shadow-sm">
                             <i data-feather="plus-circle"></i> New Customer
                         </a>
+                        <a href="{{ route('customers.export', request()->query()) }}" class="btn btn-secondary btn-lg shadow-sm ms-2">
+                            <i data-feather="download"></i> Export Table
+                        </a>
                     </div>
                 </div>
 
@@ -34,6 +37,23 @@
                 @if(session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <i data-feather="alert-circle" class="me-2"></i> {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+                @if(session('warning'))
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i data-feather="alert-triangle" class="me-2"></i> {{ session('warning') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+                @if(session('import_errors'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <h6 class="alert-heading"><i data-feather="alert-circle" class="me-2"></i> أخطاء الاستيراد:</h6>
+                        <ul class="mb-0">
+                            @foreach(session('import_errors') as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
@@ -99,6 +119,68 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {{-- =================== --}}
+                {{-- IMPORT SECTION --}}
+                {{-- =================== --}}
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-light border-0 py-3">
+                        <h6 class="fw-bold mb-0"><i data-feather="upload"></i> Import Customers</h6>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ route('customers.import') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
+                            @csrf
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Excel File (.xlsx, .xls, .csv)</label>
+                                <input type="file" name="import_file" class="form-control" required>
+                                <div class="form-text">Required columns: <strong>name, username, email</strong> (password optional, default "password123").<br>
+                                Optional: <strong>active_organization_name</strong> (must exist).</div>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i data-feather="upload"></i> Import Data
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ route('customers.template') }}" class="btn btn-outline-secondary w-100">
+                                    <i data-feather="file-text"></i> Download Template
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {{-- =================== --}}
+                {{-- EXPORT FILTER SECTION --}}
+                {{-- =================== --}}
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-light border-0 py-3">
+                        <h6 class="fw-bold mb-0"><i data-feather="download"></i> Export Options (Custom Filters)</h6>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ route('customers.export') }}" method="GET" class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Search (name/username/email)</label>
+                                <input type="text" name="search" class="form-control" placeholder="Enter keyword...">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Active Organization</label>
+                                <select name="organization_id" class="form-select">
+                                    <option value="">All</option>
+                                    @foreach(\App\Models\Organization::pluck('name', 'id') as $id => $name)
+                                        <option value="{{ $id }}">{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i data-feather="file-text"></i> Export Filtered
+                                </button>
+                            </div>
+                        </form>
+                        <div class="form-text mt-2">Use these filters to download Excel with only the matching records.</div>
                     </div>
                 </div>
 

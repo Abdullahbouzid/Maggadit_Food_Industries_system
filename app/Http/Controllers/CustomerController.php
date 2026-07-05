@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\CustomersExport;
+use App\Imports\CustomersImport;
 class CustomerController extends Controller
 {
     /**
@@ -205,5 +207,62 @@ class CustomerController extends Controller
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer deleted successfully.');
+    }
+
+       public function export(Request $request)
+    {
+        try {
+            return Excel::download(new CustomersExport($request), 'customers_' . date('Y-m-d_Hi') . '.xlsx');
+        } catch (\Exception $e) {
+            return back()->with('error', 'فشل التصدير: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * تنزيل قالب Excel للاستيراد
+     */
+    public function downloadTemplate()
+    {
+        try {
+            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+                public function collection()
+                {
+                    return collect([]);
+                }
+                public function headings(): array
+                {
+                    return ['name', 'username', 'email', 'password', 'active_organization_name']; // الأعمدة المطلوبة
+                }
+            };
+            return Excel::download($export, 'customers_template.xlsx');
+        } catch (\Exception $e) {
+            return back()->with('error', 'فشل تنزيل القالب: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * استيراد العملاء من ملف Excel
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|file|mimes:xlsx,xls,csv'
+        ]);
+
+        try {
+            $import = new CustomersImport;
+            Excel::import($import, $request->file('import_file'));
+            
+            $errors = $import->getErrors();
+            if (count($errors) > 0) {
+                return redirect()->route('customers.index')
+                    ->with('warning', 'تم الاستيراد مع وجود بعض الأخطاء في الصفوف.')
+                    ->with('import_errors', $errors);
+            }
+
+            return redirect()->route('customers.index')->with('success', 'تم استيراد العملاء بنجاح.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'فشل الاستيراد: ' . $e->getMessage());
+        }
     }
 }

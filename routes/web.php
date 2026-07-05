@@ -362,6 +362,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('organizations/template', [OrganizationController::class, 'downloadTemplate'])->name('organizations.template');
     Route::post('organizations/import', [OrganizationController::class, 'import'])->name('organizations.import');
     Route::resource('organizations', OrganizationController::class);
+    Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
+    Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
+    Route::get('customers/template', [CustomerController::class, 'downloadTemplate'])->name('customers.template');
     Route::resource('customers', CustomerController::class);
 
     Route::get('package-statuses/export', [PackageStatusController::class, 'export'])->name('package-statuses.export');
