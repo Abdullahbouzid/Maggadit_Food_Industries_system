@@ -428,4 +428,38 @@ class CustomerApiController extends Controller
             'active_organization_id' => $organizationId
         ]);
     }
+
+    public function checkNewNotifications(Request $request)
+    {
+        $customer = $request->user();
+        $lastId = $request->input('last_id', 0);
+
+        $notifications = \App\Models\Notification::where(function($query) use ($customer) {
+            $query->where('group', 'all')
+                  ->orWhere(function($q) use ($customer) {
+                      $q->whereJsonContains('customers', (string)$customer->id)
+                        ->orWhereJsonContains('customers', $customer->id);
+                  });
+        })
+        ->where('is_sent', true)
+        ->where('id', '>', (int)$lastId)
+        ->latest()
+        ->get()
+        ->map(function($notif) {
+            return [
+                'id' => $notif->id,
+                'subject' => $notif->subject_ar ?: $notif->subject_en,
+                'body' => $notif->body_ar ?: $notif->body_en,
+                'image' => $notif->image_url,
+                'icon_type' => $notif->icon_type ?? 'notification',
+                'created_at' => $notif->created_at->diffForHumans(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'new_notifications' => $notifications,
+            'count' => count($notifications)
+        ]);
+    }
 }

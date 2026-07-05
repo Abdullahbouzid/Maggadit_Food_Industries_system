@@ -38,6 +38,15 @@
         .notification-badge { transition: transform 0.2s ease; }
         .notification-badge.active { animation: shake 0.5s ease-in-out; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+        @keyframes notifShake {
+            0%,100% { transform: rotate(0deg); }
+            15%     { transform: rotate(12deg); }
+            30%     { transform: rotate(-10deg); }
+            45%     { transform: rotate(8deg); }
+            60%     { transform: rotate(-6deg); }
+            75%     { transform: rotate(4deg); }
+        }
+        .notif-shake { animation: notifShake 0.6s ease-in-out; }
         
         /* ========== مؤشر السحب للتحديث ========== */
         .ptr-indicator { position: fixed; top: 0; left: 0; right: 0; text-align: center; padding: 10px; background: #9879b6; color: white; font-size: 12px; transform: translateY(-100%); transition: transform 0.2s ease; z-index: 50; border-radius: 0 0 20px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -145,41 +154,9 @@
         }, duration);
     }
 
-    // ========== 2. الإشعارات (Notification Bell) ==========
-    const notifBell = document.getElementById('notification-bell');
-    const notifBadge = document.getElementById('notif-badge');
-    
-    // جلب عدد الإشعارات الغير مقروءة عبر API
-    async function fetchUnreadNotifications() {
-        try {
-            const token = '{{ session("api_token") }}';
-            if (!token) return;
-            
-            const response = await fetch('https://blue-beaver-923812.hostingersite.com/api/customer/notifications', {
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                }
-            });
-            const data = await response.json();
-            if (data.success) {
-                const count = data.unread_count || 0;
-                if (notifBadge) {
-                    if (count > 0) {
-                        notifBadge.innerText = count;
-                        notifBadge.classList.remove('hidden');
-                    } else {
-                        notifBadge.classList.add('hidden');
-                    }
-                }
-            }
-        } catch (e) {
-            console.log('Failed to fetch unread notifications');
-        }
-    }
-    
-    // تشغيل عند التحميل
-    fetchUnreadNotifications();
+    // ========== 2. شارة الإشعارات (تُدار من قِبل محرك الـ Polling في scripts.blade.php) ==========
+    // لا نحتاج لـ fetch هنا — المحرك الذكي في scripts.blade.php يتولى ذلك تلقائياً.
+    // الدالة updateNotificationBadge مُعرَّفة في scripts.blade.php ومتاحة عالمياً.
 
     // ========== 3. البحث (Search Bar) ==========
     const searchToggle = document.getElementById('search-toggle');
