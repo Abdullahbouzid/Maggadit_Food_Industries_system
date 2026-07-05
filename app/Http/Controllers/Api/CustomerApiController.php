@@ -307,7 +307,11 @@ class CustomerApiController extends Controller
         $customer = $request->user();
         
         $notifications = \App\Models\Notification::where(function($query) use ($customer) {
-            $query->where('group', 'all')
+            // إشعارات للجميع: customers تحتوي على "all"
+            $query->whereJsonContains('customers', 'all')
+                  // أو channel = 'all'
+                  ->orWhere('channel', 'all')
+                  // أو العميل محدد بالاسم أو ID في مصفوفة customers
                   ->orWhere(function($q) use ($customer) {
                       $q->whereJsonContains('customers', (string)$customer->id)
                         ->orWhereJsonContains('customers', $customer->id);
@@ -321,18 +325,16 @@ class CustomerApiController extends Controller
                 'id' => $notif->id,
                 'subject' => $notif->subject_ar ?: $notif->subject_en,
                 'body' => $notif->body_ar ?: $notif->body_en,
-                'image' => $notif->image_url,
+                'image' => $notif->image_url ?? null,
                 'icon_type' => $notif->icon_type ?? 'notification',
                 'created_at' => $notif->created_at->diffForHumans(),
             ];
         });
 
-        // لحساب الغير مقروء، نحتاج جدول pivot ولكن الآن يمكن اعتباره فقط لجلب الإشعارات
-        // للتبسيط، نرسل كل الإشعارات
         return response()->json([
             'success' => true, 
             'notifications' => $notifications,
-            'unread_count' => count($notifications) // مؤقتاً
+            'unread_count' => count($notifications)
         ]);
     }
 
@@ -435,7 +437,11 @@ class CustomerApiController extends Controller
         $lastId = $request->input('last_id', 0);
 
         $notifications = \App\Models\Notification::where(function($query) use ($customer) {
-            $query->where('group', 'all')
+            // إشعارات للجميع: customers تحتوي على "all"
+            $query->whereJsonContains('customers', 'all')
+                  // أو channel = 'all'
+                  ->orWhere('channel', 'all')
+                  // أو العميل محدد بالـ ID في مصفوفة customers
                   ->orWhere(function($q) use ($customer) {
                       $q->whereJsonContains('customers', (string)$customer->id)
                         ->orWhereJsonContains('customers', $customer->id);
@@ -447,19 +453,19 @@ class CustomerApiController extends Controller
         ->get()
         ->map(function($notif) {
             return [
-                'id' => $notif->id,
-                'subject' => $notif->subject_ar ?: $notif->subject_en,
-                'body' => $notif->body_ar ?: $notif->body_en,
-                'image' => $notif->image_url,
-                'icon_type' => $notif->icon_type ?? 'notification',
+                'id'         => $notif->id,
+                'subject'    => $notif->subject_ar ?: $notif->subject_en,
+                'body'       => $notif->body_ar ?: $notif->body_en,
+                'image'      => $notif->image_url ?? null,
+                'icon_type'  => $notif->icon_type ?? 'notification',
                 'created_at' => $notif->created_at->diffForHumans(),
             ];
         });
 
         return response()->json([
-            'success' => true,
-            'new_notifications' => $notifications,
-            'count' => count($notifications)
+            'success'            => true,
+            'new_notifications'  => $notifications,
+            'count'              => count($notifications)
         ]);
     }
 }

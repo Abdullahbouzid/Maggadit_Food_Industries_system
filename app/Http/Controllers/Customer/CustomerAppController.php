@@ -568,23 +568,61 @@ class CustomerAppController extends Controller
     public function notificationsIndex()
     {
         $notifications = collect();
-        $unreadCount = 0;
-        try {
-            $token = Session::get('api_token');
-            // تأكد من تمرير التوكن لجلب إشعارات المستخدم الفعلي
-            $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/notifications");
+        $unreadCount   = 0;
+        $token         = Session::get('api_token');
 
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['notifications'])) {
-                    $notifications = collect($data['notifications'])->map(function($item) {
-                        return (object) $item;
+        // محاولة جلب الإشعارات عبر API
+        if ($token) {
+            try {
+                $response = Http::withToken($token)
+                    ->withoutVerifying()
+                    ->timeout(8)
+                    ->get("{$this->baseUrl}/customer/notifications");
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (!empty($data['notifications'])) {
+                        $notifications = collect($data['notifications'])->map(fn($item) => (object) $item);
+                        $unreadCount   = $data['unread_count'] ?? count($notifications);
+                    }
+                } else {
+                    Log::warning("Notifications API non-success: " . $response->status() . ' body: ' . substr($response->body(), 0, 200));
+                }
+            } catch (\Exception $e) {
+                Log::error("Notifications API Error: " . $e->getMessage());
+            }
+        }
+
+        // Fallback: جلب مباشرة من قاعدة البيانات المحلية إذا كانت النتيجة فارغة
+        if ($notifications->isEmpty()) {
+            $customer = Auth::guard('customer')->user();
+            $customerId = $customer?->id;
+
+            $dbNotifs = \App\Models\Notification::where(function($query) use ($customerId) {
+                $query->whereJsonContains('customers', 'all')
+                      ->orWhere('channel', 'all');
+                if ($customerId) {
+                    $query->orWhere(function($q) use ($customerId) {
+                        $q->whereJsonContains('customers', (string)$customerId)
+                          ->orWhereJsonContains('customers', $customerId);
                     });
                 }
-                $unreadCount = $data['unread_count'] ?? 0;
-            }
-        } catch (\Exception $e) {
-            Log::error("Notifications API Error: " . $e->getMessage());
+            })
+            ->where('is_sent', true)
+            ->latest()
+            ->get();
+
+            $notifications = $dbNotifs->map(function($n) {
+                return (object) [
+                    'id'         => $n->id,
+                    'subject'    => $n->subject_ar ?: $n->subject_en,
+                    'body'       => $n->body_ar ?: $n->body_en,
+                    'image'      => null,
+                    'icon_type'  => $n->icon_type ?? 'notification',
+                    'created_at' => $n->created_at->diffForHumans(),
+                ];
+            });
+            $unreadCount = count($notifications);
         }
 
         return view('app_android.more.notifications', compact('notifications', 'unreadCount'));

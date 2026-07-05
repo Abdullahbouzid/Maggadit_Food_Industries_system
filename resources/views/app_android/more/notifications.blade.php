@@ -83,6 +83,18 @@
 @endsection
 
 @push('scripts')
+@php
+    // تجهيز بيانات الـ Fallback مسبقاً (بدون fn() داخل JS لتجنب أخطاء Blade)
+    $fallbackNotifications = $notifications->map(function($n) {
+        return [
+            'id'         => $n->id,
+            'subject'    => $n->subject,
+            'body'       => $n->body,
+            'icon_type'  => $n->icon_type ?? 'notification',
+            'created_at' => $n->created_at,
+        ];
+    })->values()->toArray();
+@endphp
 <script>
 (function () {
     'use strict';
@@ -258,13 +270,7 @@
             loadingEl.classList.add('hidden');
 
             // Fallback: استخدام البيانات المحقونة من السيرفر (Blade)
-            const serverData = @json($notifications->map(fn($n) => [
-                'id' => $n->id,
-                'subject' => $n->subject,
-                'body' => $n->body,
-                'icon_type' => $n->icon_type ?? 'notification',
-                'created_at' => $n->created_at,
-            ])->values()->toArray());
+            const serverData = {!! json_encode($fallbackNotifications) !!};
 
             if (serverData.length === 0) {
                 emptyEl.classList.remove('hidden');
