@@ -13,26 +13,23 @@
                 </a>
             </li>
 
-            <!-- Data Definitions Header (click to show cards) -->
-            <li class="sidebar-header cursor-pointer" id="data-definitions-header" data-bs-toggle="tooltip" data-bs-placement="right" title="تعريفات البيانات">
-                <i data-feather="database"></i>
-                <span class="align-middle">Data Definitions</span>
-            </li>
-
-            <li class="sidebar-header">Application Content</li>
-            <li class="sidebar-item {{ request()->routeIs('faqs.*') ? 'active' : '' }}">
-                <a class="sidebar-link" href="{{ route('faqs.index') }}">
-                    <i class="align-middle" data-feather="help-circle"></i>
-                    <span class="align-middle">الأسئلة الشائعة (FAQ)</span>
-                </a>
-            </li>
-            <li class="sidebar-item {{ request()->routeIs('surveys.*') ? 'active' : '' }}">
-                <a class="sidebar-link" href="{{ route('surveys.index') }}">
-                    <i class="align-middle" data-feather="clipboard"></i>
-                    <span class="align-middle">الاستبيانات</span>
+            <!-- Data Definitions -->
+            <li class="sidebar-item cursor-pointer" id="data-definitions-header">
+                <a class="sidebar-link" href="javascript:void(0);">
+                    <i class="align-middle" data-feather="database"></i>
+                    <span class="align-middle">Data Definitions</span>
                 </a>
             </li>
 
+            <!-- Customer App Properties -->
+            <li class="sidebar-item cursor-pointer" id="customer-app-header">
+                <a class="sidebar-link" href="javascript:void(0);">
+                    <i class="align-middle" data-feather="smartphone"></i>
+                    <span class="align-middle">Customer App Properties</span>
+                </a>
+            </li>
+
+            <!-- Permissions & Roles -->
             <li class="sidebar-header">Permissions & Roles</li>
             <li class="sidebar-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('roles.index') }}">
@@ -46,7 +43,7 @@
                     <span class="align-middle">Permissions</span>
                 </a>
             </li>
-            <li class="sidebar-item {{ request()->routeIs('logout') ? 'active' : '' }}">
+            <li class="sidebar-item">
                 <a class="sidebar-link" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="align-middle" data-feather="log-out"></i>
                     <span class="align-middle">sign out</span>
@@ -59,6 +56,9 @@
     </div>
 </nav>
 
+<!-- ========================================================== -->
+<!--  بيانات التعريفات (Data Definitions)                         -->
+<!-- ========================================================== -->
 @php
     $definitions = [
         'master' => [
@@ -154,11 +154,10 @@
 @endphp
 <div id="definitions-data" style="display:none;" data-json='{!! json_encode($definitions) !!}'></div>
 
-<!-- Dedicated Card View (hidden by default, shown when clicking Data Definitions header) -->
+<!-- ========== عرض بطاقات Data Definitions ========== -->
 <div id="definitions-card-view" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-none z-index-1050">
     <div class="container h-100 d-flex align-items-center justify-content-center">
         <div class="row w-100">
-            <!-- Main Categories Cards (shown initially) -->
             <div id="main-categories-container" class="col-12">
                 <div class="row g-4 justify-content-center" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1.25rem; width: 100%;">
                     @foreach ($definitions as $key => $data)
@@ -174,7 +173,6 @@
                 </div>
             </div>
 
-            <!-- Subcategory Cards (hidden initially) -->
             <div id="subcategories-container" class="col-12 d-none">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <button id="back-to-main" class="btn btn-outline-light btn-sm">
@@ -182,8 +180,45 @@
                     </button>
                     <h5 id="subcategory-title" class="mb-0" style="color: #e2e8f0;"></h5>
                 </div>
-                <div id="subcards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem;">
-                    <!-- Subcards will be injected here via JS -->
+                <div id="subcards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== عرض بطاقات Customer App Properties (مع إضافة Banners) ========== -->
+<div id="customer-app-card-view" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-none z-index-1050">
+    <div class="container h-100 d-flex align-items-center justify-content-center">
+        <div class="row w-100">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button id="close-customer-app" class="btn btn-outline-light btn-sm">
+                        <i data-feather="x"></i> Close
+                    </button>
+                    <h5 class="mb-0" style="color: #e2e8f0;">Customer App Properties</h5>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.5rem; justify-content: center;">
+                    <!-- FAQ -->
+                    <a href="{{ route('faqs.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
+                        <div class="card-body d-flex flex-column align-items-center py-4">
+                            <i data-feather="help-circle" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
+                            <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">الأسئلة الشائعة</small>
+                        </div>
+                    </a>
+                    <!-- Surveys -->
+                    <a href="{{ route('surveys.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
+                        <div class="card-body d-flex flex-column align-items-center py-4">
+                            <i data-feather="clipboard" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
+                            <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">الاستبيانات</small>
+                        </div>
+                    </a>
+                    <!-- Banners (جديد) -->
+                    <a href="{{ route('banners.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
+                        <div class="card-body d-flex flex-column align-items-center py-4">
+                            <i data-feather="image" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
+                            <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">Banners</small>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -191,7 +226,7 @@
 </div>
 
 <style>
-/* ========== تحسين شامل للـ Sidebar مع الحفاظ على الكلاسات ========== */
+/* ========== Sidebar Styles ========== */
 .sidebar {
     background: linear-gradient(145deg, #0f172a 0%, #0a0f1c 100%);
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
@@ -218,7 +253,6 @@
     transform: scale(1.02);
 }
 
-/* عناوين الأقسام */
 .sidebar-header {
     font-size: 0.7rem;
     text-transform: uppercase;
@@ -229,9 +263,12 @@
     margin-top: 8px;
 }
 
-/* عناصر القائمة الرئيسية */
 .sidebar-item {
     margin-bottom: 4px;
+}
+
+.sidebar-item.cursor-pointer {
+    cursor: pointer;
 }
 
 .sidebar-link {
@@ -255,13 +292,6 @@
     transition: all 0.2s;
 }
 
-.sidebar-link .chevron-icon {
-    margin-left: auto;
-    width: 16px;
-    height: 16px;
-    transition: transform 0.25s ease;
-}
-
 .sidebar-link:hover {
     background: rgba(99, 102, 241, 0.15);
     color: #e2e8f0;
@@ -283,42 +313,6 @@
     color: #a5b4fc;
 }
 
-/* القوائم المنسدلة (dropdown) */
-.sidebar-dropdown {
-    margin-left: 24px;
-    padding-left: 12px;
-    border-left: 1px solid rgba(255,255,255,0.08);
-}
-
-.sidebar-dropdown .sidebar-link {
-    padding: 8px 16px;
-    font-size: 0.85rem;
-}
-
-/* elements second and third level */
-.sidebar-dropdown .sidebar-dropdown {
-    margin-left: 20px;
-    border-left-color: rgba(255,255,255,0.05);
-}
-
-.sidebar-dropdown .sidebar-header {
-    font-size: 0.65rem;
-    padding: 12px 0 4px 0;
-    margin-top: 8px;
-    color: #475569;
-}
-
-/* collapse state */
-.collapse:not(.show) {
-    display: none;
-}
-
-/* smooth transition when opening/closing */
-.collapsing {
-    transition: height 0.2s ease;
-}
-
-/* custom scrollbar */
 .custom-scroll {
     overflow-y: auto !important;
     height: 100vh;
@@ -339,26 +333,17 @@
     background: #818cf8;
 }
 
-/* prevent background scroll when modal open */
+/* Modals */
 body.modal-open {
     overflow: hidden;
 }
 
-/* Ensure definitions card view is on top */
-#definitions-card-view {
+#definitions-card-view,
+#customer-app-card-view {
     z-index: 9999 !important;
 }
 
-/* ===== IMPROVED CARD STYLES ===== */
-/* Main categories container uses grid */
-#main-categories-container .row {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 1.25rem;
-    width: 100%;
-}
-
-/* Cards - main & sub */
+/* Cards */
 .card.main-category-card,
 .card.subcard-link {
     background: rgba(255,255,255,0.08);
@@ -373,16 +358,15 @@ body.modal-open {
 }
 
 .card.main-category-card:hover,
-.card.subcard-link:hover:not(.disabled) {
+.card.subcard-link:hover {
     transform: translateY(-6px) scale(1.02);
     background: rgba(255,255,255,0.15);
     box-shadow: 0 12px 30px rgba(99, 102, 241, 0.3);
 }
 
-/* ------ أيقونات البطاقات (بحجم أكبر) ------ */
 .card.main-category-card .main-icon,
 .card.subcard-link .sub-icon {
-    font-size: 4rem;          /* الحجم الجديد الرئيسي */
+    font-size: 4rem;
     width: auto;
     height: 100%;
     color: #a5b4fc;
@@ -391,13 +375,8 @@ body.modal-open {
     transition: all 0.3s ease;
 }
 
-.card.subcard-link .sub-icon {
-    font-size: 3.5rem;        /* الحجم الجديد للفرعية */
-}
-
-/* عند hover نعطي توهجاً إضافياً */
 .card.main-category-card:hover .main-icon,
-.card.subcard-link:hover:not(.disabled) .sub-icon {
+.card.subcard-link:hover .sub-icon {
     filter: drop-shadow(0 0 20px rgba(99,102,241,0.6));
     transform: scale(1.05);
 }
@@ -414,28 +393,7 @@ body.modal-open {
     color: #cbd5e1;
 }
 
-/* Disabled subcards */
-.card.subcard-link.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    filter: grayscale(0.5);
-}
-.card.subcard-link.disabled:hover {
-    transform: none !important;
-    box-shadow: none !important;
-}
-.card.subcard-link.disabled .sub-icon {
-    filter: none !important;
-}
-
-/* Subcards grid */
-#subcards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 1rem;
-}
-
-/* Responsive fine-tune */
+/* Responsive */
 @media (max-width: 576px) {
     #main-categories-container .row {
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -445,11 +403,9 @@ body.modal-open {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
         gap: 0.75rem;
     }
-    .card.main-category-card .main-icon {
-        font-size: 3rem;       /* تصغير متناسب */
-    }
+    .card.main-category-card .main-icon,
     .card.subcard-link .sub-icon {
-        font-size: 2.5rem;
+        font-size: 3rem;
     }
     .card.main-category-card {
         min-height: 120px;
@@ -474,11 +430,9 @@ body.modal-open {
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
         gap: 0.5rem;
     }
-    .card.main-category-card .main-icon {
-        font-size: 2.5rem;
-    }
+    .card.main-category-card .main-icon,
     .card.subcard-link .sub-icon {
-        font-size: 2rem;
+        font-size: 2.5rem;
     }
     .card.main-category-card {
         min-height: 100px;
@@ -491,12 +445,11 @@ body.modal-open {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Feather icons replacement
     if (typeof feather !== 'undefined') {
         feather.replace();
     }
 
-    // Load definitions data from hidden div
+    // ========== Data Definitions Logic ==========
     const dataEl = document.getElementById('definitions-data');
     window.subcategoryData = dataEl ? JSON.parse(dataEl.dataset.json) : {};
 
@@ -507,18 +460,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const subTitle        = document.getElementById('subcategory-title');
     const subcardsGrid    = document.getElementById('subcards-grid');
 
-    // Show definitions view when clicking the header
-    document.getElementById('data-definitions-header').addEventListener('click', function() {
+    document.getElementById('data-definitions-header').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('customer-app-card-view').classList.add('d-none');
         definitionsView.classList.remove('d-none');
         document.body.classList.add('modal-open');
-        // Reset to main view
         mainContainer.classList.remove('d-none');
         subContainer.classList.add('d-none');
         subcardsGrid.innerHTML = '';
         subTitle.textContent = '';
     });
 
-    // Hide definitions view when clicking outside the content
     definitionsView.addEventListener('click', function(e) {
         if (e.target === definitionsView) {
             definitionsView.classList.add('d-none');
@@ -526,24 +478,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Handle main category card clicks
     document.querySelectorAll('.main-category-card').forEach(card => {
         card.addEventListener('click', function() {
             const target = this.getAttribute('data-target');
             if (!target) return;
 
-            const subcategoryData = window.subcategoryData || {};
-            const categoryData = subcategoryData[target] || {};
-            const data = categoryData.items || [];
+            const categoryData = window.subcategoryData[target] || {};
+            const items = categoryData.items || [];
 
             subTitle.textContent = this.querySelector('.card-title').textContent;
             subcardsGrid.innerHTML = '';
-            data.forEach(item => {
+            items.forEach(item => {
                 const col = document.createElement('div');
                 col.className = 'col';
 
                 const link = document.createElement('a');
-
                 if (!item.disabled && item.route && item.route !== '#') {
                     link.href = 'javascript:void(0);';
                     link.addEventListener('click', function(e) {
@@ -582,12 +531,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Back button
     backBtn.addEventListener('click', function() {
         mainContainer.classList.remove('d-none');
         subContainer.classList.add('d-none');
         subcardsGrid.innerHTML = '';
         subTitle.textContent = '';
     });
+
+    // ========== Customer App Properties Logic ==========
+    const customerAppView = document.getElementById('customer-app-card-view');
+    const closeCustomerAppBtn = document.getElementById('close-customer-app');
+
+    document.getElementById('customer-app-header').addEventListener('click', function(e) {
+        e.stopPropagation();
+        definitionsView.classList.add('d-none');
+        customerAppView.classList.remove('d-none');
+        document.body.classList.add('modal-open');
+    });
+
+    customerAppView.addEventListener('click', function(e) {
+        if (e.target === customerAppView) {
+            customerAppView.classList.add('d-none');
+            document.body.classList.remove('modal-open');
+        }
+    });
+
+    closeCustomerAppBtn.addEventListener('click', function() {
+        customerAppView.classList.add('d-none');
+        document.body.classList.remove('modal-open');
+    });
+
+    document.querySelectorAll('#customer-app-card-view .card, #customer-app-card-view .container')
+        .forEach(el => el.addEventListener('click', function(e) {
+            e.stopPropagation();
+        }));
 });
 </script>

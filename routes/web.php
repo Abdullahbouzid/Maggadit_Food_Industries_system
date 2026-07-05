@@ -35,7 +35,10 @@ use App\Http\Controllers\VehicleTypeController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\DeviceController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BannerController;
+
 use Illuminate\Http\Request;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -481,4 +484,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('devices/template', [DeviceController::class, 'downloadTemplate'])->name('devices.template');
     Route::post('devices/import', [DeviceController::class, 'import'])->name('devices.import');
     Route::resource('devices', DeviceController::class);
+
+
+
+Route::resource('banners', BannerController::class);
+Route::get('banners/export', [BannerController::class, 'export'])->name('banners.export');
+
 });
