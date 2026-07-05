@@ -18,6 +18,7 @@ use App\Models\Customer;
 use App\Models\Brand;
 use App\Models\Item;
 use App\Models\Category;
+use App\Models\Banner;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -30,6 +31,7 @@ class CustomerAppController extends Controller
      */
     public function dashboard()
     {
+        $banners = collect();
         $categories = collect();
         $brands = collect();
         $products = collect();
@@ -42,6 +44,7 @@ class CustomerAppController extends Controller
                 $data = $response->json();
 
                 // تحويل البيانات إلى كائنات مع ضمان وجود الحقول المطلوبة
+                $banners = $this->parseData($data['banners'] ?? []);
                 $categories = $this->parseData($data['categories'] ?? []);
                 $brands = $this->parseData($data['brands'] ?? []);
                 $products = $this->parseData($data['products'] ?? []);
@@ -53,6 +56,11 @@ class CustomerAppController extends Controller
         }
 
         // إذا كانت البيانات فارغة، نستخدم البيانات المحلية كـ Fallback
+        if ($banners->isEmpty()) {
+            $banners = Banner::where('show_in_customer_app', true)->orderBy('order', 'asc')->get()->map(function ($banner) {
+                return $this->applyImagePath($banner, 'image');
+            });
+        }
         if ($categories->isEmpty()) {
             $categories = Category::all()->map(function ($category) {
                 return $this->applyImagePath($category, 'image');
@@ -69,7 +77,7 @@ class CustomerAppController extends Controller
             });
         }
 
-        return view('app_android.customer_dashboard', compact('categories', 'brands', 'products'));
+        return view('app_android.customer_dashboard', compact('banners', 'categories', 'brands', 'products'));
     }
 
     /**

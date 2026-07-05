@@ -7,39 +7,31 @@
 
     <div class="p-4 space-y-6 mb-5" dir="rtl">
 
-   {{-- ========== شريط الدعايات (Carousel) مع 6 بطاقات وتمرير تلقائي ========== --}}
+   {{-- ========== شريط الدعايات (Carousel) مع بطاقات وتمرير تلقائي ========== --}}
         <div class="relative">
             <div id="ad-carousel" class="flex overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar rounded-2xl shadow-md" style="scrollbar-width: none; -webkit-overflow-scrolling: touch;">
-                @php
-                    $ads = [
-                        ['id' => 1, 'title' => 'خصم 50% على الملابس', 'subtitle' => 'سارع بالشراء', 'icon' => '🛍️', 'bg' => 'from-pink-500 to-rose-600'],
-                        ['id' => 2, 'title' => 'عرض الإلكترونيات', 'subtitle' => 'خصم 30%', 'icon' => '📱', 'bg' => 'from-blue-500 to-cyan-600'],
-                        ['id' => 3, 'title' => 'توصيل مجاني', 'subtitle' => 'للطلبات فوق 200 ر.س', 'icon' => '🚚', 'bg' => 'from-green-500 to-emerald-600'],
-                        ['id' => 4, 'title' => 'عطور فاخرة', 'subtitle' => 'خصم 25%', 'icon' => '🌸', 'bg' => 'from-purple-500 to-indigo-600'],
-                        ['id' => 5, 'title' => 'أحذية رياضية', 'subtitle' => 'تخفيضات تصل 40%', 'icon' => '👟', 'bg' => 'from-amber-500 to-orange-600'],
-                        ['id' => 6, 'title' => 'ساعات ذكية', 'subtitle' => 'عرض خاص', 'icon' => '⌚', 'bg' => 'from-gray-500 to-gray-700'],
-                    ];
-                @endphp
-                @foreach($ads as $ad)
+                @forelse($banners as $banner)
                     <div class="flex-shrink-0 w-full snap-start">
-                        <div class="bg-gradient-to-r {{ $ad['bg'] }} rounded-2xl p-5 text-white flex items-center justify-between mx-1">
-                            <div>
-                                <p class="text-lg font-bold">{{ $ad['title'] }}</p>
-                                <p class="text-sm opacity-90">{{ $ad['subtitle'] }}</p>
-                                <button class="mt-3 bg-white/20 backdrop-blur-sm text-white text-xs px-4 py-1.5 rounded-full">اشتري الآن</button>
-                            </div>
-                            <div class="text-6xl drop-shadow-lg">
-                                {{ $ad['icon'] }}
-                            </div>
+                        <a href="{{ $banner->url ?? '#' }}" class="block w-full h-40 mx-1 rounded-2xl overflow-hidden">
+                            <img src="{{ $banner->image ?? asset('assets/images/default-banner.jpg') }}" alt="Banner" class="w-full h-full object-cover">
+                        </a>
+                    </div>
+                @empty
+                    <div class="flex-shrink-0 w-full snap-start">
+                        <div class="w-full h-40 mx-1 rounded-2xl bg-gray-200 flex items-center justify-center text-gray-500">
+                            لا توجد إعلانات
                         </div>
                     </div>
-                @endforeach
+                @endforelse
             </div>
             <!-- نقاط التنقل -->
             <div class="flex justify-center gap-1 mt-3" id="ad-dots">
-                @foreach($ads as $index => $ad)
-                    <div class="w-2 h-2 rounded-full bg-gray-300 transition-all duration-300 {{ $index === 0 ? 'w-4 bg-purple-600' : '' }}" data-index="{{ $index }}"></div>
-                @endforeach
+                @php
+                    $dotsCount = $banners->count() > 0 ? $banners->count() : 1;
+                @endphp
+                @for($i = 0; $i < $dotsCount; $i++)
+                    <div class="w-2 h-2 rounded-full bg-gray-300 transition-all duration-300 {{ $i === 0 ? 'w-4 bg-purple-600' : '' }}" data-index="{{ $i }}"></div>
+                @endfor
             </div>
         </div>
 

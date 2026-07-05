@@ -9,6 +9,7 @@ use App\Models\Item;
 use App\Models\Survey;
 use App\Models\SurveyResponse;
 use App\Models\SurveyAnswer;
+use App\Models\Banner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -168,8 +169,20 @@ class CustomerApiController extends Controller
                 ];
             });
 
+        $banners = Banner::where('show_in_customer_app', true)
+            ->orderBy('order', 'asc')
+            ->get()
+            ->map(function ($banner) {
+                return [
+                    'id' => $banner->id,
+                    'image' => $banner->image_url,
+                    'url' => $banner->url,
+                ];
+            });
+
         return response()->json([
             'success' => true,
+            'banners' => $banners,
             'categories' => $categories,
             'brands' => $brands,
             'products' => $products,
