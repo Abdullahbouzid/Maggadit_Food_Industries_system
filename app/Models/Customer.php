@@ -90,7 +90,7 @@ class Customer extends Authenticatable
     public function readNotifications()
     {
         return $this->belongsToMany(Notification::class, 'notification_reads')
-                    ->withPivot('read_at')
+                    ->withPivot('read_at', 'is_starred', 'is_archived')
                     ->withTimestamps();
     }
 }

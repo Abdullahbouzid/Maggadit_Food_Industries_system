@@ -44,6 +44,14 @@
             <p class="text-gray-400 text-sm">جاري تحميل الإشعارات...</p>
         </div>
 
+        {{-- Filter Tabs --}}
+        <div id="filter-tabs" class="hidden flex space-x-2 space-x-reverse mb-4 overflow-x-auto pb-2 scrollbar-hide" style="scrollbar-width: none;">
+            <button data-tab="all" class="tab-btn active bg-purple-600 text-white px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors">الكل</button>
+            <button data-tab="unread" class="tab-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors">غير مقروءة</button>
+            <button data-tab="starred" class="tab-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors"><i class="fas fa-star text-amber-500 mr-1"></i> هامة</button>
+            <button data-tab="archived" class="tab-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors"><i class="fas fa-archive text-gray-500 mr-1"></i> مؤرشفة</button>
+        </div>
+
         {{-- حاوية الإشعارات --}}
         <div id="notifications-list" class="space-y-3 hidden"></div>
 
@@ -63,8 +71,9 @@
     <div id="notif-modal"
          class="notif-modal-overlay fixed inset-0 bg-black/50 flex items-end justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
         <div id="notif-modal-box"
-             class="bg-white w-full max-w-lg rounded-t-3xl p-6 transform translate-y-full transition-all duration-300 shadow-2xl" dir="rtl">
+             class="bg-white w-full max-w-lg rounded-t-3xl p-6 transform translate-y-full transition-all duration-300 shadow-2xl max-h-[85vh] overflow-y-auto" dir="rtl">
             <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5"></div>
+            <img id="modal-image" src="" alt="صورة الإشعار" class="w-full h-48 object-cover rounded-xl mb-4 hidden">
             <div class="text-center mb-4">
                 <div id="modal-icon-wrap"
                      class="w-16 h-16 mx-auto rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-2xl mb-3">
@@ -110,6 +119,8 @@
     const listEl     = document.getElementById('notifications-list');
     const emptyEl    = document.getElementById('empty-state');
     const loadingEl  = document.getElementById('loading-state');
+    const filterTabs = document.getElementById('filter-tabs');
+    const tabBtns    = document.querySelectorAll('.tab-btn');
     const countLabel = document.getElementById('notif-count-label');
     const markAllBtn = document.getElementById('mark-all-btn');
     const modal      = document.getElementById('notif-modal');
@@ -118,7 +129,25 @@
     const modalBody  = document.getElementById('modal-body');
     const modalDate  = document.getElementById('modal-date');
     const modalIcon  = document.getElementById('modal-icon-wrap');
+    const modalImg   = document.getElementById('modal-image');
     const closeBtn   = document.getElementById('close-modal-btn');
+
+    let allNotifications = [];
+    let currentTab = 'all';
+
+    // ===== إعدادات التبويبات =====
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => {
+                b.classList.remove('bg-purple-600', 'text-white', 'active');
+                b.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            btn.classList.remove('bg-gray-100', 'text-gray-600');
+            btn.classList.add('bg-purple-600', 'text-white', 'active');
+            currentTab = btn.dataset.tab;
+            renderList();
+        });
+    });
 
     // ===== LocalStorage helpers =====
     function getReadIds()  { try { return new Set(JSON.parse(localStorage.getItem(LS_READ) || '[]')); } catch { return new Set(); } }
@@ -194,6 +223,43 @@
             console.error(e);
         }
     }
+    
+    // ===== تبديل النجمة يدوياً =====
+    async function toggleStarStatus(id, btnEl, notifObj) {
+        if (!API_TOKEN) return;
+        try {
+            const resp = await fetch(`${API_BASE}/notifications/${id}/toggle-star`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + API_TOKEN, 'Accept': 'application/json' }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                notifObj.is_starred = data.is_starred;
+                btnEl.className = `toggle-star-btn text-${data.is_starred ? 'amber-500' : 'gray-300'} hover:text-amber-500 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors`;
+                if(currentTab === 'starred') renderList();
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    // ===== تبديل الأرشفة يدوياً =====
+    async function toggleArchiveStatus(id, btnEl, notifObj) {
+        if (!API_TOKEN) return;
+        try {
+            const resp = await fetch(`${API_BASE}/notifications/${id}/toggle-archive`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + API_TOKEN, 'Accept': 'application/json' }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                notifObj.is_archived = data.is_archived;
+                btnEl.className = `toggle-archive-btn text-${data.is_archived ? 'gray-600' : 'gray-300'} hover:text-gray-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors`;
+                if(currentTab === 'archived' || currentTab === 'all' || currentTab === 'unread') renderList();
+                if (typeof showToast === 'function') {
+                    showToast(data.is_archived ? 'تمت الأرشفة' : 'تم الإلغاء', 'info', 2000);
+                }
+            }
+        } catch(e) { console.error(e); }
+    }
 
     // ===== أيقونات وألوان حسب نوع الإشعار =====
     const typeConfig = {
@@ -228,19 +294,31 @@
                 <p class="text-gray-500 text-xs leading-relaxed line-clamp-2" onclick="openModal(this.closest('.notif-card').notifData, this.closest('.notif-card'))">${escHtml(notif.body || notif.message || '')}</p>
                 <div class="flex justify-between items-center mt-2">
                     <p class="text-gray-400 text-[10px]">${escHtml(notif.created_at || notif.date || '')}</p>
-                    <button class="toggle-read-btn text-gray-400 hover:text-purple-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" title="تغيير حالة القراءة">
-                        <i class="fas ${read ? 'fa-envelope-open-text' : 'fa-envelope'}"></i>
-                    </button>
+                    <div class="flex gap-2">
+                        <button class="toggle-star-btn text-${notif.is_starred ? 'amber-500' : 'gray-300'} hover:text-amber-500 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" title="مهم">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button class="toggle-archive-btn text-${notif.is_archived ? 'gray-600' : 'gray-300'} hover:text-gray-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" title="أرشفة">
+                            <i class="fas fa-archive"></i>
+                        </button>
+                        <button class="toggle-read-btn text-gray-400 hover:text-purple-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" title="تغيير حالة القراءة">
+                            <i class="fas ${read ? 'fa-envelope-open-text' : 'fa-envelope'}"></i>
+                        </button>
+                    </div>
                 </div>
             </div>`;
             
         div.notifData = notif; // Attach data to DOM element for onclick access
         
-        // Setup toggle button click
-        const toggleBtn = div.querySelector('.toggle-read-btn');
-        toggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent modal from opening
-            toggleReadStatus(notif.id, div, notif);
+        // Setup toggle buttons click
+        div.querySelector('.toggle-read-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); toggleReadStatus(notif.id, div, notif);
+        });
+        div.querySelector('.toggle-star-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); toggleStarStatus(notif.id, e.currentTarget, notif);
+        });
+        div.querySelector('.toggle-archive-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); toggleArchiveStatus(notif.id, e.currentTarget, notif);
         });
         
         return div;
@@ -258,6 +336,14 @@
         modalDate.textContent  = notif.created_at || notif.date || '';
         modalIcon.className    = `w-16 h-16 mx-auto rounded-full ${c.bg} ${c.text} flex items-center justify-center text-2xl mb-3`;
         modalIcon.innerHTML    = `<i class="fas ${c.icon}"></i>`;
+        
+        if (notif.image) {
+            modalImg.src = notif.image;
+            modalImg.classList.remove('hidden');
+        } else {
+            modalImg.src = '';
+            modalImg.classList.add('hidden');
+        }
 
         // تعليم كمقروء
         // Check if unread (either from local state or server flag)
@@ -330,36 +416,23 @@
 
             if (!data.success || !data.notifications || data.notifications.length === 0) {
                 emptyEl.classList.remove('hidden');
+                filterTabs.classList.add('hidden');
                 countLabel.textContent = 'لا توجد إشعارات';
                 return;
             }
 
-            const notifs = data.notifications;
-
+            allNotifications = data.notifications;
+            
             // حفّظ آخر ID لمحرك الـ Polling
-            if (notifs.length > 0) {
-                const maxId = Math.max(...notifs.map(n => parseInt(n.id)));
+            if (allNotifications.length > 0) {
+                const maxId = Math.max(...allNotifications.map(n => parseInt(n.id)));
                 const savedLast = parseInt(localStorage.getItem(LS_LAST) || '0');
                 if (maxId > savedLast) localStorage.setItem(LS_LAST, maxId);
             }
 
-            listEl.classList.remove('hidden');
-            listEl.innerHTML = '';
-            notifs.forEach(n => listEl.appendChild(buildCard(n)));
-            // Update global unread badge if API returned it
-            if (data.unread_count !== undefined) {
-                if (typeof window.updateNotificationBadge === 'function') {
-                    window.updateNotificationBadge(data.unread_count);
-                }
-            } else {
-                refreshUnreadBadge();
-            }
-
-            // صفّر الشارة لأن المستخدم دخل الصفحة
-            // Actually, we shouldn't reset it to 0 just by opening the page, 
-            // only when they actually read the notifications.
-            // But if requested, we can keep it (or comment out if we want true read status).
-
+            filterTabs.classList.remove('hidden');
+            renderList();
+            
         } catch (e) {
             loadingEl.classList.add('hidden');
 
@@ -368,25 +441,51 @@
 
             if (serverData.length === 0) {
                 emptyEl.classList.remove('hidden');
+                filterTabs.classList.add('hidden');
                 countLabel.textContent = 'لا توجد إشعارات';
                 return;
             }
-            listEl.classList.remove('hidden');
-            serverData.forEach(n => listEl.appendChild(buildCard(n)));
-            refreshUnreadBadge();
+            
+            allNotifications = serverData;
+            filterTabs.classList.remove('hidden');
+            renderList();
         }
+    }
+    
+    function renderList() {
+        listEl.innerHTML = '';
+        let filtered = allNotifications;
+        
+        if (currentTab === 'unread') {
+            filtered = allNotifications.filter(n => !(n.is_read !== undefined ? n.is_read : isRead(n.id)));
+        } else if (currentTab === 'starred') {
+            filtered = allNotifications.filter(n => n.is_starred);
+        } else if (currentTab === 'archived') {
+            filtered = allNotifications.filter(n => n.is_archived);
+        }
+        
+        if (currentTab !== 'archived') {
+            filtered = filtered.filter(n => !n.is_archived); // Hide archived from others
+        }
+        
+        if (filtered.length === 0) {
+            listEl.classList.add('hidden');
+            emptyEl.classList.remove('hidden');
+        } else {
+            listEl.classList.remove('hidden');
+            emptyEl.classList.add('hidden');
+            filtered.forEach(n => listEl.appendChild(buildCard(n)));
+        }
+        refreshUnreadBadge();
     }
 
     // ===== دالة مكشوفة لمحرك الـ Polling لإضافة إشعارات في الأعلى =====
     window.prependNewNotifications = function(newNotifs) {
         if (!listEl) return;
         newNotifs.forEach(n => {
-            const card = buildCard(n);
-            listEl.prepend(card);
+            allNotifications.unshift(n);
         });
-        listEl.classList.remove('hidden');
-        emptyEl.classList.add('hidden');
-        refreshUnreadBadge();
+        renderList();
     };
 
     // ابدأ

@@ -46,7 +46,7 @@ class Notification extends Model
     public function readers()
     {
         return $this->belongsToMany(Customer::class, 'notification_reads')
-                    ->withPivot('read_at')
+                    ->withPivot('read_at', 'is_starred', 'is_archived')
                     ->withTimestamps();
     }
 }

@@ -322,16 +322,19 @@ class CustomerApiController extends Controller
 
         $notificationsList = $notificationsQuery->get();
 
-        // Get read notifications IDs for this customer
-        $readNotificationIds = $customer->readNotifications()->pluck('notifications.id')->toArray();
+        // Get read notifications and their pivot data for this customer
+        $readNotifications = $customer->readNotifications()->get()->keyBy('id');
 
         $unreadCount = 0;
 
-        $notifications = $notificationsList->map(function($notif) use ($readNotificationIds, &$unreadCount) {
-            $isRead = in_array($notif->id, $readNotificationIds);
+        $notifications = $notificationsList->map(function($notif) use ($readNotifications, &$unreadCount) {
+            $isRead = $readNotifications->has($notif->id);
             if (!$isRead) {
                 $unreadCount++;
             }
+            
+            $isStarred = $isRead ? (bool) $readNotifications[$notif->id]->pivot->is_starred : false;
+            $isArchived = $isRead ? (bool) $readNotifications[$notif->id]->pivot->is_archived : false;
 
             return [
                 'id' => $notif->id,
@@ -340,6 +343,8 @@ class CustomerApiController extends Controller
                 'image' => $notif->image_url ?? null,
                 'icon_type' => $notif->icon_type ?? 'notification',
                 'is_read' => $isRead,
+                'is_starred' => $isStarred,
+                'is_archived' => $isArchived,
                 'created_at' => $notif->created_at->diffForHumans(),
             ];
         });
@@ -403,6 +408,44 @@ class CustomerApiController extends Controller
         }
 
         return response()->json(['success' => true, 'message' => $message, 'is_read' => $newState]);
+    }
+
+    public function toggleNotificationStar(Request $request, $id)
+    {
+        $customer = $request->user();
+        $notification = \App\Models\Notification::find($id);
+        if (!$notification) return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
+
+        $pivotRow = $customer->readNotifications()->where('notification_id', $id)->first();
+        $newState = $pivotRow ? !$pivotRow->pivot->is_starred : true;
+
+        if ($pivotRow) {
+            $customer->readNotifications()->updateExistingPivot($id, ['is_starred' => $newState]);
+        } else {
+            // Create pivot if doesn't exist
+            $customer->readNotifications()->attach($id, ['is_starred' => $newState, 'read_at' => now()]);
+        }
+
+        return response()->json(['success' => true, 'is_starred' => $newState]);
+    }
+
+    public function toggleNotificationArchive(Request $request, $id)
+    {
+        $customer = $request->user();
+        $notification = \App\Models\Notification::find($id);
+        if (!$notification) return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
+
+        $pivotRow = $customer->readNotifications()->where('notification_id', $id)->first();
+        $newState = $pivotRow ? !$pivotRow->pivot->is_archived : true;
+
+        if ($pivotRow) {
+            $customer->readNotifications()->updateExistingPivot($id, ['is_archived' => $newState]);
+        } else {
+            // Create pivot if doesn't exist
+            $customer->readNotifications()->attach($id, ['is_archived' => $newState, 'read_at' => now()]);
+        }
+
+        return response()->json(['success' => true, 'is_archived' => $newState]);
     }
 
     public function faq(Request $request)
@@ -502,25 +545,31 @@ class CustomerApiController extends Controller
 
         $allNotifications = $notificationsQuery->get();
 
-        // Get read notifications IDs for this customer
-        $readNotificationIds = $customer->readNotifications()->pluck('notifications.id')->toArray();
+        // Get read notifications and their pivot data for this customer
+        $readNotifications = $customer->readNotifications()->get()->keyBy('id');
         $unreadCount = 0;
         $newNotifications = collect();
 
         foreach ($allNotifications as $notif) {
-            if (!in_array($notif->id, $readNotificationIds)) {
+            $isRead = $readNotifications->has($notif->id);
+            if (!$isRead) {
                 $unreadCount++;
             }
 
             // إذا كان هذا الإشعار أحدث من آخر إشعار يعلمه التطبيق
             if ($notif->id > (int)$lastId) {
+                $isStarred = $isRead ? (bool) $readNotifications[$notif->id]->pivot->is_starred : false;
+                $isArchived = $isRead ? (bool) $readNotifications[$notif->id]->pivot->is_archived : false;
+                
                 $newNotifications->push([
                     'id'         => $notif->id,
                     'subject'    => $notif->subject_ar ?: $notif->subject_en,
                     'body'       => $notif->body_ar ?: $notif->body_en,
                     'image'      => $notif->image_url ?? null,
                     'icon_type'  => $notif->icon_type ?? 'notification',
-                    'is_read'    => in_array($notif->id, $readNotificationIds),
+                    'is_read'    => $isRead,
+                    'is_starred' => $isStarred,
+                    'is_archived'=> $isArchived,
                     'created_at' => $notif->created_at->diffForHumans(),
                 ]);
             }
