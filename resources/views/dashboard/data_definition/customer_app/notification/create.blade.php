@@ -101,10 +101,10 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Customers <small class="text-muted">(optional)</small></label>
                                     <select name="customers[]" class="form-select @error('customers') is-invalid @enderror" multiple>
-                                        <option value="all" {{ old('customers') && in_array('all', old('customers')) ? 'selected' : '' }}>All Customers</option>
-                                        <option value="active" {{ old('customers') && in_array('active', old('customers')) ? 'selected' : '' }}>Active Users</option>
-                                        <option value="inactive" {{ old('customers') && in_array('inactive', old('customers')) ? 'selected' : '' }}>Inactive Users</option>
-                                        <option value="new" {{ old('customers') && in_array('new', old('customers')) ? 'selected' : '' }}>New Users</option>
+                                        <option value="all" {{ old('customers') && in_array('all', old('customers')) ? 'selected' : '' }}>All Customers (الكل)</option>
+                                        @foreach($customers as $customer)
+                                            <option value="{{ $customer->id }}" {{ old('customers') && in_array($customer->id, old('customers')) ? 'selected' : '' }}>{{ $customer->name }}</option>
+                                        @endforeach
                                     </select>
                                     <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                                     @error('customers') <div class="invalid-feedback">{{ $message }}</div> @enderror

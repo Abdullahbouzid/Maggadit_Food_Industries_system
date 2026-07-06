@@ -57,7 +57,8 @@ class NotificationController extends Controller
 
     public function create()
     {
-        return view('dashboard.data_definition.customer_app.notification.create');
+        $customers = \App\Models\Customer::select('id', 'name')->get();
+        return view('dashboard.data_definition.customer_app.notification.create', compact('customers'));
     }
 
     public function store(Request $request)
@@ -119,7 +120,8 @@ class NotificationController extends Controller
 
     public function edit(Notification $notification)
     {
-        return view('dashboard.data_definition.customer_app.notification.edit', compact('notification'));
+        $customers = \App\Models\Customer::select('id', 'name')->get();
+        return view('dashboard.data_definition.customer_app.notification.edit', compact('notification', 'customers'));
     }
 
     public function update(Request $request, Notification $notification)

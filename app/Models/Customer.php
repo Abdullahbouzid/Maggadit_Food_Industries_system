@@ -85,4 +85,12 @@ class Customer extends Authenticatable
 
         return 'https://blue-beaver-923812.hostingersite.com/uploads/customers/' . $this->avatar;
     }
+
+    // الإشعارات المقروءة
+    public function readNotifications()
+    {
+        return $this->belongsToMany(Notification::class, 'notification_reads')
+                    ->withPivot('read_at')
+                    ->withTimestamps();
+    }
 }

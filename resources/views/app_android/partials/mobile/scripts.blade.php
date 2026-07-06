@@ -111,10 +111,14 @@
             const maxId = Math.max(...newNotifs.map(n => n.id));
             setLastId(maxId);
 
-            // تحديث عداد الإشعارات غير المقروءة
-            const currentUnread = getUnread();
-            const newUnread = currentUnread + newNotifs.length;
-            updateNotificationBadge(newUnread);
+            // تحديث عداد الإشعارات غير المقروءة من السيرفر
+            if (data.unread_count !== undefined) {
+                updateNotificationBadge(data.unread_count);
+            } else {
+                const currentUnread = getUnread();
+                const newUnread = currentUnread + newNotifs.length;
+                updateNotificationBadge(newUnread);
+            }
 
             // عرض Toast لكل إشعار جديد (أو للأول فقط إذا كانت أكثر)
             if (newNotifs.length === 1) {

@@ -306,7 +306,7 @@ class CustomerApiController extends Controller
     {
         $customer = $request->user();
         
-        $notifications = \App\Models\Notification::where(function($query) use ($customer) {
+        $notificationsQuery = \App\Models\Notification::where(function($query) use ($customer) {
             // إشعارات للجميع: customers تحتوي على "all"
             $query->whereJsonContains('customers', 'all')
                   // أو channel = 'all'
@@ -318,15 +318,28 @@ class CustomerApiController extends Controller
                   });
         })
         ->where('is_sent', true)
-        ->latest()
-        ->get()
-        ->map(function($notif) {
+        ->latest();
+
+        $notificationsList = $notificationsQuery->get();
+
+        // Get read notifications IDs for this customer
+        $readNotificationIds = $customer->readNotifications()->pluck('notifications.id')->toArray();
+
+        $unreadCount = 0;
+
+        $notifications = $notificationsList->map(function($notif) use ($readNotificationIds, &$unreadCount) {
+            $isRead = in_array($notif->id, $readNotificationIds);
+            if (!$isRead) {
+                $unreadCount++;
+            }
+
             return [
                 'id' => $notif->id,
                 'subject' => $notif->subject_ar ?: $notif->subject_en,
                 'body' => $notif->body_ar ?: $notif->body_en,
                 'image' => $notif->image_url ?? null,
                 'icon_type' => $notif->icon_type ?? 'notification',
+                'is_read' => $isRead,
                 'created_at' => $notif->created_at->diffForHumans(),
             ];
         });
@@ -334,7 +347,7 @@ class CustomerApiController extends Controller
         return response()->json([
             'success' => true, 
             'notifications' => $notifications,
-            'unread_count' => count($notifications)
+            'unread_count' => $unreadCount
         ]);
     }
 
@@ -352,7 +365,20 @@ class CustomerApiController extends Controller
 
     public function markNotificationRead(Request $request, $id)
     {
-        return response()->json(['success' => true]);
+        $customer = $request->user();
+        
+        // التحقق من وجود الإشعار
+        $notification = \App\Models\Notification::find($id);
+        if (!$notification) {
+            return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
+        }
+
+        // إضافة الإشعار إلى قائمة الإشعارات المقروءة إذا لم يكن مقروءاً بالفعل
+        if (!$customer->readNotifications()->where('notification_id', $id)->exists()) {
+            $customer->readNotifications()->attach($id, ['read_at' => now()]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'تم تحديد الإشعار كمقروء']);
     }
 
     public function faq(Request $request)
@@ -436,7 +462,7 @@ class CustomerApiController extends Controller
         $customer = $request->user();
         $lastId = $request->input('last_id', 0);
 
-        $notifications = \App\Models\Notification::where(function($query) use ($customer) {
+        $notificationsQuery = \App\Models\Notification::where(function($query) use ($customer) {
             // إشعارات للجميع: customers تحتوي على "all"
             $query->whereJsonContains('customers', 'all')
                   // أو channel = 'all'
@@ -448,24 +474,39 @@ class CustomerApiController extends Controller
                   });
         })
         ->where('is_sent', true)
-        ->where('id', '>', (int)$lastId)
-        ->latest()
-        ->get()
-        ->map(function($notif) {
-            return [
-                'id'         => $notif->id,
-                'subject'    => $notif->subject_ar ?: $notif->subject_en,
-                'body'       => $notif->body_ar ?: $notif->body_en,
-                'image'      => $notif->image_url ?? null,
-                'icon_type'  => $notif->icon_type ?? 'notification',
-                'created_at' => $notif->created_at->diffForHumans(),
-            ];
-        });
+        ->latest();
+
+        $allNotifications = $notificationsQuery->get();
+
+        // Get read notifications IDs for this customer
+        $readNotificationIds = $customer->readNotifications()->pluck('notifications.id')->toArray();
+        $unreadCount = 0;
+        $newNotifications = collect();
+
+        foreach ($allNotifications as $notif) {
+            if (!in_array($notif->id, $readNotificationIds)) {
+                $unreadCount++;
+            }
+
+            // إذا كان هذا الإشعار أحدث من آخر إشعار يعلمه التطبيق
+            if ($notif->id > (int)$lastId) {
+                $newNotifications->push([
+                    'id'         => $notif->id,
+                    'subject'    => $notif->subject_ar ?: $notif->subject_en,
+                    'body'       => $notif->body_ar ?: $notif->body_en,
+                    'image'      => $notif->image_url ?? null,
+                    'icon_type'  => $notif->icon_type ?? 'notification',
+                    'is_read'    => in_array($notif->id, $readNotificationIds),
+                    'created_at' => $notif->created_at->diffForHumans(),
+                ]);
+            }
+        }
 
         return response()->json([
             'success'            => true,
-            'new_notifications'  => $notifications,
-            'count'              => count($notifications)
+            'new_notifications'  => $newNotifications,
+            'count'              => $newNotifications->count(),
+            'unread_count'       => $unreadCount
         ]);
     }
 }

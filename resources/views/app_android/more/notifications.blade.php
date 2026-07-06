@@ -123,7 +123,22 @@
     // ===== LocalStorage helpers =====
     function getReadIds()  { try { return new Set(JSON.parse(localStorage.getItem(LS_READ) || '[]')); } catch { return new Set(); } }
     function saveReadIds(s){ localStorage.setItem(LS_READ, JSON.stringify([...s])); }
-    function markRead(id)  { const s = getReadIds(); s.add(parseInt(id)); saveReadIds(s); }
+    function markRead(id)  { 
+        const s = getReadIds(); s.add(parseInt(id)); saveReadIds(s); 
+        
+        // Sync with server if logged in
+        if (API_TOKEN) {
+            fetch(`${API_BASE}/notifications/${id}/read`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + API_TOKEN,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).catch(console.error);
+        }
+    }
     function isRead(id)    { return getReadIds().has(parseInt(id)); }
 
     // ===== أيقونات وألوان حسب نوع الإشعار =====
@@ -138,7 +153,8 @@
 
     // ===== بناء بطاقة إشعار =====
     function buildCard(notif) {
-        const read  = isRead(notif.id);
+        // Use server provided is_read if available, otherwise fallback to local storage
+        const read  = notif.is_read !== undefined ? notif.is_read : isRead(notif.id);
         const c     = cfg(notif.icon_type || notif.type || 'notification');
         const div   = document.createElement('div');
         div.className = `notif-card ${read ? '' : 'unread'} bg-white rounded-2xl shadow-sm p-4 flex gap-3 items-start cursor-pointer slide-in`;
@@ -176,8 +192,11 @@
         modalIcon.innerHTML    = `<i class="fas ${c.icon}"></i>`;
 
         // تعليم كمقروء
-        if (!isRead(notif.id)) {
+        // Check if unread (either from local state or server flag)
+        const isUnread = cardEl.classList.contains('unread');
+        if (isUnread) {
             markRead(notif.id);
+            if (notif.is_read !== undefined) notif.is_read = true; // Update local object
             cardEl.classList.remove('unread');
             const dot = cardEl.querySelector('.unread-dot');
             if (dot) dot.remove();
@@ -259,12 +278,19 @@
             listEl.classList.remove('hidden');
             listEl.innerHTML = '';
             notifs.forEach(n => listEl.appendChild(buildCard(n)));
-            refreshUnreadBadge();
+            // Update global unread badge if API returned it
+            if (data.unread_count !== undefined) {
+                if (typeof window.updateNotificationBadge === 'function') {
+                    window.updateNotificationBadge(data.unread_count);
+                }
+            } else {
+                refreshUnreadBadge();
+            }
 
             // صفّر الشارة لأن المستخدم دخل الصفحة
-            if (typeof window.resetNotifBadge === 'function') {
-                setTimeout(window.resetNotifBadge, 1500);
-            }
+            // Actually, we shouldn't reset it to 0 just by opening the page, 
+            // only when they actually read the notifications.
+            // But if requested, we can keep it (or comment out if we want true read status).
 
         } catch (e) {
             loadingEl.classList.add('hidden');

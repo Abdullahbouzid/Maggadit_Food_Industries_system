@@ -121,12 +121,13 @@
                                     <label class="form-label fw-semibold">Customers <small class="text-muted">(optional)</small></label>
                                     <select name="customers[]" class="form-select @error('customers') is-invalid @enderror" multiple>
                                         @php
-                                            $selectedCustomers = old('customers', json_decode($notification->customers ?? '[]', true) ?? []);
+                                            $selectedCustomers = old('customers', is_string($notification->customers) ? json_decode($notification->customers, true) : ($notification->customers ?? []));
+                                            if (!is_array($selectedCustomers)) $selectedCustomers = [];
                                         @endphp
-                                        <option value="all" {{ in_array('all', $selectedCustomers) ? 'selected' : '' }}>All Customers</option>
-                                        <option value="active" {{ in_array('active', $selectedCustomers) ? 'selected' : '' }}>Active Users</option>
-                                        <option value="inactive" {{ in_array('inactive', $selectedCustomers) ? 'selected' : '' }}>Inactive Users</option>
-                                        <option value="new" {{ in_array('new', $selectedCustomers) ? 'selected' : '' }}>New Users</option>
+                                        <option value="all" {{ in_array('all', $selectedCustomers) ? 'selected' : '' }}>All Customers (الكل)</option>
+                                        @foreach($customers as $customer)
+                                            <option value="{{ $customer->id }}" {{ in_array($customer->id, $selectedCustomers) ? 'selected' : '' }}>{{ $customer->name }}</option>
+                                        @endforeach
                                     </select>
                                     <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                                     @error('customers') <div class="invalid-feedback">{{ $message }}</div> @enderror

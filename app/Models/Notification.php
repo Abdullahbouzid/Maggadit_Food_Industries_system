@@ -41,4 +41,12 @@ class Notification extends Model
     {
         return $this->video ? asset('uploads/' . $this->video) : $this->video;
     }
+
+    // علاقة القراءة مع العملاء
+    public function readers()
+    {
+        return $this->belongsToMany(Customer::class, 'notification_reads')
+                    ->withPivot('read_at')
+                    ->withTimestamps();
+    }
 }
