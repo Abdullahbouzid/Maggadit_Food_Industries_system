@@ -53,7 +53,10 @@
         body.ptr-refreshing .ptr-indicator { transform: translateY(0); }
         #toast-container { position: fixed; top: 80px; left: 16px; right: 16px; z-index: 9999; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .sticky { z-index: 15; }
-        .toast-item { transition: transform 0.2s, opacity 0.2s; }
+        .toast-item { transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 0.3s; pointer-events: auto; cursor: grab; user-select: none; }
+        .toast-item:active { cursor: grabbing; }
+        .toast-dismissed-left { transform: translateX(-150%) !important; opacity: 0 !important; }
+        .toast-dismissed-right { transform: translateX(150%) !important; opacity: 0 !important; }
 </style>
 <!-- مؤشر السحب للتحديث (يظهر في الأعلى) -->
 <div id="ptr-indicator" class="ptr-indicator">
@@ -120,38 +123,76 @@
         else if (type === 'error') bgColor = '#ef4444';
         else if (type === 'warning') bgColor = '#f59e0b';
         
-        toast.className = 'toast-item';
+        toast.className = 'toast-item flex items-center justify-between gap-3';
         toast.style.cssText = `
             background: ${bgColor};
             color: white;
             padding: 12px 20px;
-            border-radius: 40px;
+            border-radius: 20px;
             font-size: 0.9rem;
             font-weight: 500;
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             backdrop-filter: blur(4px);
             transform: translateY(-20px);
             opacity: 0;
-            transition: all 0.2s ease;
-            text-align: center;
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 0.3s;
+            text-align: right;
             font-family: 'Inter', sans-serif;
-            pointer-events: none;
             width: auto;
             max-width: 90%;
+            touch-action: pan-y;
         `;
-        toast.innerText = message;
+        toast.innerHTML = `<span class="flex-1">${message}</span><div class="w-1 h-8 bg-white/30 rounded-full"></div>`;
         container.appendChild(toast);
         
+        // Swipe to dismiss logic
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+        
+        toast.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+            toast.style.transition = 'none';
+        }, {passive: true});
+        
+        toast.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            currentX = e.touches[0].clientX - startX;
+            toast.style.transform = `translateX(${currentX}px)`;
+            toast.style.opacity = 1 - Math.abs(currentX) / 200;
+        }, {passive: true});
+        
+        toast.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            toast.style.transition = 'transform 0.3s, opacity 0.3s';
+            if (currentX > 80) {
+                toast.classList.add('toast-dismissed-right');
+                setTimeout(() => toast.remove(), 300);
+            } else if (currentX < -80) {
+                toast.classList.add('toast-dismissed-left');
+                setTimeout(() => toast.remove(), 300);
+            } else {
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+            }
+        });
+
         requestAnimationFrame(() => {
             toast.style.transform = 'translateY(0)';
             toast.style.opacity = '1';
         });
         
-        setTimeout(() => {
-            toast.style.transform = 'translateY(-20px)';
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, duration);
+        if (duration > 0) {
+            setTimeout(() => {
+                if(toast.parentElement) {
+                    toast.style.transform = 'translateY(-20px)';
+                    toast.style.opacity = '0';
+                    setTimeout(() => { if(toast.parentElement) toast.remove(); }, 300);
+                }
+            }, duration);
+        }
     }
 
     // ========== 2. شارة الإشعارات (تُدار من قِبل محرك الـ Polling في scripts.blade.php) ==========

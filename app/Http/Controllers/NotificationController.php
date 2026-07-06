@@ -92,9 +92,9 @@ class NotificationController extends Controller
             $data['video'] = $videoPath;
         }
 
-        // معالجة العملاء (JSON)
+        // معالجة العملاء (المصفوفة سيتم تحويلها تلقائياً عبر الكاستنج في الـ Model)
         if ($request->filled('customers')) {
-            $data['customers'] = json_encode($request->customers);
+            $data['customers'] = $request->customers;
         }
 
         $data['is_sent'] = $request->has('is_sent');
@@ -163,7 +163,7 @@ class NotificationController extends Controller
 
         // معالجة العملاء
         if ($request->filled('customers')) {
-            $data['customers'] = json_encode($request->customers);
+            $data['customers'] = $request->customers;
         } else {
             $data['customers'] = null;
         }
@@ -298,7 +298,22 @@ class NotificationController extends Controller
                 'data' => [
                     'id' => (string) $notification->id,
                     'icon_type' => $notification->icon_type ?? 'notification',
-                ]
+                ],
+                'android' => [
+                    'notification' => [
+                        'sound' => 'default',
+                        'channel_id' => 'maggadit_channel',
+                        'priority' => 'high',
+                    ],
+                ],
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'sound' => 'default',
+                            'badge' => 1,
+                        ],
+                    ],
+                ],
             ]);
 
             // تحديد المستلمين

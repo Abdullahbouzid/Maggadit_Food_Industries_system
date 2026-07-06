@@ -140,6 +140,60 @@
         }
     }
     function isRead(id)    { return getReadIds().has(parseInt(id)); }
+    
+    // ===== تبديل حالة القراءة يدوياً =====
+    async function toggleReadStatus(id, cardEl, notifObj) {
+        if (!API_TOKEN) return;
+        
+        try {
+            const resp = await fetch(`${API_BASE}/notifications/${id}/toggle-read`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + API_TOKEN,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                // Update local object
+                notifObj.is_read = data.is_read;
+                
+                // Update local storage
+                const s = getReadIds();
+                if (data.is_read) s.add(parseInt(id));
+                else s.delete(parseInt(id));
+                saveReadIds(s);
+                
+                // Update UI
+                const dot = cardEl.querySelector('.unread-dot');
+                if (data.is_read) {
+                    cardEl.classList.remove('unread');
+                    if (dot) dot.remove();
+                } else {
+                    cardEl.classList.add('unread');
+                    if (!dot) {
+                        const badgeContainer = cardEl.querySelector('.flex.items-center.gap-1.flex-shrink-0');
+                        if (badgeContainer) badgeContainer.innerHTML += '<span class="unread-dot"></span>';
+                    }
+                }
+                
+                // Update button icon
+                const toggleBtnIcon = cardEl.querySelector('.toggle-read-btn i');
+                if (toggleBtnIcon) {
+                    toggleBtnIcon.className = data.is_read ? 'fas fa-envelope-open-text' : 'fas fa-envelope';
+                }
+                
+                refreshUnreadBadge();
+                if (typeof showToast === 'function') {
+                    showToast(data.message, 'success', 2000);
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
 
     // ===== أيقونات وألوان حسب نوع الإشعار =====
     const typeConfig = {
@@ -165,16 +219,30 @@
             </div>
             <div class="flex-1 min-w-0">
                 <div class="flex justify-between items-start gap-2 mb-1">
-                    <h3 class="font-bold text-sm text-gray-800 truncate">${escHtml(notif.subject || notif.title || '')}</h3>
+                    <h3 class="font-bold text-sm text-gray-800 truncate" onclick="openModal(this.closest('.notif-card').notifData, this.closest('.notif-card'))">${escHtml(notif.subject || notif.title || '')}</h3>
                     <div class="flex items-center gap-1 flex-shrink-0">
                         <span class="badge-type ${c.labelCls}">${c.label}</span>
                         ${!read ? '<span class="unread-dot"></span>' : ''}
                     </div>
                 </div>
-                <p class="text-gray-500 text-xs leading-relaxed line-clamp-2">${escHtml(notif.body || notif.message || '')}</p>
-                <p class="text-gray-400 text-[10px] mt-2">${escHtml(notif.created_at || notif.date || '')}</p>
+                <p class="text-gray-500 text-xs leading-relaxed line-clamp-2" onclick="openModal(this.closest('.notif-card').notifData, this.closest('.notif-card'))">${escHtml(notif.body || notif.message || '')}</p>
+                <div class="flex justify-between items-center mt-2">
+                    <p class="text-gray-400 text-[10px]">${escHtml(notif.created_at || notif.date || '')}</p>
+                    <button class="toggle-read-btn text-gray-400 hover:text-purple-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" title="تغيير حالة القراءة">
+                        <i class="fas ${read ? 'fa-envelope-open-text' : 'fa-envelope'}"></i>
+                    </button>
+                </div>
             </div>`;
-        div.addEventListener('click', () => openModal(notif, div));
+            
+        div.notifData = notif; // Attach data to DOM element for onclick access
+        
+        // Setup toggle button click
+        const toggleBtn = div.querySelector('.toggle-read-btn');
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent modal from opening
+            toggleReadStatus(notif.id, div, notif);
+        });
+        
         return div;
     }
 

@@ -53,6 +53,7 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::post('/notifications/check-new', [CustomerApiController::class, 'checkNewNotifications']);
         Route::post('/fcm-token', [CustomerApiController::class, 'updateFcmToken']);
         Route::post('/notifications/{id}/read', [CustomerApiController::class, 'markNotificationRead']);
+        Route::post('/notifications/{id}/toggle-read', [CustomerApiController::class, 'toggleNotificationRead']);
         Route::get('/faq', [CustomerApiController::class, 'faq']);
         Route::get('/privacy-policy', [CustomerApiController::class, 'privacyPolicy']);
         Route::get('/about-us', [CustomerApiController::class, 'aboutUs']);

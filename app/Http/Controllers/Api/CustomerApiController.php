@@ -381,6 +381,30 @@ class CustomerApiController extends Controller
         return response()->json(['success' => true, 'message' => 'تم تحديد الإشعار كمقروء']);
     }
 
+    public function toggleNotificationRead(Request $request, $id)
+    {
+        $customer = $request->user();
+        
+        $notification = \App\Models\Notification::find($id);
+        if (!$notification) {
+            return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
+        }
+
+        $isRead = $customer->readNotifications()->where('notification_id', $id)->exists();
+
+        if ($isRead) {
+            $customer->readNotifications()->detach($id);
+            $message = 'تم تحديد الإشعار كغير مقروء';
+            $newState = false;
+        } else {
+            $customer->readNotifications()->attach($id, ['read_at' => now()]);
+            $message = 'تم تحديد الإشعار كمقروء';
+            $newState = true;
+        }
+
+        return response()->json(['success' => true, 'message' => $message, 'is_read' => $newState]);
+    }
+
     public function faq(Request $request)
     {
         $faqs = \App\Models\Faq::all();
