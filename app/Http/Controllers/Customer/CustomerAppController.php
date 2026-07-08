@@ -635,9 +635,17 @@ class CustomerAppController extends Controller
     /**
      * عرض صفحة "نبذة عنا" مع بيانات المنظمة النشطة للعميل
      */
-    public function aboutUs()
+    public function aboutUs(Request $request)
     {
         $customer = Auth::guard('customer')->user();
+
+        // Fallback to API token authentication if session user not found (e.g., in WebView without session cookie)
+        if (!$customer) {
+            if (Auth::guard('api')->check()) {
+                $customer = Auth::guard('api')->user();
+            }
+        }
+
         $about = null;
 
         if ($customer) {
