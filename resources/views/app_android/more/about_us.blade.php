@@ -167,10 +167,12 @@
 
     <script>
         (function() {
+            const API_BASE = 'https://blue-beaver-923812.hostingersite.com/api/customer';
             const token = localStorage.getItem('token') || localStorage.getItem('api_token') || @json(session('api_token'));
             const fallback = document.getElementById('about-fallback');
             const contentContainer = document.getElementById('about-content');
-            if (!token || !fallback || !contentContainer) {
+            
+            if (!fallback || !contentContainer) {
                 return;
             }
 
@@ -305,31 +307,43 @@
                 contentContainer.innerHTML = aboutHtml.join('');
             }
 
-            fetch('/api/customer/about-us', {
+            function showError(message) {
+                fallback.innerHTML = `
+                    <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
+                    <h3 class="text-lg font-bold text-gray-800">لا توجد نبذة</h3>
+                    <p class="text-gray-500 text-sm">${escapeHtml(message)}</p>
+                `;
+            }
+
+            // محاولة الجلب من الـ API
+            if (!token) {
+                showError('لم يتم تسجيل دخول. يرجى تسجيل الدخول أولاً.');
+                return;
+            }
+
+            fetch(API_BASE + '/about-us', {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Server error: ' + response.status);
+                return response.json();
+            })
             .then(data => {
                 if (data.success && data.content) {
                     renderAbout(data.content);
                 } else {
-                    fallback.innerHTML = `
-                        <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
-                        <h3 class="text-lg font-bold text-gray-800">لا توجد نبذة</h3>
-                        <p class="text-gray-500 text-sm">لم يتم إضافة نبذة لهذه المنظمة بعد.</p>
-                    `;
+                    showError('لم يتم إضافة نبذة لهذه المنظمة بعد.');
                 }
             })
-            .catch(() => {
-                fallback.innerHTML = `
-                    <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
-                    <h3 class="text-lg font-bold text-gray-800">لا توجد نبذة</h3>
-                    <p class="text-gray-500 text-sm">لم يتم إضافة نبذة لهذه المنظمة بعد.</p>
-                `;
+            .catch(error => {
+                console.error('Fetch error:', error);
+                showError('حدث خطأ في الاتصال بالسيرفر. يرجى المحاولة لاحقاً.');
             });
         })();
     </script>
