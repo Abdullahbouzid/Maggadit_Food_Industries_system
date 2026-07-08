@@ -64,4 +64,10 @@ class Organization extends Model
                     ->wherePivot('is_active', true)
                     ->withTimestamps();
     }
+// app/Models/Organization.php
+
+public function about()
+{
+    return $this->hasOne(OrganizationAbout::class);
+}
 }

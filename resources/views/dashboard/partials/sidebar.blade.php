@@ -230,6 +230,13 @@
                             <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">إرسال إشعار</small>
                         </div>
                     </a>
+                     <!-- 5. Organization About (جديد) -->
+                    <a href="{{ route('organization-about.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
+                        <div class="card-body d-flex flex-column align-items-center py-4">
+                            <i data-feather="info" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
+                            <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">نبذة المنظمات</small>
+                        </div>
+                    </a>
 
                 </div>
             </div>

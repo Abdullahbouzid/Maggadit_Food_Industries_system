@@ -632,4 +632,18 @@ class CustomerAppController extends Controller
         $customer = Auth::guard('customer')->user();
         return view('app_android.more', compact('customer'));
     }
+    /**
+     * عرض صفحة "نبذة عنا" مع بيانات المنظمة النشطة للعميل
+     */
+    public function aboutUs()
+    {
+        $customer = Auth::guard('customer')->user();
+        $about = null;
+
+        if ($customer && $customer->activeOrganization) {
+            $about = $customer->activeOrganization->about;
+        }
+
+        return view('app_android.more.about_us', compact('about', 'customer'));
+    }
 }

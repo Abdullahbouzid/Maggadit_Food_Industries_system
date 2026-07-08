@@ -11,99 +11,154 @@
             <i class="fas fa-arrow-right"></i> رجوع
         </button>
 
-        <!-- الشعار والنبذة -->
-        <div class="text-center mb-6">
-            <div class="w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto shadow-lg mb-3">
-                <i class="fas fa-utensils text-white text-4xl"></i>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-800">ماجاديت للصناعات الغذائية</h1>
-            <p class="text-gray-500 text-sm mt-1">جودة تذوقها الثقة</p>
-        </div>
+        @if($about)
+            <!-- صورة الغلاف إن وجدت -->
+            @if($about->cover_image_url)
+                <div class="w-full h-48 rounded-2xl overflow-hidden mb-4 shadow-md">
+                    <img src="{{ $about->cover_image_url }}" alt="غلاف" class="w-full h-full object-cover">
+                </div>
+            @endif
 
-        <!-- قصتنا -->
-        <div class="bg-white rounded-2xl shadow-md p-5 mb-5">
-            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
-                <i class="fas fa-book-open text-purple-600"></i> قصتنا
-            </h2>
-            <p class="text-gray-600 text-sm leading-relaxed">
-                تأسست ماجاديت للصناعات الغذائية عام 2010 بهدف تقديم منتجات غذائية عالية الجودة للمستهلكين في المملكة العربية السعودية والمنطقة. 
-                بدأنا بخط صغير لإنتاج الحلويات، ثم توسعنا لنشمل الوجبات الخفيفة والمعلبات والحبوب، وأصبحنا علامة موثوقة في كل بيت سعودي.
-            </p>
-        </div>
+            <!-- الشعار والنبذة -->
+            <div class="text-center mb-6">
+                @if($about->image_url)
+                    <img src="{{ $about->image_url }}" alt="{{ $about->title ?? 'الشعار' }}" class="w-24 h-24 rounded-2xl object-cover mx-auto shadow-lg mb-3 border-2 border-white">
+                @else
+                    <div class="w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto shadow-lg mb-3">
+                        <i class="fas fa-utensils text-white text-4xl"></i>
+                    </div>
+                @endif
+                <h1 class="text-2xl font-bold text-gray-800">{{ $about->title ?? 'ماجاديت للصناعات الغذائية' }}</h1>
+                <p class="text-gray-500 text-sm mt-1">{{ $about->subtitle ?? 'جودة تذوقها الثقة' }}</p>
+            </div>
 
-        <!-- الرسالة والرؤية -->
-        <div class="grid grid-cols-2 gap-4 mb-5">
-            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 text-center">
-                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <i class="fas fa-bullseye text-purple-600 text-lg"></i>
-                </div>
-                <h3 class="font-bold text-gray-800 text-sm">رؤيتنا</h3>
-                <p class="text-xs text-gray-500 mt-1">أن نكون الخيار الأول في الأغذية الصحية واللذيذة في الشرق الأوسط</p>
+            <!-- قصتنا (الوصف) -->
+            <div class="bg-white rounded-2xl shadow-md p-5 mb-5">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
+                    <i class="fas fa-book-open text-purple-600"></i> قصتنا
+                </h2>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    {{ $about->description ?? 'لا توجد قصة حالياً.' }}
+                </p>
             </div>
-            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 text-center">
-                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <i class="fas fa-heart text-purple-600 text-lg"></i>
-                </div>
-                <h3 class="font-bold text-gray-800 text-sm">رسالتنا</h3>
-                <p class="text-xs text-gray-500 mt-1">توفير غذاء آمن وممتع بأسعار معقولة، مع الالتزام بأعلى معايير الجودة</p>
-            </div>
-        </div>
 
-        <!-- قيمنا -->
-        <div class="bg-white rounded-2xl shadow-md p-5 mb-5">
-            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
-                <i class="fas fa-gem text-purple-600"></i> قيمنا الأساسية
-            </h2>
-            <div class="space-y-3">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-check-circle text-green-500 text-sm"></i>
-                    <span class="text-sm text-gray-700">الجودة أولاً – نختار أفضل المكونات</span>
+            <!-- الرسالة والرؤية -->
+            <div class="grid grid-cols-2 gap-4 mb-5">
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 text-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-bullseye text-purple-600 text-lg"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">رؤيتنا</h3>
+                    <p class="text-xs text-gray-500 mt-1">{{ $about->vision ?? 'لا توجد رؤية محددة' }}</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-handshake text-green-500 text-sm"></i>
-                    <span class="text-sm text-gray-700">الثقة والشفافية – نضع العميل في قلب اهتمامنا</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-leaf text-green-500 text-sm"></i>
-                    <span class="text-sm text-gray-700">الاستدامة – نحرص على البيئة والمجتمع</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-chart-line text-green-500 text-sm"></i>
-                    <span class="text-sm text-gray-700">الابتكار – نطور منتجاتنا باستمرار</span>
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 text-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-heart text-purple-600 text-lg"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">رسالتنا</h3>
+                    <p class="text-xs text-gray-500 mt-1">{{ $about->mission ?? 'لا توجد رسالة محددة' }}</p>
                 </div>
             </div>
-        </div>
 
-        <!-- إحصائيات سريعة -->
-        <div class="grid grid-cols-2 gap-4 mb-5">
-            <div class="bg-white rounded-2xl shadow-md p-3 text-center">
-                <p class="text-2xl font-bold text-purple-600">+15</p>
-                <p class="text-xs text-gray-500">عاماً من التميز</p>
+            <!-- قيمنا -->
+            <div class="bg-white rounded-2xl shadow-md p-5 mb-5">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
+                    <i class="fas fa-gem text-purple-600"></i> قيمنا الأساسية
+                </h2>
+                <div class="space-y-3">
+                    @php
+                        $values = is_array($about->values) ? $about->values : json_decode($about->values, true);
+                    @endphp
+                    @if($values && count($values))
+                        @foreach($values as $value)
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-check-circle text-green-500 text-sm"></i>
+                                <span class="text-sm text-gray-700">{{ $value }}</span>
+                            </div>
+                        @endforeach
+                    @else
+                        <p class="text-gray-500 text-sm">لا توجد قيم محددة.</p>
+                    @endif
+                </div>
             </div>
-            <div class="bg-white rounded-2xl shadow-md p-3 text-center">
-                <p class="text-2xl font-bold text-purple-600">+200</p>
-                <p class="text-xs text-gray-500">منتج متنوع</p>
-            </div>
-            <div class="bg-white rounded-2xl shadow-md p-3 text-center">
-                <p class="text-2xl font-bold text-purple-600">+1.5M</p>
-                <p class="text-xs text-gray-500">عميل سعيد</p>
-            </div>
-            <div class="bg-white rounded-2xl shadow-md p-3 text-center">
-                <p class="text-2xl font-bold text-purple-600">+50</p>
-                <p class="text-xs text-gray-500">شريك موزع</p>
-            </div>
-        </div>
 
-        <!-- خريطة تواصل -->
-        <div class="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl p-5 text-white text-center">
-            <i class="fas fa-headset text-3xl mb-2"></i>
-            <h3 class="font-bold text-lg">نحن هنا لخدمتك</h3>
-            <p class="text-sm opacity-90 mt-1">لأي استفسار أو اقتراح، لا تتردد في التواصل مع فريق الدعم</p>
-            <a href="{{ route('customer.contact') }}" class="inline-block mt-3 bg-white text-purple-600 font-semibold px-5 py-2 rounded-full text-sm shadow-md transition hover:scale-105">
-                تواصل معنا
-            </a>
-        </div>
-            <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+            <!-- ========== الإحصائيات (معدلة) ========== -->
+         <!-- ========== الإحصائيات ========== -->
+@php
+    $stats = [];
+    if (!empty($about->statistics)) {
+        $raw = is_array($about->statistics) ? $about->statistics : json_decode($about->statistics, true);
+        if (is_array($raw)) {
+            // دمج الأزواج: نبحث عن key ثم القيمة التالية لها
+            $i = 0;
+            $count = count($raw);
+            while ($i < $count) {
+                $item = $raw[$i];
+                if (isset($item['key']) && isset($item['value'])) {
+                    // إذا كان العنصر يحتوي على كلا المفتاح والقيمة
+                    $stats[] = ['key' => $item['key'], 'value' => $item['value']];
+                    $i++;
+                } elseif (isset($item['key']) && !isset($item['value']) && isset($raw[$i+1]['value'])) {
+                    // إذا كان العنصر الحالي يحتوي على مفتاح والعنصر التالي يحتوي على قيمة
+                    $stats[] = ['key' => $item['key'], 'value' => $raw[$i+1]['value']];
+                    $i += 2;
+                } else {
+                    // تخطي العناصر غير المفهومة
+                    $i++;
+                }
+            }
+        }
+    }
+@endphp
+@if(!empty($stats))
+    <div class="grid grid-cols-2 gap-4 mb-5">
+        @foreach($stats as $stat)
+            @php
+                $key = $stat['key'] ?? '';
+                $value = $stat['value'] ?? '';
+                $icon = 'fa-chart-simple';
+                if (str_contains(strtolower($key), 'عام') || str_contains(strtolower($key), 'سنة') || str_contains(strtolower($key), 'year')) $icon = 'fa-calendar-alt';
+                elseif (str_contains(strtolower($key), 'منتج') || str_contains(strtolower($key), 'product')) $icon = 'fa-box';
+                elseif (str_contains(strtolower($key), 'عميل') || str_contains(strtolower($key), 'customer')) $icon = 'fa-users';
+                elseif (str_contains(strtolower($key), 'شريك') || str_contains(strtolower($key), 'partner')) $icon = 'fa-handshake';
+                elseif (str_contains(strtolower($key), 'طلب') || str_contains(strtolower($key), 'order')) $icon = 'fa-shopping-cart';
+            @endphp
+            <div class="bg-white rounded-2xl shadow-md p-4 text-center transition hover:shadow-lg hover:-translate-y-1">
+                <div class="text-3xl font-bold text-purple-600 mb-1">
+                    {{ is_numeric($value) ? number_format($value) : $value }}
+                </div>
+                <div class="text-xs text-gray-500 flex items-center justify-center gap-1">
+                    <i class="fas {{ $icon }} text-purple-400"></i>
+                    {{ ucfirst(str_replace('_', ' ', $key)) }}
+                </div>
+            </div>
+        @endforeach
+    </div>
+@else
+    <div class="bg-white rounded-2xl shadow-md p-4 text-center">
+        <p class="text-gray-500 text-sm">لا توجد إحصائيات متاحة</p>
+    </div>
+@endif
+
+            <!-- خريطة تواصل -->
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl p-5 text-white text-center">
+                <i class="fas fa-headset text-3xl mb-2"></i>
+                <h3 class="font-bold text-lg">نحن هنا لخدمتك</h3>
+                <p class="text-sm opacity-90 mt-1">لأي استفسار أو اقتراح، لا تتردد في التواصل مع فريق الدعم</p>
+                <a href="{{ route('customer.contact') }}" class="inline-block mt-3 bg-white text-purple-600 font-semibold px-5 py-2 rounded-full text-sm shadow-md transition hover:scale-105">
+                    تواصل معنا
+                </a>
+            </div>
+        @else
+            <!-- في حال عدم وجود نبذة -->
+            <div class="bg-white rounded-2xl shadow-md p-5 text-center">
+                <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
+                <h3 class="text-lg font-bold text-gray-800">لا توجد نبذة</h3>
+                <p class="text-gray-500 text-sm">لم يتم إضافة نبذة لهذه المنظمة بعد.</p>
+            </div>
+        @endif
+
+        <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3">
             <br><br>
         </div>
     </div>

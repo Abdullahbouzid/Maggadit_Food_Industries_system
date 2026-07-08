@@ -37,6 +37,7 @@ use App\Http\Controllers\DeviceController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrganizationAboutController;
 
 
 use Illuminate\Http\Request;
@@ -293,9 +294,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/privacy-policy', function () {
         return view('app_android.more.privacy_policy');
     })->name('privacy');
-    Route::get('/about-us', function () {
-        return view('app_android.more.about_us');
-    })->name('about');
+    Route::get('/about-us', [CustomerAppController::class, 'aboutUs'])->name('about');
     Route::get('/contact-us', function () {
         return view('app_android.more.contact_us');
     })->name('contact');
@@ -364,6 +363,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('organizations/template', [OrganizationController::class, 'downloadTemplate'])->name('organizations.template');
     Route::post('organizations/import', [OrganizationController::class, 'import'])->name('organizations.import');
     Route::resource('organizations', OrganizationController::class);
+   
+    // ========== أضف هنا مسارات نبذة المنظمة ==========
+Route::resource('organization-about', OrganizationAboutController::class);
+
     Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
     Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
     Route::get('customers/template', [CustomerController::class, 'downloadTemplate'])->name('customers.template');
