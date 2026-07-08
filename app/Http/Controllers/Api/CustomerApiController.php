@@ -461,7 +461,23 @@ class CustomerApiController extends Controller
 
     public function aboutUs(Request $request)
     {
-        return response()->json(['success' => true, 'content' => 'من نحن...']);
+        $customer = $request->user();
+        $about = null;
+
+        if ($customer) {
+            // First try the direct active_organization_id relation
+            $activeOrg = $customer->activeOrganization;
+            // If not set, fallback to first active organization from pivot
+            if (!$activeOrg) {
+                $activeOrg = $customer->activeOrganizations()->first();
+            }
+            if ($activeOrg) {
+                $about = $activeOrg->about;
+            }
+        }
+
+        // Return the about object as array, or null if none
+        return response()->json(['success' => true, 'content' => $about ? $about->toArray() : null]);
     }
 
     public function contactUs(Request $request)

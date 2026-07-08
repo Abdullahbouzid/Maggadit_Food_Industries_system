@@ -68,31 +68,55 @@
                                 @endif
                             </div>
 
-                            {{-- Statistics --}}
+                            {{-- Statistics (المعدلة) --}}
                             <div class="col-12">
                                 <h6 class="fw-bold text-muted">الإحصائيات</h6>
-                                @php $stats = json_decode($organizationAbout->statistics ?? '{}', true); @endphp
-                                @if($stats && count($stats) > 0)
-                                    <div class="row">
-                                        @foreach($stats as $key => $value)
-                                            @php
-                                                // Prepare display value for statistics
-                                                if (is_array($value)) {
-                                                    // If array of scalars, join with comma; otherwise JSON encode
-                                                    $filtered = array_filter($value, fn($v) => is_scalar($v));
-                                                    if (count($filtered) === count($value)) {
-                                                        $displayValue = implode(', ', $filtered);
-                                                    } else {
-                                                        $displayValue = json_encode($value, JSON_UNESCAPED_UNICODE);
-                                                    }
+                                @php
+                                    $stats = [];
+                                    if (!empty($organizationAbout->statistics)) {
+                                        $raw = is_array($organizationAbout->statistics) ? $organizationAbout->statistics : json_decode($organizationAbout->statistics, true);
+                                        if (is_array($raw)) {
+                                            $i = 0;
+                                            $count = count($raw);
+                                            while ($i < $count) {
+                                                $item = $raw[$i];
+                                                if (isset($item['key']) && isset($item['value'])) {
+                                                    $stats[] = ['key' => $item['key'], 'value' => $item['value']];
+                                                    $i++;
+                                                } elseif (isset($item['key']) && !isset($item['value']) && isset($raw[$i+1]['value'])) {
+                                                    $stats[] = ['key' => $item['key'], 'value' => $raw[$i+1]['value']];
+                                                    $i += 2;
+                                                } elseif (isset($item['value']) && !isset($item['key']) && isset($raw[$i-1]['key'])) {
+                                                    $i++;
                                                 } else {
-                                                    $displayValue = $value;
+                                                    $i++;
                                                 }
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                @if(!empty($stats))
+                                    <div class="row g-3 mt-2">
+                                        @foreach($stats as $stat)
+                                            @php
+                                                $key = $stat['key'] ?? '';
+                                                $value = $stat['value'] ?? '';
+                                                $icon = 'fa-chart-simple';
+                                                if (str_contains(strtolower($key), 'عام') || str_contains(strtolower($key), 'سنة') || str_contains(strtolower($key), 'year')) $icon = 'fa-calendar-alt';
+                                                elseif (str_contains(strtolower($key), 'منتج') || str_contains(strtolower($key), 'product')) $icon = 'fa-box';
+                                                elseif (str_contains(strtolower($key), 'عميل') || str_contains(strtolower($key), 'customer')) $icon = 'fa-users';
+                                                elseif (str_contains(strtolower($key), 'شريك') || str_contains(strtolower($key), 'partner')) $icon = 'fa-handshake';
+                                                elseif (str_contains(strtolower($key), 'طلب') || str_contains(strtolower($key), 'order')) $icon = 'fa-shopping-cart';
                                             @endphp
-                                            <div class="col-md-3">
-                                                <div class="bg-light p-3 rounded-4 text-center">
-                                                    <div class="fs-2 fw-bold">{{ is_numeric($displayValue) ? number_format($displayValue) : $displayValue }}</div>
-                                                    <div class="text-muted">{{ $key }}</div>
+                                            <div class="col-md-3 col-sm-6">
+                                                <div class="bg-light p-3 rounded-4 text-center shadow-sm transition hover:shadow">
+                                                    <div class="fs-2 fw-bold text-purple-600">
+                                                        {{ is_numeric($value) ? number_format($value) : $value }}
+                                                    </div>
+                                                    <div class="text-muted small d-flex align-items-center justify-content-center gap-1">
+                                                        <i class="fas {{ $icon }} text-purple-400"></i>
+                                                        {{ ucfirst(str_replace('_', ' ', $key)) }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -161,3 +185,30 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    .transition {
+        transition: all 0.2s ease;
+    }
+    .hover\:shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08) !important;
+    }
+    .text-purple-600 {
+        color: #7c3aed;
+    }
+    .text-purple-400 {
+        color: #a78bfa;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+    });
+</script>
+@endpush

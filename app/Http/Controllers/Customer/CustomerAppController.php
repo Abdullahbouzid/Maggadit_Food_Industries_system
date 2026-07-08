@@ -640,8 +640,16 @@ class CustomerAppController extends Controller
         $customer = Auth::guard('customer')->user();
         $about = null;
 
-        if ($customer && $customer->activeOrganization) {
-            $about = $customer->activeOrganization->about;
+        if ($customer) {
+            // First try the direct active_organization_id relation
+            $activeOrg = $customer->activeOrganization;
+            // If not set, fallback to first active organization from pivot
+            if (!$activeOrg) {
+                $activeOrg = $customer->activeOrganizations()->first();
+            }
+            if ($activeOrg) {
+                $about = $activeOrg->about;
+            }
         }
 
         return view('app_android.more.about_us', compact('about', 'customer'));
