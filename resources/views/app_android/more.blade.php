@@ -7,18 +7,25 @@
 
     <div class="px-4 py-4 mb-5 space-y-4" style="direction: rtl;">
         <!-- User Info Card -->
+      <!-- User Info Card -->
         <div class="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-5 shadow-lg">
             <div class="flex justify-between items-start">
                 <div>
                     <p id="user-name-label" class="text-white/80 text-sm">مرحباً،</p>
-                    <h2 id="user-name" class="text-2xl font-bold text-white mt-1">تمر القوي</h2>
-                    <p id="user-doc" class="text-white/70 text-sm mt-2">DOC-10-000001</p>
+                    <h2 id="user-name" class="text-2xl font-bold text-white mt-1">{{ $customer->name ?? 'زائر' }}</h2>
+                    <p id="user-doc" class="text-white/70 text-sm mt-2">{{ $customer->username ?? '' }}</p>
                 </div>
-                <i class="fas fa-user-circle text-5xl text-white/60"></i>
+                <div>
+                    @if($customer->avatar)
+                        <img src="{{ asset('uploads/customers/' . $customer->avatar) }}" alt="Avatar" class="w-24 h-24 mx-auto rounded-full object-cover shadow-lg">
+                    @else
+                        <i class="fas fa-user-circle text-5xl text-white/60"></i>
+                    @endif
+                </div>
             </div>
         </div>
 
-        <!-- بطاقات القائمة -->
+        <!-- بطاقات القائمة (نفس ما لديك) -->
         <div class="space-y-3">
             <div id="change-org" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
                 <div class="flex items-center gap-4">
@@ -46,8 +53,6 @@
                 <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
             </div>
 
-          
-
             <div id="order-history" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
@@ -61,103 +66,99 @@
                 <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
             </div>
         </div>
-            <!-- معلوماتي -->
-            <div id="my-info" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                        <i class="fas fa-user-edit text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 id="my-info-title" class="font-bold text-gray-800">معلوماتي</h3>
-                        <p id="my-info-sub" class="text-xs text-gray-400">تحديث بيانات حسابك</p>
-                    </div>
-                </div>
-                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
-            </div>
 
-            <!-- استبيانات -->
-            <div id="surveys" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                        <i class="fas fa-poll text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 id="surveys-title" class="font-bold text-gray-800">استبيانات</h3>
-                        <p id="surveys-sub" class="text-xs text-gray-400">شاركنا رأيك</p>
-                    </div>
+        <!-- باقي العناصر (معلوماتي، استبيانات، إشعارات، إلخ) -->
+        <div id="my-info" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <i class="fas fa-user-edit text-lg"></i>
                 </div>
-                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+                <div>
+                    <h3 id="my-info-title" class="font-bold text-gray-800">معلوماتي</h3>
+                    <p id="my-info-sub" class="text-xs text-gray-400">تحديث بيانات حسابك</p>
+                </div>
             </div>
+            <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+        </div>
 
-            <!-- الإشعارات -->
-            <div id="notifications" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                        <i class="fas fa-bell text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 id="notifications-title" class="font-bold text-gray-800">الإشعارات</h3>
-                        <p id="notifications-sub" class="text-xs text-gray-400">آخر التنبيهات</p>
-                    </div>
+        <div id="surveys" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                    <i class="fas fa-poll text-lg"></i>
                 </div>
-                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+                <div>
+                    <h3 id="surveys-title" class="font-bold text-gray-800">استبيانات</h3>
+                    <p id="surveys-sub" class="text-xs text-gray-400">شاركنا رأيك</p>
+                </div>
             </div>
+            <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+        </div>
 
-            <!-- الأسئلة الشائعة -->
-            <div id="faq" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                        <i class="fas fa-question-circle text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 id="faq-title" class="font-bold text-gray-800">الأسئلة الشائعة</h3>
-                        <p id="faq-sub" class="text-xs text-gray-400">أجوبة لاستفساراتك</p>
-                    </div>
+        <div id="notifications" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                    <i class="fas fa-bell text-lg"></i>
                 </div>
-                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+                <div>
+                    <h3 id="notifications-title" class="font-bold text-gray-800">الإشعارات</h3>
+                    <p id="notifications-sub" class="text-xs text-gray-400">آخر التنبيهات</p>
+                </div>
             </div>
+            <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+        </div>
 
-            <!-- سياسة الخصوصية -->
-            <div id="privacy-policy" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                        <i class="fas fa-lock text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 id="privacy-title" class="font-bold text-gray-800">سياسة الخصوصية</h3>
-                        <p id="privacy-sub" class="text-xs text-gray-400">كيف نحمي بياناتك</p>
-                    </div>
+        <div id="faq" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                    <i class="fas fa-question-circle text-lg"></i>
                 </div>
-                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+                <div>
+                    <h3 id="faq-title" class="font-bold text-gray-800">الأسئلة الشائعة</h3>
+                    <p id="faq-sub" class="text-xs text-gray-400">أجوبة لاستفساراتك</p>
+                </div>
             </div>
+            <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+        </div>
 
-            <!-- نبذة عنا -->
-            <div id="about-us" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                        <i class="fas fa-store text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 id="about-title" class="font-bold text-gray-800">نبذة عنا</h3>
-                        <p id="about-sub" class="text-xs text-gray-400">تعرف على ماجديت</p>
-                    </div>
+        <div id="privacy-policy" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                    <i class="fas fa-lock text-lg"></i>
                 </div>
-                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+                <div>
+                    <h3 id="privacy-title" class="font-bold text-gray-800">سياسة الخصوصية</h3>
+                    <p id="privacy-sub" class="text-xs text-gray-400">كيف نحمي بياناتك</p>
+                </div>
             </div>
+            <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+        </div>
 
-            <!-- التواصل معنا -->
-            <div id="contact-us" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600">
-                        <i class="fas fa-headset text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 id="contact-title" class="font-bold text-gray-800">التواصل معنا</h3>
-                        <p id="contact-sub" class="text-xs text-gray-400">الدعم وخدمة العملاء</p>
-                    </div>
+        <div id="about-us" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                    <i class="fas fa-store text-lg"></i>
                 </div>
-                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+                <div>
+                    <h3 id="about-title" class="font-bold text-gray-800">نبذة عنا</h3>
+                    <p id="about-sub" class="text-xs text-gray-400">تعرف على ماجديت</p>
+                </div>
             </div>
+            <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+        </div>
+
+        <div id="contact-us" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600">
+                    <i class="fas fa-headset text-lg"></i>
+                </div>
+                <div>
+                    <h3 id="contact-title" class="font-bold text-gray-800">التواصل معنا</h3>
+                    <p id="contact-sub" class="text-xs text-gray-400">الدعم وخدمة العملاء</p>
+                </div>
+            </div>
+            <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+        </div>
+
         <!-- زر تسجيل الخروج -->
         <div id="logout-btn" class="mt-6 bg-red-50 rounded-xl p-4 flex items-center justify-center gap-3 cursor-pointer transition-all duration-200 hover:bg-red-100 active:scale-[0.98] border border-red-200 shadow-sm">
             <i class="fas fa-sign-out-alt text-red-600 text-lg"></i>
@@ -179,14 +180,11 @@
     <div id="confirm-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none" style="direction: rtl;">
         <div class="bg-white rounded-2xl w-80 max-w-[85%] p-6 transform scale-95 transition-all duration-300 shadow-2xl">
             <div class="text-center">
-                <!-- أيقونة -->
                 <div class="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
                     <i class="fas fa-sign-out-alt text-red-600 text-2xl"></i>
                 </div>
-                <!-- عنوان النص حسب اللغة -->
                 <h3 id="modal-title" class="text-lg font-bold text-gray-800 mb-2">تسجيل الخروج</h3>
                 <p id="modal-message" class="text-gray-500 text-sm mb-6">هل أنت متأكد من تسجيل الخروج؟</p>
-                <!-- الأزرار -->
                 <div class="flex gap-3">
                     <button id="modal-confirm" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-xl transition duration-200 shadow-md">
                         نعم، تسجيل خروج
@@ -200,19 +198,28 @@
     </div>
 
     <script>
-        // بيانات الترجمة (نفس السابق مع إضافة نصوص المودال)
+        // ============================================================
+        //  بيانات العميل من السيرفر
+        // ============================================================
+        window.customerData = {
+            name: "{{ $customer->name ?? 'زائر' }}",
+            username: "{{ $customer->username ?? '' }}",
+            avatar_url: "{{ $customer->avatar_url ?? '' }}"
+        };
+
+        // ============================================================
+        //  الترجمة
+        // ============================================================
         const translations = {
             en: {
                 page_title: "More",
                 user_name_label: "Welcome,",
-                user_name: "Tamer Alqawi",
-                user_doc: "DOC-10-000001",
+                // سيتم ملء الاسم واسم المستخدم من customerData
+                user_doc: "Username",
                 change_org_title: "Change Organization",
                 change_org_sub: "Switch between organizations",
                 financial_title: "Financial Statement",
                 financial_sub: "View transaction history",
-                change_pwd_title: "Change Password",
-                change_pwd_sub: "Update your password",
                 order_title: "Order History",
                 order_sub: "Your previous orders",
                 logout_text: "Logout",
@@ -247,14 +254,12 @@
             ar: {
                 page_title: "المزيد",
                 user_name_label: "مرحباً،",
-                user_name: "تمر القوي",
-                user_doc: "DOC-10-000001",
+                // سيتم ملء الاسم واسم المستخدم من customerData
+                user_doc: "اسم المستخدم",
                 change_org_title: "تغيير المنظمة",
                 change_org_sub: "التبديل بين المنظمات",
                 financial_title: "كشف حساب مالي",
                 financial_sub: "عرض الحركات المالية",
-                change_pwd_title: "تغيير كلمة السر",
-                change_pwd_sub: "تحديث كلمة المرور",
                 order_title: "تاريخ الطلبات",
                 order_sub: "سجل طلباتك السابقة",
                 logout_text: "تسجيل خروج",
@@ -297,13 +302,13 @@
 
             document.getElementById('page-title').innerText = t.page_title;
             document.getElementById('user-name-label').innerText = t.user_name_label;
-            document.getElementById('user-name').innerText = t.user_name;
-            document.getElementById('user-doc').innerText = t.user_doc;
+            // تعيين اسم العميل واسم المستخدم من customerData
+            document.getElementById('user-name').innerText = window.customerData.name;
+            document.getElementById('user-doc').innerText = window.customerData.username || t.user_doc;
             document.getElementById('change-org-title').innerText = t.change_org_title;
             document.getElementById('change-org-sub').innerText = t.change_org_sub;
             document.getElementById('financial-title').innerText = t.financial_title;
             document.getElementById('financial-sub').innerText = t.financial_sub;
-           
             document.getElementById('order-title').innerText = t.order_title;
             document.getElementById('order-sub').innerText = t.order_sub;
             document.getElementById('logout-text').innerText = t.logout_text;
@@ -332,7 +337,7 @@
             document.documentElement.lang = lang === 'ar' ? 'ar' : 'en';
             document.body.style.textAlign = t.text_align;
 
-            // تحديث نصوص المودال
+            // نصوص المودال
             document.getElementById('modal-title').innerText = t.modal_title;
             document.getElementById('modal-message').innerText = t.modal_message;
             document.getElementById('modal-confirm').innerText = t.modal_confirm;
@@ -353,8 +358,6 @@
 
         // دوال التحكم في المودال
         const modal = document.getElementById('confirm-modal');
-        let pendingLogout = null;
-
         function showModal() {
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modal.classList.add('opacity-100');
@@ -362,7 +365,6 @@
             modalContent.classList.remove('scale-95');
             modalContent.classList.add('scale-100');
         }
-
         function hideModal() {
             modal.classList.remove('opacity-100');
             modal.classList.add('opacity-0', 'pointer-events-none');
@@ -395,26 +397,13 @@
             });
         });
 
-        // أحداث القائمة
-      // أحداث القائمة - الآن تنتقل إلى صفحات حقيقية
+        // أحداث القائمة - الآن تنتقل إلى صفحات حقيقية
         document.getElementById('change-org').addEventListener('click', () => {
             window.location.href = "{{ route('customer.change_organization') }}";
         });
         document.getElementById('financial-stmt').addEventListener('click', () => {
             window.location.href = "{{ route('customer.financial_statement') }}";
         });
-    
-        document.getElementById('order-history').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.order_history') }}";
-        });
-        // أحداث القائمة
-        document.getElementById('change-org').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.change_organization') }}";
-        });
-        document.getElementById('financial-stmt').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.financial_statement') }}";
-        });
-   
         document.getElementById('order-history').addEventListener('click', () => {
             window.location.href = "{{ route('customer.order_history') }}";
         });
@@ -439,12 +428,13 @@
         document.getElementById('contact-us').addEventListener('click', () => {
             window.location.href = "{{ route('customer.contact') }}";
         });
+
         // تسجيل الخروج باستخدام المودال الجميل
         document.getElementById('logout-btn').addEventListener('click', () => {
             showModal();
         });
 
-        // تأكيد الخروج من المودال
+        // تأكيد الخروج
         document.getElementById('modal-confirm').addEventListener('click', () => {
             hideModal();
             const t = translations[currentLang];

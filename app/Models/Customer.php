@@ -93,4 +93,6 @@ class Customer extends Authenticatable
                     ->withPivot('read_at', 'is_starred', 'is_archived')
                     ->withTimestamps();
     }
+
+    
 }

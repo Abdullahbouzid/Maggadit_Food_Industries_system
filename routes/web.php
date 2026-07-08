@@ -304,9 +304,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
     // مسارات محمية (تتطلب تسجيل دخول بجلسة PHP)
     Route::middleware('check.customer.session')->group(function () {
         Route::get('/dashboard', [CustomerAppController::class, 'dashboard'])->name('dashboard');
-        Route::get('/more', function () {
-            return view('app_android.more');
-        })->name('more');
+       
+        Route::get('/more', [CustomerAppController::class, 'more'])->name('more');
         Route::get('/offers', function () {
             return view('app_android.offers');
         })->name('offers');

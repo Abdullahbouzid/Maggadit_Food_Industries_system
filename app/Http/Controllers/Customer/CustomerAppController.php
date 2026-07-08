@@ -627,4 +627,9 @@ class CustomerAppController extends Controller
 
         return view('app_android.more.notifications', compact('notifications', 'unreadCount'));
     }
+    public function more()
+    {
+        $customer = Auth::guard('customer')->user();
+        return view('app_android.more', compact('customer'));
+    }
 }
