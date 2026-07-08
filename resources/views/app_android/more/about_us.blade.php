@@ -11,6 +11,7 @@
             <i class="fas fa-arrow-right"></i> رجوع
         </button>
 
+        <div id="about-content">
         @if($about)
             <!-- صورة الغلاف إن وجدت -->
             @if($about->cover_image_url)
@@ -151,17 +152,187 @@
             </div>
         @else
             <!-- في حال عدم وجود نبذة -->
-            <div class="bg-white rounded-2xl shadow-md p-5 text-center">
-                <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
-                <h3 class="text-lg font-bold text-gray-800">لا توجد نبذة</h3>
-                <p class="text-gray-500 text-sm">لم يتم إضافة نبذة لهذه المنظمة بعد.</p>
+            <div id="about-fallback" class="bg-white rounded-2xl shadow-md p-5 text-center">
+                <i class="fas fa-spinner fa-spin text-4xl text-purple-500 mb-3"></i>
+                <h3 class="text-lg font-bold text-gray-800">جاري تحميل النبذة...</h3>
+                <p class="text-gray-500 text-sm">إذا كانت هناك بيانات، سيتم عرضها بعد الاتصال بالسيرفر.</p>
             </div>
         @endif
+        </div>
 
         <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3">
             <br><br>
         </div>
     </div>
+
+    <script>
+        (function() {
+            const token = localStorage.getItem('token') || localStorage.getItem('api_token') || @json(session('api_token'));
+            const fallback = document.getElementById('about-fallback');
+            const contentContainer = document.getElementById('about-content');
+            if (!token || !fallback || !contentContainer) {
+                return;
+            }
+
+            function escapeHtml(value) {
+                return String(value || '').replace(/[&<>\"']/g, function(match) {
+                    return {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#39;'
+                    }[match];
+                });
+            }
+
+            function renderItems(items) {
+                if (!Array.isArray(items) || items.length === 0) {
+                    return '<p class="text-gray-500 text-sm">لا توجد قيم محددة.</p>';
+                }
+                return items.map(item => `
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <span class="text-sm text-gray-700">${escapeHtml(item)}</span>
+                    </div>
+                `).join('');
+            }
+
+            function renderStats(stats) {
+                if (!Array.isArray(stats) || stats.length === 0) {
+                    return '<div class="bg-white rounded-2xl shadow-md p-4 text-center"><p class="text-gray-500 text-sm">لا توجد إحصائيات متاحة</p></div>';
+                }
+                const cards = stats.map(stat => {
+                    const key = escapeHtml(stat.key || stat.title || '');
+                    const value = escapeHtml(stat.value || stat.count || stat.number || '');
+                    let icon = 'fa-chart-simple';
+                    const keyLower = key.toLowerCase();
+                    if (keyLower.includes('عام') || keyLower.includes('سنة') || keyLower.includes('year')) icon = 'fa-calendar-alt';
+                    else if (keyLower.includes('منتج') || keyLower.includes('product')) icon = 'fa-box';
+                    else if (keyLower.includes('عميل') || keyLower.includes('customer')) icon = 'fa-users';
+                    else if (keyLower.includes('شريك') || keyLower.includes('partner')) icon = 'fa-handshake';
+                    else if (keyLower.includes('طلب') || keyLower.includes('order')) icon = 'fa-shopping-cart';
+                    const displayValue = Number.isFinite(Number(value)) ? new Intl.NumberFormat().format(value) : value;
+                    return `
+                        <div class="bg-white rounded-2xl shadow-md p-4 text-center transition hover:shadow-lg hover:-translate-y-1">
+                            <div class="text-3xl font-bold text-purple-600 mb-1">${displayValue}</div>
+                            <div class="text-xs text-gray-500 flex items-center justify-center gap-1">
+                                <i class="fas ${icon} text-purple-400"></i>
+                                ${key}
+                            </div>
+                        </div>
+                    `;
+                });
+                return `<div class="grid grid-cols-2 gap-4 mb-5">${cards.join('')}</div>`;
+            }
+
+            function renderAbout(about) {
+                const aboutHtml = [];
+                if (about.cover_image_url) {
+                    aboutHtml.push(`
+                        <div class="w-full h-48 rounded-2xl overflow-hidden mb-4 shadow-md">
+                            <img src="${escapeHtml(about.cover_image_url)}" alt="غلاف" class="w-full h-full object-cover">
+                        </div>
+                    `);
+                }
+
+                aboutHtml.push(`
+                    <div class="text-center mb-6">
+                        ${about.image_url ? `
+                            <img src="${escapeHtml(about.image_url)}" alt="${escapeHtml(about.title || 'الشعار')}" class="w-24 h-24 rounded-2xl object-cover mx-auto shadow-lg mb-3 border-2 border-white">
+                        ` : `
+                            <div class="w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto shadow-lg mb-3">
+                                <i class="fas fa-utensils text-white text-4xl"></i>
+                            </div>
+                        `}
+                        <h1 class="text-2xl font-bold text-gray-800">${escapeHtml(about.title || 'ماجاديت للصناعات الغذائية')}</h1>
+                        <p class="text-gray-500 text-sm mt-1">${escapeHtml(about.subtitle || 'جودة تذوقها الثقة')}</p>
+                    </div>
+                `);
+
+                aboutHtml.push(`
+                    <div class="bg-white rounded-2xl shadow-md p-5 mb-5">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
+                            <i class="fas fa-book-open text-purple-600"></i> قصتنا
+                        </h2>
+                        <p class="text-gray-600 text-sm leading-relaxed">${escapeHtml(about.description || 'لا توجد قصة حالياً.')}</p>
+                    </div>
+                `);
+
+                aboutHtml.push(`
+                    <div class="grid grid-cols-2 gap-4 mb-5">
+                        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 text-center">
+                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <i class="fas fa-bullseye text-purple-600 text-lg"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-800 text-sm">رؤيتنا</h3>
+                            <p class="text-xs text-gray-500 mt-1">${escapeHtml(about.vision || 'لا توجد رؤية محددة')}</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 text-center">
+                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <i class="fas fa-heart text-purple-600 text-lg"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-800 text-sm">رسالتنا</h3>
+                            <p class="text-xs text-gray-500 mt-1">${escapeHtml(about.mission || 'لا توجد رسالة محددة')}</p>
+                        </div>
+                    </div>
+                `);
+
+                aboutHtml.push(`
+                    <div class="bg-white rounded-2xl shadow-md p-5 mb-5">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
+                            <i class="fas fa-gem text-purple-600"></i> قيمنا الأساسية
+                        </h2>
+                        <div class="space-y-3">
+                            ${renderItems(about.values)}
+                        </div>
+                    </div>
+                `);
+
+                aboutHtml.push(renderStats(about.statistics));
+
+                aboutHtml.push(`
+                    <div class="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl p-5 text-white text-center">
+                        <i class="fas fa-headset text-3xl mb-2"></i>
+                        <h3 class="font-bold text-lg">نحن هنا لخدمتك</h3>
+                        <p class="text-sm opacity-90 mt-1">لأي استفسار أو اقتراح، لا تتردد في التواصل مع فريق الدعم</p>
+                        <a href="{{ route('customer.contact') }}" class="inline-block mt-3 bg-white text-purple-600 font-semibold px-5 py-2 rounded-full text-sm shadow-md transition hover:scale-105">
+                            تواصل معنا
+                        </a>
+                    </div>
+                `);
+
+                contentContainer.innerHTML = aboutHtml.join('');
+            }
+
+            fetch('/api/customer/about-us', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.content) {
+                    renderAbout(data.content);
+                } else {
+                    fallback.innerHTML = `
+                        <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
+                        <h3 class="text-lg font-bold text-gray-800">لا توجد نبذة</h3>
+                        <p class="text-gray-500 text-sm">لم يتم إضافة نبذة لهذه المنظمة بعد.</p>
+                    `;
+                }
+            })
+            .catch(() => {
+                fallback.innerHTML = `
+                    <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
+                    <h3 class="text-lg font-bold text-gray-800">لا توجد نبذة</h3>
+                    <p class="text-gray-500 text-sm">لم يتم إضافة نبذة لهذه المنظمة بعد.</p>
+                `;
+            });
+        })();
+    </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 @endsection
