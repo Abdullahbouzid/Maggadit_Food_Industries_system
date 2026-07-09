@@ -27,8 +27,6 @@
 
     <script>
         (function() {
-            const API_BASE = '{{ url("/api/customer") }}';
-            const token = localStorage.getItem('token') || localStorage.getItem('api_token') || '{{ session("api_token") }}';
             const contentContainer = document.getElementById('about-content');
             const UPLOADS_BASE = '{{ asset("uploads/organization_about") }}';
 
@@ -249,42 +247,33 @@
                 return;
             }
 
-            fetch(API_BASE + '/about-us', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Server error: ' + response.status);
-                return response.json();
-            })
-            .then(data => {
-                if (data.success && data.content) {
-                    renderAbout(data.content);
-                } else {
-                    contentContainer.innerHTML = `
-                        <div class="bg-white rounded-2xl shadow-md p-5 text-center">
-                            <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
-                            <h3 class="text-lg font-bold text-gray-800">لا توجد نبذة</h3>
-                            <p class="text-gray-500 text-sm">لم يتم إضافة نبذة لهذه المنظمة بعد.</p>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
+            // Render data passed from controller
+            const aboutData = {!! $about ? json_encode([
+                'id' => $about->id,
+                'title' => $about->title,
+                'subtitle' => $about->subtitle ?? '',
+                'description' => $about->description,
+                'vision' => $about->vision,
+                'mission' => $about->mission,
+                'values' => is_string($about->values) ? json_decode($about->values, true) : $about->values,
+                'statistics' => is_string($about->statistics) ? json_decode($about->statistics, true) : $about->statistics,
+                'image' => $about->image,
+                'cover_image' => $about->cover_image,
+                'image_url' => $about->image_url,
+                'cover_image_url' => $about->cover_image_url,
+            ]) : 'null' !!};
+
+            if (aboutData) {
+                renderAbout(aboutData);
+            } else {
                 contentContainer.innerHTML = `
                     <div class="bg-white rounded-2xl shadow-md p-5 text-center">
-                        <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-3"></i>
-                        <h3 class="text-lg font-bold text-gray-800">حدث خطأ</h3>
-                        <p class="text-gray-500 text-sm">حدث خطأ في الاتصال بالسيرفر. يرجى المحاولة لاحقاً.</p>
+                        <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
+                        <h3 class="text-lg font-bold text-gray-800">لا توجد نبذة</h3>
+                        <p class="text-gray-500 text-sm">لم يتم إضافة نبذة لهذه المنظمة بعد.</p>
                     </div>
                 `;
-            });
+            }
         })();
     </script>
 

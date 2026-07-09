@@ -636,7 +636,24 @@ class CustomerAppController extends Controller
 
     public function aboutUsWeb(Request $request)
     {
-        return view('app_android.more.about_us');
+        $about = null;
+        $customer = auth('sanctum')->user();
+        
+        if ($customer) {
+            // Try to get the active organization
+            $activeOrg = $customer->activeOrganization;
+            if (!$activeOrg) {
+                $activeOrg = $customer->activeOrganizations()->first();
+            }
+            if ($activeOrg) {
+                $about = $activeOrg->about;
+            }
+        } else {
+            // If not authenticated, get first active about
+            $about = \App\Models\OrganizationAbout::where('is_active', true)->first();
+        }
+        
+        return view('app_android.more.about_us', compact('about'));
     }
 
     public function aboutUs(Request $request)

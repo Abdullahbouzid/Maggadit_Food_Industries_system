@@ -474,6 +474,9 @@ class CustomerApiController extends Controller
             if ($activeOrg) {
                 $about = $activeOrg->about;
             }
+        } else {
+            // If no authenticated user, get the first active organization's about
+            $about = \App\Models\OrganizationAbout::where('is_active', true)->first();
         }
 
         // Return the about object with proper data transformation
