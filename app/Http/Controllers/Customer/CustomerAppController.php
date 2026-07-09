@@ -637,7 +637,10 @@ class CustomerAppController extends Controller
     public function aboutUsWeb(Request $request)
     {
         $about = null;
-        $customer = $request->user('customer') ?: Auth::guard('customer')->user();
+        $customer = $request->user('customer')
+            ?: $request->user('api')
+            ?: Auth::guard('customer')->user()
+            ?: Auth::guard('api')->user();
 
         if ($customer) {
             $activeOrg = $customer->activeOrganization;
@@ -656,7 +659,10 @@ class CustomerAppController extends Controller
 
     public function aboutUs(Request $request)
     {
-        $customer = $request->user('customer') ?: Auth::guard('customer')->user();
+        $customer = $request->user('customer')
+            ?: $request->user('api')
+            ?: Auth::guard('customer')->user()
+            ?: Auth::guard('api')->user();
         $about = null;
 
         if ($customer) {
