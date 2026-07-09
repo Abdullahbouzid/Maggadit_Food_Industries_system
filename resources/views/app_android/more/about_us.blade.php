@@ -27,8 +27,8 @@
 
     <script>
         (function() {
-            const API_BASE = 'https://blue-beaver-923812.hostingersite.com/api/customer';
-            const token = localStorage.getItem('token') || localStorage.getItem('api_token') || @json(session('api_token'));
+            const API_BASE = '{{ url("/api/customer") }}';
+            const token = localStorage.getItem('token') || localStorage.getItem('api_token') || '{{ session("api_token") }}';
             const contentContainer = document.getElementById('about-content');
             const UPLOADS_BASE = '{{ asset("uploads/organization_about") }}';
 

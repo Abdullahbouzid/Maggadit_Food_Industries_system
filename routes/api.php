@@ -36,6 +36,12 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
     Route::get('/products', [CustomerApiController::class, 'productsIndex']);
     Route::get('/products/{id}', [CustomerApiController::class, 'productsShow']);
     Route::get('/offers', [CustomerApiController::class, 'offersIndex']);
+    
+    // مسارات عامة (بدون توكن)
+    Route::get('/faq', [CustomerApiController::class, 'faq']);
+    Route::get('/privacy-policy', [CustomerApiController::class, 'privacyPolicy']);
+    Route::get('/about-us', [CustomerApiController::class, 'aboutUs']);
+    Route::get('/contact-us', [CustomerApiController::class, 'contactUs']);
 
     // مسارات محمية (تتطلب توكن)
     Route::middleware('auth:api')->group(function () {
@@ -56,10 +62,6 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::post('/notifications/{id}/toggle-read', [CustomerApiController::class, 'toggleNotificationRead']);
         Route::post('/notifications/{id}/toggle-star', [CustomerApiController::class, 'toggleNotificationStar']);
         Route::post('/notifications/{id}/toggle-archive', [CustomerApiController::class, 'toggleNotificationArchive']);
-        Route::get('/faq', [CustomerApiController::class, 'faq']);
-        Route::get('/privacy-policy', [CustomerApiController::class, 'privacyPolicy']);
-        Route::get('/about-us', [CustomerApiController::class, 'aboutUs']);
-        Route::get('/contact-us', [CustomerApiController::class, 'contactUs']);
         Route::get('/organizations', [CustomerApiController::class, 'organizationsList']);
         Route::post('/change-organization', [CustomerApiController::class, 'switchOrganization']);
     });

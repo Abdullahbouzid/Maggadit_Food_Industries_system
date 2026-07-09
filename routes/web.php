@@ -294,7 +294,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/privacy-policy', function () {
         return view('app_android.more.privacy_policy');
     })->name('privacy');
-    Route::get('/about-us', [CustomerAppController::class, 'aboutUs'])->name('about');
+    Route::get('/about-us', [CustomerAppController::class, 'aboutUsWeb'])->name('about');
     Route::get('/contact-us', function () {
         return view('app_android.more.contact_us');
     })->name('contact');

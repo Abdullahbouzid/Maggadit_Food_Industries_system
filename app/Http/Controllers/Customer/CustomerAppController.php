@@ -634,6 +634,11 @@ class CustomerAppController extends Controller
         return view('app_android.more', compact('customer'));
     }
 
+    public function aboutUsWeb(Request $request)
+    {
+        return view('app_android.more.about_us');
+    }
+
     public function aboutUs(Request $request)
     {
         $customer = $request->user();
