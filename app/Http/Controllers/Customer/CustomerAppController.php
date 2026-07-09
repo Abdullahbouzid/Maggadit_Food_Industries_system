@@ -645,85 +645,18 @@ class CustomerAppController extends Controller
             }
         }
 
-       if ($customer) {
-           // First try the direct active_organization_id relation
-           $activeOrg = $customer->activeOrganization;
-           // If not set, fallback to first active organization from pivot
-           if (!$activeOrg) {
-               $activeOrg = $customer->activeOrganizations()->first();
-           }
-           if ($activeOrg) {
-               $about = $activeOrg->about;
-           }
-       }
+        if ($customer) {
+            // First try the direct active_organization_id relation
+            $activeOrg = $customer->activeOrganization;
+            // If not set, fallback to first active organization from pivot
+            if (!$activeOrg) {
+                $activeOrg = $customer->activeOrganizations()->first();
+            }
+            if ($activeOrg) {
+                $about = $activeOrg->about;
+            }
+        }
 
-       // Return the about object with proper JSON parsing
-       return response()->json([
-           'success' => true,
-           'content' => $about ? [
-               'id' => $about->id,
-               'title' => $about->title,
-               'subtitle' => $about->subtitle,
-               'description' => $about->description,
-               'vision' => $about->vision,
-               'mission' => $about->mission,
-               'values' => $this->parseJsonField($about->values),
-               'statistics' => $this->parseStatsField($about->statistics),
-               'image_url' => $about->image_url,
-               'cover_image_url' => $about->cover_image_url,
-           ] : null
-       ]);
-   }
-
-   private function parseJsonField($field)
-   {
-       if (empty($field)) {
-           return [];
-       }
-
-       if (is_array($field)) {
-           return $field;
-       }
-
-       if (is_string($field)) {
-           $decoded = json_decode($field, true);
-           if (json_last_error() === JSON_ERROR_NONE) {
-               return $decoded ?? [];
-           }
-       }
-
-       return [];
-   }
-
-   private function parseStatsField($field)
-   {
-       if (empty($field)) {
-           return [];
-       }
-
-       $stats = [];
-
-       if (is_array($field)) {
-           $stats = $field;
-       } elseif (is_string($field)) {
-           $decoded = json_decode($field, true);
-           if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-               $stats = $decoded;
-           }
-       }
-
-       // If stats is a flat array, convert to key-value pairs
-       if (!empty($stats) && !isset($stats[0]['key']) && !isset($stats[0]['value'])) {
-           $formatted = [];
-           $keys = array_keys($stats);
-           foreach ($keys as $key) {
-               if (!is_numeric($key) && !is_null($stats[$key])) {
-                   $formatted[] = ['key' => $key, 'value' => $stats[$key]];
-               }
-           }
-           return $formatted;
-       }
-
-       return $stats;
-   }
+        return view('app_android.more.about_us', compact('about', 'customer'));
+    }
 }
