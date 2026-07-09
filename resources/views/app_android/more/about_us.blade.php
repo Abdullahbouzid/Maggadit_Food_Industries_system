@@ -30,6 +30,7 @@
             const API_BASE = 'https://blue-beaver-923812.hostingersite.com/api/customer';
             const token = localStorage.getItem('token') || localStorage.getItem('api_token') || @json(session('api_token'));
             const contentContainer = document.getElementById('about-content');
+            const UPLOADS_BASE = '{{ asset("uploads/organization_about") }}';
 
             if (!contentContainer) {
                 return;
@@ -49,11 +50,22 @@
             }
 
             function renderValues(values) {
-                if (!values || !Array.isArray(values) || values.length === 0) {
+                if (!values || (typeof values !== 'object')) {
                     return '<p class="text-gray-500 text-sm">لا توجد قيم محددة.</p>';
                 }
-                return values.map(item => {
-                    const value = typeof item === 'object' ? (item.value || item.key || item) : item;
+
+                const items = Array.isArray(values)
+                    ? values
+                    : Object.values(values);
+
+                if (items.length === 0) {
+                    return '<p class="text-gray-500 text-sm">لا توجد قيم محددة.</p>';
+                }
+
+                return items.map(item => {
+                    const value = typeof item === 'object'
+                        ? (item.value || item.key || item.name || item.label || Object.values(item).join(' - '))
+                        : item;
                     return `
                         <div class="flex items-center gap-3">
                             <i class="fas fa-check-circle text-green-500 text-sm"></i>
@@ -64,7 +76,7 @@
             }
 
             function renderStats(stats) {
-                if (!stats || !Array.isArray(stats) || stats.length === 0) {
+                if (!stats || (typeof stats !== 'object')) {
                     return `
                         <div class="bg-white rounded-2xl shadow-md p-4 text-center">
                             <p class="text-gray-500 text-sm">لا توجد إحصائيات متاحة</p>
@@ -72,14 +84,25 @@
                     `;
                 }
 
-                const cards = stats.map(stat => {
-                    // Handle both array of objects and simple arrays
+                const items = Array.isArray(stats)
+                    ? stats
+                    : Object.entries(stats).map(([key, value]) => ({ key, value }));
+
+                if (items.length === 0) {
+                    return `
+                        <div class="bg-white rounded-2xl shadow-md p-4 text-center">
+                            <p class="text-gray-500 text-sm">لا توجد إحصائيات متاحة</p>
+                        </div>
+                    `;
+                }
+
+                const cards = items.map(stat => {
                     let key = '';
                     let value = '';
 
                     if (typeof stat === 'object' && stat !== null) {
-                        key = stat.key || stat.title || '';
-                        value = stat.value || stat.count || stat.number || '';
+                        key = stat.key || stat.title || stat.label || '';
+                        value = stat.value || stat.count || stat.number || stat.amount || '';
                     } else {
                         key = stat;
                         value = '';
@@ -126,19 +149,21 @@
                 const aboutHtml = [];
 
                 // Cover Image
-                if (about.cover_image_url) {
+                const coverImageUrl = about.cover_image_url || (about.cover_image ? `${UPLOADS_BASE}/${escapeHtml(about.cover_image)}` : null);
+                if (coverImageUrl) {
                     aboutHtml.push(`
                         <div class="w-full h-48 rounded-2xl overflow-hidden mb-4 shadow-md">
-                            <img src="${escapeHtml(about.cover_image_url)}" alt="غلاف" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                            <img src="${coverImageUrl}" alt="غلاف" class="w-full h-full object-cover" onerror="this.style.display='none'">
                         </div>
                     `);
                 }
 
                 // Logo and Title
+                const imageUrl = about.image_url || (about.image ? `${UPLOADS_BASE}/${escapeHtml(about.image)}` : null);
                 aboutHtml.push(`
                     <div class="text-center mb-6">
-                        ${about.image_url ? `
-                            <img src="${escapeHtml(about.image_url)}" alt="${escapeHtml(about.title || 'الشعار')}" class="w-24 h-24 rounded-2xl object-cover mx-auto shadow-lg mb-3 border-2 border-white" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        ${imageUrl ? `
+                            <img src="${imageUrl}" alt="${escapeHtml(about.title || 'الشعار')}" class="w-24 h-24 rounded-2xl object-cover mx-auto shadow-lg mb-3 border-2 border-white" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                             <div style="display:none" class="w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto shadow-lg mb-3">
                                 <i class="fas fa-utensils text-white text-4xl"></i>
                             </div>

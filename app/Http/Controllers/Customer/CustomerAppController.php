@@ -627,27 +627,23 @@ class CustomerAppController extends Controller
 
         return view('app_android.more.notifications', compact('notifications', 'unreadCount'));
     }
-   public function aboutUs(Request $request)
-   {
-       $customer = $request->user();
-       $about = null;
 
-       if ($customer) {
-           // First try the direct active_organization_id relation
-           $activeOrg = $customer->activeOrganization;
-           // If not set, fallback to first active organization from pivot
-           if (!$activeOrg) {
-               $activeOrg = $customer->activeOrganizations()->first();
-           }
-           if ($activeOrg) {
-               $about = $activeOrg->about;
-           }
-       }
+    public function aboutUs(Request $request)
+    {
+        $customer = $request->user();
+        $about = null;
 
-   public function aboutUs(Request $request)
-   {
-       $customer = $request->user();
-       $about = null;
+        if ($customer) {
+            // First try the direct active_organization_id relation
+            $activeOrg = $customer->activeOrganization;
+            // If not set, fallback to first active organization from pivot
+            if (!$activeOrg) {
+                $activeOrg = $customer->activeOrganizations()->first();
+            }
+            if ($activeOrg) {
+                $about = $activeOrg->about;
+            }
+        }
 
        if ($customer) {
            // First try the direct active_organization_id relation

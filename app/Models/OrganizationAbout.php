@@ -29,6 +29,11 @@ class OrganizationAbout extends Model
         'is_active' => 'boolean',
     ];
 
+    protected $appends = [
+        'image_url',
+        'cover_image_url',
+    ];
+
     // العلاقة مع المنظمة
     public function organization()
     {
