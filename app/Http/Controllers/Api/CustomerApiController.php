@@ -476,8 +476,80 @@ class CustomerApiController extends Controller
             }
         }
 
-        // Return the about object as array, or null if none
-        return response()->json(['success' => true, 'content' => $about ? $about->toArray() : null]);
+        // Return the about object with proper data transformation
+        $content = null;
+        if ($about) {
+            $content = [
+                'id' => $about->id,
+                'organization_id' => $about->organization_id,
+                'title' => $about->title,
+                'subtitle' => $about->subtitle ?? '',
+                'description' => $about->description,
+                'vision' => $about->vision,
+                'mission' => $about->mission,
+                'values' => $this->parseJsonField($about->values),
+                'statistics' => $this->parseStatsField($about->statistics),
+                'image' => $about->image,
+                'cover_image' => $about->cover_image,
+                'image_url' => $about->image_url,
+                'cover_image_url' => $about->cover_image_url,
+                'is_active' => $about->is_active,
+            ];
+        }
+
+        return response()->json(['success' => true, 'content' => $content]);
+    }
+
+    private function parseJsonField($field)
+    {
+        if (empty($field)) {
+            return [];
+        }
+
+        if (is_array($field)) {
+            return $field;
+        }
+
+        if (is_string($field)) {
+            $decoded = json_decode($field, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $decoded ?? [];
+            }
+        }
+
+        return [];
+    }
+
+    private function parseStatsField($field)
+    {
+        if (empty($field)) {
+            return [];
+        }
+
+        $stats = [];
+
+        if (is_array($field)) {
+            $stats = $field;
+        } elseif (is_string($field)) {
+            $decoded = json_decode($field, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $stats = $decoded;
+            }
+        }
+
+        // If stats is a flat array, convert to key-value pairs
+        if (!empty($stats) && !isset($stats[0]['key']) && !isset($stats[0]['value'])) {
+            $formatted = [];
+            $keys = array_keys($stats);
+            foreach ($keys as $key) {
+                if (!is_numeric($key) && !is_null($stats[$key])) {
+                    $formatted[] = ['key' => $key, 'value' => $stats[$key]];
+                }
+            }
+            return $formatted;
+        }
+
+        return $stats;
     }
 
     public function contactUs(Request $request)
