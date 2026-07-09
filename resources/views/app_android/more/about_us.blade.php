@@ -235,19 +235,6 @@
                 contentContainer.innerHTML = aboutHtml.join('');
             }
 
-            // Main fetch
-            if (!token) {
-                contentContainer.innerHTML = `
-                    <div class="bg-white rounded-2xl shadow-md p-5 text-center">
-                        <i class="fas fa-info-circle text-4xl text-gray-300 mb-3"></i>
-                        <h3 class="text-lg font-bold text-gray-800">لم يتم تسجيل دخول</h3>
-                        <p class="text-gray-500 text-sm">يرجى تسجيل الدخول أولاً للاطلاع على النبذة.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Render data passed from controller
             const aboutData = {!! $about ? json_encode([
                 'id' => $about->id,
                 'title' => $about->title,

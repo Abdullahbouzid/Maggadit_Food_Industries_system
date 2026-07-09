@@ -637,39 +637,35 @@ class CustomerAppController extends Controller
     public function aboutUsWeb(Request $request)
     {
         $about = null;
-        $customer = auth('sanctum')->user();
-        
+        $customer = $request->user('customer') ?: Auth::guard('customer')->user();
+
         if ($customer) {
-            // Try to get the active organization
             $activeOrg = $customer->activeOrganization;
             if (!$activeOrg) {
                 $activeOrg = $customer->activeOrganizations()->first();
             }
             if ($activeOrg) {
-                $about = $activeOrg->about;
+                $about = $activeOrg->about()->where('is_active', true)->first() ?: $activeOrg->about;
             }
         } else {
-            // If not authenticated, get first active about
             $about = \App\Models\OrganizationAbout::where('is_active', true)->first();
         }
-        
+
         return view('app_android.more.about_us', compact('about'));
     }
 
     public function aboutUs(Request $request)
     {
-        $customer = $request->user();
+        $customer = $request->user('customer') ?: Auth::guard('customer')->user();
         $about = null;
 
         if ($customer) {
-            // First try the direct active_organization_id relation
             $activeOrg = $customer->activeOrganization;
-            // If not set, fallback to first active organization from pivot
             if (!$activeOrg) {
                 $activeOrg = $customer->activeOrganizations()->first();
             }
             if ($activeOrg) {
-                $about = $activeOrg->about;
+                $about = $activeOrg->about()->where('is_active', true)->first() ?: $activeOrg->about;
             }
         }
 
