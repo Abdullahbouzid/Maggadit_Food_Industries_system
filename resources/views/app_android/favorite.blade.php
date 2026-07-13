@@ -13,7 +13,7 @@
             </div>
             <h3 id="empty-title" class="text-xl font-bold text-gray-700 mb-2">المفضلة فارغة</h3>
             <p id="empty-message" class="text-gray-400 text-sm mb-6">أضف المنتجات التي تعجبك إلى قائمة مفضلاتك</p>
-            <a href="#" id="empty-shop-btn" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
+            <a href="{{ route('customer.products') }}" id="empty-shop-btn" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
                 استعرض المنتجات
             </a>
         </div>
@@ -207,14 +207,7 @@
             renderFavorites();
         }
 
-        // أحداث الأزرار التجريبية (لحالة فارغة)
-        document.getElementById('empty-shop-btn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            showToastMessage(currentLang === 'ar' ? 'جاري استعراض المنتجات (تجريبي)' : 'Browsing products (demo)', false);
-            setTimeout(() => {
-                alert(currentLang === 'ar' ? 'هذه مجرد عينة. سيتم توجيهك إلى صفحة المنتجات قريباً.' : 'This is a sample. You will be redirected to products page soon.');
-            }, 500);
-        });
+        // زر استعراض المنتجات الآن يعمل عبر الـ href مباشرة
 
         // زر تبديل اللغة (إذا كان موجوداً في الهيدر)
         const langSwitch = document.getElementById('lang-switch');

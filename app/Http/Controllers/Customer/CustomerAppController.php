@@ -140,6 +140,12 @@ class CustomerAppController extends Controller
 
                 $category = (object) $categoryData;
                 $category = $this->applyImagePath($category, 'image');
+
+                if (isset($data['products'])) {
+                    $items = $this->parseData($data['products']);
+                } elseif (isset($data['items'])) {
+                    $items = $this->parseData($data['items']);
+                }
             }
         } catch (\Exception $e) {
             Log::error("Category Show API Error: " . $e->getMessage());
@@ -153,10 +159,12 @@ class CustomerAppController extends Controller
             $category = $this->applyImagePath($category, 'image');
         }
 
-        // جلب المنتجات التابعة لهذه الفئة
-        $items = Item::where('category_id', $id)->get()->map(function ($item) {
-            return $this->applyImagePath($item, 'image');
-        });
+        if ($items->isEmpty()) {
+            // جلب المنتجات التابعة لهذه الفئة محلياً
+            $items = Item::where('category_id', $id)->get()->map(function ($item) {
+                return $this->applyImagePath($item, 'image');
+            });
+        }
 
         $customer = Auth::guard('customer')->user();
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
@@ -220,6 +228,12 @@ class CustomerAppController extends Controller
 
                 $brand = (object) $brandData;
                 $brand = $this->applyImagePath($brand, 'logo');
+
+                if (isset($data['products'])) {
+                    $items = $this->parseData($data['products']);
+                } elseif (isset($data['items'])) {
+                    $items = $this->parseData($data['items']);
+                }
             }
         } catch (\Exception $e) {
             Log::error("Brand Show API Error: " . $e->getMessage());
@@ -233,10 +247,12 @@ class CustomerAppController extends Controller
             $brand = $this->applyImagePath($brand, 'logo');
         }
 
-        // جلب المنتجات التابعة لهذه الماركة
-        $items = Item::where('brand_id', $id)->get()->map(function ($item) {
-            return $this->applyImagePath($item, 'image');
-        });
+        if ($items->isEmpty()) {
+            // جلب المنتجات التابعة لهذه الماركة محلياً
+            $items = Item::where('brand_id', $id)->get()->map(function ($item) {
+                return $this->applyImagePath($item, 'image');
+            });
+        }
 
         $customer = Auth::guard('customer')->user();
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
@@ -662,7 +678,8 @@ class CustomerAppController extends Controller
                     'name_en' => $item->name_en ?? $item->name,
                     'price' => $item->price,
                     'image' => $this->normalizeImagePath($item->image),
-                    'discount' => 0, // Placeholder
+               
+
                     'inStock' => true // Placeholder
                 ]);
             });
@@ -728,6 +745,39 @@ class CustomerAppController extends Controller
             $customer->favorites()->create(['item_id' => $itemId]);
             return response()->json(['success' => true, 'is_favorite' => true, 'message' => 'تمت الإضافة للمفضلة']);
         }
+    }
+
+    /**
+     * عرض تفاصيل منتج محدد (للـ APK)
+     */
+    public function productShow($id)
+    {
+        $product = null;
+        try {
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/products/{$id}");
+            if ($response->successful()) {
+                $data = $response->json();
+                $productData = $data['product'] ?? $data;
+                $product = (object) $productData;
+                $product = $this->applyImagePath($product, 'image');
+            }
+        } catch (\Exception $e) {
+            Log::error("Product Show API Error: " . $e->getMessage());
+        }
+
+        if (!$product) {
+            $product = Item::find($id);
+            if ($product) {
+                $product = $this->applyImagePath($product, 'image');
+            } else {
+                abort(404, 'المنتج غير موجود');
+            }
+        }
+
+        $customer = Auth::guard('customer')->user();
+        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        return view('app_android.product.show', compact('product', 'favoriteItemIds'));
     }
 
     public function more(Request $request)

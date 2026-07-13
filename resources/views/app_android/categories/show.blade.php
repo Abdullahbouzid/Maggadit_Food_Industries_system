@@ -15,7 +15,7 @@
 
         <div class="grid grid-cols-2 gap-4">
             @forelse($items as $item)
-                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
+                <a href="{{ route('customer.product.show', $item->id) }}" class="block"><div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
                     <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ in_array($item->id, $favoriteItemIds ?? []) ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $item->id }}">
                         <i class="{{ in_array($item->id, $favoriteItemIds ?? []) ? 'fas' : 'far' }} fa-heart text-lg"></i>
                     </button>
@@ -44,7 +44,7 @@
                             <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
                         </button>
                     </div>
-                </div>
+                </div></a>
             @empty
                 <p class="text-center text-gray-500 col-span-2">لا توجد منتجات في هذه الفئة حالياً</p>
             @endforelse

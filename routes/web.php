@@ -193,6 +193,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/categories/{id}', [CustomerAppController::class, 'categoriesShow'])->name('categories.show');
     Route::get('/brands', [CustomerAppController::class, 'brandsIndex'])->name('brands');
     Route::get('/brands/{id}', [CustomerAppController::class, 'brandsShow'])->name('brands.show');
+    Route::get('/product/{id}', [CustomerAppController::class, 'productShow'])->name('product.show');
     Route::get('/products', [CustomerAppController::class, 'productsIndex'])->name('products');
     Route::get('/showoffers', [CustomerAppController::class, 'offersIndex'])->name('offer');
 

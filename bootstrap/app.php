@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'mobile/login',
             'mobile/register',
             'customer/proxy/*',
+            'customer/favorite/toggle',
         ]);
         // Register route middleware aliases
         $middleware->alias([
