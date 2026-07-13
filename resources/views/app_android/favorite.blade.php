@@ -33,36 +33,7 @@
     <div id="fav-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
     <script>
-        // ========== بيانات وهمية للمفضلة (أمثلة) ==========
-        let favoriteItems = [
-            {
-                id: 1,
-                name_ar: "حذاء رياضي ماجديت برو",
-                name_en: "Maggadit Pro Sports Shoes",
-                price: 299,
-                image: "👟",
-                discount: 0,
-                inStock: true
-            },
-            {
-                id: 2,
-                name_ar: "تي شيرت قطني - أزرق",
-                name_en: "Cotton T-Shirt Blue",
-                price: 89,
-                image: "👕",
-                discount: 10,
-                inStock: true
-            },
-            {
-                id: 3,
-                name_ar: "ساعة ذكية",
-                name_en: "Smart Watch",
-                price: 459,
-                image: "⌚",
-                discount: 0,
-                inStock: false
-            }
-        ];
+        let favoriteItems = @json($favoriteItems ?? []);
 
         // ========== ترجمة الواجهة ==========
         const translations = {
@@ -123,9 +94,27 @@
         }
 
         function removeFromFav(id) {
-            favoriteItems = favoriteItems.filter(item => item.id !== id);
-            renderFavorites();
-            showToastMessage(currentLang === 'ar' ? 'تمت الإزالة من المفضلة' : 'Removed from wishlist', false);
+            fetch('{{ route('customer.favorite.toggle') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ item_id: id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    favoriteItems = favoriteItems.filter(item => item.id !== id);
+                    renderFavorites();
+                    showToastMessage(currentLang === 'ar' ? 'تمت الإزالة من المفضلة' : 'Removed from wishlist', false);
+                } else {
+                    showToastMessage(currentLang === 'ar' ? 'حدث خطأ' : 'Error occurred', true);
+                }
+            })
+            .catch(err => {
+                showToastMessage(currentLang === 'ar' ? 'حدث خطأ' : 'Error occurred', true);
+            });
         }
 
         function renderFavorites() {
@@ -148,8 +137,8 @@
                 itemCard.className = 'bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg';
                 itemCard.innerHTML = `
                     <div class="flex flex-row">
-                        <div class="w-24 h-24 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center text-4xl">
-                            ${item.image}
+                        <div class="w-24 h-24 bg-gray-100 flex items-center justify-center text-4xl overflow-hidden">
+                            ${item.image ? `<img src="${item.image}" alt="${currentLang === 'ar' ? item.name_ar : item.name_en}" class="w-full h-full object-cover">` : '📦'}
                         </div>
                         <div class="flex-1 p-3 text-right">
                             <div class="flex justify-between items-start">

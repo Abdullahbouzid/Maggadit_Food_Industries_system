@@ -94,5 +94,9 @@ class Customer extends Authenticatable
                     ->withTimestamps();
     }
 
-    
+    // المفضلة
+    public function favorites()
+    {
+        return $this->hasMany(CustomerFavorite::class);
+    }
 }

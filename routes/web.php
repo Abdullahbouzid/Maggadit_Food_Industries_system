@@ -311,9 +311,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/cart', function () {
             return view('app_android.cart');
         })->name('cart');
-        Route::get('/favorite', function () {
-            return view('app_android.favorite');
-        })->name('favorite');
+        Route::get('/favorite', [CustomerAppController::class, 'favorites'])->name('favorite');
+        Route::post('/favorite/toggle', [CustomerAppController::class, 'toggleFavorite'])->name('favorite.toggle');
         Route::get('/financial-statement', function () {
             return view('app_android.more.financial_statement');
         })->name('financial_statement');

@@ -91,7 +91,10 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 @forelse($products as $product)
-                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg">
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
+                        <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ in_array($product->id, $favoriteItemIds ?? []) ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $product->id }}">
+                            <i class="{{ in_array($product->id, $favoriteItemIds ?? []) ? 'fas' : 'far' }} fa-heart text-lg"></i>
+                        </button>
                         <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                             @if($product->image)
                                 <img src="{{ $product->image }}" alt="{{ $product->name ?? $product->name_en }}" class="w-full h-full object-cover">
@@ -103,16 +106,16 @@
                             <h3 class="font-bold text-gray-800 text-sm">{{ $product->name ?? $product->name_en }}</h3>
                             <div class="flex items-center gap-1 mt-1">
                                 <span class="text-yellow-500 text-xs">★</span>
-                                <span class="text-xs text-gray-600">{{ number_format($product->rate, 1) }}</span>
+                                <span class="text-xs text-gray-600">{{ number_format($product->rate ?? 0, 1) }}</span>
                             </div>
                             <div class="mt-2 flex items-center justify-between">
                                 <div>
-                                    <span class="text-purple-700 font-bold">{{ number_format($product->price) }} ر.س</span>
-                                    @if($product->old_price)
+                                    <span class="text-purple-700 font-bold">{{ number_format($product->price ?? 0) }} ر.س</span>
+                                    @if(isset($product->old_price) && $product->old_price)
                                         <span class="text-gray-400 text-xs line-through mr-1">{{ number_format($product->old_price) }} ر.س</span>
                                     @endif
                                 </div>
-                                <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" data-name="{{ $product->name ?? $product->name_en }}" data-price="{{ $product->price }}">شراء</button>
+                                <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" data-name="{{ $product->name ?? $product->name_en }}" data-price="{{ $product->price ?? 0 }}">شراء</button>
                             </div>
                         </div>
                     </div>
@@ -283,6 +286,42 @@
                     if (target === 'home') return;
                     window.location.href = routes[target];
                 }
+            });
+        });
+
+        // ========== Favorite Toggle ==========
+        document.querySelectorAll('.toggle-favorite-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const icon = this.querySelector('i');
+                const productId = this.getAttribute('data-id');
+                
+                fetch('{{ route("customer.favorite.toggle") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ item_id: productId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        if(data.is_favorite) {
+                            this.classList.remove('text-gray-400');
+                            this.classList.add('text-red-500');
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                        } else {
+                            this.classList.remove('text-red-500');
+                            this.classList.add('text-gray-400');
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                        }
+                    }
+                })
+                .catch(err => console.error(err));
             });
         });
     </script>

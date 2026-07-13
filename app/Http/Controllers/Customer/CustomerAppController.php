@@ -77,7 +77,10 @@ class CustomerAppController extends Controller
             });
         }
 
-        return view('app_android.customer_dashboard', compact('banners', 'categories', 'brands', 'products'));
+        $customer = Auth::guard('customer')->user();
+        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        return view('app_android.customer_dashboard', compact('banners', 'categories', 'brands', 'products', 'favoriteItemIds'));
     }
 
     /**
@@ -155,7 +158,10 @@ class CustomerAppController extends Controller
             return $this->applyImagePath($item, 'image');
         });
 
-        return view('app_android.categories.show', compact('category', 'items'));
+        $customer = Auth::guard('customer')->user();
+        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        return view('app_android.categories.show', compact('category', 'items', 'favoriteItemIds'));
     }
 
     /**
@@ -232,7 +238,10 @@ class CustomerAppController extends Controller
             return $this->applyImagePath($item, 'image');
         });
 
-        return view('app_android.brands.show', compact('brand', 'items'));
+        $customer = Auth::guard('customer')->user();
+        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        return view('app_android.brands.show', compact('brand', 'items', 'favoriteItemIds'));
     }
 
     /**
@@ -261,7 +270,9 @@ class CustomerAppController extends Controller
                 $items = $this->parseData(is_array($rawData) ? $rawData : []);
 
                 if ($items->isNotEmpty()) {
-                    return view('app_android.products.index', compact('items'));
+                    $customer = Auth::guard('customer')->user();
+                    $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+                    return view('app_android.products.index', compact('items', 'favoriteItemIds'));
                 }
             }
         } catch (\Exception $e) {
@@ -273,7 +284,10 @@ class CustomerAppController extends Controller
             return $this->applyImagePath($item, 'image');
         });
 
-        return view('app_android.products.index', compact('items'));
+        $customer = Auth::guard('customer')->user();
+        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        return view('app_android.products.index', compact('items', 'favoriteItemIds'));
     }
     /**
      * عرض العروض
@@ -626,6 +640,94 @@ class CustomerAppController extends Controller
         }
 
         return view('app_android.more.notifications', compact('notifications', 'unreadCount'));
+    }
+
+    public function favorites(Request $request)
+    {
+        $customer = $request->user('customer') ?: Auth::guard('customer')->user();
+        if (!$customer) {
+            return redirect()->route('mobile.login');
+        }
+
+        // Get favorite item IDs from local DB
+        $favoriteItemIds = $customer->favorites()->pluck('item_id')->toArray();
+
+        $favoriteItems = collect();
+        if (!empty($favoriteItemIds)) {
+            // We fetch the items from local DB as fallback
+            $favoriteItems = Item::whereIn('id', $favoriteItemIds)->get()->map(function ($item) {
+                return collect([
+                    'id' => $item->id,
+                    'name_ar' => $item->name,
+                    'name_en' => $item->name_en ?? $item->name,
+                    'price' => $item->price,
+                    'image' => $this->normalizeImagePath($item->image),
+                    'discount' => 0, // Placeholder
+                    'inStock' => true // Placeholder
+                ]);
+            });
+            
+            // Try fetching from API to get fresh data if possible
+            try {
+                $token = Session::get('api_token');
+                if ($token) {
+                    $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/products");
+                    if ($response->successful()) {
+                        $data = $response->json();
+                        $rawData = $data['products'] ?? ($data['data'] ?? $data);
+                        if (is_array($rawData) && isset($rawData['data']) && is_array($rawData['data'])) {
+                            $rawData = $rawData['data'];
+                        }
+                        $items = $this->parseData(is_array($rawData) ? $rawData : []);
+                        
+                        if ($items->isNotEmpty()) {
+                            // Filter API items by favorite IDs
+                            $favoriteItems = $items->filter(function($item) use ($favoriteItemIds) {
+                                return in_array($item->id, $favoriteItemIds);
+                            })->map(function($item) {
+                                return collect([
+                                    'id' => $item->id,
+                                    'name_ar' => $item->name ?? $item->name_en,
+                                    'name_en' => $item->name_en ?? $item->name,
+                                    'price' => $item->price ?? 0,
+                                    'image' => $item->image,
+                                    'discount' => $item->discount ?? 0,
+                                    'inStock' => true // Placeholder if API doesn't return stock
+                                ]);
+                            })->values();
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error("Favorites API Error: " . $e->getMessage());
+            }
+        }
+
+        return view('app_android.favorite', compact('favoriteItems'));
+    }
+
+    public function toggleFavorite(Request $request)
+    {
+        $customer = $request->user('customer') ?: Auth::guard('customer')->user();
+        if (!$customer) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'item_id' => 'required|integer'
+        ]);
+
+        $itemId = $request->item_id;
+
+        $favorite = $customer->favorites()->where('item_id', $itemId)->first();
+
+        if ($favorite) {
+            $favorite->delete();
+            return response()->json(['success' => true, 'is_favorite' => false, 'message' => 'تمت الإزالة من المفضلة']);
+        } else {
+            $customer->favorites()->create(['item_id' => $itemId]);
+            return response()->json(['success' => true, 'is_favorite' => true, 'message' => 'تمت الإضافة للمفضلة']);
+        }
     }
 
     public function more(Request $request)

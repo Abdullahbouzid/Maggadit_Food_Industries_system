@@ -15,7 +15,10 @@
 
         <div class="grid grid-cols-2 gap-4">
             @forelse($items as $item)
-                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg">
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
+                    <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ in_array($item->id, $favoriteItemIds ?? []) ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $item->id }}">
+                        <i class="{{ in_array($item->id, $favoriteItemIds ?? []) ? 'fas' : 'far' }} fa-heart text-lg"></i>
+                    </button>
                     <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                            @if($item->image)
                             <img src="{{ $item->image }}" class="w-full h-full object-cover">
@@ -80,6 +83,43 @@
                 e.preventDefault();
                 let name = this.getAttribute('data-name');
                 showToast(`✅ تم إضافة "${name}" إلى السلة`);
+            });
+        });
+
+        document.querySelectorAll('.toggle-favorite-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const icon = this.querySelector('i');
+                const productId = this.getAttribute('data-id');
+                
+                fetch('{{ route("customer.favorite.toggle") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ item_id: productId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        if(data.is_favorite) {
+                            this.classList.remove('text-gray-400');
+                            this.classList.add('text-red-500');
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            showToast('تمت الإضافة للمفضلة');
+                        } else {
+                            this.classList.remove('text-red-500');
+                            this.classList.add('text-gray-400');
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            showToast('تمت الإزالة من المفضلة');
+                        }
+                    }
+                })
+                .catch(err => console.error(err));
             });
         });
     </script>
