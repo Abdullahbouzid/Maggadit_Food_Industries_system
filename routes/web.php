@@ -38,6 +38,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationAboutController;
+use App\Http\Controllers\ProductionBatchController;
+use App\Http\Controllers\BatchDistributionController;
 
 
 use Illuminate\Http\Request;
@@ -471,6 +473,13 @@ Route::resource('organization-about', OrganizationAboutController::class);
     Route::get('warehouses/cities/{stateId}', [WarehouseController::class, 'getCitiesByState'])->name('warehouses.cities');
     Route::get('/warehouses/areas-by-state/{stateId}', [WarehouseController::class, 'getAreasByState']);
     Route::resource('warehouses', WarehouseController::class);
+
+    Route::resource('production-batches', ProductionBatchController::class);
+    Route::get('production-batches/get-packs/{itemId}', [ProductionBatchController::class, 'getPacks'])->name('production-batches.get-packs');
+    Route::get('production-batches/{productionBatch}/distribute', [ProductionBatchController::class, 'distributeForm'])->name('production-batches.distribute');
+    Route::post('production-batches/{productionBatch}/distribute', [ProductionBatchController::class, 'distribute'])->name('production-batches.distribute.store');
+    Route::get('production-batches/{batch}/warehouse-stock/{warehouse}', [ProductionBatchController::class, 'getWarehouseStock'])->name('production-batches.warehouse-stock');
+
 
     Route::get('vehicle-types/export', [VehicleTypeController::class, 'export'])->name('vehicle-types.export');
     Route::get('vehicle-types/template', [VehicleTypeController::class, 'downloadTemplate'])->name('vehicle-types.template');

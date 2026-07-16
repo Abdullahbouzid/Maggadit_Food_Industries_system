@@ -129,8 +129,48 @@
 					</div>
 
 					<div class="row">
+						<div class="col-xl-6 col-xxl-6 d-flex">
+							<div class="card flex-fill w-100">
+								<div class="card-body">
+									<div class="row">
+										<div class="col mt-0">
+											<h5 class="card-title">{{ $stats['items_count']['label'] }}</h5>
+										</div>
+										<div class="col-auto">
+											<div class="stat text-primary">
+												<i class="align-middle" data-feather="{{ $stats['items_count']['icon'] }}"></i>
+											</div>
+										</div>
+									</div>
+									<h1 class="mt-1 mb-3">{{ $stats['items_count']['value'] }}</h1>
+									<div class="mb-0">
+										<span class="text-{{ $stats['items_count']['trend'] === 'up' ? 'success' : ($stats['items_count']['trend'] === 'down' ? 'danger' : 'muted') }}">
+											<i class="mdi mdi-arrow-{{ $stats['items_count']['trend'] === 'up' ? 'top-right' : ($stats['items_count']['trend'] === 'down' ? 'bottom-right' : 'right') }}"></i>
+											{{ number_format($stats['items_count']['change_percent'], 2) }}%
+										</span>
+										<span class="text-muted">Since last week</span>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-xl-6 col-xxl-6 d-flex">
+							<div class="card flex-fill w-100">
+								<div class="card-header">
+									<h5 class="card-title mb-0">{{ $stats['top_favorite_items']['label'] }}</h5>
+								</div>
+								<div class="card-body">
+									<div class="chart">
+										<canvas id="chartjs-dashboard-favorites"></canvas>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row">
 						<div class="col-12 col-md-6 col-xxl-3 d-flex order-2 order-xxl-3">
 							<div class="card flex-fill w-100">
+									<h5 class="card flex-fill w-100">
 								<div class="card-header">
 
 									<h5 class="card-title mb-0">Browser Usage</h5>

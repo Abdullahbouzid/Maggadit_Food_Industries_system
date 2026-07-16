@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -141,6 +142,63 @@ class DashboardController extends Controller
                 'trend' => 'neutral',
                 'icon' => 'credit-card',
                 'label' => 'الأرباح'
+            ],
+            'items_count' => [
+                'value' => 0,
+                'change' => 0,
+                'change_percent' => 0,
+                'trend' => 'neutral',
+                'icon' => 'box',
+                'label' => 'عدد الاصناف'
+            ],
+            'top_favorite_items' => [
+                'items' => [], // Will store top favorite items
+                'icon' => 'heart',
+                'label' => 'اكثر المنتجات مفضلة'
+            ],
+            'warehouses_count' => [
+                'value' => 0,
+                'change' => 0,
+                'change_percent' => 0,
+                'trend' => 'neutral',
+                'icon' => 'box',
+                'label' => 'عدد المخازن'
+            ],
+            'customers_count' => [
+                'value' => 0,
+                'change' => 0,
+                'change_percent' => 0,
+                'trend' => 'neutral',
+                'icon' => 'users',
+                'label' => 'عدد العملاء'
+            ],
+            'packs_count' => [
+                'value' => 0,
+                'change' => 0,
+                'change_percent' => 0,
+                'trend' => 'neutral',
+                'icon' => 'package',
+                'label' => 'المونتاجات'
+            ],
+            'new_customers_today' => [
+                'value' => 0,
+                'change' => 0,
+                'change_percent' => 0,
+                'trend' => 'neutral',
+                'icon' => 'user-plus',
+                'label' => 'عملاء جدد اليوم'
+            ],
+            'new_customers_this_month' => [
+                'value' => 0,
+                'change' => 0,
+                'change_percent' => 0,
+                'trend' => 'neutral',
+                'icon' => 'calendar-plus',
+                'label' => 'عملاء جدد هذا الشهر'
+            ],
+            'favorites_chart' => [
+                'labels' => [],
+                'data' => [],
             ]
         ];
 
@@ -152,8 +210,8 @@ class DashboardController extends Controller
                     $orderModel = new \App\Models\Order();
                     $table = $orderModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
-                        $currentOrders = $orderModel->whereDate('created_at', today())->count();
-                        $previousOrders = $orderModel->whereDate('created_at', yesterday())->count();
+                        $currentOrders = $orderModel->whereDate('created_at', Carbon::today()->toDateString())->count();
+                        $previousOrders = $orderModel->whereDate('created_at', Carbon::yesterday()->toDateString())->count();
                         $stats['orders']['value'] = $currentOrders;
                         $stats['orders']['change'] = $currentOrders - $previousOrders;
                         $stats['orders']['change_percent'] = $previousOrders > 0 ?
@@ -167,8 +225,8 @@ class DashboardController extends Controller
                     $invoiceModel = new \App\Models\Invoice();
                     $table = $invoiceModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
-                        $currentOrders = $invoiceModel->whereDate('created_at', today())->count();
-                        $previousOrders = $invoiceModel->whereDate('created_at', yesterday())->count();
+                        $currentOrders = $invoiceModel->whereDate('created_at', Carbon::today())->count();
+                        $previousOrders = $invoiceModel->whereDate('created_at', Carbon::yesterday())->count();
                         $stats['orders']['value'] = $currentOrders;
                         $stats['orders']['change'] = $currentOrders - $previousOrders;
                         $stats['orders']['change_percent'] = $previousOrders > 0 ?
@@ -191,13 +249,13 @@ class DashboardController extends Controller
                     $table = $orderModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         if (Schema()->hasColumn($table, 'total_amount')) {
-                            $currentSales = $orderModel->whereDate('created_at', today())->sum('total_amount');
-                            $previousSales = $orderModel->whereDate('created_at', yesterday())->sum('total_amount');
+                            $currentSales = $orderModel->whereDate('created_at', Carbon::today()->toDateString())->sum('total_amount');
+                            $previousSales = $orderModel->whereDate('created_at', Carbon::yesterday()->toDateString())->sum('total_amount');
                         }
                         // Alternative: if there's an amount column
                         elseif (Schema()->hasColumn($table, 'amount')) {
-                            $currentSales = $orderModel->whereDate('created_at', today())->sum('amount');
-                            $previousSales = $orderModel->whereDate('created_at', yesterday())->sum('amount');
+                            $currentSales = $orderModel->whereDate('created_at', Carbon::today()->toDateString())->sum('amount');
+                            $previousSales = $orderModel->whereDate('created_at', Carbon::yesterday()->toDateString())->sum('amount');
                         }
 
                         if ($currentSales > 0 || $previousSales > 0) {
@@ -215,8 +273,8 @@ class DashboardController extends Controller
                     $invoiceModel = new \App\Models\Invoice();
                     $table = $invoiceModel->getTable();
                     if ($table && Schema()->hasTable($table) && Schema()->hasColumn($table, 'total_amount')) {
-                        $currentSales = $invoiceModel->whereDate('created_at', today())->sum('total_amount');
-                        $previousSales = $invoiceModel->whereDate('created_at', yesterday())->sum('total_amount');
+                        $currentSales = $invoiceModel->whereDate('created_at', Carbon::today()->toDateString())->sum('total_amount');
+                        $previousSales = $invoiceModel->whereDate('created_at', Carbon::yesterday()->toDateString())->sum('total_amount');
                         $stats['sales']['value'] = round($currentSales, 2);
                         $stats['sales']['change'] = round($currentSales - $previousSales, 2);
                         $stats['sales']['change_percent'] = $previousSales > 0 ?
@@ -232,10 +290,10 @@ class DashboardController extends Controller
                     if ($table && Schema()->hasTable($table) &&
                         Schema()->hasColumn($table, 'price') &&
                         Schema()->hasColumn($table, 'quantity')) {
-                        $currentSales = $orderItemModel->whereDate('created_at', today())
+                        $currentSales = $orderItemModel->whereDate('created_at', Carbon::today()->toDateString())
                                                         ->join('orders', 'order_items.order_id', '=', 'orders.id')
                                                         ->sum(DB::raw('order_items.price * order_items.quantity'));
-                        $previousSales = $orderItemModel->whereDate('created_at', yesterday())
+                        $previousSales = $orderItemModel->whereDate('created_at', Carbon::yesterday()->toDateString())
                                                         ->join('orders', 'order_items.order_id', '=', 'orders.id')
                                                         ->sum(DB::raw('order_items.price * order_items.quantity'));
                         $stats['sales']['value'] = round($currentSales, 2);
@@ -257,8 +315,8 @@ class DashboardController extends Controller
                     $visitorModel = new \App\Models\VisitorLog();
                     $table = $visitorModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
-                        $currentVisitors = $visitorModel->whereDate('created_at', today())->countDistinct('ip_address');
-                        $previousVisitors = $visitorModel->whereDate('created_at', yesterday())->countDistinct('ip_address');
+                        $currentVisitors = $visitorModel->whereDate('created_at', Carbon::today())->countDistinct('ip_address');
+                        $previousVisitors = $visitorModel->whereDate('created_at', Carbon::yesterday())->countDistinct('ip_address');
                         $stats['visitors']['value'] = $currentVisitors;
                         $stats['visitors']['change'] = $currentVisitors - $previousVisitors;
                         $stats['visitors']['change_percent'] = $previousVisitors > 0 ?
@@ -273,8 +331,8 @@ class DashboardController extends Controller
                     $table = $userModel->getTable();
                     if ($table && Schema()->hasTable($table) &&
                         Schema()->hasColumn($table, 'last_login_at')) {
-                        $currentVisitors = $userModel->whereDate('last_login_at', today())->count();
-                        $previousVisitors = $userModel->whereDate('last_login_at', yesterday())->count();
+                        $currentVisitors = $userModel->whereDate('last_login_at', Carbon::today())->count();
+                        $previousVisitors = $userModel->whereDate('last_login_at', Carbon::yesterday())->count();
                         $stats['visitors']['value'] = $currentVisitors;
                         $stats['visitors']['change'] = $currentVisitors - $previousVisitors;
                         $stats['visitors']['change_percent'] = $previousVisitors > 0 ?
@@ -297,8 +355,8 @@ class DashboardController extends Controller
                     $customerModel = new \App\Models\Customer();
                     $table = $customerModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
-                        $currentVisitors = $customerModel->whereDate('created_at', today())->count();
-                        $previousVisitors = $customerModel->whereDate('created_at', yesterday())->count();
+                        $currentVisitors = $customerModel->whereDate('created_at', Carbon::today())->count();
+                        $previousVisitors = $customerModel->whereDate('created_at', Carbon::yesterday())->count();
                         $stats['visitors']['value'] = $currentVisitors;
                         $stats['visitors']['change'] = $currentVisitors - $previousVisitors;
                         $stats['visitors']['change_percent'] = $previousVisitors > 0 ?
@@ -319,8 +377,8 @@ class DashboardController extends Controller
                     $table = $paymentModel->getTable();
                     if ($table && Schema()->hasTable($table) &&
                         Schema()->hasColumn($table, 'amount')) {
-                        $currentEarnings = $paymentModel->whereDate('created_at', today())->sum('amount');
-                        $previousEarnings = $paymentModel->whereDate('created_at', yesterday())->sum('amount');
+                        $currentEarnings = $paymentModel->whereDate('created_at', Carbon::today())->sum('amount');
+                        $previousEarnings = $paymentModel->whereDate('created_at', Carbon::yesterday())->sum('amount');
                         $stats['earnings']['value'] = round($currentEarnings, 2);
                         $stats['earnings']['change'] = round($currentEarnings - $previousEarnings, 2);
                         $stats['earnings']['change_percent'] = $previousEarnings > 0 ?
@@ -344,6 +402,207 @@ class DashboardController extends Controller
                 $stats['earnings']['change'] = $stats['sales']['change'];
                 $stats['earnings']['change_percent'] = $stats['sales']['change_percent'];
                 $stats['earnings']['trend'] = $stats['sales']['trend'];
+            }
+
+            // Calculate items count
+            try {
+                if (class_exists('App\Models\Item')) {
+                    $itemsModel = new \App\Models\Item();
+                    $table = $itemsModel->getTable();
+                    if ($table && Schema()->hasTable($table)) {
+                        $currentItems = $itemsModel->where('is_inactive', false)->count(); // Count only active items
+                        $previousItems = $itemsModel->where('is_inactive', false) // We could use yesterday's count but let's keep it simple for now
+                            ->whereDate('created_at', '<=', Carbon::today()->subDay())
+                            ->count(); // Items created before today
+
+                        $stats['items_count']['value'] = $currentItems;
+                        $stats['items_count']['change'] = $currentItems - $previousItems; // Items added today
+                        $stats['items_count']['change_percent'] = $previousItems > 0 ?
+                            (($currentItems - $previousItems) / $previousItems) * 100 : 0;
+                        $stats['items_count']['trend'] = $currentItems > $previousItems ? 'up' :
+                                                   ($currentItems < $previousItems ? 'down' : 'neutral');
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not fetch items count statistics: " . $e->getMessage());
+            }
+
+            // Calculate warehouses count
+            try {
+                if (class_exists('App\Models\Warehouse')) {
+                    $warehousesModel = new \App\Models\Warehouse();
+                    $table = $warehousesModel->getTable();
+                    if ($table && Schema()->hasTable($table)) {
+                        $stats['warehouses_count']['value'] = $warehousesModel->count();
+                        $stats['warehouses_count']['change'] = 0;
+                        $stats['warehouses_count']['change_percent'] = 0;
+                        $stats['warehouses_count']['trend'] = 'neutral';
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not fetch warehouses count statistics: " . $e->getMessage());
+            }
+
+            // Calculate customers count
+            try {
+                if (class_exists('App\Models\Customer')) {
+                    $customersModel = new \App\Models\Customer();
+                    $table = $customersModel->getTable();
+                    if ($table && Schema()->hasTable($table)) {
+                        $stats['customers_count']['value'] = $customersModel->count();
+                        $stats['customers_count']['change'] = 0;
+                        $stats['customers_count']['change_percent'] = 0;
+                        $stats['customers_count']['trend'] = 'neutral';
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not fetch customers count statistics: " . $e->getMessage());
+            }
+
+            // Calculate packs count
+            try {
+                if (class_exists('App\Models\ItemPack')) {
+                    $packsModel = new \App\Models\ItemPack();
+                    $table = $packsModel->getTable();
+                    if ($table && Schema()->hasTable($table)) {
+                        $stats['packs_count']['value'] = $packsModel->count();
+                        $stats['packs_count']['change'] = 0;
+                        $stats['packs_count']['change_percent'] = 0;
+                        $stats['packs_count']['trend'] = 'neutral';
+                        $stats['packs_count']['label'] = 'Packs';
+                        $stats['packs_count']['icon'] = 'box';
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not fetch packs count statistics: " . $e->getMessage());
+            }
+
+            // Calculate new customers today
+            try {
+                if (class_exists('App\Models\Customer')) {
+                    $customersModel = new \App\Models\Customer();
+                    $table = $customersModel->getTable();
+                    if ($table && Schema()->hasTable($table)) {
+                        $todayStart = Carbon::today()->startOfDay();
+                        $todayEnd = Carbon::today()->endOfDay();
+                        $yesterdayStart = Carbon::yesterday()->startOfDay();
+                        $yesterdayEnd = Carbon::yesterday()->endOfDay();
+
+                        $current = $customersModel->whereBetween('created_at', [$todayStart, $todayEnd])->count();
+                        $previous = $customersModel->whereBetween('created_at', [$yesterdayStart, $yesterdayEnd])->count();
+
+                        $stats['new_customers_today']['value'] = $current;
+                        $stats['new_customers_today']['change'] = $current - $previous;
+                        $stats['new_customers_today']['change_percent'] = $previous > 0 ? (($current - $previous) / $previous) * 100 : 0;
+                        $stats['new_customers_today']['trend'] = $current > $previous ? 'up' : ($current < $previous ? 'down' : 'neutral');
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not fetch new customers today statistics: " . $e->getMessage());
+            }
+
+// Calculate new customers this month
+            try {
+                if (class_exists('App\Models\Customer')) {
+                    $customersModel = new \App\Models\Customer();
+                    $table = $customersModel->getTable();
+                    if ($table && Schema()->hasTable($table)) {
+                        $monthStart = Carbon::now()->startOfMonth();
+                        $monthEnd = Carbon::now()->endOfMonth();
+                        $lastMonthStart = Carbon::now()->subMonth()->startOfMonth();
+                        $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
+
+                        $current = $customersModel->whereBetween('created_at', [$monthStart, $monthEnd])->count();
+                        $previous = $customersModel->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+
+                        $stats['new_customers_this_month']['value'] = $current;
+                        $stats['new_customers_this_month']['change'] = $current - $previous;
+                        $stats['new_customers_this_month']['change_percent'] = $previous > 0 ? (($current - $previous) / $previous) * 100 : 0;
+                        $stats['new_customers_this_month']['trend'] = $current > $previous ? 'up' : ($current < $previous ? 'down' : 'neutral');
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not fetch new customers this month statistics: " . $e->getMessage());
+            }
+
+            // Prepare data for new customers daily chart (last 7 days)
+            try {
+                if (class_exists('App\Models\Customer')) {
+                    $customersModel = new \App\Models\Customer();
+                    $table = $customersModel->getTable();
+                    if ($table && Schema()->hasTable($table)) {
+                        $labels = [];
+                        $data = [];
+                        for ($i = 6; $i >= 0; $i--) {
+                            $day = Carbon::now()->subDays($i)->startOfDay();
+                            $label = $day->format('M d'); // e.g., Jan 01
+                            $labels[] = $label;
+                            $count = $customersModel->whereDate('created_at', $day)->count();
+                            $data[] = (int)$count;
+                        }
+                        $stats['new_customers_daily_chart']['labels'] = $labels;
+                        $stats['new_customers_daily_chart']['data'] = $data;
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not fetch new customers daily chart data: " . $e->getMessage());
+            }
+
+            // Prepare data for new customers monthly chart (last 12 months)
+            try {
+                if (class_exists('App\Models\Customer')) {
+                    $customersModel = new \App\Models\Customer();
+                    $table = $customersModel->getTable();
+                    if ($table && Schema()->hasTable($table)) {
+                        $labels = [];
+                        $data = [];
+                        for ($i = 11; $i >= 0; $i--) {
+                            $month = Carbon::now()->subMonths($i)->startOfMonth();
+                            $label = $month->format('M Y'); // e.g., Jan 2026
+                            $labels[] = $label;
+                            $count = $customersModel->whereBetween('created_at', [$month->startOfMonth(), $month->endOfMonth()])->count();
+                            $data[] = (int)$count;
+                        }
+                        $stats['new_customers_monthly_chart']['labels'] = $labels;
+                        $stats['new_customers_monthly_chart']['data'] = $data;
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not fetch new customers monthly chart data: " . $e->getMessage());
+            }
+            try {
+                if (class_exists('App\Models\CustomerFavorite') && class_exists('App\Models\Item')) {
+                    // Get top 5 most favorited items with their details
+                    $topFavorites = \App\Models\CustomerFavorite::select('item_id', DB::raw('count(*) as favorite_count'))
+                        ->groupBy('item_id')
+                        ->orderByDesc('favorite_count')
+                        ->limit(5)
+                        ->get();
+
+                    $topItems = [];
+                    $labels = [];
+                    $data = [];
+                    foreach ($topFavorites as $fav) {
+                        $item = \App\Models\Item::where('id', $fav->item_id)->first();
+                        if ($item) {
+                            $topItems[] = [
+                                'id' => $item->id,
+                                'name_en' => $item->name_en,
+                                'name_ar' => $item->name_ar,
+                                'image' => $item->getMainImageUrlAttribute(),
+                                'favorite_count' => (int)$fav->favorite_count
+                            ];
+                            $labels[] = $item->name_ar;
+                            $data[] = (int)$fav->favorite_count;
+                        }
+                    }
+
+                    $stats['top_favorite_items']['items'] = $topItems;
+                    $stats['favorites_chart']['labels'] = $labels;
+                    $stats['favorites_chart']['data'] = $data;
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not fetch top favorite items statistics: " . $e->getMessage());
             }
         } catch (\Exception $e) {
             Log::error("Error calculating dashboard statistics: " . $e->getMessage());

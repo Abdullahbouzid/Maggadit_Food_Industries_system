@@ -9,6 +9,7 @@ use App\Models\Country;
 use App\Models\State;
 use App\Models\City;
 use App\Models\Area;
+use App\Models\BatchItemStock;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\WarehousesExport;
@@ -18,7 +19,6 @@ class WarehouseController extends Controller
 {
     public function index(Request $request)
     {
-        // ... (نفس الكود الموجود لديك، لا تغيير)
         $query = Warehouse::with(['warehouseType', 'organization', 'country', 'state', 'city', 'area']);
         if ($request->filled('search')) {
             $search = $request->search;
@@ -48,13 +48,11 @@ class WarehouseController extends Controller
         $warehouseTypes = WarehouseType::where('is_active', true)->orderBy('name_en')->get();
         $organizations = Organization::orderBy('name')->get();
         $countries = Country::orderBy('name')->get();
-        // لا نرسل states, cities, areas مسبقاً - سيتم تحميلها عبر AJAX
         return view('dashboard.data_definition.w&v.warehouse.create', compact('warehouseTypes', 'organizations', 'countries'));
     }
 
     public function store(Request $request)
     {
-        // ... (نفس الكود الموجود، لا تغيير)
         $validated = $request->validate([
             'code' => 'required|string|max:100|unique:warehouses,code',
             'name_en' => 'required|string|max:255',
@@ -88,18 +86,55 @@ class WarehouseController extends Controller
         return redirect()->route('warehouses.index')->with('success', 'Warehouse created successfully.');
     }
 
-    public function show(Warehouse $warehouse)
-    {
-        $warehouse->load(['warehouseType', 'organization', 'country', 'state', 'city', 'area']);
-        return view('dashboard.data_definition.w&v.warehouse.show', compact('warehouse'));
-    }
+        public function show(Warehouse $warehouse)
+        {
+            $stocks = BatchItemStock::where('warehouse_id', $warehouse->id)
+                ->with(['batchItem.item', 'batchItem.pack', 'batchItem.batch'])
+                ->get();
+
+            // تصفية الأرصدة الصالحة
+            $validStocks = $stocks->filter(function ($stock) {
+                return $stock->batchItem !== null && $stock->batchItem->item !== null;
+            });
+
+            $totalProducts = $validStocks->groupBy('batch_item_id')->count();
+            $totalQuantity = $validStocks->sum('quantity');
+            $totalBatches = $validStocks->groupBy('batchItem.batch_id')->count();
+
+            // تجميع المنتجات مع إضافة صورة المنتج
+            $groupedProducts = $validStocks->groupBy('batch_item_id')->map(function ($stockGroup) {
+                $first = $stockGroup->first();
+                if (!$first->batchItem || !$first->batchItem->item) return null;
+
+                $item = $first->batchItem->item;
+                return [
+                    'item' => $item,
+                    'item_name' => $item->name_en ?? 'غير معروف',
+                    'item_code' => $item->code ?? '',
+                    'image_url' => $item->main_image_url, // صورة المنتج
+                    'pack' => $first->batchItem->pack,
+                    'total_quantity' => $stockGroup->sum('quantity'),
+                    'batches' => $stockGroup->map(function ($stock) {
+                        return [
+                            'batch_number' => $stock->batchItem->batch->batch_number ?? 'غير معروف',
+                            'batch_id' => $stock->batchItem->batch->id ?? null,
+                            'quantity' => $stock->quantity,
+                            'expiry_date' => $stock->batchItem->batch->expiry_date ?? null,
+                        ];
+                    })->filter(fn($b) => $b['batch_id'] !== null),
+                ];
+            })->filter();
+
+            return view('dashboard.data_definition.w&v.warehouse.show', compact(
+                'warehouse', 'groupedProducts', 'totalProducts', 'totalQuantity', 'totalBatches'
+            ));
+        }
 
     public function edit(Warehouse $warehouse)
     {
         $warehouseTypes = WarehouseType::where('is_active', true)->orderBy('name_en')->get();
         $organizations = Organization::orderBy('name')->get();
         $countries = Country::orderBy('name')->get();
-        // فك تشفير الحقول النصية
         $warehouse->destinations = json_decode($warehouse->destinations, true);
         $warehouse->sources = json_decode($warehouse->sources, true);
         $warehouse->employees = json_decode($warehouse->employees, true);
@@ -108,7 +143,6 @@ class WarehouseController extends Controller
 
     public function update(Request $request, Warehouse $warehouse)
     {
-        // نفس منطق store مع unique exception
         $validated = $request->validate([
             'code' => 'required|string|max:100|unique:warehouses,code,' . $warehouse->id,
             'name_en' => 'required|string|max:255',
@@ -152,11 +186,14 @@ class WarehouseController extends Controller
     public function downloadTemplate() { /* نفس الكود */ }
     public function import(Request $request) { /* نفس الكود */ }
 
-    private function parseCommaField($field) { /* نفس الكود */ }
+    private function parseCommaField($field)
+    {
+        if (empty($field)) return null;
+        $parts = array_map('trim', explode(',', $field));
+        return json_encode(array_filter($parts));
+    }
 
-    // ========== دوال AJAX المعدلة ==========
-
-    // 1. جلب الولايات بناءً على country_id
+    // دوال AJAX
     public function getStatesByCountry($countryId)
     {
         $states = State::where('country_id', $countryId)
@@ -166,7 +203,6 @@ class WarehouseController extends Controller
         return response()->json($states);
     }
 
-    // 2. جلب المدن بناءً على state_id
     public function getCitiesByState($stateId)
     {
         $cities = City::where('state_id', $stateId)
@@ -175,8 +211,6 @@ class WarehouseController extends Controller
         return response()->json($cities);
     }
 
-    // 3. جلب المناطق (areas) بناءً على state_id (وليس city_id)
-   // WarehouseController.php
     public function getAreasByState($stateId)
     {
         $areas = Area::where('state_id', $stateId)
@@ -185,5 +219,4 @@ class WarehouseController extends Controller
             ->get(['id', 'name_en', 'name_ar']);
         return response()->json($areas);
     }
-    
 }

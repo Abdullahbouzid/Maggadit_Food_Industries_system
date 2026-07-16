@@ -130,6 +130,7 @@
                 ['label' => 'warehouses', 'icon' => 'warehouse', 'route' => route('warehouses.index'), 'disabled' => false],
                 ['label' => 'vehicle types', 'icon' => 'truck', 'route' => route('vehicle-types.index'), 'disabled' => false],
                 ['label' => 'vehicles', 'icon' => 'truck', 'route' => route('vehicles.index'), 'disabled' => false],
+                ['label' => 'production batches', 'icon' => 'package', 'route' => route('production-batches.index'), 'disabled' => false],
             ]
         ],
         'mobile' => [
