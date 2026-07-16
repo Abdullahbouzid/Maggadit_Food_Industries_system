@@ -85,51 +85,120 @@ class WarehouseController extends Controller
         Warehouse::create($validated);
         return redirect()->route('warehouses.index')->with('success', 'Warehouse created successfully.');
     }
+    public function show(Request $request, Warehouse $warehouse)
+    {
+        $search = $request->input('search');
+        
+        $stocks = BatchItemStock::where('warehouse_id', $warehouse->id)
+            ->with(['batchItem.item', 'batchItem.pack', 'batchItem.batch'])
+            ->get();
 
-        public function show(Warehouse $warehouse)
-        {
-            $stocks = BatchItemStock::where('warehouse_id', $warehouse->id)
-                ->with(['batchItem.item', 'batchItem.pack', 'batchItem.batch'])
-                ->get();
+        $validStocks = $stocks->filter(function ($stock) {
+            return $stock->batchItem !== null 
+                && $stock->batchItem->item !== null 
+                && $stock->batchItem->batch !== null;
+        });
 
-            // تصفية الأرصدة الصالحة
-            $validStocks = $stocks->filter(function ($stock) {
-                return $stock->batchItem !== null && $stock->batchItem->item !== null;
+        // تطبيق البحث
+        if ($search) {
+            $searchLower = strtolower($search);
+            $validStocks = $validStocks->filter(function ($stock) use ($searchLower) {
+                $item = $stock->batchItem->item;
+                $batch = $stock->batchItem->batch;
+                $pack = $stock->batchItem->pack;
+                
+                return (
+                    stripos($item->name_en ?? '', $searchLower) !== false ||
+                    stripos($item->name_ar ?? '', $searchLower) !== false ||
+                    stripos($item->code ?? '', $searchLower) !== false ||
+                    stripos($batch->batch_number ?? '', $searchLower) !== false ||
+                    ($pack && stripos($pack->barcode ?? '', $searchLower) !== false)
+                );
             });
-
-            $totalProducts = $validStocks->groupBy('batch_item_id')->count();
-            $totalQuantity = $validStocks->sum('quantity');
-            $totalBatches = $validStocks->groupBy('batchItem.batch_id')->count();
-
-            // تجميع المنتجات مع إضافة صورة المنتج
-            $groupedProducts = $validStocks->groupBy('batch_item_id')->map(function ($stockGroup) {
-                $first = $stockGroup->first();
-                if (!$first->batchItem || !$first->batchItem->item) return null;
-
-                $item = $first->batchItem->item;
-                return [
-                    'item' => $item,
-                    'item_name' => $item->name_en ?? 'غير معروف',
-                    'item_code' => $item->code ?? '',
-                    'image_url' => $item->main_image_url, // صورة المنتج
-                    'pack' => $first->batchItem->pack,
-                    'total_quantity' => $stockGroup->sum('quantity'),
-                    'batches' => $stockGroup->map(function ($stock) {
-                        return [
-                            'batch_number' => $stock->batchItem->batch->batch_number ?? 'غير معروف',
-                            'batch_id' => $stock->batchItem->batch->id ?? null,
-                            'quantity' => $stock->quantity,
-                            'expiry_date' => $stock->batchItem->batch->expiry_date ?? null,
-                        ];
-                    })->filter(fn($b) => $b['batch_id'] !== null),
-                ];
-            })->filter();
-
-            return view('dashboard.data_definition.w&v.warehouse.show', compact(
-                'warehouse', 'groupedProducts', 'totalProducts', 'totalQuantity', 'totalBatches'
-            ));
         }
 
+        // تجميع حسب (item_id, item_pack_id)
+        $grouped = $validStocks->groupBy(function ($stock) {
+            $itemId = $stock->batchItem->item_id;
+            $packId = $stock->batchItem->item_pack_id ?? 'null';
+            return $itemId . '-' . $packId;
+        });
+
+        $groupedProducts = $grouped->map(function ($stockGroup) {
+            $first = $stockGroup->first();
+            if (!$first || !$first->batchItem || !$first->batchItem->item) {
+                return null;
+            }
+
+            $item = $first->batchItem->item;
+            $pack = $first->batchItem->pack;
+
+            $totalQuantity = $stockGroup->sum('quantity');
+
+            $activeBatches = $stockGroup->filter(function ($stock) {
+                return $stock->batchItem->batch->status === 'active';
+            })->map(function ($stock) {
+                return [
+                    'batch_number' => $stock->batchItem->batch->batch_number,
+                    'batch_id' => $stock->batchItem->batch->id,
+                    'quantity' => $stock->quantity,
+                    'expiry_date' => $stock->batchItem->batch->expiry_date,
+                ];
+            })->values();
+
+            return [
+                'item' => $item,
+                'item_name' => $item->name_en ?? 'غير معروف',
+                'item_code' => $item->code ?? '',
+                'image_url' => $item->main_image_url,
+                'pack' => $pack,
+                'total_quantity' => $totalQuantity,
+                'batches' => $activeBatches,
+                'batches_count' => $activeBatches->count(),
+            ];
+        })->filter(function ($group) {
+            return $group !== null && isset($group['total_quantity']) && $group['total_quantity'] > 0;
+        })->sortBy('item_name')->values();
+
+        // إحصائيات العبوات مع النسب المئوية
+        $packStatsRaw = $validStocks->groupBy('batchItem.item_pack_id')->map(function ($group) {
+            $first = $group->first();
+            if (!$first || !$first->batchItem) {
+                return null;
+            }
+            return [
+                'pack' => $first->batchItem->pack,
+                'total_quantity' => $group->sum('quantity'),
+            ];
+        })->filter(function ($item) {
+            return $item !== null && $item['total_quantity'] > 0;
+        })->values();
+
+        $totalQuantityAll = $packStatsRaw->sum('total_quantity');
+
+        $packStats = $packStatsRaw->map(function ($item) use ($totalQuantityAll) {
+            $percentage = $totalQuantityAll > 0 ? ($item['total_quantity'] / $totalQuantityAll) * 100 : 0;
+            $packName = $item['pack'] ? $item['pack']->barcode : 'بدون عبوة';
+            return [
+                'pack' => $item['pack'],
+                'pack_name' => $packName,
+                'total_quantity' => $item['total_quantity'],
+                'percentage' => round($percentage, 1),
+            ];
+        })->sortByDesc('total_quantity')->values();
+
+        $totalPackTypes = $packStats->count();
+        $totalQuantityByPack = $packStats->sum('total_quantity');
+
+        $totalProducts = $groupedProducts->count();
+        $totalQuantity = $groupedProducts->sum('total_quantity');
+        $totalBatches = $groupedProducts->sum('batches_count');
+
+        return view('dashboard.data_definition.w&v.warehouse.show', compact(
+            'warehouse', 'groupedProducts', 'totalProducts', 'totalQuantity', 'totalBatches',
+            'packStats', 'totalPackTypes', 'totalQuantityByPack', 'search'
+        ));
+    }
     public function edit(Warehouse $warehouse)
     {
         $warehouseTypes = WarehouseType::where('is_active', true)->orderBy('name_en')->get();

@@ -92,36 +92,47 @@
                                                 </tr>
                                             </thead>
                                             <tbody id="itemsTableBody">
-                                                @foreach($batch->batchItems as $index => $item)
+                                             @foreach($batch->batchItems as $index => $item)
                                                     @php
                                                         $remaining = $item->quantity - $item->dispatched_quantity;
                                                     @endphp
-                                                    <tr id="row-{{ $item->id }}">
-                                                        <td>{{ $loop->iteration }}</td>
-                                                        <td>{{ $item->item->name_en ?? 'غير معروف' }}</td>
-                                                        <td>{{ $item->pack ? $item->pack->barcode . ' (Qty: ' . $item->pack->quantity . ')' : 'بدون عبوة' }}</td>
-                                                        <td>{{ number_format($item->quantity, 3) }}</td>
-                                                        <td>{{ number_format($item->dispatched_quantity, 3) }}</td>
-                                                        <td class="fw-bold @if($remaining == 0) text-success @else text-primary @endif">
-                                                            {{ number_format($remaining, 3) }}
-                                                        </td>
-                                                        <td id="stock-{{ $item->id }}">0</td>
-                                                        <td>
-                                                            <input type="hidden" name="items[{{ $index }}][batch_item_id]" value="{{ $item->id }}">
-                                                            <input type="number" step="0.001" min="0" max="{{ $remaining }}" name="items[{{ $index }}][quantity]" class="form-control distribute-qty" value="0" @if($remaining == 0) disabled @endif>
-                                                            @if($remaining == 0)
-                                                                <small class="text-success">تم التوزيع بالكامل</small>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
+                                                    @if($remaining > 0)
+                                                    
+                                                        <tr id="row-{{ $item->id }}">
+                                                            <td>{{ $loop->iteration }}</td>
+                                                            <td>{{ $item->item->name_en ?? 'غير معروف' }}</td>
+                                                            <td>{{ $item->pack ? $item->pack->barcode . ' (Qty: ' . $item->pack->quantity . ')' : 'بدون عبوة' }}</td>
+                                                            <td>{{ number_format($item->quantity, 3) }}</td>
+                                                            <td>{{ number_format($item->dispatched_quantity, 3) }}</td>
+                                                            <td class="fw-bold @if($remaining == 0) text-success @else text-primary @endif">
+                                                                {{ number_format($remaining, 3) }}
+                                                            </td>
+                                                            <td id="stock-{{ $item->id }}">0</td>
+                                                            <td>
+                                                                <input type="hidden" name="items[{{ $index }}][batch_item_id]" value="{{ $item->id }}">
+                                                                <input type="number" step="0.001" min="0" max="{{ $remaining }}" name="items[{{ $index }}][quantity]" class="form-control distribute-qty" value="0">
+                                                                @if($remaining == 0)
+                                                                    <small class="text-success">تم التوزيع بالكامل</small>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                       
+                                                    @endif
+                                                     
                                                 @endforeach
+                                               
                                             </tbody>
                                         </table>
                                     </div>
-
+                                                          @if($batch->batchItems->where('quantity', '>', 'dispatched_quantity')->count() == 0)
+                                                            <div class="alert alert-info">
+                                                                <i data-feather="info"></i> جميع المنتجات في هذه الدفعة تم توزيعها بالكامل.
+                                                            </div>
+                                                        @endif
                                     @if($batch->batchItems->isEmpty())
                                         <p class="text-muted text-center">لا توجد منتجات في هذه الدفعة لتوزيعها.</p>
                                     @endif
+                                 
                                 </div>
                             </div>
                         </div>

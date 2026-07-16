@@ -307,57 +307,57 @@ class ProductionBatchController extends Controller
             return view('dashboard.data_definition.w&v.batches.distribute', compact('batch', 'warehouses'));
         }
 
-    public function distribute(Request $request, ProductionBatch $productionBatch)
-        {
-            $validated = $request->validate([
-                'warehouse_id' => 'required|exists:warehouses,id',
-                'items' => 'required|array|min:1',
-                'items.*.batch_item_id' => 'required|exists:batch_items,id',
-                'items.*.quantity' => 'required|numeric|min:0.001',
-            ]);
+            public function distribute(Request $request, ProductionBatch $productionBatch)
+            {
+                $validated = $request->validate([
+                    'warehouse_id' => 'required|exists:warehouses,id',
+                    'items' => 'sometimes|array', // جعلها اختيارية
+                    'items.*.batch_item_id' => 'required|exists:batch_items,id',
+                    'items.*.quantity' => 'required|numeric|min:0.001',
+                ]);
 
-            DB::transaction(function () use ($validated, $productionBatch) {
-                $warehouseId = $validated['warehouse_id'];
-
-                foreach ($validated['items'] as $itemData) {
-                    $batchItem = BatchItem::findOrFail($itemData['batch_item_id']);
-
-                    // التأكد من أن العنصر يتبع الدفعة
-                    if ($batchItem->batch_id != $productionBatch->id) {
-                        throw new \Exception('عنصر غير صحيح في الدفعة.');
-                    }
-
-                    // حساب المتبقي
-                    $remaining = $batchItem->quantity - $batchItem->dispatched_quantity;
-                    if ($itemData['quantity'] > $remaining) {
-                        throw new \Exception("الكمية الموزعة ({$itemData['quantity']}) تتجاوز الكمية المتبقية ({$remaining}) للمنتج: {$batchItem->item->name_en}.");
-                    }
-
-                    // تحديث الكمية الموزعة
-                    $batchItem->increment('dispatched_quantity', $itemData['quantity']);
-
-                    // تحديث رصيد المخزن
-                    $stock = BatchItemStock::firstOrNew([
-                        'batch_item_id' => $batchItem->id,
-                        'warehouse_id' => $warehouseId,
-                    ]);
-                    $stock->quantity += $itemData['quantity'];
-                    $stock->save();
-
-                    // تسجيل حركة
-                    BatchMovement::create([
-                        'batch_item_id' => $batchItem->id,
-                        'from_warehouse_id' => null,
-                        'to_warehouse_id' => $warehouseId,
-                        'movement_type' => 'in',
-                        'quantity' => $itemData['quantity'],
-                        'movement_date' => now(),
-                        'notes' => 'توزيع أولي من الدفعة ' . $productionBatch->batch_number,
-                    ]);
+                // إذا لم توجد items، نعرض رسالة
+                if (empty($validated['items'])) {
+                    return redirect()->back()->with('error', 'لا توجد منتجات متبقية للتوزيع في هذه الدفعة.');
                 }
-            });
 
-            return redirect()->route('production-batches.show', $productionBatch)
-                            ->with('success', 'تم توزيع الكميات بنجاح.');
-        }
+                DB::transaction(function () use ($validated, $productionBatch) {
+                    $warehouseId = $validated['warehouse_id'];
+
+                    foreach ($validated['items'] as $itemData) {
+                        $batchItem = BatchItem::findOrFail($itemData['batch_item_id']);
+
+                        if ($batchItem->batch_id != $productionBatch->id) {
+                            throw new \Exception('عنصر غير صحيح في الدفعة.');
+                        }
+
+                        $remaining = $batchItem->quantity - $batchItem->dispatched_quantity;
+                        if ($itemData['quantity'] > $remaining) {
+                            throw new \Exception("الكمية الموزعة ({$itemData['quantity']}) تتجاوز الكمية المتبقية ({$remaining}) للمنتج: {$batchItem->item->name_en}.");
+                        }
+
+                        $batchItem->increment('dispatched_quantity', $itemData['quantity']);
+
+                        $stock = BatchItemStock::firstOrNew([
+                            'batch_item_id' => $batchItem->id,
+                            'warehouse_id' => $warehouseId,
+                        ]);
+                        $stock->quantity += $itemData['quantity'];
+                        $stock->save();
+
+                        BatchMovement::create([
+                            'batch_item_id' => $batchItem->id,
+                            'from_warehouse_id' => null,
+                            'to_warehouse_id' => $warehouseId,
+                            'movement_type' => 'in',
+                            'quantity' => $itemData['quantity'],
+                            'movement_date' => now(),
+                            'notes' => 'توزيع من الدفعة ' . $productionBatch->batch_number,
+                        ]);
+                    }
+                });
+
+                return redirect()->route('production-batches.show', $productionBatch)
+                                ->with('success', 'تم توزيع الكميات بنجاح.');
+            }
 }
