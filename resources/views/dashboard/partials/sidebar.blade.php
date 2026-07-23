@@ -131,6 +131,8 @@
                 ['label' => 'vehicle types', 'icon' => 'truck', 'route' => route('vehicle-types.index'), 'disabled' => false],
                 ['label' => 'vehicles', 'icon' => 'truck', 'route' => route('vehicles.index'), 'disabled' => false],
                 ['label' => 'production batches', 'icon' => 'package', 'route' => route('production-batches.index'), 'disabled' => false],
+                // ['label' => 'batch distribution', 'icon' => 'share-2', 'route' => route('batch-distribution.index'), 'disabled' => false],
+                ['label' => 'batch movements', 'icon' => 'move', 'route' => route('warehouse-movements.index'), 'disabled' => false],
             ]
         ],
         'mobile' => [

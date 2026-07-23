@@ -40,6 +40,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationAboutController;
 use App\Http\Controllers\ProductionBatchController;
 use App\Http\Controllers\BatchDistributionController;
+use App\Http\Controllers\WarehouseMovementController;
 
 
 use Illuminate\Http\Request;
@@ -473,6 +474,17 @@ Route::resource('organization-about', OrganizationAboutController::class);
     Route::get('warehouses/cities/{stateId}', [WarehouseController::class, 'getCitiesByState'])->name('warehouses.cities');
     Route::get('/warehouses/areas-by-state/{stateId}', [WarehouseController::class, 'getAreasByState']);
     Route::resource('warehouses', WarehouseController::class);
+    Route::prefix('warehouses')->group(function () {
+        Route::get('/{warehouse}/transfer/select', [WarehouseController::class, 'transferSelect'])->name('warehouses.transfer.select');
+        Route::post('/{warehouse}/transfer/select', [WarehouseController::class, 'transferStoreSelection'])->name('warehouses.transfer.store-selection');
+        Route::get('/{warehouse}/transfer/confirm', [WarehouseController::class, 'transferConfirm'])->name('warehouses.transfer.confirm');
+        Route::post('/{warehouse}/transfer/execute', [WarehouseController::class, 'transferExecute'])->name('warehouses.transfer.execute');
+    });
+
+
+    Route::get('warehouse-movements/export', [WarehouseMovementController::class, 'export'])->name('warehouse-movements.export');
+    Route::get('warehouse-movements/{warehouse_movement}/export-detail', [WarehouseMovementController::class, 'exportDetail'])->name('warehouse-movements.export-detail');
+    Route::resource('warehouse-movements', WarehouseMovementController::class);
 
     Route::resource('production-batches', ProductionBatchController::class);
     Route::get('production-batches/get-packs/{itemId}', [ProductionBatchController::class, 'getPacks'])->name('production-batches.get-packs');
@@ -480,6 +492,14 @@ Route::resource('organization-about', OrganizationAboutController::class);
     Route::post('production-batches/{productionBatch}/distribute', [ProductionBatchController::class, 'distribute'])->name('production-batches.distribute.store');
     Route::get('production-batches/{batch}/warehouse-stock/{warehouse}', [ProductionBatchController::class, 'getWarehouseStock'])->name('production-batches.warehouse-stock');
 
+
+        // نقل الكميات بين المخازن
+    Route::get('production-batches/transfer', [ProductionBatchController::class, 'transferForm'])->name('production-batches.transfer');
+    Route::post('production-batches/transfer', [ProductionBatchController::class, 'transferStore'])->name('production-batches.transfer.store');
+
+    // الباتشات منتهية الصلاحية
+    Route::get('production-batches/expired', [ProductionBatchController::class, 'expiredBatches'])->name('production-batches.expired');
+    Route::post('production-batches/return-expired', [ProductionBatchController::class, 'returnExpired'])->name('production-batches.return-expired');
 
     Route::get('vehicle-types/export', [VehicleTypeController::class, 'export'])->name('vehicle-types.export');
     Route::get('vehicle-types/template', [VehicleTypeController::class, 'downloadTemplate'])->name('vehicle-types.template');

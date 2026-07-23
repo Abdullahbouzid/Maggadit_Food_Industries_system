@@ -14,9 +14,10 @@ return new class extends Migration
             $table->foreignId('batch_item_id')->constrained('batch_items')->cascadeOnDelete();
             $table->foreignId('from_warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             $table->foreignId('to_warehouse_id')->constrained('warehouses')->cascadeOnDelete();
-            $table->enum('movement_type', ['in', 'transfer']);
+            // $table->enum('movement_type', ['in', 'transfer']);
             $table->decimal('quantity', 15, 3);
             $table->date('movement_date')->nullable();
+            $table->string('movement_type')->change();  
             $table->text('notes')->nullable();
             $table->timestamps();
         });

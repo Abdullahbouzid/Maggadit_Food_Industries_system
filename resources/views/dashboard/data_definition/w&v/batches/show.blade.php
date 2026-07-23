@@ -171,6 +171,7 @@
                         <a href="{{ route('production-batches.edit', $batch) }}" class="btn btn-warning btn-lg shadow-sm ms-2">
                             <i data-feather="edit"></i> تعديل
                         </a>
+                      
                     </div>
                 </div>
             </div>

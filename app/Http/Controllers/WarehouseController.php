@@ -11,6 +11,12 @@ use App\Models\City;
 use App\Models\Area;
 use App\Models\BatchItemStock;
 use Illuminate\Http\Request;
+use App\Models\BatchMovement;
+use App\Models\BatchItem;
+use App\Models\Item;
+use App\Models\Category;
+use App\Models\Brand;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\WarehousesExport;
 use App\Imports\WarehousesImport;
@@ -288,4 +294,198 @@ class WarehouseController extends Controller
             ->get(['id', 'name_en', 'name_ar']);
         return response()->json($areas);
     }
+
+    /**
+ * الخطوة 1: عرض واجهة اختيار المنتجات من المخزن المصدر
+ */
+public function transferSelect(Request $request, Warehouse $warehouse)
+{
+    // جلب قائمة المخازن النشطة لاختيار المخزن الهدف (باستثناء المصدر)
+    $warehouses = Warehouse::where('is_active', true)
+        ->where('id', '!=', $warehouse->id)
+        ->orderBy('name_en')
+        ->get();
+
+    // استعلام أساسي لجلب أرصدة المنتجات في هذا المخزن
+    $query = BatchItemStock::where('warehouse_id', $warehouse->id)
+        ->with(['batchItem.item.category', 'batchItem.item.brand', 'batchItem.batch', 'batchItem.pack'])
+        ->where('quantity', '>', 0);
+
+    // تطبيق فلترة البحث (اختياري)
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->whereHas('batchItem.item', function ($q) use ($search) {
+            $q->where('name_en', 'LIKE', "%{$search}%")
+              ->orWhere('name_ar', 'LIKE', "%{$search}%")
+              ->orWhere('code', 'LIKE', "%{$search}%");
+        });
+    }
+    if ($request->filled('category_id')) {
+        $query->whereHas('batchItem.item', function ($q) use ($request) {
+            $q->where('category_id', $request->category_id);
+        });
+    }
+    if ($request->filled('brand_id')) {
+        $query->whereHas('batchItem.item', function ($q) use ($request) {
+            $q->where('brand_id', $request->brand_id);
+        });
+    }
+
+    $stocks = $query->get();
+
+    // تجميع البيانات لعرضها في الجدول (كل صف يمثل BatchItem مع كميته)
+    // نضيف خاصية available_quantity وهي الكمية الموجودة حالياً
+    $batchItems = $stocks->map(function ($stock) {
+        $item = $stock->batchItem->item;
+        return (object) [
+            'batch_item_id' => $stock->batch_item_id,
+            'item_name'     => $item->name_en ?? $item->name_ar,
+            'item_code'     => $item->code,
+            'category'      => $item->category->name ?? '-',
+            'brand'         => $item->brand->name ?? '-',
+            'batch_number'  => $stock->batchItem->batch->batch_number,
+            'available_qty' => $stock->quantity,
+            'pack_info'     => $stock->batchItem->pack ? $stock->batchItem->pack->barcode . ' (Qty: ' . $stock->batchItem->pack->quantity . ')' : 'بدون عبوة',
+        ];
+    });
+
+    // قوائم الفلاتر
+    $categories = Category::orderBy('name')->get();
+    $brands = Brand::orderBy('name')->get();
+
+    return view('dashboard.data_definition.w&v.warehouse.transfer_select', compact(
+        'warehouse', 'warehouses', 'batchItems', 'categories', 'brands'
+    ));
+}
+
+/**
+ * الخطوة 1 - حفظ الاختيارات في الجلسة والانتقال للخطوة 2
+ */
+public function transferStoreSelection(Request $request, Warehouse $warehouse)
+{
+    $validated = $request->validate([
+        'target_warehouse_id' => 'required|exists:warehouses,id|different:' . $warehouse->id,
+        'selected_items'      => 'required|array|min:1',
+        'selected_items.*'    => 'exists:batch_items,id',
+    ]);
+
+    // التأكد من أن العناصر المحددة تنتمي فعلاً إلى هذا المخزن ولها رصيد
+    $validIds = BatchItemStock::where('warehouse_id', $warehouse->id)
+        ->whereIn('batch_item_id', $validated['selected_items'])
+        ->where('quantity', '>', 0)
+        ->pluck('batch_item_id')
+        ->toArray();
+
+    if (empty($validIds)) {
+        return back()->with('error', 'المنتجات المحددة غير متوفرة في هذا المخزن.');
+    }
+
+    // حفظ البيانات في الجلسة
+    session([
+        'warehouse_transfer' => [
+            'source_warehouse_id' => $warehouse->id,
+            'target_warehouse_id' => $validated['target_warehouse_id'],
+            'selected_batch_item_ids' => $validIds,
+        ]
+    ]);
+
+    return redirect()->route('warehouses.transfer.confirm', $warehouse);
+}
+
+/**
+ * الخطوة 2: عرض واجهة تحديد الكميات لكل منتج مختار
+ */
+public function transferConfirm(Warehouse $warehouse)
+{
+    $transferData = session('warehouse_transfer');
+    if (!$transferData || $transferData['source_warehouse_id'] != $warehouse->id) {
+        return redirect()->route('warehouses.transfer.select', $warehouse)
+            ->with('error', 'يرجى اختيار المنتجات أولاً.');
+    }
+
+    $targetWarehouse = Warehouse::findOrFail($transferData['target_warehouse_id']);
+
+    // جلب بيانات المنتجات المختارة مع كمياتها في المصدر
+    $batchItems = BatchItem::whereIn('id', $transferData['selected_batch_item_ids'])
+        ->with(['item', 'pack', 'batch'])
+        ->get();
+
+    // إضافة الكمية المتوفرة في المصدر
+    $batchItems->each(function ($item) use ($warehouse) {
+        $stock = BatchItemStock::where('batch_item_id', $item->id)
+            ->where('warehouse_id', $warehouse->id)
+            ->first();
+        $item->available_quantity = $stock ? $stock->quantity : 0;
+    });
+
+    return view('dashboard.data_definition.w&v.warehouse.transfer_confirm', compact(
+        'warehouse', 'targetWarehouse', 'batchItems'
+    ));
+}
+
+/**
+ * الخطوة 2 - تنفيذ النقل بعد تحديد الكميات
+ */
+public function transferExecute(Request $request, Warehouse $warehouse)
+{
+    $transferData = session('warehouse_transfer');
+    if (!$transferData || $transferData['source_warehouse_id'] != $warehouse->id) {
+        return redirect()->route('warehouses.transfer.select', $warehouse)
+            ->with('error', 'الجلسة منتهية، يرجى البدء من جديد.');
+    }
+
+    $validated = $request->validate([
+        'quantities' => 'required|array',
+        'quantities.*' => 'numeric|min:0.001',
+        'notes' => 'nullable|string',
+        'transfer_date' => 'nullable|date',
+    ]);
+
+    $targetWarehouseId = $transferData['target_warehouse_id'];
+    $selectedIds = $transferData['selected_batch_item_ids'];
+
+    DB::transaction(function () use ($warehouse, $targetWarehouseId, $selectedIds, $validated) {
+        foreach ($selectedIds as $batchItemId) {
+            $qty = $validated['quantities'][$batchItemId] ?? 0;
+            if ($qty <= 0) continue;
+
+            // التحقق من وجود رصيد كافٍ في المصدر
+            $fromStock = BatchItemStock::where('batch_item_id', $batchItemId)
+                ->where('warehouse_id', $warehouse->id)
+                ->first();
+
+            if (!$fromStock || $fromStock->quantity < $qty) {
+                throw new \Exception("الكمية غير متوفرة للمنتج ID: {$batchItemId}");
+            }
+
+            // خصم من المصدر
+            $fromStock->decrement('quantity', $qty);
+
+            // إضافة إلى الهدف
+            $toStock = BatchItemStock::firstOrNew([
+                'batch_item_id' => $batchItemId,
+                'warehouse_id' => $targetWarehouseId,
+            ]);
+            $toStock->quantity += $qty;
+            $toStock->save();
+
+            // تسجيل حركة النقل
+            BatchMovement::create([
+                'batch_item_id' => $batchItemId,
+                'from_warehouse_id' => $warehouse->id,
+                'to_warehouse_id' => $targetWarehouseId,
+                'movement_type' => 'transfer',
+                'quantity' => $qty,
+                'movement_date' => $validated['transfer_date'] ?? now(),
+                'notes' => $validated['notes'] ?? 'نقل بين المخازن',
+            ]);
+        }
+    });
+
+    // مسح الجلسة بعد التنفيذ
+    session()->forget('warehouse_transfer');
+
+    return redirect()->route('warehouses.show', $warehouse)
+        ->with('success', 'تم نقل الكميات بنجاح.');
+}
 }

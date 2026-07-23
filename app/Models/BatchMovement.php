@@ -18,6 +18,7 @@ class BatchMovement extends Model
         'quantity',
         'movement_date',
         'notes',
+        
     ];
 
     protected $casts = [

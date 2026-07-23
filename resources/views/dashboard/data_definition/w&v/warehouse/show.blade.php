@@ -152,6 +152,13 @@
                         </form>
                     </div>
                 </div>
+                   <div class="row mb-4">
+                    <div class="col-12">
+                        <a href="{{ route('warehouses.transfer.select', $warehouse->id) }}" class="btn btn-primary btn-lg shadow-sm">
+                            <i data-feather="send" class="align-middle me-1"></i> نقل كميات من هذا المخزن
+                        </a>
+                    </div>
+                </div>
 
                 <!-- PRODUCTS -->
                 <div class="card border-0 shadow-sm rounded-4">
@@ -289,7 +296,7 @@
                         </div>
                     </div>
                 </div>
-
+             
                
 
             </div>

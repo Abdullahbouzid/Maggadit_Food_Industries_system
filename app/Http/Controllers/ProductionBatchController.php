@@ -360,4 +360,242 @@ class ProductionBatchController extends Controller
                 return redirect()->route('production-batches.show', $productionBatch)
                                 ->with('success', 'تم توزيع الكميات بنجاح.');
             }
+
+            // في ProductionBatchController.php
+
+            /**
+             * عرض نموذج نقل كميات بين المخازن
+             */
+            public function transferForm(ProductionBatch $productionBatch)
+            {
+                $batch = $productionBatch->load(['batchItems.item', 'batchItems.pack']);
+                $warehouses = Warehouse::where('is_active', true)->orderBy('name_en')->get();
+
+                // Retrieve stored step data if exists
+                $step1 = session('transfer_step1');
+                $step2 = session('transfer_step2');
+
+                if ($step2) {
+                    // Show confirmation step
+                    $selectedItemIds = $step2['selected_item_ids'] ?? [];
+                    $sourceWarehouseId = $step1['source_warehouse_id'] ?? null;
+
+                    $selectedItems = collect($batch->batchItems)->whereIn('id', $selectedItemIds)->map(function($item) use ($sourceWarehouseId) {
+                        $stock = 0;
+                        if ($sourceWarehouseId) {
+                            $stock = BatchItemStock::where('batch_item_id', $item->id)
+                                ->where('warehouse_id', $sourceWarehouseId)
+                                ->value('quantity') ?? 0;
+                        }
+                        $item->stock = $stock;
+                        return $item;
+                    })->all();
+
+                    $sourceWarehouse = null;
+                    if (!empty($sourceWarehouseId)) {
+                        $sourceWarehouse = $warehouses->firstWhere('id', $sourceWarehouseId);
+                    }
+
+                    return view('dashboard.data_definition.w&v.batches.transfer_confirm', compact('batch', 'warehouses', 'selectedItems', 'step1', 'step2', 'sourceWarehouse'));
+                }
+
+                // Show step 1: select source warehouse and items
+                return view('dashboard.data_definition.w&v.batches.transfer_select', compact('batch', 'warehouses', 'step1'));
+            }
+
+            /**
+             * معالجة نقل الكميات بين المخازن (مرحلتين)
+             */
+            public function transferStore(Request $request, ProductionBatch $productionBatch)
+            {
+                $batch = $productionBatch->load(['batchItems.item', 'batchItems.pack']);
+
+                // Step 1: source warehouse and selected items
+                if ($request->has('source_warehouse_id') && $request->has('selected_items')) {
+                    $validated = $request->validate([
+                        'source_warehouse_id' => 'required|exists:warehouses,id',
+                        'selected_items' => 'required|array',
+                        'selected_items.*' => 'exists:batch_items,id',
+                        'transfer_date' => 'nullable|date',
+                        'notes' => 'nullable|string',
+                    ]);
+
+                    // Ensure selected items belong to this batch
+                    $batchItemIds = $batch->batchItems->pluck('id')->toArray();
+                    $invalid = array_diff($request->selected_items, $batchItemIds);
+                    if (!empty($invalid)) {
+                        return back()->with('error', 'بعض العناصر المختارة لا تنتمي إلى هذه الدفعة.');
+                    }
+
+                    // Store step 1 data
+                    session(['transfer_step1' => [
+                        'source_warehouse_id' => $validated['source_warehouse_id'],
+                        'transfer_date' => $validated['transfer_date'] ?? now()->toDateString(),
+                        'notes' => $validated['notes'],
+                    ]]);
+
+                    // Store selected items for step 2
+                    session(['transfer_step2' => [
+                        'selected_item_ids' => $request->selected_items,
+                    ]]);
+
+                    return redirect()->route('production-batches.transfer', $productionBatch);
+                }
+
+                // Step 2: confirm transfer with quantities and target warehouse
+                if ($request->has('target_warehouse_id') && $request->has('quantities')) {
+                    if (!session('transfer_step1') || !session('transfer_step2')) {
+                        return redirect()->route('production-batches.transfer', $productionBatch)
+                            ->with('error', 'البيانات غير مكتملة. يرجى المحاولة مرة أخرى.');
+                    }
+
+                    $step1 = session('transfer_step1');
+                    $step2 = session('transfer_step2');
+
+                    $validated = $request->validate([
+                        'target_warehouse_id' => 'required|exists:warehouses,id|different:' . $step1['source_warehouse_id'],
+                        'quantities' => 'required|array',
+                        'quantities.*' => 'numeric|min:0.001',
+                        'transfer_date' => 'nullable|date',
+                        'notes' => 'nullable|string',
+                    ]);
+
+                    $sourceWarehouseId = $step1['source_warehouse_id'];
+                    $targetWarehouseId = $validated['target_warehouse_id'];
+                    $date = $validated['transfer_date'] ?? $step1['transfer_date'];
+                    $notes = $validated['notes'] ?? $step1['notes'];
+                    $quantities = $validated['quantities']; // key: batch_item_id => quantity
+
+                    DB::transaction(function () use ($batch, $sourceWarehouseId, $targetWarehouseId, $quantities, $date, $notes) {
+                        foreach ($quantities as $batchItemId => $quantity) {
+                            $batchItem = $batch->batchItems->find($batchItemId);
+                            if (!$batchItem) {
+                                continue; // should not happen due to validation
+                            }
+
+                            // Check stock in source warehouse
+                            $fromStock = BatchItemStock::where('batch_item_id', $batchItem->id)
+                                ->where('warehouse_id', $sourceWarehouseId)
+                                ->first();
+                            if (!$fromStock || $fromStock->quantity < $quantity) {
+                                throw new \Exception("الكمية المطلوبة غير متوفرة في المخزن المصدر للمنتج: {$batchItem->item->name_en}");
+                            }
+
+                            // Deduct from source
+                            $fromStock->decrement('quantity', $quantity);
+
+                            // Add to destination
+                            $toStock = BatchItemStock::firstOrNew([
+                                'batch_item_id' => $batchItem->id,
+                                'warehouse_id' => $targetWarehouseId,
+                            ]);
+                            $toStock->quantity += $quantity;
+                            $toStock->save();
+
+                            // Record movement
+                            BatchMovement::create([
+                                'batch_item_id' => $batchItem->id,
+                                'from_warehouse_id' => $sourceWarehouseId,
+                                'to_warehouse_id' => $targetWarehouseId,
+                                'movement_type' => 'transfer',
+                                'quantity' => $quantity,
+                                'movement_date' => $date,
+                                'notes' => $notes ?? 'نقل بين المخازن',
+                            ]);
+                        }
+                    });
+
+                    // Clear session data
+                    session()->forget(['transfer_step1', 'transfer_step2']);
+
+                    return redirect()->route('production-batches.show', $batch)
+                        ->with('success', 'تم نقل الكميات بنجاح بين المخازن.');
+                }
+
+                // If neither step matches, redirect back to step 1
+                return redirect()->route('production-batches.transfer', $productionBatch);
+            }
+
+            /**
+             * عرض قائمة الدفعات منتهية الصلاحية في المخازن
+             */
+            public function expiredBatches(Request $request)
+            {
+                $today = now()->toDateString();
+                $warehouseId = $request->input('warehouse_id');
+
+                $query = BatchItemStock::with(['batchItem.item', 'batchItem.pack', 'batchItem.batch', 'warehouse'])
+                    ->whereHas('batchItem.batch', function ($q) use ($today) {
+                        $q->where('expiry_date', '<', $today)->where('status', 'active');
+                    });
+
+                if ($warehouseId) {
+                    $query->where('warehouse_id', $warehouseId);
+                }
+
+                $expiredStocks = $query->get()->filter(function ($stock) {
+                    return $stock->quantity > 0;
+                });
+
+                $warehouses = Warehouse::where('is_active', true)->orderBy('name_en')->get();
+
+                return view('dashboard.data_definition.w&v.batches.expired', compact('expiredStocks', 'warehouses', 'warehouseId'));
+            }
+
+            /**
+             * استرجاع الباتشات منتهية الصلاحية (نقلها إلى مخزن المهملات أو تحديث الحالة)
+             */
+            public function returnExpired(Request $request)
+            {
+                $validated = $request->validate([
+                    'stock_ids' => 'required|array',
+                    'stock_ids.*' => 'exists:batch_item_stock,id',
+                    'destination_warehouse_id' => 'required|exists:warehouses,id',
+                    'return_date' => 'nullable|date',
+                    'notes' => 'nullable|string',
+                ]);
+
+                DB::transaction(function () use ($validated) {
+                    $destWarehouseId = $validated['destination_warehouse_id'];
+                    $date = $validated['return_date'] ?? now()->toDateString();
+
+                    foreach ($validated['stock_ids'] as $stockId) {
+                        $stock = BatchItemStock::findOrFail($stockId);
+                        $batchItem = $stock->batchItem;
+
+                        if ($stock->quantity <= 0) continue;
+
+                        $quantity = $stock->quantity;
+
+                        // نقل الكمية من المخزن الحالي إلى مخزن المهملات
+                        // خصم من المخزن الحالي
+                        $stock->decrement('quantity', $quantity);
+
+                        // إضافة إلى المخزن الهدف
+                        $destStock = BatchItemStock::firstOrNew([
+                            'batch_item_id' => $batchItem->id,
+                            'warehouse_id' => $destWarehouseId,
+                        ]);
+                        $destStock->quantity += $quantity;
+                        $destStock->save();
+
+                        // تحديث حالة الدفعة إلى "expired"
+                        $batchItem->batch->update(['status' => 'expired']);
+
+                        // تسجيل حركة استرجاع الصلاحية
+                        BatchMovement::create([
+                            'batch_item_id' => $batchItem->id,
+                            'from_warehouse_id' => $stock->warehouse_id,
+                            'to_warehouse_id' => $destWarehouseId,
+                            'movement_type' => 'expiry_return',
+                            'quantity' => $quantity,
+                            'movement_date' => $date,
+                            'notes' => $validated['notes'] ?? 'استرجاع بسبب انتهاء الصلاحية',
+                        ]);
+                    }
+                });
+
+                return redirect()->route('production-batches.expired')
+                                ->with('success', 'تم استرجاع الباتشات منتهية الصلاحية بنجاح.');
+            }
 }
