@@ -479,6 +479,10 @@ Route::resource('organization-about', OrganizationAboutController::class);
         Route::post('/{warehouse}/transfer/select', [WarehouseController::class, 'transferStoreSelection'])->name('warehouses.transfer.store-selection');
         Route::get('/{warehouse}/transfer/confirm', [WarehouseController::class, 'transferConfirm'])->name('warehouses.transfer.confirm');
         Route::post('/{warehouse}/transfer/execute', [WarehouseController::class, 'transferExecute'])->name('warehouses.transfer.execute');
+
+        // Warehouse transfer from warehouse show page
+        Route::post('/{warehouse}/transfer/store-selection-from-warehouse', [WarehouseController::class, 'transferStoreSelectionFromWarehouse'])->name('warehouses.transfer.store-selection-from-warehouse');
+        Route::get('/{warehouse}/transfer/confirm-from-warehouse', [WarehouseController::class, 'transferConfirmFromWarehouse'])->name('warehouses.transfer.confirm-from-warehouse');
     });
 
 
@@ -494,8 +498,8 @@ Route::resource('organization-about', OrganizationAboutController::class);
 
 
         // نقل الكميات بين المخازن
-    Route::get('production-batches/transfer', [ProductionBatchController::class, 'transferForm'])->name('production-batches.transfer');
-    Route::post('production-batches/transfer', [ProductionBatchController::class, 'transferStore'])->name('production-batches.transfer.store');
+    Route::get('production-batches/{productionBatch}/transfer', [ProductionBatchController::class, 'transferForm'])->name('production-batches.transfer');
+    Route::post('production-batches/{productionBatch}/transfer', [ProductionBatchController::class, 'transferStore'])->name('production-batches.transfer.store');
 
     // الباتشات منتهية الصلاحية
     Route::get('production-batches/expired', [ProductionBatchController::class, 'expiredBatches'])->name('production-batches.expired');

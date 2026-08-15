@@ -154,9 +154,13 @@
                 </div>
                    <div class="row mb-4">
                     <div class="col-12">
-                        <a href="{{ route('warehouses.transfer.select', $warehouse->id) }}" class="btn btn-primary btn-lg shadow-sm">
+                        <a href="{{ route('warehouses.transfer.store-selection-from-warehouse', $warehouse->id) }}" class="btn btn-primary btn-lg shadow-sm" onclick="event.preventDefault(); document.getElementById('transferForm-{{ $warehouse->id }}').submit();">
                             <i data-feather="send" class="align-middle me-1"></i> نقل كميات من هذا المخزن
                         </a>
+                        <form id="transferForm-{{ $warehouse->id }}" action="{{ route('warehouses.transfer.store-selection-from-warehouse', $warehouse->id) }}" method="POST" style="display: none;">
+                            @csrf
+                            <input type="hidden" name="selected_items[]" value="">
+                        </form>
                     </div>
                 </div>
 
@@ -218,6 +222,10 @@
                                                     @else
                                                         <p class="text-muted small">لا توجد دفعات نشطة.</p>
                                                     @endif
+                                                    <div class="form-check mt-3">
+                                                        <input type="checkbox" class="form-check-input product-checkbox" value="{{ $group['item_id'] }}-{{ $group['item_pack_id'] ?? 'null' }}" data-batch-ids='@json($group['batch_item_ids'])'>
+                                                        <label class="form-check-label">اختيار هذا المنتج للنقل</label>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -235,6 +243,7 @@
                                     <table class="table table-hover align-middle">
                                         <thead>
                                             <tr>
+                                                <th class="text-center"><input type="checkbox" id="selectAllProducts" class="form-check-input"></th>
                                                 <th>#</th>
                                                 <th>الصورة</th>
                                                 <th>المنتج</th>
@@ -248,6 +257,9 @@
                                         <tbody>
                                             @foreach($groupedProducts as $index => $group)
                                                 <tr>
+                                                    <td class="text-center">
+                                                        <input type="checkbox" class="form-check-input product-checkbox" value="{{ $group['item_id'] }}-{{ $group['item_pack_id'] ?? 'null' }}" data-batch-ids='@json($group['batch_item_ids'])'>
+                                                    </td>
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td>
                                                         @if($group['image_url'])
@@ -411,6 +423,49 @@
                 cutout: '60%',
             }
         });
+
+        // Handle product selection for warehouse transfer
+        const transferForm = document.getElementById('transferForm-{{ $warehouse->id }}');
+        const selectedItemsInput = transferForm ? transferForm.querySelector('input[name="selected_items[]"]') : null;
+        const selectAllCheckbox = document.getElementById('selectAllProducts');
+        const productCheckboxes = document.querySelectorAll('.product-checkbox');
+
+        function updateSelectedItems() {
+            const selectedBatchIds = [];
+            productCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    const batchIds = JSON.parse(cb.getAttribute('data-batch-ids'));
+                    batchIds.forEach(id => {
+                        if (!selectedBatchIds.includes(id)) {
+                            selectedBatchIds.push(id);
+                        }
+                    });
+                }
+            });
+            if (selectedItemsInput) {
+                selectedItemsInput.value = selectedBatchIds.join(',');
+            }
+        }
+
+        // Update when individual checkboxes change
+        productCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateSelectedItems);
+        });
+
+        // Select all checkbox
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                productCheckboxes.forEach(cb => {
+                    if (!cb.disabled) {
+                        cb.checked = this.checked;
+                    }
+                });
+                updateSelectedItems();
+            });
+        }
+
+        // Initial update
+        updateSelectedItems();
     });
 </script>
 @endpush
