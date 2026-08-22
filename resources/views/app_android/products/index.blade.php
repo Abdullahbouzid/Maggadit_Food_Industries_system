@@ -95,10 +95,8 @@
                             @endif
                         </div>
                         <button class="add-to-cart mt-2 w-full bg-purple-600 text-white text-xs py-2 rounded-full hover:bg-purple-700 transition"
-                                data-id="{{ $item->id }}"
                                 data-name="{{ $item->name ?? ($item->name_ar ?? $item->name_en) }}"
-                                data-price="{{ $item->price ?? 0 }}"
-                                data-image="{{ $item->image ?? '📦' }}">
+                                data-price="{{ $item->price ?? 0 }}">
                             <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
                         </button>
                     </div>
@@ -138,28 +136,7 @@
         document.querySelectorAll('.add-to-cart').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                let id = this.getAttribute('data-id');
                 let name = this.getAttribute('data-name');
-                let price = this.getAttribute('data-price');
-                let image = this.getAttribute('data-image');
-                
-                let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
-                let existingItemIndex = cartItems.findIndex(item => item.id == id);
-                
-                if (existingItemIndex > -1) {
-                    cartItems[existingItemIndex].quantity += 1;
-                } else {
-                    cartItems.push({
-                        id: id,
-                        name: name,
-                        price: price,
-                        quantity: 1,
-                        image: image,
-                        discount: 0
-                    });
-                }
-                
-                localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
                 showToast(`✅ تم إضافة "${name}" إلى السلة`);
             });
         });

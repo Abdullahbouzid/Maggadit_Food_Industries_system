@@ -1,15 +1,12 @@
 <?php
-
 // app/Http/Controllers/ItemModelController.php
 
 namespace App\Http\Controllers;
 
-use App\Exports\ItemModelsExport;
-use App\Imports\ItemModelsImport;
 use App\Models\ItemModel;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use App\Exports\ItemModelsExport;
+use App\Imports\ItemModelsImport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ItemModelController extends Controller
@@ -19,10 +16,10 @@ class ItemModelController extends Controller
         $query = ItemModel::query();
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
         if ($request->filled('status')) {
@@ -33,9 +30,7 @@ class ItemModelController extends Controller
         $inactive = ItemModel::where('is_active', false)->count();
 
         $perPage = $request->get('per_page', 20);
-        if ($perPage === 'all') {
-            $perPage = $query->count() ?: 1;
-        }
+        if ($perPage === 'all') $perPage = $query->count() ?: 1;
         $models = $query->orderBy('sort_order')->orderBy('name_en')->paginate($perPage)->appends($request->query());
 
         return view('dashboard.data_definition.data_product.item_models.index', compact('models', 'total', 'active', 'inactive'));
@@ -49,15 +44,14 @@ class ItemModelController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:item_models,code',
-            'name_en' => 'required|string|max:255',
-            'name_ar' => 'required|string|max:255',
-            'is_active' => 'boolean',
+            'code'       => 'required|string|max:255|unique:item_models,code',
+            'name_en'    => 'required|string|max:255',
+            'name_ar'    => 'required|string|max:255',
+            'is_active'  => 'boolean',
             'sort_order' => 'nullable|integer',
         ]);
         $validated['is_active'] = $request->boolean('is_active');
         ItemModel::create($validated);
-
         return redirect()->route('item-models.index')->with('success', 'Item Model created successfully.');
     }
 
@@ -74,45 +68,34 @@ class ItemModelController extends Controller
     public function update(Request $request, ItemModel $itemModel)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:item_models,code,'.$itemModel->id,
-            'name_en' => 'required|string|max:255',
-            'name_ar' => 'required|string|max:255',
-            'is_active' => 'boolean',
+            'code'       => 'required|string|max:255|unique:item_models,code,' . $itemModel->id,
+            'name_en'    => 'required|string|max:255',
+            'name_ar'    => 'required|string|max:255',
+            'is_active'  => 'boolean',
             'sort_order' => 'nullable|integer',
         ]);
         $validated['is_active'] = $request->boolean('is_active');
         $itemModel->update($validated);
-
         return redirect()->route('item-models.index')->with('success', 'Item Model updated successfully.');
     }
 
     public function destroy(ItemModel $itemModel)
     {
         $itemModel->delete();
-
         return redirect()->route('item-models.index')->with('success', 'Item Model deleted.');
     }
 
     public function export(Request $request)
     {
-        return Excel::download(new ItemModelsExport($request), 'item_models_'.date('Y-m-d_Hi').'.xlsx');
+        return Excel::download(new ItemModelsExport($request), 'item_models_' . date('Y-m-d_Hi') . '.xlsx');
     }
 
     public function downloadTemplate()
     {
-        $export = new class implements FromCollection, WithHeadings
-        {
-            public function collection()
-            {
-                return collect([]);
-            }
-
-            public function headings(): array
-            {
-                return ['code', 'name_en', 'name_ar', 'is_active', 'sort_order'];
-            }
+        $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+            public function collection() { return collect([]); }
+            public function headings(): array { return ['code', 'name_en', 'name_ar', 'is_active', 'sort_order']; }
         };
-
         return Excel::download($export, 'item_models_template.xlsx');
     }
 
@@ -125,7 +108,6 @@ class ItemModelController extends Controller
         if (count($errors)) {
             return redirect()->route('item-models.index')->with('warning', 'Import with errors.')->with('import_errors', $errors);
         }
-
         return redirect()->route('item-models.index')->with('success', 'Imported successfully.');
     }
 }

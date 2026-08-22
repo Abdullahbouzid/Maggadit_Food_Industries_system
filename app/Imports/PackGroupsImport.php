@@ -1,18 +1,17 @@
 <?php
-
 // app/Imports/PackGroupsImport.php
 
 namespace App\Imports;
 
 use App\Models\PackGroup;
-use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Validators\Failure;
+use Maatwebsite\Excel\Concerns\Importable;
 
-class PackGroupsImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithValidation
+class PackGroupsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     use Importable;
 
@@ -21,10 +20,10 @@ class PackGroupsImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithV
     public function model(array $row)
     {
         return new PackGroup([
-            'code' => $row['code'],
-            'name_en' => $row['name_en'],
-            'name_ar' => $row['name_ar'],
-            'is_active' => isset($row['is_active']) ? filter_var($row['is_active'], FILTER_VALIDATE_BOOLEAN) : true,
+            'code'       => $row['code'],
+            'name_en'    => $row['name_en'],
+            'name_ar'    => $row['name_ar'],
+            'is_active'  => isset($row['is_active']) ? filter_var($row['is_active'], FILTER_VALIDATE_BOOLEAN) : true,
             'sort_order' => $row['sort_order'] ?? null,
         ]);
     }
@@ -32,7 +31,7 @@ class PackGroupsImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithV
     public function rules(): array
     {
         return [
-            'code' => 'required|string|max:255|unique:pack_groups,code',
+            'code'    => 'required|string|max:255|unique:pack_groups,code',
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
         ];
@@ -41,7 +40,7 @@ class PackGroupsImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithV
     public function onFailure(Failure ...$failures)
     {
         foreach ($failures as $failure) {
-            $this->errors[] = 'Row '.$failure->row().': '.implode(', ', $failure->errors());
+            $this->errors[] = 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors());
         }
     }
 

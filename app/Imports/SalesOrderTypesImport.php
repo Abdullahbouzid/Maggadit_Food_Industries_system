@@ -1,26 +1,25 @@
 <?php
-
 // app/Imports/SalesOrderTypesImport.php
 
 namespace App\Imports;
 
 use App\Models\SalesOrderType;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Validators\Failure;
 
-class SalesOrderTypesImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithValidation
+class SalesOrderTypesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     protected $errors = [];
 
     public function model(array $row)
     {
         return new SalesOrderType([
-            'name' => $row['name'],
-            'code' => $row['code'],
-            'active' => filter_var($row['active'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'name'    => $row['name'],
+            'code'    => $row['code'],
+            'active'  => filter_var($row['active'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'default' => filter_var($row['default'] ?? false, FILTER_VALIDATE_BOOLEAN),
         ]);
     }
@@ -38,7 +37,7 @@ class SalesOrderTypesImport implements SkipsOnFailure, ToModel, WithHeadingRow, 
     public function onFailure(Failure ...$failures)
     {
         foreach ($failures as $failure) {
-            $this->errors[] = "Row {$failure->row()}: ".implode(', ', $failure->errors());
+            $this->errors[] = "Row {$failure->row()}: " . implode(', ', $failure->errors());
         }
     }
 

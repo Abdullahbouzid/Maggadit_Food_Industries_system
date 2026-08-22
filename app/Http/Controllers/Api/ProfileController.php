@@ -38,7 +38,7 @@ class ProfileController extends Controller
 
         $customer = $request->user();
 
-        if (! Hash::check($request->current_password, $customer->password)) {
+        if (!Hash::check($request->current_password, $customer->password)) {
             return response()->json(['success' => false, 'message' => 'كلمة المرور الحالية غير صحيحة'], 422);
         }
 
@@ -67,7 +67,7 @@ class ProfileController extends Controller
         $request->validate($rules);
 
         if ($request->filled('old_password')) {
-            if (! Hash::check($request->old_password, $customer->password)) {
+            if (!Hash::check($request->old_password, $customer->password)) {
                 return response()->json(['errors' => ['old_password' => ['كلمة المرور القديمة غير صحيحة']]], 422);
             }
             $customer->password = Hash::make($request->password);
@@ -75,13 +75,13 @@ class ProfileController extends Controller
 
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
-            $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/customers'), $filename);
-
-            if ($customer->avatar && file_exists(public_path('uploads/customers/'.$customer->avatar))) {
-                @unlink(public_path('uploads/customers/'.$customer->avatar));
+            
+            if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
+                @unlink(public_path('uploads/customers/' . $customer->avatar));
             }
-
+            
             $customer->avatar = $filename;
         }
 

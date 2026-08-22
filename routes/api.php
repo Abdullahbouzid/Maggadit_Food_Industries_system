@@ -1,13 +1,33 @@
 <?php
 
-use App\Http\Controllers\Api\CustomerApiController;
 use App\Http\Controllers\Api\CustomerAuthController;
+use App\Http\Controllers\Api\CustomerApiController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/testroot', function () {
+    return response()->json(['test' => 'Root API working']);
+});
+
+Route::get('/testxyz', function () {
+    return response()->json(['test' => 'Test XYZ API working']);
+});
+
+Route::get('/testzzz', function () {
+    return response()->json(['test' => 'Test ZZZ API working']);
+});
+
+Route::post('/testapianother', function () {
+    return response()->json(['test' => 'API working']);
+});
+
 Route::prefix('customer')->name('api.customer.')->group(function () {
+    // مسارات عامة
     Route::post('/login', [CustomerAuthController::class, 'login']);
     Route::post('/register', [CustomerAuthController::class, 'register']);
+    Route::post('/testapi3', function () {
+        return response()->json(['test' => 'API working']);
+    });
 
     Route::get('/categories', [CustomerApiController::class, 'categoriesIndex']);
     Route::get('/categories/{id}', [CustomerApiController::class, 'categoriesShow']);
@@ -16,23 +36,21 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
     Route::get('/products', [CustomerApiController::class, 'productsIndex']);
     Route::get('/products/{id}', [CustomerApiController::class, 'productsShow']);
     Route::get('/offers', [CustomerApiController::class, 'offersIndex']);
-
+    
     // مسارات عامة (بدون توكن)
     Route::get('/faq', [CustomerApiController::class, 'faq']);
     Route::get('/privacy-policy', [CustomerApiController::class, 'privacyPolicy']);
-    Route::get('/contact-info', [CustomerApiController::class, 'contactInfo']);
-    Route::post('/contact-us', [CustomerApiController::class, 'contactUs']);
-
+    Route::get('/contact-us', [CustomerApiController::class, 'contactUs']);
+    
     // مسارات محمية (تتطلب توكن)
     Route::middleware('auth:api')->group(function () {
         Route::post('/logout', [CustomerAuthController::class, 'logout']);
         Route::get('/profile', [ProfileController::class, 'show']);
         Route::put('/profile', [ProfileController::class, 'update']);
         Route::post('/profile/update', [ProfileController::class, 'updateProfile']);
-
+      
         Route::get('/dashboard', [CustomerApiController::class, 'dashboard']);
         Route::get('/financial-statement', [CustomerApiController::class, 'financialStatement']);
-        Route::get('/orders', [CustomerApiController::class, 'orderHistory']);
         Route::get('/surveys', [CustomerApiController::class, 'surveys']);
         Route::get('/surveys/{id}', [CustomerApiController::class, 'getSurvey']);
         Route::post('/surveys/{id}/respond', [CustomerApiController::class, 'submitSurvey']);
@@ -46,9 +64,10 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::get('/about-us', [CustomerApiController::class, 'aboutUs']);
         Route::get('/organizations', [CustomerApiController::class, 'organizationsList']);
         Route::post('/change-organization', [CustomerApiController::class, 'switchOrganization']);
-        Route::get('/favorites', [CustomerApiController::class, 'favorites']);
-        Route::post('/favorites/toggle', [CustomerApiController::class, 'toggleFavorite']);
-        Route::get('/invoices', [CustomerApiController::class, 'invoices']);
-        Route::get('/invoices/{id}', [CustomerApiController::class, 'invoiceDetail'])->name('api.customer.invoice.detail');
+    });
+
+    // Add test route inside customer group
+    Route::get('/testinside', function () {
+        return response()->json(['test' => 'Inside group API working']);
     });
 });

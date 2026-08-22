@@ -1,5 +1,4 @@
 <?php
-
 // app/Models/Organization.php
 
 namespace App\Models;
@@ -12,28 +11,7 @@ class Organization extends Model
 {
     use HasFactory, HasRoles;
 
-    protected $fillable = [
-        'name',
-        'code',
-        'parent_id',
-        'organization_type',
-        'gln',
-        'phone',
-        'whatsapp',
-        'email',
-        'website',
-        'address',
-        'latitude',
-        'longitude',
-        'forward_contact_messages_to_email',
-        'contact_email_recipient',
-    ];
-
-    protected $casts = [
-        'forward_contact_messages_to_email' => 'boolean',
-        'latitude' => 'decimal:7',
-        'longitude' => 'decimal:7',
-    ];
+    protected $fillable = ['name', 'code', 'parent_id', 'organization_type', 'gln'];
 
     public function parent()
     {
@@ -74,21 +52,22 @@ class Organization extends Model
     public function customers()
     {
         return $this->belongsToMany(Customer::class, 'customer_organization')
-            ->withPivot('is_active')
-            ->withTimestamps();
+                    ->withPivot('is_active')
+                    ->withTimestamps();
     }
+    
 
     // العملاء النشطون في هذه المنظمة
     public function activeCustomers()
     {
         return $this->belongsToMany(Customer::class, 'customer_organization')
-            ->wherePivot('is_active', true)
-            ->withTimestamps();
+                    ->wherePivot('is_active', true)
+                    ->withTimestamps();
     }
-    // app/Models/Organization.php
+// app/Models/Organization.php
 
-    public function about()
-    {
-        return $this->hasOne(OrganizationAbout::class);
-    }
+public function about()
+{
+    return $this->hasOne(OrganizationAbout::class);
+}
 }

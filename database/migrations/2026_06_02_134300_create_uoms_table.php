@@ -1,5 +1,4 @@
 <?php
-
 // database/migrations/xxxx_xx_xx_xxxxxx_create_uoms_table.php
 
 use Illuminate\Database\Migrations\Migration;

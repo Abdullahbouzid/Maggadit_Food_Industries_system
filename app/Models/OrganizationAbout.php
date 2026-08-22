@@ -1,5 +1,4 @@
 <?php
-
 // app/Models/OrganizationAbout.php
 
 namespace App\Models;
@@ -44,26 +43,26 @@ class OrganizationAbout extends Model
     // أكسسور لصورة الشعار
     public function getImageUrlAttribute()
     {
-        if (! $this->image) {
+        if (!$this->image) {
             return null;
         }
         if (filter_var($this->image, FILTER_VALIDATE_URL)) {
             return $this->image;
         }
-
-        return asset('uploads/organization_about/'.$this->image);
+        return asset('uploads/organization_about/' . $this->image);
     }
 
     // أكسسور لصورة الغلاف
     public function getCoverImageUrlAttribute()
     {
-        if (! $this->cover_image) {
+        if (!$this->cover_image) {
             return null;
         }
         if (filter_var($this->cover_image, FILTER_VALIDATE_URL)) {
             return $this->cover_image;
         }
-
-        return asset('uploads/organization_about/'.$this->cover_image);
+        return asset('uploads/organization_about/' . $this->cover_image);
     }
+
+    
 }

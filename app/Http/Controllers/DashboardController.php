@@ -2,21 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customer;
-use App\Models\CustomerFavorite;
-use App\Models\Invoice;
-use App\Models\Item;
-use App\Models\ItemPack;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Payment;
-use App\Models\User;
-use App\Models\VisitorLog;
-use App\Models\Warehouse;
-use Carbon\Carbon;
-use Illuminate\Database\Schema\Builder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -43,7 +31,7 @@ class DashboardController extends Controller
                     ['label' => 'Tax Type', 'icon' => 'percent', 'route' => '#', 'disabled' => false],
                     ['label' => 'Reasons', 'icon' => 'alert-triangle', 'route' => '#', 'disabled' => false],
                     ['label' => 'Reason Groups', 'icon' => 'list', 'route' => '#', 'disabled' => false],
-                ],
+                ]
             ],
             'staff' => [
                 'title' => 'staff data definitions',
@@ -53,7 +41,7 @@ class DashboardController extends Controller
                     ['label' => 'personal information', 'icon' => 'user', 'route' => '#', 'disabled' => false],
                     ['label' => 'employment details', 'icon' => 'briefcase', 'route' => '#', 'disabled' => false],
                     ['label' => 'attendance schema', 'icon' => 'calendar-check', 'route' => '#', 'disabled' => false],
-                ],
+                ]
             ],
             'customer' => [
                 'title' => 'customer data definitions',
@@ -62,7 +50,7 @@ class DashboardController extends Controller
                     ['label' => 'customer demographics', 'icon' => 'user-plus', 'route' => '#', 'disabled' => false],
                     ['label' => 'contact information', 'icon' => 'phone', 'route' => '#', 'disabled' => false],
                     ['label' => 'loyalty & segments', 'icon' => 'award', 'route' => '#', 'disabled' => false],
-                ],
+                ]
             ],
             'products' => [
                 'title' => 'products data definitions',
@@ -80,7 +68,7 @@ class DashboardController extends Controller
                     ['label' => 'Item Packs', 'icon' => 'package', 'route' => route('item-packs.index'), 'disabled' => false],
                     ['label' => 'Item Images', 'icon' => 'image', 'route' => route('item-images.index'), 'disabled' => false],
                     ['label' => 'Item Models', 'icon' => 'box', 'route' => route('item-models.index'), 'disabled' => false],
-                ],
+                ]
             ],
             'warehouse' => [
                 'title' => 'warehouse & vehicles',
@@ -92,7 +80,7 @@ class DashboardController extends Controller
                     ['label' => 'warehouses', 'icon' => 'warehouse', 'route' => route('warehouses.index'), 'disabled' => false],
                     ['label' => 'vehicle types', 'icon' => 'truck', 'route' => route('vehicle-types.index'), 'disabled' => false],
                     ['label' => 'vehicles', 'icon' => 'truck', 'route' => route('vehicles.index'), 'disabled' => false],
-                ],
+                ]
             ],
             'mobile' => [
                 'title' => 'mobile customization',
@@ -101,7 +89,7 @@ class DashboardController extends Controller
                     ['label' => 'UI layouts', 'icon' => 'layout', 'route' => '#', 'disabled' => false],
                     ['label' => 'offline forms', 'icon' => 'save', 'route' => '#', 'disabled' => false],
                     ['label' => 'push notification schemas', 'icon' => 'bell', 'route' => '#', 'disabled' => false],
-                ],
+                ]
             ],
             'display' => [
                 'title' => 'display units',
@@ -110,15 +98,14 @@ class DashboardController extends Controller
                     ['label' => 'screen layouts', 'icon' => 'layout', 'route' => '#', 'disabled' => false],
                     ['label' => 'widget definitions', 'icon' => 'sliders', 'route' => '#', 'disabled' => false],
                     ['label' => 'real-time dashboards', 'icon' => 'monitor', 'route' => '#', 'disabled' => false],
-                ],
+                ]
             ],
         ];
 
         // Helper function to check if table/column exists (since we might not have Schema facade imported in all contexts)
-        if (! function_exists('Schema')) {
-            function Schema()
-            {
-                return app(Builder::class);
+        if (!function_exists('Schema')) {
+            function Schema() {
+                return app(\Illuminate\Database\Schema\Builder::class);
             }
         }
 
@@ -130,7 +117,7 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral', // up, down, neutral
                 'icon' => 'shopping-cart',
-                'label' => 'الطلبات',
+                'label' => 'الطلبات'
             ],
             'sales' => [
                 'value' => 0,
@@ -138,7 +125,7 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral',
                 'icon' => 'dollar-sign',
-                'label' => 'المبيعات',
+                'label' => 'المبيعات'
             ],
             'visitors' => [
                 'value' => 0,
@@ -146,7 +133,7 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral',
                 'icon' => 'users',
-                'label' => 'الزوار',
+                'label' => 'الزوار'
             ],
             'earnings' => [
                 'value' => 0,
@@ -154,7 +141,7 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral',
                 'icon' => 'credit-card',
-                'label' => 'الأرباح',
+                'label' => 'الأرباح'
             ],
             'items_count' => [
                 'value' => 0,
@@ -162,12 +149,12 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral',
                 'icon' => 'box',
-                'label' => 'عدد الاصناف',
+                'label' => 'عدد الاصناف'
             ],
             'top_favorite_items' => [
                 'items' => [], // Will store top favorite items
                 'icon' => 'heart',
-                'label' => 'اكثر المنتجات مفضلة',
+                'label' => 'اكثر المنتجات مفضلة'
             ],
             'warehouses_count' => [
                 'value' => 0,
@@ -175,7 +162,7 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral',
                 'icon' => 'box',
-                'label' => 'عدد المخازن',
+                'label' => 'عدد المخازن'
             ],
             'customers_count' => [
                 'value' => 0,
@@ -183,7 +170,7 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral',
                 'icon' => 'users',
-                'label' => 'عدد العملاء',
+                'label' => 'عدد العملاء'
             ],
             'packs_count' => [
                 'value' => 0,
@@ -191,7 +178,7 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral',
                 'icon' => 'package',
-                'label' => 'المونتاجات',
+                'label' => 'المونتاجات'
             ],
             'new_customers_today' => [
                 'value' => 0,
@@ -199,7 +186,7 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral',
                 'icon' => 'user-plus',
-                'label' => 'عملاء جدد اليوم',
+                'label' => 'عملاء جدد اليوم'
             ],
             'new_customers_this_month' => [
                 'value' => 0,
@@ -207,12 +194,12 @@ class DashboardController extends Controller
                 'change_percent' => 0,
                 'trend' => 'neutral',
                 'icon' => 'calendar-plus',
-                'label' => 'عملاء جدد هذا الشهر',
+                'label' => 'عملاء جدد هذا الشهر'
             ],
             'favorites_chart' => [
                 'labels' => [],
                 'data' => [],
-            ],
+            ]
         ];
 
         try {
@@ -220,7 +207,7 @@ class DashboardController extends Controller
             // Assuming there might be an Order model or similar
             try {
                 if (class_exists('App\Models\Order')) {
-                    $orderModel = new Order;
+                    $orderModel = new \App\Models\Order();
                     $table = $orderModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $currentOrders = $orderModel->whereDate('created_at', Carbon::today()->toDateString())->count();
@@ -235,7 +222,7 @@ class DashboardController extends Controller
                 }
                 // Fallback: try to count invoices or sales orders
                 elseif (class_exists('App\Models\Invoice')) {
-                    $invoiceModel = new Invoice;
+                    $invoiceModel = new \App\Models\Invoice();
                     $table = $invoiceModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $currentOrders = $invoiceModel->whereDate('created_at', Carbon::today())->count();
@@ -249,7 +236,7 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch order statistics: '.$e->getMessage());
+                Log::warning("Could not fetch order statistics: " . $e->getMessage());
             }
 
             // Try to get sales/total amount
@@ -258,7 +245,7 @@ class DashboardController extends Controller
                 $previousSales = 0;
 
                 if (class_exists('App\Models\Order')) {
-                    $orderModel = new Order;
+                    $orderModel = new \App\Models\Order();
                     $table = $orderModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         if (Schema()->hasColumn($table, 'total_amount')) {
@@ -283,7 +270,7 @@ class DashboardController extends Controller
                 }
                 // Fallback: try to get from invoices
                 elseif (class_exists('App\Models\Invoice')) {
-                    $invoiceModel = new Invoice;
+                    $invoiceModel = new \App\Models\Invoice();
                     $table = $invoiceModel->getTable();
                     if ($table && Schema()->hasTable($table) && Schema()->hasColumn($table, 'total_amount')) {
                         $currentSales = $invoiceModel->whereDate('created_at', Carbon::today()->toDateString())->sum('total_amount');
@@ -298,17 +285,17 @@ class DashboardController extends Controller
                 }
                 // Last resort: estimate from items sold (if we have order items)
                 elseif (class_exists('App\Models\OrderItem')) {
-                    $orderItemModel = new OrderItem;
+                    $orderItemModel = new \App\Models\OrderItem();
                     $table = $orderItemModel->getTable();
                     if ($table && Schema()->hasTable($table) &&
                         Schema()->hasColumn($table, 'price') &&
                         Schema()->hasColumn($table, 'quantity')) {
                         $currentSales = $orderItemModel->whereDate('created_at', Carbon::today()->toDateString())
-                            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-                            ->sum(DB::raw('order_items.price * order_items.quantity'));
+                                                        ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                                                        ->sum(DB::raw('order_items.price * order_items.quantity'));
                         $previousSales = $orderItemModel->whereDate('created_at', Carbon::yesterday()->toDateString())
-                            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-                            ->sum(DB::raw('order_items.price * order_items.quantity'));
+                                                        ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                                                        ->sum(DB::raw('order_items.price * order_items.quantity'));
                         $stats['sales']['value'] = round($currentSales, 2);
                         $stats['sales']['change'] = round($currentSales - $previousSales, 2);
                         $stats['sales']['change_percent'] = $previousSales > 0 ?
@@ -318,14 +305,14 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch sales statistics: '.$e->getMessage());
+                Log::warning("Could not fetch sales statistics: " . $e->getMessage());
             }
 
             // Try to get visitor count (this is trickier - might need to check logs or sessions)
             try {
                 // Option 1: If there's a visitor tracking model
                 if (class_exists('App\Models\VisitorLog')) {
-                    $visitorModel = new VisitorLog;
+                    $visitorModel = new \App\Models\VisitorLog();
                     $table = $visitorModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $currentVisitors = $visitorModel->whereDate('created_at', Carbon::today())->countDistinct('ip_address');
@@ -340,7 +327,7 @@ class DashboardController extends Controller
                 }
                 // Option 2: Use unique customers who logged in today
                 elseif (class_exists('App\Models\User')) {
-                    $userModel = new User;
+                    $userModel = new \App\Models\User();
                     $table = $userModel->getTable();
                     if ($table && Schema()->hasTable($table) &&
                         Schema()->hasColumn($table, 'last_login_at')) {
@@ -365,7 +352,7 @@ class DashboardController extends Controller
                 }
                 // Option 3: Use customer count as proxy
                 elseif (class_exists('App\Models\Customer')) {
-                    $customerModel = new Customer;
+                    $customerModel = new \App\Models\Customer();
                     $table = $customerModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $currentVisitors = $customerModel->whereDate('created_at', Carbon::today())->count();
@@ -379,14 +366,14 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch visitor statistics: '.$e->getMessage());
+                Log::warning("Could not fetch visitor statistics: " . $e->getMessage());
             }
 
             // Try to get earnings (might be same as sales or from payments)
             try {
                 // First try: if there's a payment model with amount
                 if (class_exists('App\Models\Payment')) {
-                    $paymentModel = new Payment;
+                    $paymentModel = new \App\Models\Payment();
                     $table = $paymentModel->getTable();
                     if ($table && Schema()->hasTable($table) &&
                         Schema()->hasColumn($table, 'amount')) {
@@ -409,7 +396,7 @@ class DashboardController extends Controller
                     $stats['earnings']['trend'] = $stats['sales']['trend'];
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch earnings statistics: '.$e->getMessage());
+                Log::warning("Could not fetch earnings statistics: " . $e->getMessage());
                 // Fallback to sales value
                 $stats['earnings']['value'] = $stats['sales']['value'];
                 $stats['earnings']['change'] = $stats['sales']['change'];
@@ -420,7 +407,7 @@ class DashboardController extends Controller
             // Calculate items count
             try {
                 if (class_exists('App\Models\Item')) {
-                    $itemsModel = new Item;
+                    $itemsModel = new \App\Models\Item();
                     $table = $itemsModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $currentItems = $itemsModel->where('is_inactive', false)->count(); // Count only active items
@@ -437,13 +424,13 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch items count statistics: '.$e->getMessage());
+                Log::warning("Could not fetch items count statistics: " . $e->getMessage());
             }
 
             // Calculate warehouses count
             try {
                 if (class_exists('App\Models\Warehouse')) {
-                    $warehousesModel = new Warehouse;
+                    $warehousesModel = new \App\Models\Warehouse();
                     $table = $warehousesModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $stats['warehouses_count']['value'] = $warehousesModel->count();
@@ -453,13 +440,13 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch warehouses count statistics: '.$e->getMessage());
+                Log::warning("Could not fetch warehouses count statistics: " . $e->getMessage());
             }
 
             // Calculate customers count
             try {
                 if (class_exists('App\Models\Customer')) {
-                    $customersModel = new Customer;
+                    $customersModel = new \App\Models\Customer();
                     $table = $customersModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $stats['customers_count']['value'] = $customersModel->count();
@@ -469,13 +456,13 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch customers count statistics: '.$e->getMessage());
+                Log::warning("Could not fetch customers count statistics: " . $e->getMessage());
             }
 
             // Calculate packs count
             try {
                 if (class_exists('App\Models\ItemPack')) {
-                    $packsModel = new ItemPack;
+                    $packsModel = new \App\Models\ItemPack();
                     $table = $packsModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $stats['packs_count']['value'] = $packsModel->count();
@@ -487,13 +474,13 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch packs count statistics: '.$e->getMessage());
+                Log::warning("Could not fetch packs count statistics: " . $e->getMessage());
             }
 
             // Calculate new customers today
             try {
                 if (class_exists('App\Models\Customer')) {
-                    $customersModel = new Customer;
+                    $customersModel = new \App\Models\Customer();
                     $table = $customersModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $todayStart = Carbon::today()->startOfDay();
@@ -511,13 +498,13 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch new customers today statistics: '.$e->getMessage());
+                Log::warning("Could not fetch new customers today statistics: " . $e->getMessage());
             }
 
-            // Calculate new customers this month
+// Calculate new customers this month
             try {
                 if (class_exists('App\Models\Customer')) {
-                    $customersModel = new Customer;
+                    $customersModel = new \App\Models\Customer();
                     $table = $customersModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $monthStart = Carbon::now()->startOfMonth();
@@ -535,13 +522,13 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch new customers this month statistics: '.$e->getMessage());
+                Log::warning("Could not fetch new customers this month statistics: " . $e->getMessage());
             }
 
             // Prepare data for new customers daily chart (last 7 days)
             try {
                 if (class_exists('App\Models\Customer')) {
-                    $customersModel = new Customer;
+                    $customersModel = new \App\Models\Customer();
                     $table = $customersModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $labels = [];
@@ -551,20 +538,20 @@ class DashboardController extends Controller
                             $label = $day->format('M d'); // e.g., Jan 01
                             $labels[] = $label;
                             $count = $customersModel->whereDate('created_at', $day)->count();
-                            $data[] = (int) $count;
+                            $data[] = (int)$count;
                         }
                         $stats['new_customers_daily_chart']['labels'] = $labels;
                         $stats['new_customers_daily_chart']['data'] = $data;
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch new customers daily chart data: '.$e->getMessage());
+                Log::warning("Could not fetch new customers daily chart data: " . $e->getMessage());
             }
 
             // Prepare data for new customers monthly chart (last 12 months)
             try {
                 if (class_exists('App\Models\Customer')) {
-                    $customersModel = new Customer;
+                    $customersModel = new \App\Models\Customer();
                     $table = $customersModel->getTable();
                     if ($table && Schema()->hasTable($table)) {
                         $labels = [];
@@ -574,19 +561,19 @@ class DashboardController extends Controller
                             $label = $month->format('M Y'); // e.g., Jan 2026
                             $labels[] = $label;
                             $count = $customersModel->whereBetween('created_at', [$month->startOfMonth(), $month->endOfMonth()])->count();
-                            $data[] = (int) $count;
+                            $data[] = (int)$count;
                         }
                         $stats['new_customers_monthly_chart']['labels'] = $labels;
                         $stats['new_customers_monthly_chart']['data'] = $data;
                     }
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch new customers monthly chart data: '.$e->getMessage());
+                Log::warning("Could not fetch new customers monthly chart data: " . $e->getMessage());
             }
             try {
                 if (class_exists('App\Models\CustomerFavorite') && class_exists('App\Models\Item')) {
                     // Get top 5 most favorited items with their details
-                    $topFavorites = CustomerFavorite::select('item_id', DB::raw('count(*) as favorite_count'))
+                    $topFavorites = \App\Models\CustomerFavorite::select('item_id', DB::raw('count(*) as favorite_count'))
                         ->groupBy('item_id')
                         ->orderByDesc('favorite_count')
                         ->limit(5)
@@ -596,17 +583,17 @@ class DashboardController extends Controller
                     $labels = [];
                     $data = [];
                     foreach ($topFavorites as $fav) {
-                        $item = Item::where('id', $fav->item_id)->first();
+                        $item = \App\Models\Item::where('id', $fav->item_id)->first();
                         if ($item) {
                             $topItems[] = [
                                 'id' => $item->id,
                                 'name_en' => $item->name_en,
                                 'name_ar' => $item->name_ar,
                                 'image' => $item->getMainImageUrlAttribute(),
-                                'favorite_count' => (int) $fav->favorite_count,
+                                'favorite_count' => (int)$fav->favorite_count
                             ];
                             $labels[] = $item->name_ar;
-                            $data[] = (int) $fav->favorite_count;
+                            $data[] = (int)$fav->favorite_count;
                         }
                     }
 
@@ -615,10 +602,10 @@ class DashboardController extends Controller
                     $stats['favorites_chart']['data'] = $data;
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not fetch top favorite items statistics: '.$e->getMessage());
+                Log::warning("Could not fetch top favorite items statistics: " . $e->getMessage());
             }
         } catch (\Exception $e) {
-            Log::error('Error calculating dashboard statistics: '.$e->getMessage());
+            Log::error("Error calculating dashboard statistics: " . $e->getMessage());
             // Keep default values if everything fails
         }
 

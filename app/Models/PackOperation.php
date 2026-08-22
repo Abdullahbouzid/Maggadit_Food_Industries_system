@@ -1,5 +1,4 @@
 <?php
-
 // app/Models/PackOperation.php
 
 namespace App\Models;
@@ -14,7 +13,7 @@ class PackOperation extends Model
     protected $table = 'pack_operations';
 
     protected $fillable = [
-        'code', 'name_en', 'name_ar', 'is_active', 'sort_order',
+        'code', 'name_en', 'name_ar', 'is_active', 'sort_order'
     ];
 
     protected $casts = [

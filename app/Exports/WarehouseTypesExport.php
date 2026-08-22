@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Models\WarehouseType;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Http\Request;
 
 class WarehouseTypesExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -23,10 +23,10 @@ class WarehouseTypesExport implements FromQuery, WithHeadings, WithMapping
 
         if ($this->request->filled('search')) {
             $search = $this->request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
 
@@ -40,7 +40,7 @@ class WarehouseTypesExport implements FromQuery, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'ID', 'Code', 'Name (EN)', 'Name (AR)', 'Description', 'Active', 'Sort Order', 'Created At',
+            'ID', 'Code', 'Name (EN)', 'Name (AR)', 'Description', 'Active', 'Sort Order', 'Created At'
         ];
     }
 

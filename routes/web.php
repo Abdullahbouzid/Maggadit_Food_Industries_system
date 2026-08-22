@@ -1,56 +1,50 @@
 <?php
 
-use App\Http\Controllers\Admin\RolePermissionController;
-use App\Http\Controllers\AreaController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\BannerController;
-use App\Http\Controllers\BrandController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\CityController;
-use App\Http\Controllers\CompetitorController;
-use App\Http\Controllers\ContactMessageController;
-use App\Http\Controllers\CountryController;
-use App\Http\Controllers\CurrencyController;
-use App\Http\Controllers\Customer\CustomerAppController;
-use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DeviceController;
-use App\Http\Controllers\FaqController;
-use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\ItemController;
-use App\Http\Controllers\ItemImageController;
-use App\Http\Controllers\ItemModelController;
-use App\Http\Controllers\ItemPackController;
-use App\Http\Controllers\ItemPackPackGroupController;
-use App\Http\Controllers\ItemPackPackOperationController;
-use App\Http\Controllers\ItemTypeController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\Offer\OfferController;
-use App\Http\Controllers\OrganizationAboutController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PackageStatusController;
-use App\Http\Controllers\PackGroupController;
-use App\Http\Controllers\PackOperationController;
-use App\Http\Controllers\ProductionBatchController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VendorController;
+use App\Http\Controllers\CompetitorController;
+use App\Http\Controllers\CountryController;
+use App\Http\Controllers\CityController;
 use App\Http\Controllers\SalesOrderTypeController;
-use App\Http\Controllers\StateController;
+use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FaqController;
+use App\Http\Controllers\Customer\CustomerAppController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ItemTypeController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\UomController;
-use App\Http\Controllers\VehicleController;
-use App\Http\Controllers\VehicleTypeController;
-use App\Http\Controllers\VendorController;
-use App\Http\Controllers\WarehouseController;
-use App\Http\Controllers\WarehouseMovementController;
+use App\Http\Controllers\PackOperationController;
+use App\Http\Controllers\PackGroupController;
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\ItemPackController;
+use App\Http\Controllers\ItemImageController;
+use App\Http\Controllers\ItemModelController;
+use App\Http\Controllers\ItemPackPackGroupController;
+use App\Http\Controllers\ItemPackPackOperationController;
 use App\Http\Controllers\WarehouseTypeController;
-use App\Models\Customer;
-use App\Models\Offer;
-use App\Models\PrivacyPolicy;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
+use App\Http\Controllers\StateController;
+use App\Http\Controllers\AreaController;
+use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\VehicleTypeController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\DeviceController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BannerController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrganizationAboutController;
+use App\Http\Controllers\ProductionBatchController;
+use App\Http\Controllers\BatchDistributionController;
+use App\Http\Controllers\WarehouseMovementController;
+
+
+use Illuminate\Http\Request;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -82,7 +76,7 @@ Route::post('/mobile/register', function (Request $request) {
 
     // إرسال طلب التسجيل للاستضافة الحقيقية
     try {
-        $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
+        $response = \Illuminate\Support\Facades\Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
@@ -95,38 +89,35 @@ Route::post('/mobile/register', function (Request $request) {
             $remoteUser = $data['customer'];
 
             // إنشاء المستخدم محلياً في الـ APK لمزامنة الجلسة
-            $customer = Customer::create([
+            $customer = \App\Models\Customer::create([
                 'name' => $remoteUser['name'],
                 'username' => $remoteUser['username'],
                 'email' => $remoteUser['email'],
-                'password' => Hash::make($request->password),
+                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
             ]);
 
-            Auth::guard('customer')->login($customer);
+            \Illuminate\Support\Facades\Auth::guard('customer')->login($customer);
             $request->session()->regenerate();
             $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
             }
-
             return redirect()->route('customer.dashboard');
         }
-
+        
         // في حال وجود أخطاء تحقق من السيرفر
         $errors = $response->json('errors') ?? ['error' => ['فشل التسجيل في السيرفر']];
         if ($request->expectsJson()) {
             return response()->json(['errors' => $errors], 422);
         }
-
         return back()->withErrors($errors);
-
-    } catch (Exception $e) {
+        
+    } catch (\Exception $e) {
         // خطأ في الاتصال
         if ($request->expectsJson()) {
             return response()->json(['errors' => ['error' => ['فشل الاتصال بالسيرفر']]], 422);
         }
-
         return back()->withErrors(['error' => 'فشل الاتصال بالسيرفر']);
     }
 })->name('mobile.register.submit');
@@ -139,7 +130,7 @@ Route::post('/mobile/login', function (Request $request) {
 
     // إرسال طلب الدخول للاستضافة الحقيقية
     try {
-        $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
+        $response = \Illuminate\Support\Facades\Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
             'username' => $request->username,
             'password' => $request->password,
         ]);
@@ -149,53 +140,50 @@ Route::post('/mobile/login', function (Request $request) {
             $remoteUser = $data['customer'];
 
             // إنشاء أو تحديث المستخدم محلياً في الـ APK لمزامنة الجلسة
-            $customer = Customer::updateOrCreate(
+            $customer = \App\Models\Customer::updateOrCreate(
                 ['username' => $remoteUser['username']],
                 [
                     'name' => $remoteUser['name'],
                     'email' => $remoteUser['email'],
-                    'password' => Hash::make($request->password),
+                    'password' => \Illuminate\Support\Facades\Hash::make($request->password),
                 ]
             );
 
-            Auth::guard('customer')->login($customer);
+            \Illuminate\Support\Facades\Auth::guard('customer')->login($customer);
             $request->session()->regenerate();
             $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
             }
-
             return redirect()->route('customer.dashboard');
         }
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         // خطأ في الاتصال
     }
 
     if ($request->expectsJson()) {
         return response()->json(['message' => 'فشل الاتصال بالسيرفر أو بيانات خاطئة'], 422);
     }
-
     return back()->withErrors(['username' => 'بيانات الدخول غير صحيحة أو السيرفر غير متاح.']);
 })->name('mobile.login.submit');
 
 Route::get('/customer/logout', function (Request $request) {
-    Auth::guard('customer')->logout();
+    \Illuminate\Support\Facades\Auth::guard('customer')->logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
-
     return redirect()->route('mobile.login');
 })->name('customer.logout');
 
 // الصفحة الرئيسية توجه بناءً على الجهاز (ويب أو تطبيق)
 Route::get('/', function (Request $request) {
     $userAgent = strtolower($request->header('User-Agent'));
-
+    
     // التحقق مما إذا كان الطلب قادماً من تطبيق الموبايل (APK) أو متصفح هاتف
     if (str_contains($userAgent, 'android') || str_contains($userAgent, 'mobile') || str_contains($userAgent, 'wv')) {
         return redirect()->route('mobile.login');
     }
-
+    
     // إذا كان من متصفح الويب العادي (سطح المكتب)
     return redirect('/admin');
 });
@@ -234,15 +222,14 @@ Route::prefix('customer')->name('customer.')->group(function () {
         // جلب قائمة الاستبيانات
         Route::get('/surveys', function () use ($baseUrl) {
             $token = session('api_token');
-            if (! $token) {
+            if (!$token) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
             try {
-                $response = Http::withToken($token)->withoutVerifying()
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
                     ->get("{$baseUrl}/customer/surveys");
-
                 return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
             }
         })->name('surveys.index');
@@ -250,31 +237,29 @@ Route::prefix('customer')->name('customer.')->group(function () {
         // جلب تفاصيل استبيان
         Route::get('/surveys/{id}', function ($id) use ($baseUrl) {
             $token = session('api_token');
-            if (! $token) {
+            if (!$token) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
             try {
-                $response = Http::withToken($token)->withoutVerifying()
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
                     ->get("{$baseUrl}/customer/surveys/{$id}");
-
                 return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
             }
         })->name('surveys.show');
 
         // إرسال إجابات استبيان
-        Route::post('/surveys/{id}/respond', function (Request $request, $id) use ($baseUrl) {
+        Route::post('/surveys/{id}/respond', function (\Illuminate\Http\Request $request, $id) use ($baseUrl) {
             $token = session('api_token');
-            if (! $token) {
+            if (!$token) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
             try {
-                $response = Http::withToken($token)->withoutVerifying()
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
                     ->post("{$baseUrl}/customer/surveys/{$id}/respond", $request->all());
-
                 return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
             }
         })->name('surveys.respond');
@@ -282,52 +267,37 @@ Route::prefix('customer')->name('customer.')->group(function () {
         // جلب قائمة المنظمات
         Route::get('/organizations', function () use ($baseUrl) {
             $token = session('api_token');
-            if (! $token) {
+            if (!$token) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
             try {
-                $response = Http::withToken($token)->withoutVerifying()
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
                     ->get("{$baseUrl}/customer/organizations");
-
                 return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
             }
         })->name('organizations.index');
 
         // تبديل المنظمة
-        Route::post('/change-organization', function (Request $request) use ($baseUrl) {
+        Route::post('/change-organization', function (\Illuminate\Http\Request $request) use ($baseUrl) {
             $token = session('api_token');
-            if (! $token) {
+            if (!$token) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
             try {
-                $response = Http::withToken($token)->withoutVerifying()
+                $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()
                     ->post("{$baseUrl}/customer/change-organization", $request->all());
-
                 return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
             }
         })->name('organizations.switch');
     });
     Route::get('/notifications', [CustomerAppController::class, 'notificationsIndex'])->name('notifications');
     Route::get('/privacy-policy', function () {
-        $policy = PrivacyPolicy::where('type', 'privacy_policy')
-            ->where('is_active', true)
-            ->latest()
-            ->first();
-
-        return view('app_android.more.privacy_policy', compact('policy'));
+        return view('app_android.more.privacy_policy');
     })->name('privacy');
-    Route::get('/terms-of-service', function () {
-        $policy = PrivacyPolicy::where('type', 'terms_of_service')
-            ->where('is_active', true)
-            ->latest()
-            ->first();
-
-        return view('app_android.more.privacy_policy', compact('policy'));
-    })->name('terms');
     Route::get('/about-us', [CustomerAppController::class, 'aboutUsWeb'])->name('about');
     Route::get('/contact-us', function () {
         return view('app_android.more.contact_us');
@@ -337,48 +307,22 @@ Route::prefix('customer')->name('customer.')->group(function () {
     // مسارات محمية (تتطلب تسجيل دخول بجلسة PHP)
     Route::middleware('check.customer.session')->group(function () {
         Route::get('/dashboard', [CustomerAppController::class, 'dashboard'])->name('dashboard');
-
+       
         Route::get('/more', [CustomerAppController::class, 'more'])->name('more');
         Route::get('/offers', function () {
-            $offers = Offer::with(['item', 'itemPack.packType'])
-                ->active()
-                ->get()
-                ->map(function ($offer) {
-                    $item = $offer->item;
-                    $defaultPack = $item ? $item->packs->first() : null;
-                    $offerPack = $offer->itemPack;
-
-                    $data = [
-                        'id' => $offer->id,
-                        'title' => $offer->title,
-                        'description' => $offer->description,
-                        'item_id' => $offer->item_id,
-                        'item_pack_id' => $offer->item_pack_id,
-                        'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                        'pack_type' => $offerPack ? ($offerPack->packType->name_ar ?? $offerPack->packType->name_en ?? '') : ($defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : ''),
-                        'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
-                        'old_price' => (float) $offer->old_price,
-                        'new_price' => (float) $offer->new_price,
-                        'discount_percentage' => (float) $offer->discount_percentage,
-                        'start_date' => $offer->start_date?->format('Y-m-d H:i'),
-                        'end_date' => $offer->end_date?->format('Y-m-d H:i'),
-                    ];
-
-                    return (object) $data;
-                });
-
-            return view('app_android.offers.index', compact('offers'));
+            return view('app_android.offers');
         })->name('offers');
         Route::get('/cart', function () {
             return view('app_android.cart');
         })->name('cart');
-        Route::post('/checkout', [CustomerAppController::class, 'checkout'])->name('checkout');
         Route::get('/favorite', [CustomerAppController::class, 'favorites'])->name('favorite');
         Route::post('/favorite/toggle', [CustomerAppController::class, 'toggleFavorite'])->name('favorite.toggle');
         Route::get('/financial-statement', function () {
             return view('app_android.more.financial_statement');
         })->name('financial_statement');
-        Route::get('/order-history', [CustomerAppController::class, 'orderHistory'])->name('order_history');
+        Route::get('/order-history', function () {
+            return view('app_android.more.order_history');
+        })->name('order_history');
         Route::get('/order/{id}', function ($id) {
             return view('app_android.more.order_details', ['orderId' => $id]);
         })->name('order_details');
@@ -409,22 +353,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
     // الأدوار والصلاحيات
-    Route::resource('roles', RolePermissionController::class)->except(['show']);
-    Route::get('permissions', [RolePermissionController::class, 'permissionsIndex'])->name('permissions.index');
-    Route::get('permissions/create', [RolePermissionController::class, 'createPermission'])->name('permissions.create');
-    Route::post('permissions', [RolePermissionController::class, 'storePermission'])->name('permissions.store');
-    Route::get('permissions/{permission}/edit', [RolePermissionController::class, 'editPermission'])->name('permissions.edit');
-    Route::put('permissions/{permission}', [RolePermissionController::class, 'updatePermission'])->name('permissions.update');
-    Route::delete('permissions/{permission}', [RolePermissionController::class, 'destroyPermission'])->name('permissions.destroy');
+    Route::resource('roles', \App\Http\Controllers\Admin\RolePermissionController::class)->except(['show']);
+    Route::get('permissions', [\App\Http\Controllers\Admin\RolePermissionController::class, 'permissionsIndex'])->name('permissions.index');
+    Route::get('permissions/create', [\App\Http\Controllers\Admin\RolePermissionController::class, 'createPermission'])->name('permissions.create');
+    Route::post('permissions', [\App\Http\Controllers\Admin\RolePermissionController::class, 'storePermission'])->name('permissions.store');
+    Route::get('permissions/{permission}/edit', [\App\Http\Controllers\Admin\RolePermissionController::class, 'editPermission'])->name('permissions.edit');
+    Route::put('permissions/{permission}', [\App\Http\Controllers\Admin\RolePermissionController::class, 'updatePermission'])->name('permissions.update');
+    Route::delete('permissions/{permission}', [\App\Http\Controllers\Admin\RolePermissionController::class, 'destroyPermission'])->name('permissions.destroy');
 
     // المنظمات وغيرها من الموارد (كلها كما هي)
     Route::get('organizations/export', [OrganizationController::class, 'export'])->name('organizations.export');
     Route::get('organizations/template', [OrganizationController::class, 'downloadTemplate'])->name('organizations.template');
     Route::post('organizations/import', [OrganizationController::class, 'import'])->name('organizations.import');
     Route::resource('organizations', OrganizationController::class);
-
+   
     // ========== أضف هنا مسارات نبذة المنظمة ==========
-    Route::resource('organization-about', OrganizationAboutController::class);
+Route::resource('organization-about', OrganizationAboutController::class);
 
     Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
     Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
@@ -541,6 +485,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{warehouse}/transfer/confirm-from-warehouse', [WarehouseController::class, 'transferConfirmFromWarehouse'])->name('warehouses.transfer.confirm-from-warehouse');
     });
 
+
     Route::get('warehouse-movements/export', [WarehouseMovementController::class, 'export'])->name('warehouse-movements.export');
     Route::get('warehouse-movements/{warehouse_movement}/export-detail', [WarehouseMovementController::class, 'exportDetail'])->name('warehouse-movements.export-detail');
     Route::resource('warehouse-movements', WarehouseMovementController::class);
@@ -551,7 +496,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('production-batches/{productionBatch}/distribute', [ProductionBatchController::class, 'distribute'])->name('production-batches.distribute.store');
     Route::get('production-batches/{batch}/warehouse-stock/{warehouse}', [ProductionBatchController::class, 'getWarehouseStock'])->name('production-batches.warehouse-stock');
 
-    // نقل الكميات بين المخازن
+
+        // نقل الكميات بين المخازن
     Route::get('production-batches/{productionBatch}/transfer', [ProductionBatchController::class, 'transferForm'])->name('production-batches.transfer');
     Route::post('production-batches/{productionBatch}/transfer', [ProductionBatchController::class, 'transferStore'])->name('production-batches.transfer.store');
 
@@ -574,19 +520,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('devices/import', [DeviceController::class, 'import'])->name('devices.import');
     Route::resource('devices', DeviceController::class);
 
+
+
     Route::resource('banners', BannerController::class);
     Route::get('banners/export', [BannerController::class, 'export'])->name('banners.export');
 
-    Route::resource('invoices', InvoiceController::class);
-    Route::get('invoices/get-warehouses/{itemId}', [InvoiceController::class, 'getWarehousesForItem'])->name('invoices.warehouses');
-
-    Route::resource('offers', OfferController::class);
-
-    Route::resource('contact-messages', ContactMessageController::class);
-    Route::post('contact-messages/{contactMessage}/forward', [ContactMessageController::class, 'forward'])->name('contact-messages.forward');
-    Route::post('contact-messages/{contactMessage}/close', [ContactMessageController::class, 'close'])->name('contact-messages.close');
-    Route::post('contact-messages/{contactMessage}/status', [ContactMessageController::class, 'updateStatus'])->name('contact-messages.status');
-    Route::post('contact-messages/{contactMessage}/importance', [ContactMessageController::class, 'updateImportance'])->name('contact-messages.importance');
 
     Route::resource('notifications', NotificationController::class);
     Route::post('notifications/{notification}/resend', [NotificationController::class, 'resend'])->name('notifications.resend');

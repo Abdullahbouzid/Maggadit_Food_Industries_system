@@ -1,14 +1,13 @@
 <?php
-
 // app/Exports/ItemTypesExport.php
 
 namespace App\Exports;
 
 use App\Models\ItemType;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Http\Request;
 
 class ItemTypesExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -27,7 +26,7 @@ class ItemTypesExport implements FromCollection, WithHeadings, WithMapping
             $search = $this->request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%");
+                  ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -45,7 +44,7 @@ class ItemTypesExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'ID', 'Code', 'Name', 'Description', 'Is Active', 'Sort Order', 'Image Path', 'Created At',
+            'ID', 'Code', 'Name', 'Description', 'Is Active', 'Sort Order', 'Image Path', 'Created At'
         ];
     }
 

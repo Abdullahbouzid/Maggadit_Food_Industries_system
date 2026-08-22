@@ -20,10 +20,8 @@
             @endif
             <p class="text-gray-600 mb-4">{{ $product->description ?? '' }}</p>
             <button class="add-to-cart w-full bg-purple-600 text-white text-sm py-2 rounded-full hover:bg-purple-700 transition"
-                    data-id="{{ $product->id }}"
                     data-name="{{ $product->name }}"
-                    data-price="{{ $product->price }}"
-                    data-image="{{ $product->image ?? '📦' }}">
+                    data-price="{{ $product->price }}">
                 <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
             </button>
             <button class="toggle-favorite-btn mt-3 w-full flex items-center justify-center py-2 rounded-full border border-gray-300 transition"
@@ -59,28 +57,7 @@
         document.querySelectorAll('.add-to-cart').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                let id = this.getAttribute('data-id');
-                let name = this.getAttribute('data-name');
-                let price = this.getAttribute('data-price');
-                let image = this.getAttribute('data-image');
-                
-                let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
-                let existingItemIndex = cartItems.findIndex(item => item.id == id);
-                
-                if (existingItemIndex > -1) {
-                    cartItems[existingItemIndex].quantity += 1;
-                } else {
-                    cartItems.push({
-                        id: id,
-                        name: name,
-                        price: price,
-                        quantity: 1,
-                        image: image,
-                        discount: 0
-                    });
-                }
-                
-                localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
+                const name = this.getAttribute('data-name');
                 showToast(`✅ تم إضافة "${name}" إلى السلة`);
             });
         });

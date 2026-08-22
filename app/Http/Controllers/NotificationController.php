@@ -2,13 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customer;
 use App\Models\Notification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\Messaging\CloudMessage;
 
 class NotificationController extends Controller
 {
@@ -19,10 +15,10 @@ class NotificationController extends Controller
         // فلتر البحث
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('subject_en', 'like', '%'.$request->search.'%')
-                    ->orWhere('subject_ar', 'like', '%'.$request->search.'%')
-                    ->orWhere('body_en', 'like', '%'.$request->search.'%')
-                    ->orWhere('body_ar', 'like', '%'.$request->search.'%');
+                $q->where('subject_en', 'like', '%' . $request->search . '%')
+                  ->orWhere('subject_ar', 'like', '%' . $request->search . '%')
+                  ->orWhere('body_en', 'like', '%' . $request->search . '%')
+                  ->orWhere('body_ar', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -61,8 +57,7 @@ class NotificationController extends Controller
 
     public function create()
     {
-        $customers = Customer::select('id', 'name')->get();
-
+        $customers = \App\Models\Customer::select('id', 'name')->get();
         return view('dashboard.data_definition.customer_app.notification.create', compact('customers'));
     }
 
@@ -71,15 +66,15 @@ class NotificationController extends Controller
         $validated = $request->validate([
             'subject_en' => 'required|string|max:255',
             'subject_ar' => 'required|string|max:255',
-            'body_en' => 'required|string',
-            'body_ar' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'video' => 'nullable|mimes:mp4,avi,mov|max:20480', // 20MB
-            'group' => 'nullable|string|max:100',
-            'channel' => 'required|in:all,email,push,sms',
-            'icon_type' => 'nullable|string|max:50',
-            'customers' => 'nullable|array',
-            'is_sent' => 'boolean',
+            'body_en'    => 'required|string',
+            'body_ar'    => 'required|string',
+            'image'      => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'video'      => 'nullable|mimes:mp4,avi,mov|max:20480', // 20MB
+            'group'      => 'nullable|string|max:100',
+            'channel'    => 'required|in:all,email,push,sms',
+            'icon_type'  => 'nullable|string|max:50',
+            'customers'  => 'nullable|array',
+            'is_sent'    => 'boolean',
             'scheduled_at' => 'nullable|date|after:now',
         ]);
 
@@ -103,7 +98,7 @@ class NotificationController extends Controller
         }
 
         $data['is_sent'] = $request->has('is_sent');
-        if (! $request->filled('icon_type')) {
+        if (!$request->filled('icon_type')) {
             $data['icon_type'] = 'notification';
         }
 
@@ -125,8 +120,7 @@ class NotificationController extends Controller
 
     public function edit(Notification $notification)
     {
-        $customers = Customer::select('id', 'name')->get();
-
+        $customers = \App\Models\Customer::select('id', 'name')->get();
         return view('dashboard.data_definition.customer_app.notification.edit', compact('notification', 'customers'));
     }
 
@@ -135,15 +129,15 @@ class NotificationController extends Controller
         $validated = $request->validate([
             'subject_en' => 'required|string|max:255',
             'subject_ar' => 'required|string|max:255',
-            'body_en' => 'required|string',
-            'body_ar' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'video' => 'nullable|mimes:mp4,avi,mov|max:20480',
-            'group' => 'nullable|string|max:100',
-            'channel' => 'required|in:all,email,push,sms',
-            'icon_type' => 'nullable|string|max:50',
-            'customers' => 'nullable|array',
-            'is_sent' => 'boolean',
+            'body_en'    => 'required|string',
+            'body_ar'    => 'required|string',
+            'image'      => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'video'      => 'nullable|mimes:mp4,avi,mov|max:20480',
+            'group'      => 'nullable|string|max:100',
+            'channel'    => 'required|in:all,email,push,sms',
+            'icon_type'  => 'nullable|string|max:50',
+            'customers'  => 'nullable|array',
+            'is_sent'    => 'boolean',
             'scheduled_at' => 'nullable|date|after:now',
         ]);
 
@@ -175,7 +169,7 @@ class NotificationController extends Controller
         }
 
         $data['is_sent'] = $request->has('is_sent');
-        if (! $request->filled('icon_type')) {
+        if (!$request->filled('icon_type')) {
             $data['icon_type'] = 'notification';
         }
 
@@ -211,16 +205,16 @@ class NotificationController extends Controller
         $query = Notification::query();
 
         if ($request->filled('search')) {
-            $query->where('subject_en', 'like', '%'.$request->search.'%')
-                ->orWhere('subject_ar', 'like', '%'.$request->search.'%');
+            $query->where('subject_en', 'like', '%' . $request->search . '%')
+                  ->orWhere('subject_ar', 'like', '%' . $request->search . '%');
         }
 
         $notifications = $query->get();
 
-        $fileName = 'notifications_'.date('Y-m-d_H-i').'.csv';
+        $fileName = 'notifications_' . date('Y-m-d_H-i') . '.csv';
         $handle = fopen('php://output', 'w');
         header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="'.$fileName.'"');
+        header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
         fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
         fputcsv($handle, [
@@ -236,7 +230,7 @@ class NotificationController extends Controller
             'Customers',
             'Sent',
             'Scheduled At',
-            'Created At',
+            'Created At'
         ]);
 
         foreach ($notifications as $notification) {
@@ -246,8 +240,8 @@ class NotificationController extends Controller
                 $notification->subject_ar,
                 $notification->body_en,
                 $notification->body_ar,
-                $notification->image ? asset('uploads/'.$notification->image) : '',
-                $notification->video ? asset('uploads/'.$notification->video) : '',
+                $notification->image ? asset('uploads/' . $notification->image) : '',
+                $notification->video ? asset('uploads/' . $notification->video) : '',
                 $notification->group,
                 $notification->channel,
                 $notification->customers ? implode(', ', json_decode($notification->customers, true) ?? []) : '',
@@ -265,9 +259,9 @@ class NotificationController extends Controller
     {
         if (in_array($notification->channel, ['all', 'push'])) {
             $this->sendPushNotification($notification);
-
+            
             // تحديث حالة الإرسال إذا لم تكن محدثة
-            if (! $notification->is_sent) {
+            if (!$notification->is_sent) {
                 $notification->update(['is_sent' => true]);
             }
 
@@ -285,22 +279,21 @@ class NotificationController extends Controller
     private function sendPushNotification(Notification $notification)
     {
         try {
-            if (! class_exists(Factory::class)) {
-                Log::error("FCM Send Error: Kreait\Firebase\Factory class not found. Please run 'composer require kreait/firebase-php' on your server.");
-
+            if (!class_exists(\Kreait\Firebase\Factory::class)) {
+                \Illuminate\Support\Facades\Log::error("FCM Send Error: Kreait\Firebase\Factory class not found. Please run 'composer require kreait/firebase-php' on your server.");
                 return;
             }
 
-            $factory = (new Factory)
+            $factory = (new \Kreait\Firebase\Factory)
                 ->withServiceAccount(storage_path('app/firebase/google-services.json')); // المسار لملف الخدمة
 
             $messaging = $factory->createMessaging();
 
-            $message = CloudMessage::fromArray([
+            $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
                 'notification' => [
                     'title' => $notification->subject_ar,
-                    'body' => $notification->body_ar,
-                    'image' => $notification->image ? asset('uploads/'.$notification->image) : null,
+                    'body'  => $notification->body_ar,
+                    'image' => $notification->image ? asset('uploads/' . $notification->image) : null,
                 ],
                 'data' => [
                     'id' => (string) $notification->id,
@@ -333,18 +326,18 @@ class NotificationController extends Controller
                 // إرسال لعملاء محددين
                 $customerIds = is_array($notification->customers) ? $notification->customers : json_decode($notification->customers, true);
                 if (is_array($customerIds) && count($customerIds) > 0) {
-                    $tokens = Customer::whereIn('id', $customerIds)
-                        ->whereNotNull('fcm_token')
-                        ->pluck('fcm_token')
-                        ->toArray();
-
+                    $tokens = \App\Models\Customer::whereIn('id', $customerIds)
+                                    ->whereNotNull('fcm_token')
+                                    ->pluck('fcm_token')
+                                    ->toArray();
+                    
                     if (count($tokens) > 0) {
                         $messaging->sendMulticast($message, $tokens);
                     }
                 }
             }
         } catch (\Throwable $e) {
-            Log::error('FCM Send Error: '.$e->getMessage());
+            \Illuminate\Support\Facades\Log::error("FCM Send Error: " . $e->getMessage());
         }
     }
 }

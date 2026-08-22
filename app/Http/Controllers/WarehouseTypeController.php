@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\WarehouseTypesExport;
-use App\Imports\WarehouseTypesImport;
 use App\Models\WarehouseType;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\WarehouseTypesExport;
+use App\Imports\WarehouseTypesImport;
 
 class WarehouseTypeController extends Controller
 {
@@ -18,10 +16,10 @@ class WarehouseTypeController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
 
@@ -63,7 +61,7 @@ class WarehouseTypeController extends Controller
         WarehouseType::create($validated);
 
         return redirect()->route('warehouse-types.index')
-            ->with('success', 'Warehouse Type created successfully.');
+                         ->with('success', 'Warehouse Type created successfully.');
     }
 
     public function show(WarehouseType $warehouseType)
@@ -79,7 +77,7 @@ class WarehouseTypeController extends Controller
     public function update(Request $request, WarehouseType $warehouseType)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:50|unique:warehouse_types,code,'.$warehouseType->id,
+            'code' => 'required|string|max:50|unique:warehouse_types,code,' . $warehouseType->id,
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -90,15 +88,14 @@ class WarehouseTypeController extends Controller
         $warehouseType->update($validated);
 
         return redirect()->route('warehouse-types.index')
-            ->with('success', 'Warehouse Type updated successfully.');
+                         ->with('success', 'Warehouse Type updated successfully.');
     }
 
     public function destroy(WarehouseType $warehouseType)
     {
         $warehouseType->delete();
-
         return redirect()->route('warehouse-types.index')
-            ->with('success', 'Warehouse Type deleted successfully.');
+                         ->with('success', 'Warehouse Type deleted successfully.');
     }
 
     // Export & Import
@@ -106,38 +103,31 @@ class WarehouseTypeController extends Controller
     public function export(Request $request)
     {
         try {
-            return Excel::download(new WarehouseTypesExport($request), 'warehouse_types_'.date('Y-m-d_Hi').'.xlsx');
+            return Excel::download(new WarehouseTypesExport($request), 'warehouse_types_' . date('Y-m-d_Hi') . '.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: '.$e->getMessage());
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
         }
     }
 
     public function downloadTemplate()
     {
         try {
-            $export = new class implements FromCollection, WithHeadings
-            {
-                public function collection()
-                {
-                    return collect([]);
-                }
-
-                public function headings(): array
-                {
+            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+                public function collection() { return collect([]); }
+                public function headings(): array {
                     return ['code', 'name_en', 'name_ar', 'description', 'is_active', 'sort_order'];
                 }
             };
-
             return Excel::download($export, 'warehouse_types_template.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Template download failed: '.$e->getMessage());
+            return back()->with('error', 'Template download failed: ' . $e->getMessage());
         }
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv',
+            'import_file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
 
         try {
@@ -153,7 +143,7 @@ class WarehouseTypeController extends Controller
 
             return redirect()->route('warehouse-types.index')->with('success', 'Warehouse Types imported successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: '.$e->getMessage());
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
 }

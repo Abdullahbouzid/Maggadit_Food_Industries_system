@@ -4,17 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RolePermissionController extends Controller
 {
+ 
+
     // عرض قائمة الأدوار
     public function index()
     {
         $roles = Role::with('permissions')->paginate(10);
-
         return view('dashboard.roles.index', compact('roles'));
     }
 
@@ -22,7 +24,6 @@ class RolePermissionController extends Controller
     public function create()
     {
         $permissions = Permission::all();
-
         return view('dashboard.roles.create', compact('permissions'));
     }
 
@@ -30,7 +31,7 @@ class RolePermissionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:roles|string|max:255',
+            'name' => 'required|unique:roles|string|max:255'
         ]);
 
         $role = Role::create(['name' => $request->name]);
@@ -47,7 +48,6 @@ class RolePermissionController extends Controller
     {
         $permissions = Permission::all();
         $rolePermissions = $role->permissions->pluck('name')->toArray();
-
         return view('dashboard.roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
@@ -55,7 +55,7 @@ class RolePermissionController extends Controller
     public function update(Request $request, Role $role)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id
         ]);
 
         $role->update(['name' => $request->name]);
@@ -74,7 +74,6 @@ class RolePermissionController extends Controller
                 ->with('error', 'لا يمكن حذف دور المشرف الرئيسي ⚠️');
         }
         $role->delete();
-
         return redirect()->route('roles.index')
             ->with('success', 'تم حذف الدور بنجاح 🗑️');
     }
@@ -83,49 +82,45 @@ class RolePermissionController extends Controller
     public function permissionsIndex()
     {
         $permissions = Permission::paginate(20);
-
         return view('dashboard.permissions.index', compact('permissions'));
     }
 
     // داخل app/Http/Controllers/Admin/RolePermissionController.php
 
-    // عرض نموذج إنشاء صلاحية
-    public function createPermission()
-    {
-        return view('dashboard.permissions.create');
-    }
+// عرض نموذج إنشاء صلاحية
+public function createPermission()
+{
+    return view('dashboard.permissions.create');
+}
 
-    // تخزين صلاحية جديدة
-    public function storePermission(Request $request)
-    {
-        $request->validate(['name' => 'required|unique:permissions,name']);
-        Permission::create(['name' => $request->name, 'guard_name' => 'web']);
-        Log::info('Permission created: '.$request->name);
+// تخزين صلاحية جديدة
+public function storePermission(Request $request)
+{
+    $request->validate(['name' => 'required|unique:permissions,name']);
+    Permission::create(['name' => $request->name, 'guard_name' => 'web']);
+    Log::info('Permission created: ' . $request->name);
+    return redirect()->route('permissions.index')->with('success', 'Permission created.');
+}
 
-        return redirect()->route('permissions.index')->with('success', 'Permission created.');
-    }
+// عرض نموذج تعديل صلاحية
+public function editPermission(Permission $permission)
+{
+    return view('dashboard.permissions.edit', compact('permission'));
+}
 
-    // عرض نموذج تعديل صلاحية
-    public function editPermission(Permission $permission)
-    {
-        return view('dashboard.permissions.edit', compact('permission'));
-    }
+// تحديث صلاحية
+public function updatePermission(Request $request, Permission $permission)
+{
+    $request->validate(['name' => 'required|unique:permissions,name,'.$permission->id]);
+    $permission->update(['name' => $request->name]);
+    return redirect()->route('permissions.index')->with('success', 'Permission updated.');
+}
 
-    // تحديث صلاحية
-    public function updatePermission(Request $request, Permission $permission)
-    {
-        $request->validate(['name' => 'required|unique:permissions,name,'.$permission->id]);
-        $permission->update(['name' => $request->name]);
-
-        return redirect()->route('permissions.index')->with('success', 'Permission updated.');
-    }
-
-    // حذف صلاحية
-    public function destroyPermission(Permission $permission)
-    {
-        // منع حذف صلاحيات حرجة إذا أردت
-        $permission->delete();
-
-        return redirect()->route('permissions.index')->with('success', 'Permission deleted.');
-    }
+// حذف صلاحية
+public function destroyPermission(Permission $permission)
+{
+    // منع حذف صلاحيات حرجة إذا أردت
+    $permission->delete();
+    return redirect()->route('permissions.index')->with('success', 'Permission deleted.');
+}
 }

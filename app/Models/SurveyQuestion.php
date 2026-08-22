@@ -18,7 +18,7 @@ class SurveyQuestion extends Model
     ];
 
     protected $casts = [
-        'options' => 'array',
+        'options'     => 'array',
         'is_required' => 'boolean',
     ];
 

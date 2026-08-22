@@ -2,16 +2,14 @@
 
 namespace App\Imports;
 
-use App\Models\Organization;
 use App\Models\Warehouse;
-use App\Models\WarehouseType;
-use Maatwebsite\Excel\Concerns\SkipsErrors;
-use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsOnError;
+use Maatwebsite\Excel\Concerns\SkipsErrors;
 
-class WarehousesImport implements SkipsOnError, ToModel, WithHeadingRow, WithValidation
+class WarehousesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnError
 {
     use SkipsErrors;
 
@@ -21,19 +19,16 @@ class WarehousesImport implements SkipsOnError, ToModel, WithHeadingRow, WithVal
     {
         if (Warehouse::where('code', $row['code'])->exists()) {
             $this->errors[] = "Code '{$row['code']}' already exists. Skipped.";
-
             return null;
         }
 
         // Validate foreign keys existence
-        if (! WarehouseType::find($row['warehouse_type_id'])) {
+        if (!\App\Models\WarehouseType::find($row['warehouse_type_id'])) {
             $this->errors[] = "Warehouse Type ID {$row['warehouse_type_id']} not found for code {$row['code']}";
-
             return null;
         }
-        if (! Organization::find($row['organization_id'])) {
+        if (!\App\Models\Organization::find($row['organization_id'])) {
             $this->errors[] = "Organization ID {$row['organization_id']} not found for code {$row['code']}";
-
             return null;
         }
 

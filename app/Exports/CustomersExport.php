@@ -3,13 +3,13 @@
 namespace App\Exports;
 
 use App\Models\Customer;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Illuminate\Http\Request;
 
-class CustomersExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
+class CustomersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
 {
     protected $request;
 
@@ -27,8 +27,8 @@ class CustomersExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
             $search = $this->request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('username', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('username', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 

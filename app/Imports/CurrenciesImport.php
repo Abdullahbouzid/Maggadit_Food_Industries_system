@@ -3,23 +3,23 @@
 namespace App\Imports;
 
 use App\Models\Currency;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Validators\Failure;
 
-class CurrenciesImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithValidation
+class CurrenciesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     protected $errors = [];
 
     public function model(array $row)
     {
         return new Currency([
-            'name' => $row['name'],
-            'code' => $row['code'],
+            'name'             => $row['name'],
+            'code'             => $row['code'],
             'coin_description' => $row['coin_description'] ?? null,
-            'base_currency' => filter_var($row['base_currency'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'base_currency'    => filter_var($row['base_currency'] ?? false, FILTER_VALIDATE_BOOLEAN),
         ]);
     }
 
@@ -36,7 +36,7 @@ class CurrenciesImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithV
     public function onFailure(Failure ...$failures)
     {
         foreach ($failures as $failure) {
-            $this->errors[] = "Row {$failure->row()}: ".implode(', ', $failure->errors());
+            $this->errors[] = "Row {$failure->row()}: " . implode(', ', $failure->errors());
         }
     }
 

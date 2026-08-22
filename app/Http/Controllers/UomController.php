@@ -1,17 +1,14 @@
 <?php
-
 // app/Http/Controllers/UomController.php
 
 namespace App\Http\Controllers;
 
-use App\Exports\UomsExport;
-use App\Imports\UomsImport;
 use App\Models\Uom;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use App\Exports\UomsExport;
+use App\Imports\UomsImport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class UomController extends Controller
 {
@@ -24,9 +21,9 @@ class UomController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('uom_symbol', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%")
+                  ->orWhere('uom_symbol', 'like', "%{$search}%");
             });
         }
 
@@ -49,9 +46,7 @@ class UomController extends Controller
         $perPage = $request->get('per_page', 20);
         if ($perPage === 'all') {
             $perPage = $query->count();
-            if ($perPage == 0) {
-                $perPage = 1;
-            }
+            if ($perPage == 0) $perPage = 1;
         }
 
         $uoms = $query->orderBy('sort_order')->orderBy('name_en')->paginate($perPage)->appends($request->query());
@@ -69,14 +64,14 @@ class UomController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:uoms,code',
-            'name_en' => 'required|string|max:255',
-            'name_ar' => 'required|string|max:255',
-            'uom_symbol' => 'nullable|string|max:50',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer',
+            'code'          => 'required|string|max:255|unique:uoms,code',
+            'name_en'       => 'required|string|max:255',
+            'name_ar'       => 'required|string|max:255',
+            'uom_symbol'    => 'nullable|string|max:50',
+            'description'   => 'nullable|string',
+            'image'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_active'     => 'boolean',
+            'sort_order'    => 'nullable|integer',
         ]);
 
         if ($request->hasFile('image')) {
@@ -104,14 +99,14 @@ class UomController extends Controller
     public function update(Request $request, Uom $uom)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:uoms,code,'.$uom->id,
-            'name_en' => 'required|string|max:255',
-            'name_ar' => 'required|string|max:255',
-            'uom_symbol' => 'nullable|string|max:50',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer',
+            'code'          => 'required|string|max:255|unique:uoms,code,' . $uom->id,
+            'name_en'       => 'required|string|max:255',
+            'name_ar'       => 'required|string|max:255',
+            'uom_symbol'    => 'nullable|string|max:50',
+            'description'   => 'nullable|string',
+            'image'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_active'     => 'boolean',
+            'sort_order'    => 'nullable|integer',
         ]);
 
         if ($request->hasFile('image')) {
@@ -135,7 +130,6 @@ class UomController extends Controller
             Storage::disk('uploads')->delete($uom->image);
         }
         $uom->delete();
-
         return redirect()->route('uoms.index')->with('success', 'UOM deleted successfully.');
     }
 
@@ -143,9 +137,9 @@ class UomController extends Controller
     public function export(Request $request)
     {
         try {
-            return Excel::download(new UomsExport($request), 'uoms_'.date('Y-m-d_Hi').'.xlsx');
+            return Excel::download(new UomsExport($request), 'uoms_' . date('Y-m-d_Hi') . '.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: '.$e->getMessage());
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
         }
     }
 
@@ -153,22 +147,19 @@ class UomController extends Controller
     public function downloadTemplate()
     {
         try {
-            $export = new class implements FromCollection, WithHeadings
-            {
+            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
                 public function collection()
                 {
                     return collect([]);
                 }
-
                 public function headings(): array
                 {
                     return ['code', 'name_en', 'name_ar', 'uom_symbol', 'description', 'is_active', 'sort_order'];
                 }
             };
-
             return Excel::download($export, 'uoms_template.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Template download failed: '.$e->getMessage());
+            return back()->with('error', 'Template download failed: ' . $e->getMessage());
         }
     }
 
@@ -176,7 +167,7 @@ class UomController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv',
+            'import_file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
 
         try {
@@ -192,7 +183,7 @@ class UomController extends Controller
 
             return redirect()->route('uoms.index')->with('success', 'UOMs imported successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: '.$e->getMessage());
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
 }

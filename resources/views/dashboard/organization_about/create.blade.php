@@ -59,8 +59,6 @@
                                 </div>
 
                                 {{-- Vision --}}
-
-                                {{-- Vision --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">الرؤية</label>
                                     <input type="text" name="vision" class="form-control @error('vision') is-invalid @enderror" value="{{ old('vision') }}" placeholder="الرؤية المستقبلية">

@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Models\PackageStatus;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Http\Request;
 
 class PackageStatusesExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -56,7 +56,7 @@ class PackageStatusesExport implements FromQuery, WithHeadings, WithMapping
             'LPO Required',
             'Is Related To CN Request',
             'Is Price Editable',
-            'Created At',
+            'Created At'
         ];
     }
 

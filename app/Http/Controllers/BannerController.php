@@ -15,8 +15,8 @@ class BannerController extends Controller
         // فلتر البحث بالعنوان أو النوع
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('title', 'like', '%'.$request->search.'%')
-                    ->orWhere('type', 'like', '%'.$request->search.'%');
+                $q->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('type', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -57,12 +57,12 @@ class BannerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'type' => 'required|in:home,category,product,promo,custom',
-            'url' => 'nullable|url|max:500',
+            'title'       => 'nullable|string|max:255',
+            'image'       => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'type'        => 'required|in:home,category,product,promo,custom',
+            'url'         => 'nullable|url|max:500',
             'show_in_customer_app' => 'boolean',
-            'order' => 'nullable|integer|min:0',
+            'order'       => 'nullable|integer|min:0',
         ]);
 
         $data = $request->only(['title', 'type', 'url', 'show_in_customer_app', 'order']);
@@ -91,12 +91,12 @@ class BannerController extends Controller
     public function update(Request $request, Banner $banner)
     {
         $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'type' => 'required|in:home,category,product,promo,custom',
-            'url' => 'nullable|url|max:500',
+            'title'       => 'nullable|string|max:255',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'type'        => 'required|in:home,category,product,promo,custom',
+            'url'         => 'nullable|url|max:500',
             'show_in_customer_app' => 'boolean',
-            'order' => 'nullable|integer|min:0',
+            'order'       => 'nullable|integer|min:0',
         ]);
 
         $data = $request->only(['title', 'type', 'url', 'show_in_customer_app', 'order']);
@@ -132,7 +132,7 @@ class BannerController extends Controller
         $query = Banner::query();
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%'.$request->search.'%');
+            $query->where('title', 'like', '%' . $request->search . '%');
         }
         if ($request->filled('type')) {
             $query->where('type', $request->type);
@@ -140,10 +140,10 @@ class BannerController extends Controller
 
         $banners = $query->get();
 
-        $fileName = 'banners_'.date('Y-m-d_H-i').'.csv';
+        $fileName = 'banners_' . date('Y-m-d_H-i') . '.csv';
         $handle = fopen('php://output', 'w');
         header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="'.$fileName.'"');
+        header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
         fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
         fputcsv($handle, ['ID', 'Title', 'Image URL', 'Type', 'URL', 'Show in App', 'Order', 'Created At']);
@@ -152,7 +152,7 @@ class BannerController extends Controller
             fputcsv($handle, [
                 $banner->id,
                 $banner->title,
-                $banner->image ? asset('uploads/'.$banner->image) : '',
+                $banner->image ? asset('uploads/' . $banner->image) : '',
                 $banner->type,
                 $banner->url,
                 $banner->show_in_customer_app ? 'Yes' : 'No',

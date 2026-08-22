@@ -142,101 +142,6 @@
                                         @error('gln') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                     </div>
 
-                                    <!-- Contact Section Title -->
-                                    <h5 class="fw-bold mt-3 mb-3 text-primary">
-                                        <i data-feather="phone" class="align-middle me-1"></i>
-                                        بيانات التواصل
-                                    </h5>
-
-                                    <!-- Phone -->
-                                    <div class="mb-4">
-                                        <label for="phone" class="form-label fw-semibold">رقم الهاتف</label>
-                                        <div class="input-group shadow-sm">
-                                            <span class="input-group-text bg-white border-end-0">
-                                                <i data-feather="phone" class="text-muted" style="width: 18px;"></i>
-                                            </span>
-                                            <input type="text" class="form-control border-start-0" id="phone" name="phone" value="{{ old('phone') }}" placeholder="+966 12 345 6789">
-                                        </div>
-                                    </div>
-
-                                    <!-- WhatsApp -->
-                                    <div class="mb-4">
-                                        <label for="whatsapp" class="form-label fw-semibold">رقم الواتساب</label>
-                                        <div class="input-group shadow-sm">
-                                            <span class="input-group-text bg-white border-end-0">
-                                                <i data-feather="message-circle" class="text-muted" style="width: 18px;"></i>
-                                            </span>
-                                            <input type="text" class="form-control border-start-0" id="whatsapp" name="whatsapp" value="{{ old('whatsapp') }}" placeholder="+966 55 555 5555">
-                                        </div>
-                                    </div>
-
-                                    <!-- Email -->
-                                    <div class="mb-4">
-                                        <label for="email" class="form-label fw-semibold">البريد الإلكتروني</label>
-                                        <div class="input-group shadow-sm">
-                                            <span class="input-group-text bg-white border-end-0">
-                                                <i data-feather="mail" class="text-muted" style="width: 18px;"></i>
-                                            </span>
-                                            <input type="email" class="form-control border-start-0" id="email" name="email" value="{{ old('email') }}" placeholder="info@maggadit.com">
-                                        </div>
-                                    </div>
-
-                                    <!-- Website -->
-                                    <div class="mb-4">
-                                        <label for="website" class="form-label fw-semibold">موقع الشركة</label>
-                                        <div class="input-group shadow-sm">
-                                            <span class="input-group-text bg-white border-end-0">
-                                                <i data-feather="globe" class="text-muted" style="width: 18px;"></i>
-                                            </span>
-                                            <input type="url" class="form-control border-start-0" id="website" name="website" value="{{ old('website') }}" placeholder="https://www.maggadit.com">
-                                        </div>
-                                    </div>
-
-                                    <!-- Address -->
-                                    <div class="mb-4">
-                                        <label for="address" class="form-label fw-semibold">العنوان</label>
-                                        <div class="input-group shadow-sm">
-                                            <span class="input-group-text bg-white border-end-0">
-                                                <i data-feather="map-pin" class="text-muted" style="width: 18px;"></i>
-                                            </span>
-                                            <input type="text" class="form-control border-start-0" id="address" name="address" value="{{ old('address') }}" placeholder="المدينة - الشارع">
-                                        </div>
-                                    </div>
-
-                                    <!-- Map Picker -->
-                                    <div class="mb-4">
-                                        <label class="form-label fw-semibold">الموقع على الخريطة</label>
-                                        <div id="map-picker" style="height: 350px; border-radius: 12px; z-index: 1;"></div>
-                                        <div class="row mt-2">
-                                            <div class="col-md-6">
-                                                <label class="form-label small">خط العرض (Latitude)</label>
-                                                <input type="text" name="latitude" id="latitude" class="form-control" value="{{ old('latitude') }}" placeholder="مثال: 32.8872">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label small">خط الطول (Longitude)</label>
-                                                <input type="text" name="longitude" id="longitude" class="form-control" value="{{ old('longitude') }}" placeholder="مثال: 13.1913">
-                                            </div>
-                                        </div>
-                                        <div class="form-text">انقر على الخريطة لتحديد الموقع، أو أدخل الإحداثيات يدوياً</div>
-                                    </div>
-
-                                    <!-- Email Forwarding Toggle -->
-                                    <div class="card border mb-4">
-                                        <div class="card-body">
-                                            <div class="form-check form-switch mb-3">
-                                                <input type="checkbox" name="forward_contact_messages_to_email" class="form-check-input" id="forwardEmail" value="1" {{ old('forward_contact_messages_to_email') ? 'checked' : '' }}>
-                                                <label class="form-check-label fw-bold" for="forwardEmail">تحويل رسائل التواصل إلى البريد الإلكتروني</label>
-                                                <div class="form-text">عند التفعيل، ستصل جميع رسائل العملاء إلى البريد المحدد تلقائياً</div>
-                                            </div>
-                                            <div class="ms-4">
-                                                <label class="form-label fw-semibold">البريد المستلم</label>
-                                                <input type="email" class="form-control @error('contact_email_recipient') is-invalid @enderror" name="contact_email_recipient" value="{{ old('contact_email_recipient') }}" placeholder="support@maggadit.com">
-                                                <div class="form-text">اتركه فارغاً لاستخدام بريد المنظمة الافتراضي</div>
-                                                @error('contact_email_recipient') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <!-- Action Buttons -->
                                     <div class="d-flex gap-2 justify-content-end mt-4 pt-2 border-top">
                                         <a href="{{ route('organizations.index') }}" class="btn btn-light px-4 shadow-sm">
@@ -258,7 +163,6 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     .rounded-4 {
         border-radius: 1rem !important;
@@ -270,63 +174,13 @@
         border-color: #86b7fe;
         box-shadow: 0 0 0 0.25rem rgba(13,110,253,.15);
     }
-    #map-picker {
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
-    }
 </style>
 @endpush
 
 @push('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         feather.replace();
-        
-        const defaultLat = parseFloat(document.getElementById('latitude').value) || 32.8872;
-        const defaultLng = parseFloat(document.getElementById('longitude').value) || 13.1913;
-        
-        const map = L.map('map-picker').setView([defaultLat, defaultLng], 13);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19,
-        }).addTo(map);
-        
-        let marker = null;
-        const latInput = document.getElementById('latitude');
-        const lngInput = document.getElementById('longitude');
-        
-        if (latInput.value && lngInput.value) {
-            marker = L.marker([parseFloat(latInput.value), parseFloat(lngInput.value)]).addTo(map);
-        }
-        
-        map.on('click', function(e) {
-            const { lat, lng } = e.latlng;
-            latInput.value = lat.toFixed(7);
-            lngInput.value = lng.toFixed(7);
-            
-            if (marker) {
-                marker.setLatLng([lat, lng]);
-            } else {
-                marker = L.marker([lat, lng]).addTo(map);
-            }
-        });
-        
-        [latInput, lngInput].forEach(input => {
-            input.addEventListener('change', function() {
-                const lat = parseFloat(latInput.value);
-                const lng = parseFloat(lngInput.value);
-                if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                    map.setView([lat, lng], 13);
-                    if (marker) {
-                        marker.setLatLng([lat, lng]);
-                    } else {
-                        marker = L.marker([lat, lng]).addTo(map);
-                    }
-                }
-            });
-        });
     });
 </script>
 @endpush

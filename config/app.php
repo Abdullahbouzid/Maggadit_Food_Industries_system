@@ -123,6 +123,4 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    'hostinger_domain' => env('HOSTINGER_DOMAIN', 'https://blue-beaver-923812.hostingersite.com'),
-
 ];

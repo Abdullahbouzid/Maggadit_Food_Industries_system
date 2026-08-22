@@ -4,14 +4,15 @@ namespace App\Imports;
 
 use App\Models\Customer;
 use App\Models\Organization;
-use Illuminate\Support\Facades\Hash;
-use Maatwebsite\Excel\Concerns\SkipsErrors;
-use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsOnError;
+use Maatwebsite\Excel\Concerns\SkipsErrors;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
-class CustomersImport implements SkipsOnError, ToModel, WithHeadingRow, WithValidation
+class CustomersImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnError
 {
     use SkipsErrors;
 
@@ -20,19 +21,19 @@ class CustomersImport implements SkipsOnError, ToModel, WithHeadingRow, WithVali
     public function model(array $row)
     {
         // إذا كان العمود 'password' فارغاً، نضع كلمة مرور افتراضية
-        $password = isset($row['password']) && ! empty($row['password'])
-            ? Hash::make($row['password'])
+        $password = isset($row['password']) && !empty($row['password']) 
+            ? Hash::make($row['password']) 
             : Hash::make('password123'); // أو يمكن توليد عشوائي
 
         // البحث عن المنظمة عبر الاسم (إذا ورد)
         $organizationId = null;
-        if (! empty($row['active_organization_name'])) {
+        if (!empty($row['active_organization_name'])) {
             $org = Organization::where('name', $row['active_organization_name'])->first();
             if ($org) {
                 $organizationId = $org->id;
             } else {
                 // نضيف خطأ في السجل
-                $this->errors[] = "المنظمة '{$row['active_organization_name']}' غير موجودة في الصف رقم ".($this->rowNumber ?? 'غير معروف');
+                $this->errors[] = "المنظمة '{$row['active_organization_name']}' غير موجودة في الصف رقم " . ($this->rowNumber ?? 'غير معروف');
             }
         }
 

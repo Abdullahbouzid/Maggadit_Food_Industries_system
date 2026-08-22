@@ -59,7 +59,6 @@
                                     @enderror
                                 </div>
 
-
                                 {{-- Vision --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">الرؤية</label>

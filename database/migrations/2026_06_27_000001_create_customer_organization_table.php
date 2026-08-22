@@ -1,5 +1,4 @@
 <?php
-
 // database/migrations/2024_01_01_000001_create_customer_organization_table.php
 
 use Illuminate\Database\Migrations\Migration;
@@ -16,7 +15,7 @@ return new class extends Migration
             $table->foreignId('organization_id')->constrained()->onDelete('cascade');
             $table->boolean('is_active')->default(false);
             $table->timestamps();
-
+            
             $table->unique(['customer_id', 'organization_id']);
         });
     }

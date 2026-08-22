@@ -1,5 +1,4 @@
 <?php
-
 // database/migrations/xxxx_xx_xx_000007_create_item_images_table.php
 
 use Illuminate\Database\Migrations\Migration;

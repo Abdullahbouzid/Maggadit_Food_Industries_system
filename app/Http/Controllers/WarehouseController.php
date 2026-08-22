@@ -2,21 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Area;
-use App\Models\BatchItem;
-use App\Models\BatchItemStock;
-use App\Models\BatchMovement;
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\City;
-use App\Models\Country;
-use App\Models\Item;
-use App\Models\Organization;
-use App\Models\State;
 use App\Models\Warehouse;
 use App\Models\WarehouseType;
+use App\Models\Organization;
+use App\Models\Country;
+use App\Models\State;
+use App\Models\City;
+use App\Models\Area;
+use App\Models\BatchItemStock;
 use Illuminate\Http\Request;
+use App\Models\BatchMovement;
+use App\Models\BatchItem;
+use App\Models\Item;
+use App\Models\Category;
+use App\Models\Brand;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\WarehousesExport;
+use App\Imports\WarehousesImport;
 
 class WarehouseController extends Controller
 {
@@ -25,33 +28,24 @@ class WarehouseController extends Controller
         $query = Warehouse::with(['warehouseType', 'organization', 'country', 'state', 'city', 'area']);
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
             });
         }
-        if ($request->filled('warehouse_type_id')) {
-            $query->where('warehouse_type_id', $request->warehouse_type_id);
-        }
-        if ($request->filled('organization_id')) {
-            $query->where('organization_id', $request->organization_id);
-        }
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status == 'active');
-        }
+        if ($request->filled('warehouse_type_id')) $query->where('warehouse_type_id', $request->warehouse_type_id);
+        if ($request->filled('organization_id')) $query->where('organization_id', $request->organization_id);
+        if ($request->filled('status')) $query->where('is_active', $request->status == 'active');
         $perPage = $request->get('per_page', 20);
-        if ($perPage === 'all') {
-            $perPage = $query->count() ?: 1;
-        }
+        if ($perPage === 'all') $perPage = $query->count() ?: 1;
         $warehouses = $query->orderBy('sort_order')->orderBy('code')->paginate($perPage)->appends($request->query());
         $total = Warehouse::count();
         $active = Warehouse::where('is_active', true)->count();
         $inactive = Warehouse::where('is_active', false)->count();
         $warehouseTypes = WarehouseType::where('is_active', true)->orderBy('name_en')->get();
         $organizations = Organization::orderBy('name')->get();
-
         return view('dashboard.data_definition.w&v.warehouse.index', compact('warehouses', 'total', 'active', 'inactive', 'warehouseTypes', 'organizations'));
     }
 
@@ -60,7 +54,6 @@ class WarehouseController extends Controller
         $warehouseTypes = WarehouseType::where('is_active', true)->orderBy('name_en')->get();
         $organizations = Organization::orderBy('name')->get();
         $countries = Country::orderBy('name')->get();
-
         return view('dashboard.data_definition.w&v.warehouse.create', compact('warehouseTypes', 'organizations', 'countries'));
     }
 
@@ -96,7 +89,6 @@ class WarehouseController extends Controller
         $validated['sources'] = $this->parseCommaField($validated['sources'] ?? null);
         $validated['employees'] = $this->parseCommaField($validated['employees'] ?? null);
         Warehouse::create($validated);
-
         return redirect()->route('warehouses.index')->with('success', 'Warehouse created successfully.');
     }
 
@@ -122,12 +114,13 @@ class WarehouseController extends Controller
                 $batch = $stock->batchItem->batch;
                 $pack = $stock->batchItem->pack;
 
-                return
+                return (
                     stripos($item->name_en ?? '', $searchLower) !== false ||
                     stripos($item->name_ar ?? '', $searchLower) !== false ||
                     stripos($item->code ?? '', $searchLower) !== false ||
                     stripos($batch->batch_number ?? '', $searchLower) !== false ||
-                    ($pack && stripos($pack->barcode ?? '', $searchLower) !== false);
+                    ($pack && stripos($pack->barcode ?? '', $searchLower) !== false)
+                );
             });
         }
 
@@ -135,13 +128,12 @@ class WarehouseController extends Controller
         $grouped = $validStocks->groupBy(function ($stock) {
             $itemId = $stock->batchItem->item_id;
             $packId = $stock->batchItem->item_pack_id ?? 'null';
-
-            return $itemId.'-'.$packId;
+            return $itemId . '-' . $packId;
         });
 
         $groupedProducts = $grouped->map(function ($stockGroup) {
             $first = $stockGroup->first();
-            if (! $first || ! $first->batchItem || ! $first->batchItem->item) {
+            if (!$first || !$first->batchItem || !$first->batchItem->item) {
                 return null;
             }
 
@@ -185,10 +177,9 @@ class WarehouseController extends Controller
         // إحصائيات العبوات مع النسب المئوية
         $packStatsRaw = $validStocks->groupBy('batchItem.item_pack_id')->map(function ($group) {
             $first = $group->first();
-            if (! $first || ! $first->batchItem) {
+            if (!$first || !$first->batchItem) {
                 return null;
             }
-
             return [
                 'pack' => $first->batchItem->pack,
                 'total_quantity' => $group->sum('quantity'),
@@ -202,7 +193,6 @@ class WarehouseController extends Controller
         $packStats = $packStatsRaw->map(function ($item) use ($totalQuantityAll) {
             $percentage = $totalQuantityAll > 0 ? ($item['total_quantity'] / $totalQuantityAll) * 100 : 0;
             $packName = $item['pack'] ? $item['pack']->barcode : 'بدون عبوة';
-
             return [
                 'pack' => $item['pack'],
                 'pack_name' => $packName,
@@ -232,14 +222,13 @@ class WarehouseController extends Controller
         $warehouse->destinations = json_decode($warehouse->destinations, true);
         $warehouse->sources = json_decode($warehouse->sources, true);
         $warehouse->employees = json_decode($warehouse->employees, true);
-
         return view('dashboard.data_definition.w&v.warehouse.edit', compact('warehouse', 'warehouseTypes', 'organizations', 'countries'));
     }
 
     public function update(Request $request, Warehouse $warehouse)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:100|unique:warehouses,code,'.$warehouse->id,
+            'code' => 'required|string|max:100|unique:warehouses,code,' . $warehouse->id,
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
             'warehouse_type_id' => 'required|exists:warehouse_types,id',
@@ -268,36 +257,23 @@ class WarehouseController extends Controller
         $validated['sources'] = $this->parseCommaField($validated['sources'] ?? null);
         $validated['employees'] = $this->parseCommaField($validated['employees'] ?? null);
         $warehouse->update($validated);
-
         return redirect()->route('warehouses.index')->with('success', 'Warehouse updated successfully.');
     }
 
     public function destroy(Warehouse $warehouse)
     {
         $warehouse->delete();
-
         return redirect()->route('warehouses.index')->with('success', 'Warehouse deleted successfully.');
     }
 
-    public function export(Request $request)
-    { /* نفس الكود */
-    }
-
-    public function downloadTemplate()
-    { /* نفس الكود */
-    }
-
-    public function import(Request $request)
-    { /* نفس الكود */
-    }
+    public function export(Request $request) { /* نفس الكود */ }
+    public function downloadTemplate() { /* نفس الكود */ }
+    public function import(Request $request) { /* نفس الكود */ }
 
     private function parseCommaField($field)
     {
-        if (empty($field)) {
-            return null;
-        }
+        if (empty($field)) return null;
         $parts = array_map('trim', explode(',', $field));
-
         return json_encode(array_filter($parts));
     }
 
@@ -308,7 +284,6 @@ class WarehouseController extends Controller
             ->where('is_active', true)
             ->orderBy('name_en')
             ->get(['id', 'name_en', 'name_ar']);
-
         return response()->json($states);
     }
 
@@ -317,7 +292,6 @@ class WarehouseController extends Controller
         $cities = City::where('state_id', $stateId)
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
-
         return response()->json($cities);
     }
 
@@ -327,7 +301,6 @@ class WarehouseController extends Controller
             ->where('is_active', true)
             ->orderBy('name_en')
             ->get(['id', 'name_en', 'name_ar']);
-
         return response()->json($areas);
     }
 
@@ -352,8 +325,8 @@ class WarehouseController extends Controller
             $search = $request->search;
             $query->whereHas('batchItem.item', function ($q) use ($search) {
                 $q->where('name_en', 'LIKE', "%{$search}%")
-                    ->orWhere('name_ar', 'LIKE', "%{$search}%")
-                    ->orWhere('code', 'LIKE', "%{$search}%");
+                  ->orWhere('name_ar', 'LIKE', "%{$search}%")
+                  ->orWhere('code', 'LIKE', "%{$search}%");
             });
         }
         if ($request->filled('category_id')) {
@@ -373,16 +346,15 @@ class WarehouseController extends Controller
         // نضيف خاصية available_quantity وهي الكمية الموجودة حالياً
         $batchItems = $stocks->map(function ($stock) {
             $item = $stock->batchItem->item;
-
             return (object) [
                 'batch_item_id' => $stock->batch_item_id,
-                'item_name' => $item->name_en ?? $item->name_ar,
-                'item_code' => $item->code,
-                'category' => $item->category->name ?? '-',
-                'brand' => $item->brand->name ?? '-',
-                'batch_number' => $stock->batchItem->batch->batch_number,
+                'item_name'     => $item->name_en ?? $item->name_ar,
+                'item_code'     => $item->code,
+                'category'      => $item->category->name ?? '-',
+                'brand'         => $item->brand->name ?? '-',
+                'batch_number'  => $stock->batchItem->batch->batch_number,
                 'available_qty' => $stock->quantity,
-                'pack_info' => $stock->batchItem->pack ? $stock->batchItem->pack->barcode.' (Qty: '.$stock->batchItem->pack->quantity.')' : 'بدون عبوة',
+                'pack_info'     => $stock->batchItem->pack ? $stock->batchItem->pack->barcode . ' (Qty: ' . $stock->batchItem->pack->quantity . ')' : 'بدون عبوة',
             ];
         });
 
@@ -401,8 +373,8 @@ class WarehouseController extends Controller
     public function transferStoreSelection(Request $request, Warehouse $warehouse)
     {
         $validated = $request->validate([
-            'selected_items' => 'required|array|min:1',
-            'selected_items.*' => 'exists:batch_items,id',
+            'selected_items'      => 'required|array|min:1',
+            'selected_items.*'    => 'exists:batch_items,id',
         ]);
 
         // التأكد من أن العناصر المحددة تنتمي فعلاً إلى هذا المخزن ولها رصيد
@@ -421,7 +393,7 @@ class WarehouseController extends Controller
             'warehouse_transfer' => [
                 'source_warehouse_id' => $warehouse->id,
                 'selected_batch_item_ids' => $validIds,
-            ],
+            ]
         ]);
 
         return redirect()->route('warehouses.transfer.confirm', $warehouse);
@@ -434,7 +406,7 @@ class WarehouseController extends Controller
     {
         $selected = $request->input('selected_items');
 
-        if (! $selected) {
+        if (!$selected) {
             return back()->with('error', 'يرجى اختيار منتجات واحدة على الأقل.');
         }
 
@@ -445,7 +417,7 @@ class WarehouseController extends Controller
         }
 
         // Ensure it's an array
-        if (! is_array($selected)) {
+        if (!is_array($selected)) {
             $selected = [$selected];
         }
 
@@ -474,7 +446,7 @@ class WarehouseController extends Controller
             'warehouse_transfer' => [
                 'source_warehouse_id' => $warehouse->id,
                 'selected_batch_item_ids' => $validated,
-            ],
+            ]
         ]);
 
         return redirect()->route('warehouses.transfer.confirm-from-warehouse', $warehouse);
@@ -486,7 +458,7 @@ class WarehouseController extends Controller
     public function transferConfirmFromWarehouse(Warehouse $warehouse)
     {
         $transferData = session('warehouse_transfer');
-        if (! $transferData || $transferData['source_warehouse_id'] != $warehouse->id) {
+        if (!$transferData || $transferData['source_warehouse_id'] != $warehouse->id) {
             return redirect()->route('warehouses.transfer.select', $warehouse)
                 ->with('error', 'يرجى اختيار المنتجات أولاً.');
         }
@@ -521,7 +493,7 @@ class WarehouseController extends Controller
     public function transferConfirm(Warehouse $warehouse)
     {
         $transferData = session('warehouse_transfer');
-        if (! $transferData || $transferData['source_warehouse_id'] != $warehouse->id) {
+        if (!$transferData || $transferData['source_warehouse_id'] != $warehouse->id) {
             return redirect()->route('warehouses.transfer.select', $warehouse)
                 ->with('error', 'يرجى اختيار المنتجات أولاً.');
         }
@@ -552,7 +524,7 @@ class WarehouseController extends Controller
     public function transferExecute(Request $request, Warehouse $warehouse)
     {
         $transferData = session('warehouse_transfer');
-        if (! $transferData || $transferData['source_warehouse_id'] != $warehouse->id) {
+        if (!$transferData || $transferData['source_warehouse_id'] != $warehouse->id) {
             return redirect()->route('warehouses.transfer.select', $warehouse)
                 ->with('error', 'الجلسة منتهية، يرجى البدء من جديد.');
         }
@@ -570,16 +542,14 @@ class WarehouseController extends Controller
         DB::transaction(function () use ($warehouse, $targetWarehouseId, $selectedIds, $validated) {
             foreach ($selectedIds as $batchItemId) {
                 $qty = $validated['quantities'][$batchItemId] ?? 0;
-                if ($qty <= 0) {
-                    continue;
-                }
+                if ($qty <= 0) continue;
 
                 // التحقق من وجود رصيد كافٍ في المصدر
                 $fromStock = BatchItemStock::where('batch_item_id', $batchItemId)
                     ->where('warehouse_id', $warehouse->id)
                     ->first();
 
-                if (! $fromStock || $fromStock->quantity < $qty) {
+                if (!$fromStock || $fromStock->quantity < $qty) {
                     throw new \Exception("الكمية غير متوفرة للمنتج ID: {$batchItemId}");
                 }
 

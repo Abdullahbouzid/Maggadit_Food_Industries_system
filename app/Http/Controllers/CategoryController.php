@@ -20,7 +20,7 @@ class CategoryController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%");
+                  ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -85,7 +85,7 @@ class CategoryController extends Controller
         $data = $request->only(['code', 'name', 'division', 'show_in_customer_app']);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('categories', 'uploads');
+           $path = $request->file('image')->store('categories', 'uploads');
             $data['image'] = $path;
         }
 
@@ -117,7 +117,7 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:categories,code,'.$category->id,
+            'code' => 'required|string|max:255|unique:categories,code,' . $category->id,
             'name' => 'required|string|max:255',
             'division' => 'required|string|max:255',
             'show_in_customer_app' => 'boolean',
@@ -131,7 +131,7 @@ class CategoryController extends Controller
             if ($category->image && Storage::disk('uploads')->exists($category->image)) {
                 Storage::disk('uploads')->delete($category->image);
             }
-            $path = $request->file('image')->store('categories', 'uploads');
+           $path = $request->file('image')->store('categories', 'uploads');
             $data['image'] = $path;
         }
 
@@ -166,7 +166,7 @@ class CategoryController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%");
+                  ->orWhere('name', 'like', "%{$search}%");
             });
         }
         if ($request->filled('division')) {
@@ -183,10 +183,10 @@ class CategoryController extends Controller
 
         $categories = $query->get();
 
-        $fileName = 'categories_'.date('Y-m-d_H-i').'.csv';
+        $fileName = 'categories_' . date('Y-m-d_H-i') . '.csv';
         $handle = fopen('php://output', 'w');
         header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="'.$fileName.'"');
+        header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
         fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
         fputcsv($handle, ['ID', 'Code', 'Name', 'Division', 'Show in Customer App', 'Image URL', 'Created At']);
@@ -198,7 +198,7 @@ class CategoryController extends Controller
                 $cat->name,
                 $cat->division,
                 $cat->show_in_customer_app ? 'Yes' : 'No',
-                $cat->image ? asset('storage/'.$cat->image) : '',
+                $cat->image ? asset('storage/' . $cat->image) : '',
                 $cat->created_at,
             ]);
         }

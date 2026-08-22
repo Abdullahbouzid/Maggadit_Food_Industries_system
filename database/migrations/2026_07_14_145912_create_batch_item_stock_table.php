@@ -1,5 +1,4 @@
 <?php
-
 // database/migrations/2026_07_14_000003_create_batch_item_stock_table.php
 
 use Illuminate\Database\Migrations\Migration;

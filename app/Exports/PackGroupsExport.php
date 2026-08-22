@@ -1,14 +1,13 @@
 <?php
-
 // app/Exports/PackGroupsExport.php
 
 namespace App\Exports;
 
 use App\Models\PackGroup;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Http\Request;
 
 class PackGroupsExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -24,16 +23,15 @@ class PackGroupsExport implements FromCollection, WithHeadings, WithMapping
         $query = PackGroup::query();
         if ($this->request->filled('search')) {
             $search = $this->request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
         if ($this->request->filled('status')) {
             $query->where('is_active', $this->request->status == 'active');
         }
-
         return $query->get();
     }
 

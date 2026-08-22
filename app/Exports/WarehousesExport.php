@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Models\Warehouse;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Http\Request;
 
 class WarehousesExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -23,10 +23,10 @@ class WarehousesExport implements FromQuery, WithHeadings, WithMapping
 
         if ($this->request->filled('search')) {
             $search = $this->request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
 
@@ -47,7 +47,7 @@ class WarehousesExport implements FromQuery, WithHeadings, WithMapping
             'ID', 'Code', 'Name EN', 'Name AR', 'Warehouse Type', 'Organization',
             'Phone', 'Fax', 'Barcode', 'Address EN', 'Address AR',
             'GPS Latitude', 'GPS Longitude', 'Zip Code', 'Country', 'State', 'City', 'Area', 'Street',
-            'Destinations', 'Sources', 'Employees', 'Active', 'Sort Order',
+            'Destinations', 'Sources', 'Employees', 'Active', 'Sort Order'
         ];
     }
 

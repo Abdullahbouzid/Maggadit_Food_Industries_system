@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Models\Organization;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Http\Request;
 
 class OrganizationsExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -24,10 +24,10 @@ class OrganizationsExport implements FromQuery, WithHeadings, WithMapping
         // Text search
         if ($this->request->filled('search')) {
             $search = $this->request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%")
-                    ->orWhere('gln', 'like', "%{$search}%");
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('gln', 'like', "%{$search}%");
             });
         }
 

@@ -1,24 +1,25 @@
 <?php
-
 // app/Http/Controllers/ItemController.php
 
 namespace App\Http\Controllers;
 
-use App\Imports\ItemsImport;
-use App\Models\Brand;
-use App\Models\Category;
 use App\Models\Item;
-use App\Models\ItemModel;
+use App\Models\ItemPack;
+use App\Models\ItemImage;
 use App\Models\ItemType;
-use App\Models\PackGroup;
-use App\Models\PackOperation;
-use App\Models\Uom;
+use App\Models\Category;
+use App\Models\Brand;
+use App\Models\ItemModel;
 use App\Models\Vendor;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use App\Models\Uom;
+use App\Models\PackOperation;
+use App\Models\PackGroup;
+use App\Exports\ItemsExport;
+use App\Imports\ItemsImport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Http\Request;
+
+use Illuminate\Support\Facades\Storage;
 
 class ItemController extends Controller
 {
@@ -30,8 +31,8 @@ class ItemController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
 
@@ -162,10 +163,10 @@ class ItemController extends Controller
                     'sort_order' => $index,
                 ]);
 
-                if (! empty($packData['pack_operation_ids'])) {
+                if (!empty($packData['pack_operation_ids'])) {
                     $pack->packOperations()->sync($packData['pack_operation_ids']);
                 }
-                if (! empty($packData['pack_group_ids'])) {
+                if (!empty($packData['pack_group_ids'])) {
                     $pack->packGroups()->sync($packData['pack_group_ids']);
                 }
             }
@@ -177,7 +178,7 @@ class ItemController extends Controller
                 $path = $img->store('item_images', 'uploads');
                 $item->images()->create([
                     'image_path' => $path,
-                    'sort_order' => $index,
+                    'sort_order' => $index
                 ]);
             }
         }
@@ -185,12 +186,11 @@ class ItemController extends Controller
         return redirect()->route('items.index')->with('success', 'Item created successfully.');
     }
 
-    public function show(Item $item)
-    {
-        $item->load(['itemType', 'category', 'brand', 'model', 'supplier', 'packs.uom', 'packs.packOperations', 'packs.packGroups', 'images']);
-
-        return view('dashboard.data_definition.data_product.items.show', compact('item'));
-    }
+  public function show(Item $item)
+{
+    $item->load(['itemType', 'category', 'brand', 'model', 'supplier', 'packs.uom', 'packs.packOperations', 'packs.packGroups', 'images']);
+    return view('dashboard.data_definition.data_product.items.show', compact('item'));
+}
 
     public function edit(Item $item)
     {
@@ -213,7 +213,7 @@ class ItemController extends Controller
     public function update(Request $request, Item $item)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:items,code,'.$item->id,
+            'code' => 'required|string|max:255|unique:items,code,' . $item->id,
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
             'definition' => 'nullable|string',
@@ -266,9 +266,7 @@ class ItemController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            if ($item->image) {
-                Storage::disk('uploads')->delete($item->image);
-            }
+            if ($item->image) Storage::disk('uploads')->delete($item->image);
             $validated['image'] = $request->file('image')->store('items', 'uploads');
         }
 
@@ -279,7 +277,7 @@ class ItemController extends Controller
         if ($request->has('packs')) {
             foreach ($request->packs as $index => $packData) {
                 // تأكد من وجود البيانات الأساسية
-                if (empty($packData['uom_id']) || ! isset($packData['quantity'])) {
+                if (empty($packData['uom_id']) || !isset($packData['quantity'])) {
                     continue;
                 }
                 $pack = $item->packs()->create([
@@ -298,10 +296,10 @@ class ItemController extends Controller
                     'sort_order' => $index,
                 ]);
 
-                if (! empty($packData['pack_operation_ids'])) {
+                if (!empty($packData['pack_operation_ids'])) {
                     $pack->packOperations()->sync($packData['pack_operation_ids']);
                 }
-                if (! empty($packData['pack_group_ids'])) {
+                if (!empty($packData['pack_group_ids'])) {
                     $pack->packGroups()->sync($packData['pack_group_ids']);
                 }
             }
@@ -334,58 +332,48 @@ class ItemController extends Controller
 
     public function destroy(Item $item)
     {
-        if ($item->image) {
-            Storage::disk('uploads')->delete($item->image);
-        }
+        if ($item->image) Storage::disk('uploads')->delete($item->image);
         foreach ($item->images as $img) {
             Storage::disk('uploads')->delete($img->image_path);
         }
         $item->delete();
-
         return redirect()->route('items.index')->with('success', 'Item deleted successfully.');
     }
 
-    // داخل ItemController
+  // داخل ItemController
 
-    public function downloadTemplate()
-    {
-        $export = new class implements FromCollection, WithHeadings
+
+        public function downloadTemplate()
         {
-            public function collection()
-            {
-                return collect([]);
-            }
-
-            public function headings(): array
-            {
-                return [
-                    'code', 'name_en', 'name_ar', 'definition', 'item_type_id', 'category_id',
-                    'brand_id', 'model_id', 'supplier_id', 'shelf_life_time', 'sequence',
-                    'van_stock_tolerance', 'storage_tolerance', 'weight_tolerance', 'low_stock_qty',
-                    'is_inactive', 'is_new', 'is_price_protected', 'is_power_sku', 'is_default_batch',
-                    'is_temp_credit', 'is_batch_priced', 'is_initiative', 'force_default_pack',
-                    'has_serial_number', 'required_by_liter', 'required_by_weight',
-                ];
-            }
-        };
-
-        return Excel::download($export, 'items_template.xlsx');
-    }
-
-    public function import(Request $request)
-    {
-        $request->validate(['import_file' => 'required|file|mimes:xlsx,xls,csv']);
-        try {
-            $import = new ItemsImport;
-            Excel::import($import, $request->file('import_file'));
-            $errors = $import->getErrors();
-            if (count($errors)) {
-                return redirect()->route('items.index')->with('warning', 'Import with errors.')->with('import_errors', $errors);
-            }
-
-            return redirect()->route('items.index')->with('success', 'Items imported successfully.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: '.$e->getMessage());
+            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+                public function collection() { return collect([]); }
+                public function headings(): array {
+                    return [
+                        'code', 'name_en', 'name_ar', 'definition', 'item_type_id', 'category_id',
+                        'brand_id', 'model_id', 'supplier_id', 'shelf_life_time', 'sequence',
+                        'van_stock_tolerance', 'storage_tolerance', 'weight_tolerance', 'low_stock_qty',
+                        'is_inactive', 'is_new', 'is_price_protected', 'is_power_sku', 'is_default_batch',
+                        'is_temp_credit', 'is_batch_priced', 'is_initiative', 'force_default_pack',
+                        'has_serial_number', 'required_by_liter', 'required_by_weight'
+                    ];
+                }
+            };
+            return Excel::download($export, 'items_template.xlsx');
         }
-    }
+
+        public function import(Request $request)
+        {
+            $request->validate(['import_file' => 'required|file|mimes:xlsx,xls,csv']);
+            try {
+                $import = new ItemsImport;
+                Excel::import($import, $request->file('import_file'));
+                $errors = $import->getErrors();
+                if (count($errors)) {
+                    return redirect()->route('items.index')->with('warning', 'Import with errors.')->with('import_errors', $errors);
+                }
+                return redirect()->route('items.index')->with('success', 'Items imported successfully.');
+            } catch (\Exception $e) {
+                return back()->with('error', 'Import failed: ' . $e->getMessage());
+            }
+        }
 }

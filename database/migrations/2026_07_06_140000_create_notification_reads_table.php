@@ -23,12 +23,12 @@ return new class extends Migration
             $table->unique(['notification_id', 'customer_id']);
 
             $table->foreign('notification_id')
-                ->references('id')->on('notifications')
-                ->onDelete('cascade');
+                  ->references('id')->on('notifications')
+                  ->onDelete('cascade');
 
             $table->foreign('customer_id')
-                ->references('id')->on('customers')
-                ->onDelete('cascade');
+                  ->references('id')->on('customers')
+                  ->onDelete('cascade');
         });
     }
 

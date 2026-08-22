@@ -17,7 +17,7 @@ class BrandController extends Controller
 
         // فلتر البحث بالاسم
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->search.'%');
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
 
         // تحديد عدد النتائج في الصفحة
@@ -92,7 +92,7 @@ class BrandController extends Controller
     public function update(Request $request, Brand $brand)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:brands,name,'.$brand->id,
+            'name' => 'required|string|max:255|unique:brands,name,' . $brand->id,
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'show_in_customer_app' => 'boolean',
         ]);
@@ -136,7 +136,7 @@ class BrandController extends Controller
         $query = Brand::query();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->search.'%');
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
         if ($request->filled('show_status')) {
             $status = $request->show_status;
@@ -149,10 +149,10 @@ class BrandController extends Controller
 
         $brands = $query->get();
 
-        $fileName = 'brands_'.date('Y-m-d_H-i').'.csv';
+        $fileName = 'brands_' . date('Y-m-d_H-i') . '.csv';
         $handle = fopen('php://output', 'w');
         header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="'.$fileName.'"');
+        header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
         // إضافة BOM لدعم UTF-8 في Excel
         fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
@@ -162,7 +162,7 @@ class BrandController extends Controller
             fputcsv($handle, [
                 $brand->id,
                 $brand->name,
-                $brand->logo ? asset('storage/'.$brand->logo) : '',
+                $brand->logo ? asset('storage/' . $brand->logo) : '',
                 $brand->show_in_customer_app ? 'Yes' : 'No',
                 $brand->created_at,
             ]);

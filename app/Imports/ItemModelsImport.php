@@ -3,19 +3,17 @@
 namespace App\Imports;
 
 use App\Models\ItemModel;
-use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Validators\Failure;
+use Maatwebsite\Excel\Concerns\Importable;
 
-class ItemModelsImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithValidation
+class ItemModelsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     use Importable;
-
     protected $errors = [];
-
     public function model(array $row)
     {
         return new ItemModel([
@@ -26,19 +24,16 @@ class ItemModelsImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithV
             'sort_order' => $row['sort_order'] ?? null,
         ]);
     }
-
     public function rules(): array
     {
         return ['code' => 'required|string|max:255|unique:item_models,code', 'name_en' => 'required|string|max:255', 'name_ar' => 'required|string|max:255'];
     }
-
     public function onFailure(Failure ...$failures)
     {
         foreach ($failures as $failure) {
-            $this->errors[] = 'Row '.$failure->row().': '.implode(', ', $failure->errors());
+            $this->errors[] = 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors());
         }
     }
-
     public function getErrors()
     {
         return $this->errors;

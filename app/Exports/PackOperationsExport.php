@@ -1,14 +1,13 @@
 <?php
-
 // app/Exports/PackOperationsExport.php
 
 namespace App\Exports;
 
 use App\Models\PackOperation;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Http\Request;
 
 class PackOperationsExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -27,8 +26,8 @@ class PackOperationsExport implements FromCollection, WithHeadings, WithMapping
             $search = $this->request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
 
@@ -46,7 +45,7 @@ class PackOperationsExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'ID', 'Code', 'Name (English)', 'Name (Arabic)', 'Is Active', 'Sort Order', 'Created At',
+            'ID', 'Code', 'Name (English)', 'Name (Arabic)', 'Is Active', 'Sort Order', 'Created At'
         ];
     }
 

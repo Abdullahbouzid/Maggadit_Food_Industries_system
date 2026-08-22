@@ -13,7 +13,6 @@ class FaqController extends Controller
     public function index()
     {
         $faqs = Faq::all();
-
         return view('dashboard.faqs.index', compact('faqs'));
     }
 
@@ -33,7 +32,7 @@ class FaqController extends Controller
         $request->validate([
             'category' => 'nullable|string|max:255',
             'question' => 'required|string|max:255',
-            'answer' => 'required|string',
+            'answer'   => 'required|string',
         ]);
 
         Faq::create($request->all());
@@ -65,7 +64,7 @@ class FaqController extends Controller
         $request->validate([
             'category' => 'nullable|string|max:255',
             'question' => 'required|string|max:255',
-            'answer' => 'required|string',
+            'answer'   => 'required|string',
         ]);
 
         $faq->update($request->all());
@@ -79,7 +78,6 @@ class FaqController extends Controller
     public function destroy(Faq $faq)
     {
         $faq->delete();
-
         return redirect()->route('faqs.index')->with('success', 'تم حذف السؤال الشائع بنجاح.');
     }
 }

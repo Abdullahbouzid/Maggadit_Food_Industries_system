@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 class CustomerAuthController extends Controller
 {
     // تسجيل الدخول وإرجاع توكن Sanctum
-    public function login(Request $request)
+   public function login(Request $request)
     {
         $request->validate([
             'username' => 'required|string',
@@ -22,7 +22,7 @@ class CustomerAuthController extends Controller
             ->orWhere('email', $request->username)
             ->first();
 
-        if (! $customer || ! Hash::check($request->password, $customer->password)) {
+        if (!$customer || !Hash::check($request->password, $customer->password)) {
             throw ValidationException::withMessages([
                 'username' => ['بيانات الدخول غير صحيحة.'],
             ]);
@@ -83,7 +83,6 @@ class CustomerAuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['success' => true, 'message' => 'Logged out']);
     }
 

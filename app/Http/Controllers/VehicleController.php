@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vehicle;
+use App\Models\Organization;
+use App\Models\VehicleType;
 use App\Exports\VehiclesExport;
 use App\Imports\VehiclesImport;
-use App\Models\Organization;
-use App\Models\Vehicle;
-use App\Models\VehicleType;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Facades\Excel;
 
 class VehicleController extends Controller
@@ -44,9 +42,7 @@ class VehicleController extends Controller
         $perPage = $request->get('per_page', 20);
         if ($perPage === 'all') {
             $perPage = $query->count();
-            if ($perPage == 0) {
-                $perPage = 1;
-            }
+            if ($perPage == 0) $perPage = 1;
         }
 
         $vehicles = $query->orderBy('id', 'desc')->paginate($perPage)->appends($request->query());
@@ -68,7 +64,6 @@ class VehicleController extends Controller
     {
         $organizations = Organization::all();
         $vehicleTypes = VehicleType::all();
-
         return view('dashboard.data_definition.w&v.vehicle.create', compact('organizations', 'vehicleTypes'));
     }
 
@@ -79,18 +74,18 @@ class VehicleController extends Controller
         $request->merge(['inactive' => $inactive]);
 
         $validated = $request->validate([
-            'vehicle_name' => 'required|string|max:255',
-            'vehicle_code' => 'required|string|max:255|unique:vehicles,vehicle_code',
-            'plate_no' => 'required|string|max:255|unique:vehicles,plate_no',
-            'barcode' => 'nullable|string|max:255',
-            'organization_id' => 'required|exists:organizations,id',
-            'vehicle_type_id' => 'required|exists:vehicle_types,id',
-            'odometer' => 'nullable|numeric',
-            'capacity' => 'nullable|numeric',
-            'amount' => 'nullable|numeric',
-            'volume' => 'nullable|numeric',
-            'min_load_qty' => 'nullable|integer',
-            'inactive' => 'boolean',
+            'vehicle_name'      => 'required|string|max:255',
+            'vehicle_code'      => 'required|string|max:255|unique:vehicles,vehicle_code',
+            'plate_no'          => 'required|string|max:255|unique:vehicles,plate_no',
+            'barcode'           => 'nullable|string|max:255',
+            'organization_id'   => 'required|exists:organizations,id',
+            'vehicle_type_id'   => 'required|exists:vehicle_types,id',
+            'odometer'          => 'nullable|numeric',
+            'capacity'          => 'nullable|numeric',
+            'amount'            => 'nullable|numeric',
+            'volume'            => 'nullable|numeric',
+            'min_load_qty'      => 'nullable|integer',
+            'inactive'          => 'boolean',
         ]);
 
         Vehicle::create($validated);
@@ -102,7 +97,6 @@ class VehicleController extends Controller
     public function show(Vehicle $vehicle)
     {
         $vehicle->load(['organization', 'vehicleType']);
-
         return view('dashboard.data_definition.w&v.vehicle.show', compact('vehicle'));
     }
 
@@ -110,7 +104,6 @@ class VehicleController extends Controller
     {
         $organizations = Organization::all();
         $vehicleTypes = VehicleType::all();
-
         return view('dashboard.data_definition.w&v.vehicle.edit', compact('vehicle', 'organizations', 'vehicleTypes'));
     }
 
@@ -126,18 +119,18 @@ class VehicleController extends Controller
         // ==========================================
 
         $validated = $request->validate([
-            'vehicle_name' => 'required|string|max:255',
-            'vehicle_code' => 'required|string|max:255|unique:vehicles,vehicle_code,'.$vehicle->id,
-            'plate_no' => 'required|string|max:255|unique:vehicles,plate_no,'.$vehicle->id,
-            'barcode' => 'nullable|string|max:255',
-            'organization_id' => 'required|exists:organizations,id',
-            'vehicle_type_id' => 'required|exists:vehicle_types,id',
-            'odometer' => 'nullable|numeric',
-            'capacity' => 'nullable|numeric',
-            'amount' => 'nullable|numeric',
-            'volume' => 'nullable|numeric',
-            'min_load_qty' => 'nullable|integer',
-            'inactive' => 'boolean',
+            'vehicle_name'      => 'required|string|max:255',
+            'vehicle_code'      => 'required|string|max:255|unique:vehicles,vehicle_code,' . $vehicle->id,
+            'plate_no'          => 'required|string|max:255|unique:vehicles,plate_no,' . $vehicle->id,
+            'barcode'           => 'nullable|string|max:255',
+            'organization_id'   => 'required|exists:organizations,id',
+            'vehicle_type_id'   => 'required|exists:vehicle_types,id',
+            'odometer'          => 'nullable|numeric',
+            'capacity'          => 'nullable|numeric',
+            'amount'            => 'nullable|numeric',
+            'volume'            => 'nullable|numeric',
+            'min_load_qty'      => 'nullable|integer',
+            'inactive'          => 'boolean',
         ]);
 
         $vehicle->update($validated);
@@ -149,7 +142,6 @@ class VehicleController extends Controller
     public function destroy(Vehicle $vehicle)
     {
         $vehicle->delete();
-
         return redirect()->route('vehicles.index')
             ->with('success', 'Vehicle deleted successfully.');
     }
@@ -157,38 +149,35 @@ class VehicleController extends Controller
     public function export(Request $request)
     {
         try {
-            return Excel::download(new VehiclesExport($request), 'vehicles_'.date('Y-m-d_Hi').'.xlsx');
+            return Excel::download(new VehiclesExport($request), 'vehicles_' . date('Y-m-d_Hi') . '.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: '.$e->getMessage());
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
         }
     }
 
     public function downloadTemplate()
     {
-        $export = new class implements FromCollection, WithHeadings
-        {
+        $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
             public function collection()
             {
                 return collect([]);
             }
-
             public function headings(): array
             {
                 return [
                     'vehicle_name', 'vehicle_code', 'plate_no', 'barcode',
                     'organization', 'vehicle_type', 'odometer', 'capacity',
-                    'amount', 'volume', 'min_load_qty', 'inactive',
+                    'amount', 'volume', 'min_load_qty', 'inactive'
                 ];
             }
         };
-
         return Excel::download($export, 'vehicles_template.xlsx');
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv',
+            'import_file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
 
         try {
@@ -205,7 +194,7 @@ class VehicleController extends Controller
             return redirect()->route('vehicles.index')
                 ->with('success', 'Vehicles imported successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: '.$e->getMessage());
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
 }

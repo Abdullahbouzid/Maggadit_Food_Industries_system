@@ -1,4 +1,4 @@
-<!-- @extends('app_android.partials.mobile.app_mobile')
+@extends('app_android.partials.mobile.app_mobile')
 
 @section('title', __('messages.dashboard_title'))
 
@@ -64,4 +64,4 @@
             <br><br>
         </div>
     </div>
-@endsection -->
+@endsection

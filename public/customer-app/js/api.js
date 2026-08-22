@@ -183,55 +183,6 @@ const API = (() => {
         return await request(`/customer/products/${id}`);
     }
 
-    // ===== Favorites API =====
-    async function getFavorites() {
-        return await request('/customer/favorites');
-    }
-
-    async function toggleFavorite(itemId) {
-        return await request('/customer/favorites/toggle', {
-            method: 'POST',
-            body: JSON.stringify({ item_id: itemId }),
-        });
-    }
-
-    // ===== Invoices (Orders) API =====
-    async function getInvoices(page = 1) {
-        return await request(`/customer/invoices?page=${page}`);
-    }
-
-    async function getInvoice(id) {
-        return await request(`/customer/invoices/${id}`);
-    }
-
-    // ===== Privacy Policy API =====
-    async function getPrivacyPolicy() {
-        return await request('/customer/privacy-policy');
-    }
-
-    async function getTermsOfService() {
-        return await request('/customer/terms-of-service');
-    }
-
-    // ===== Offers API =====
-    async function getOffers() {
-        return await request('/api/customer/offers');
-    }
-
-    // ===== Contact API =====
-    async function getContactInfo(organizationId) {
-        const url = organizationId ? `/api/customer/contact-info?organization_id=${organizationId}` : '/api/customer/contact-info';
-        return await request(url);
-    }
-
-    async function sendContactMessage(data, organizationId) {
-        const url = organizationId ? `/api/customer/contact-us?organization_id=${organizationId}` : '/api/customer/contact-us';
-        return await request(url, {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    }
-
     // ===== Public API =====
     return {
         getBaseUrl,
@@ -251,14 +202,5 @@ const API = (() => {
         getBrandProducts,
         getProducts,
         getProduct,
-        getFavorites,
-        toggleFavorite,
-        getInvoices,
-        getInvoice,
-        getPrivacyPolicy,
-        getTermsOfService,
-        getOffers,
-        getContactInfo,
-        sendContactMessage,
     };
 })();

@@ -80,9 +80,6 @@
                 
                 if (data.success) {
                     renderOrganizations(data.organizations, data.active_organization_id);
-                    if (data.active_organization_id) {
-                        localStorage.setItem('active_organization_id', data.active_organization_id);
-                    }
                 } else {
                     throw new Error(data.message || 'حدث خطأ');
                 }
@@ -168,7 +165,7 @@
 
                 if (data.success) {
                     showToast(`✅ تم التبديل إلى "${organizationName}" بنجاح`);
-                    localStorage.setItem('active_organization_id', organizationId);
+                    // إعادة تحميل المنظمات لتحديث حالة النشاط
                     setTimeout(() => {
                         loadOrganizations();
                     }, 1000);

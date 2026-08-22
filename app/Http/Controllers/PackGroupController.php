@@ -1,15 +1,12 @@
 <?php
-
 // app/Http/Controllers/PackGroupController.php
 
 namespace App\Http\Controllers;
 
-use App\Exports\PackGroupsExport;
-use App\Imports\PackGroupsImport;
 use App\Models\PackGroup;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use App\Exports\PackGroupsExport;
+use App\Imports\PackGroupsImport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PackGroupController extends Controller
@@ -22,8 +19,8 @@ class PackGroupController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%");
+                  ->orWhere('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
 
@@ -53,10 +50,10 @@ class PackGroupController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:pack_groups,code',
-            'name_en' => 'required|string|max:255',
-            'name_ar' => 'required|string|max:255',
-            'is_active' => 'boolean',
+            'code'       => 'required|string|max:255|unique:pack_groups,code',
+            'name_en'    => 'required|string|max:255',
+            'name_ar'    => 'required|string|max:255',
+            'is_active'  => 'boolean',
             'sort_order' => 'nullable|integer',
         ]);
 
@@ -79,10 +76,10 @@ class PackGroupController extends Controller
     public function update(Request $request, PackGroup $packGroup)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:pack_groups,code,'.$packGroup->id,
-            'name_en' => 'required|string|max:255',
-            'name_ar' => 'required|string|max:255',
-            'is_active' => 'boolean',
+            'code'       => 'required|string|max:255|unique:pack_groups,code,' . $packGroup->id,
+            'name_en'    => 'required|string|max:255',
+            'name_ar'    => 'required|string|max:255',
+            'is_active'  => 'boolean',
             'sort_order' => 'nullable|integer',
         ]);
 
@@ -95,34 +92,24 @@ class PackGroupController extends Controller
     public function destroy(PackGroup $packGroup)
     {
         $packGroup->delete();
-
         return redirect()->route('pack-groups.index')->with('success', 'Pack Group deleted successfully.');
     }
 
     public function export(Request $request)
     {
         try {
-            return Excel::download(new PackGroupsExport($request), 'pack_groups_'.date('Y-m-d_Hi').'.xlsx');
+            return Excel::download(new PackGroupsExport($request), 'pack_groups_' . date('Y-m-d_Hi') . '.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: '.$e->getMessage());
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
         }
     }
 
     public function downloadTemplate()
     {
-        $export = new class implements FromCollection, WithHeadings
-        {
-            public function collection()
-            {
-                return collect([]);
-            }
-
-            public function headings(): array
-            {
-                return ['code', 'name_en', 'name_ar', 'is_active', 'sort_order'];
-            }
+        $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+            public function collection() { return collect([]); }
+            public function headings(): array { return ['code', 'name_en', 'name_ar', 'is_active', 'sort_order']; }
         };
-
         return Excel::download($export, 'pack_groups_template.xlsx');
     }
 
@@ -138,10 +125,9 @@ class PackGroupController extends Controller
                     ->with('warning', 'Import completed with some errors.')
                     ->with('import_errors', $errors);
             }
-
             return redirect()->route('pack-groups.index')->with('success', 'Pack Groups imported successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: '.$e->getMessage());
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
 }

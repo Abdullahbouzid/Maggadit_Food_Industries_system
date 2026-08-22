@@ -1,5 +1,4 @@
 <?php
-
 // database/migrations/2024_01_01_000002_add_active_organization_to_customers_table.php
 
 use Illuminate\Database\Migrations\Migration;

@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Models\Device;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Http\Request;
 
 class DevicesExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -23,10 +23,10 @@ class DevicesExport implements FromQuery, WithHeadings, WithMapping
 
         if ($this->request->filled('search')) {
             $search = $this->request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('serial', 'like', "%{$search}%");
+                  ->orWhere('name_ar', 'like', "%{$search}%")
+                  ->orWhere('serial', 'like', "%{$search}%");
             });
         }
 
@@ -42,7 +42,7 @@ class DevicesExport implements FromQuery, WithHeadings, WithMapping
         return [
             'ID', 'Name (EN)', 'Name (AR)', 'Serial', 'Organization',
             'Model No', 'Brand', 'Remark', 'Purchase Date',
-            'Warranty Expiry', 'Inactive', 'Created At',
+            'Warranty Expiry', 'Inactive', 'Created At'
         ];
     }
 

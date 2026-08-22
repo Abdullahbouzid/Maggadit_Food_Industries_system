@@ -1,17 +1,14 @@
 <?php
-
 // app/Http/Controllers/ItemTypeController.php
 
 namespace App\Http\Controllers;
 
-use App\Exports\ItemTypesExport;
-use App\Imports\ItemTypesImport;
 use App\Models\ItemType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use App\Exports\ItemTypesExport;
+use App\Imports\ItemTypesImport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class ItemTypeController extends Controller
 {
@@ -24,7 +21,7 @@ class ItemTypeController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%");
+                  ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -47,9 +44,7 @@ class ItemTypeController extends Controller
         $perPage = $request->get('per_page', 20);
         if ($perPage === 'all') {
             $perPage = $query->count();
-            if ($perPage == 0) {
-                $perPage = 1;
-            }
+            if ($perPage == 0) $perPage = 1;
         }
 
         $itemTypes = $query->orderBy('sort_order')->orderBy('name')->paginate($perPage)->appends($request->query());
@@ -67,12 +62,12 @@ class ItemTypeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:item_types,code',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer',
+            'code'          => 'required|string|max:255|unique:item_types,code',
+            'name'          => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'image'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_active'     => 'boolean',
+            'sort_order'    => 'nullable|integer',
         ]);
 
         if ($request->hasFile('image')) {
@@ -100,12 +95,12 @@ class ItemTypeController extends Controller
     public function update(Request $request, ItemType $itemType)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:item_types,code,'.$itemType->id,
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer',
+            'code'          => 'required|string|max:255|unique:item_types,code,' . $itemType->id,
+            'name'          => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'image'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_active'     => 'boolean',
+            'sort_order'    => 'nullable|integer',
         ]);
 
         if ($request->hasFile('image')) {
@@ -130,7 +125,6 @@ class ItemTypeController extends Controller
             Storage::disk('uploads')->delete($itemType->image);
         }
         $itemType->delete();
-
         return redirect()->route('item-types.index')->with('success', 'Item Type deleted successfully.');
     }
 
@@ -138,9 +132,9 @@ class ItemTypeController extends Controller
     public function export(Request $request)
     {
         try {
-            return Excel::download(new ItemTypesExport($request), 'item_types_'.date('Y-m-d_Hi').'.xlsx');
+            return Excel::download(new ItemTypesExport($request), 'item_types_' . date('Y-m-d_Hi') . '.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: '.$e->getMessage());
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
         }
     }
 
@@ -148,22 +142,19 @@ class ItemTypeController extends Controller
     public function downloadTemplate()
     {
         try {
-            $export = new class implements FromCollection, WithHeadings
-            {
+            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
                 public function collection()
                 {
                     return collect([]);
                 }
-
                 public function headings(): array
                 {
                     return ['code', 'name', 'description', 'is_active', 'sort_order'];
                 }
             };
-
             return Excel::download($export, 'item_types_template.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Template download failed: '.$e->getMessage());
+            return back()->with('error', 'Template download failed: ' . $e->getMessage());
         }
     }
 
@@ -171,7 +162,7 @@ class ItemTypeController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv',
+            'import_file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
 
         try {
@@ -187,7 +178,7 @@ class ItemTypeController extends Controller
 
             return redirect()->route('item-types.index')->with('success', 'Item Types imported successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: '.$e->getMessage());
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
 }

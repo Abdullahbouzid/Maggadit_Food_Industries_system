@@ -21,6 +21,6 @@ class Banner extends Model
     // يمكن إضافة accessor للحصول على رابط الصورة الكامل
     public function getImageUrlAttribute()
     {
-        return $this->image ? asset('uploads/'.$this->image) : null;
+        return $this->image ? asset('uploads/' . $this->image) : null;
     }
 }
