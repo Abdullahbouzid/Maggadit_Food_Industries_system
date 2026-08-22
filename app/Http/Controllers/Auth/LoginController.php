@@ -23,6 +23,7 @@ class LoginController extends Controller
         // المحاولة باستخدام remember me
         if (Auth::attempt($credentials, $request->has('remember-me'))) {
             $request->session()->regenerate();
+
             return redirect()->intended(route('dashboard'));
         }
 
@@ -36,6 +37,7 @@ class LoginController extends Controller
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
 }

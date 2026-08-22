@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/ItemPack.php
 
 namespace App\Models;
@@ -15,7 +16,7 @@ class ItemPack extends Model
     protected $fillable = [
         'item_id', 'uom_id', 'quantity', 'barcode', 'serial_separator',
         'equivalency_factor', 'height', 'width', 'depth', 'weight',
-        'is_weight_priced', 'allow_fraction_in_qty', 'is_default_pack', 'sort_order'
+        'is_weight_priced', 'allow_fraction_in_qty', 'is_default_pack', 'sort_order',
     ];
 
     protected $casts = [

@@ -16,7 +16,7 @@ class CheckCustomerSession
         }
 
         // التحقق من التوكن في الجلسة (للـ APK الذي قد لا يرسل الـ cookies بشكل صحيح)
-        if ($request->session()->has('api_token') && !empty($request->session()->get('api_token'))) {
+        if ($request->session()->has('api_token') && ! empty($request->session()->get('api_token'))) {
             return $next($request);
         }
 

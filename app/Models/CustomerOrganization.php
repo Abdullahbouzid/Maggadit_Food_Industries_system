@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/CustomerOrganization.php
 
 namespace App\Models;
@@ -50,8 +51,8 @@ class CustomerOrganization extends Model
     public static function getActiveOrganization($customerId)
     {
         return self::where('customer_id', $customerId)
-                   ->where('is_active', true)
-                   ->first();
+            ->where('is_active', true)
+            ->first();
     }
 
     // طريقة لتعيين منظمة نشطة لعميل معين
@@ -77,15 +78,15 @@ class CustomerOrganization extends Model
     public static function getCustomerOrganizations($customerId)
     {
         return self::where('customer_id', $customerId)
-                   ->with('organization')
-                   ->get();
+            ->with('organization')
+            ->get();
     }
 
     // طريقة للحصول على جميع العملاء المرتبطين بمنظمة
     public static function getOrganizationCustomers($organizationId)
     {
         return self::where('organization_id', $organizationId)
-                   ->with('customer')
-                   ->get();
+            ->with('customer')
+            ->get();
     }
 }

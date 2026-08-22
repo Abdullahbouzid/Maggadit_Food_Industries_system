@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/Customer.php
 
 namespace App\Models;
@@ -34,8 +35,8 @@ class Customer extends Authenticatable
     public function organizations()
     {
         return $this->belongsToMany(Organization::class, 'customer_organization')
-                    ->withPivot('is_active')
-                    ->withTimestamps();
+            ->withPivot('is_active')
+            ->withTimestamps();
     }
 
     // المنظمة النشطة حالياً
@@ -48,8 +49,8 @@ class Customer extends Authenticatable
     public function activeOrganizations()
     {
         return $this->belongsToMany(Organization::class, 'customer_organization')
-                    ->wherePivot('is_active', true)
-                    ->withTimestamps();
+            ->wherePivot('is_active', true)
+            ->withTimestamps();
     }
 
     // تعيين منظمة نشطة
@@ -75,23 +76,23 @@ class Customer extends Authenticatable
 
     public function getAvatarUrlAttribute()
     {
-        if (!$this->avatar) {
-            return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
+        if (! $this->avatar) {
+            return 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&color=7F9CF5&background=EBF4FF';
         }
 
         if (filter_var($this->avatar, FILTER_VALIDATE_URL)) {
             return $this->avatar;
         }
 
-        return 'https://blue-beaver-923812.hostingersite.com/uploads/customers/' . $this->avatar;
+        return 'https://blue-beaver-923812.hostingersite.com/uploads/customers/'.$this->avatar;
     }
 
     // الإشعارات المقروءة
     public function readNotifications()
     {
         return $this->belongsToMany(Notification::class, 'notification_reads')
-                    ->withPivot('read_at', 'is_starred', 'is_archived')
-                    ->withTimestamps();
+            ->withPivot('read_at', 'is_starred', 'is_archived')
+            ->withTimestamps();
     }
 
     // المفضلة

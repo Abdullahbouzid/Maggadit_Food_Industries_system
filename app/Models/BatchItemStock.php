@@ -15,7 +15,7 @@ class BatchItemStock extends Model
         'batch_item_id',
         'warehouse_id',
         'quantity',
-        'reserved_quantity'
+        'reserved_quantity',
     ];
 
     public function batchItem()

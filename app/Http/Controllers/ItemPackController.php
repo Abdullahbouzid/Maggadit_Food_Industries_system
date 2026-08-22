@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/ItemPackController.php
 
 namespace App\Http\Controllers;
@@ -20,16 +21,16 @@ class ItemPackController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('barcode', 'like', "%{$search}%")
-                  ->orWhereHas('item', function ($sub) use ($search) {
-                      $sub->where('code', 'like', "%{$search}%")
-                          ->orWhere('name_en', 'like', "%{$search}%")
-                          ->orWhere('name_ar', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('uom', function ($sub) use ($search) {
-                      $sub->where('name_en', 'like', "%{$search}%")
-                          ->orWhere('name_ar', 'like', "%{$search}%")
-                          ->orWhere('uom_symbol', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('item', function ($sub) use ($search) {
+                        $sub->where('code', 'like', "%{$search}%")
+                            ->orWhere('name_en', 'like', "%{$search}%")
+                            ->orWhere('name_ar', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('uom', function ($sub) use ($search) {
+                        $sub->where('name_en', 'like', "%{$search}%")
+                            ->orWhere('name_ar', 'like', "%{$search}%")
+                            ->orWhere('uom_symbol', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -68,24 +69,24 @@ class ItemPackController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'item_id'              => 'required|exists:items,id',
-            'uom_id'               => 'required|exists:uoms,id',
-            'quantity'             => 'required|numeric|min:0.001',
-            'barcode'              => 'required|string|max:255|unique:item_packs,barcode',
-            'serial_separator'     => 'nullable|string|max:20',
-            'equivalency_factor'   => 'nullable|numeric|min:0',
-            'height'               => 'nullable|numeric|min:0',
-            'width'                => 'nullable|numeric|min:0',
-            'depth'                => 'nullable|numeric|min:0',
-            'weight'               => 'nullable|numeric|min:0',
-            'is_weight_priced'     => 'boolean',
-            'allow_fraction_in_qty'=> 'boolean',
-            'is_default_pack'      => 'boolean',
-            'sort_order'           => 'nullable|integer',
-            'pack_operation_ids'   => 'nullable|array',
+            'item_id' => 'required|exists:items,id',
+            'uom_id' => 'required|exists:uoms,id',
+            'quantity' => 'required|numeric|min:0.001',
+            'barcode' => 'required|string|max:255|unique:item_packs,barcode',
+            'serial_separator' => 'nullable|string|max:20',
+            'equivalency_factor' => 'nullable|numeric|min:0',
+            'height' => 'nullable|numeric|min:0',
+            'width' => 'nullable|numeric|min:0',
+            'depth' => 'nullable|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'is_weight_priced' => 'boolean',
+            'allow_fraction_in_qty' => 'boolean',
+            'is_default_pack' => 'boolean',
+            'sort_order' => 'nullable|integer',
+            'pack_operation_ids' => 'nullable|array',
             'pack_operation_ids.*' => 'exists:pack_operations,id',
-            'pack_group_ids'       => 'nullable|array',
-            'pack_group_ids.*'     => 'exists:pack_groups,id',
+            'pack_group_ids' => 'nullable|array',
+            'pack_group_ids.*' => 'exists:pack_groups,id',
         ]);
 
         $validated['is_weight_priced'] = $request->boolean('is_weight_priced');
@@ -102,6 +103,7 @@ class ItemPackController extends Controller
     public function show(ItemPack $itemPack)
     {
         $itemPack->load(['item', 'uom', 'packOperations', 'packGroups']);
+
         return view('dashboard.data_definition.data_product.item_packs.show', compact('itemPack'));
     }
 
@@ -122,24 +124,24 @@ class ItemPackController extends Controller
     public function update(Request $request, ItemPack $itemPack)
     {
         $validated = $request->validate([
-            'item_id'              => 'required|exists:items,id',
-            'uom_id'               => 'required|exists:uoms,id',
-            'quantity'             => 'required|numeric|min:0.001',
-            'barcode'              => 'required|string|max:255|unique:item_packs,barcode,' . $itemPack->id,
-            'serial_separator'     => 'nullable|string|max:20',
-            'equivalency_factor'   => 'nullable|numeric|min:0',
-            'height'               => 'nullable|numeric|min:0',
-            'width'                => 'nullable|numeric|min:0',
-            'depth'                => 'nullable|numeric|min:0',
-            'weight'               => 'nullable|numeric|min:0',
-            'is_weight_priced'     => 'boolean',
-            'allow_fraction_in_qty'=> 'boolean',
-            'is_default_pack'      => 'boolean',
-            'sort_order'           => 'nullable|integer',
-            'pack_operation_ids'   => 'nullable|array',
+            'item_id' => 'required|exists:items,id',
+            'uom_id' => 'required|exists:uoms,id',
+            'quantity' => 'required|numeric|min:0.001',
+            'barcode' => 'required|string|max:255|unique:item_packs,barcode,'.$itemPack->id,
+            'serial_separator' => 'nullable|string|max:20',
+            'equivalency_factor' => 'nullable|numeric|min:0',
+            'height' => 'nullable|numeric|min:0',
+            'width' => 'nullable|numeric|min:0',
+            'depth' => 'nullable|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'is_weight_priced' => 'boolean',
+            'allow_fraction_in_qty' => 'boolean',
+            'is_default_pack' => 'boolean',
+            'sort_order' => 'nullable|integer',
+            'pack_operation_ids' => 'nullable|array',
             'pack_operation_ids.*' => 'exists:pack_operations,id',
-            'pack_group_ids'       => 'nullable|array',
-            'pack_group_ids.*'     => 'exists:pack_groups,id',
+            'pack_group_ids' => 'nullable|array',
+            'pack_group_ids.*' => 'exists:pack_groups,id',
         ]);
 
         $validated['is_weight_priced'] = $request->boolean('is_weight_priced');

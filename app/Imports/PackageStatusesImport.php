@@ -2,23 +2,24 @@
 
 namespace App\Imports;
 
-use App\Models\PackageStatus;
 use App\Models\Organization;
+use App\Models\PackageStatus;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Validators\Failure;
 
-class PackageStatusesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure
+class PackageStatusesImport implements SkipsOnFailure, ToModel, WithHeadingRow, WithValidation
 {
     private $errors = [];
 
     public function model(array $row)
     {
         // Verify organization exists
-        if (!Organization::where('id', $row['organization_id'])->exists()) {
+        if (! Organization::where('id', $row['organization_id'])->exists()) {
             $this->errors[] = "Organization ID {$row['organization_id']} does not exist (status: {$row['status_name']})";
+
             return null;
         }
 
@@ -51,7 +52,7 @@ class PackageStatusesImport implements ToModel, WithHeadingRow, WithValidation, 
     public function onFailure(Failure ...$failures)
     {
         foreach ($failures as $failure) {
-            $this->errors[] = "Row {$failure->row()}: " . implode(', ', $failure->errors());
+            $this->errors[] = "Row {$failure->row()}: ".implode(', ', $failure->errors());
         }
     }
 

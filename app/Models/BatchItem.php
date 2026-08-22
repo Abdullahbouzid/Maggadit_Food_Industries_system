@@ -4,15 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
-use App\Models\ProductionBatch  ;
-use App\Models\User;
-use App\Models\Item;
-use App\Models\ItemPack;
-use App\Models\BatchItemStock;
-use App\Models\BatchMovement;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class BatchItem extends Model
 {
@@ -27,7 +19,8 @@ class BatchItem extends Model
         'transferred_quantity',
         'remaining_quantity',
     ];
- // حساب الكمية المتبقية تلقائياً
+
+    // حساب الكمية المتبقية تلقائياً
     public function getRemainingQuantityAttribute()
     {
         return $this->quantity - $this->dispatched_quantity;
@@ -59,13 +52,10 @@ class BatchItem extends Model
         return $this->hasMany(BatchMovement::class);
     }
     // حساب الكمية المتبقية تلقائياً
-   
+
     // التأكد من أن dispatched_quantity لا تتجاوز الكمية الأصلية عند التحديث
     public function scopeWithRemaining($query)
     {
         return $query->select('*', DB::raw('quantity - dispatched_quantity as remaining_quantity'));
     }
-
-
-   
 }

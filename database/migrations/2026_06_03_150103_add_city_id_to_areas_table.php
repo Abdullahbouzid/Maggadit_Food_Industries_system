@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-      Schema::table('areas', function (Blueprint $table) {
-    $table->foreignId('city_id')->nullable()->after('state_id')->constrained('cities')->nullOnDelete();
-});
+        Schema::table('areas', function (Blueprint $table) {
+            $table->foreignId('city_id')->nullable()->after('state_id')->constrained('cities')->nullOnDelete();
+        });
     }
 
     /**

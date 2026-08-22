@@ -13,6 +13,21 @@
             </button>
         </div>
 
+        <div class="bg-white rounded-3xl shadow-lg p-5 mb-5 text-center">
+            <div class="w-20 h-20 mx-auto rounded-full overflow-hidden bg-gray-100 flex items-center justify-center mb-3 shadow-md">
+                @if($category->image)
+                    <img src="{{ $category->image }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
+                @else
+                    <span class="text-4xl">📁</span>
+                @endif
+            </div>
+            <h2 class="text-xl font-bold text-gray-800">{{ $category->name }}</h2>
+            <div class="mt-2 inline-flex items-center gap-1 bg-purple-50 text-purple-700 px-3 py-1 rounded-full">
+                <i class="fas fa-box-open text-sm"></i>
+                <span class="text-sm font-semibold">{{ is_array($category->items) ? count($category->items) : ($category->items->count() ?? 0) }} منتج</span>
+            </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
             @forelse($items as $item)
                 <a href="{{ route('customer.product.show', $item->id) }}" class="block"><div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
@@ -39,8 +54,10 @@
                             @endif
                         </div>
                         <button class="add-to-cart mt-2 w-full bg-purple-600 text-white text-xs py-2 rounded-full hover:bg-purple-700 transition"
-                                data-name="{{ $item->name ?? ($item->name_ar ?? $item->name_en) }}"
-                                data-price="{{ $item->price ?? 0 }}">
+                                data-id="{{ $item->id }}"
+                                data-name="{{ $item->name ?? ($item->name_ar ?? $item->name_en)  }}"
+                                data-price="{{ $item->price ?? 0  }}"
+                                data-image="{{ $item->image ?? '📦' }}">
                             <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
                         </button>
                     </div>

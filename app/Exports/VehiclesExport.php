@@ -3,12 +3,12 @@
 namespace App\Exports;
 
 use App\Models\Vehicle;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use Illuminate\Http\Request;
 
 class VehiclesExport implements FromQuery, WithHeadings, WithMapping, WithStyles
 {
@@ -26,11 +26,11 @@ class VehiclesExport implements FromQuery, WithHeadings, WithMapping, WithStyles
         // Apply filters same as index
         if ($this->request->filled('search')) {
             $search = $this->request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('vehicle_name', 'like', "%{$search}%")
-                  ->orWhere('vehicle_code', 'like', "%{$search}%")
-                  ->orWhere('plate_no', 'like', "%{$search}%")
-                  ->orWhere('barcode', 'like', "%{$search}%");
+                    ->orWhere('vehicle_code', 'like', "%{$search}%")
+                    ->orWhere('plate_no', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%");
             });
         }
 
@@ -66,7 +66,7 @@ class VehiclesExport implements FromQuery, WithHeadings, WithMapping, WithStyles
             'Volume',
             'Min Load QTY',
             'Status',
-            'Created At'
+            'Created At',
         ];
     }
 

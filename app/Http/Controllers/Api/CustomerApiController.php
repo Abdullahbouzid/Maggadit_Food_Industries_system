@@ -3,34 +3,52 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
-use App\Models\Brand;
-use App\Models\Item;
-use App\Models\Survey;
-use App\Models\SurveyResponse;
-use App\Models\SurveyAnswer;
+use App\Http\Traits\Customer\JsonFieldParser;
+use App\Mail\ContactMessageMail;
 use App\Models\Banner;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\ContactMessage;
+use App\Models\Faq;
+use App\Models\Invoice;
+use App\Models\Item;
+use App\Models\Notification;
+use App\Models\Offer;
+use App\Models\Organization;
+use App\Models\OrganizationAbout;
+use App\Models\PrivacyPolicy;
+use App\Models\Survey;
+use App\Models\SurveyAnswer;
+use App\Models\SurveyResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class CustomerApiController extends Controller
 {
+    use JsonFieldParser;
+
     // التصنيفات
     public function categoriesIndex()
     {
         $categories = Category::where('show_in_customer_app', true)
             ->select('id', 'name', 'image')
+            ->withCount(['items as products_count' => function ($q) {
+                $q->where('is_inactive', false);
+            }])
             ->get();
+
         return response()->json(['success' => true, 'categories' => $categories]);
     }
 
     public function categoriesShow($id)
     {
         $category = Category::where('show_in_customer_app', true)
-            ->with(['items' => function($q) {
+            ->with(['items' => function ($q) {
                 $q->where('is_inactive', false);
             }])
             ->findOrFail($id);
+
         return response()->json(['success' => true, 'category' => $category]);
     }
 
@@ -39,15 +57,20 @@ class CustomerApiController extends Controller
     {
         $brands = Brand::where('show_in_customer_app', true)
             ->select('id', 'name', 'logo')
+            ->withCount(['items as products_count' => function ($q) {
+                $q->where('is_inactive', false);
+            }])
             ->get();
+
         return response()->json(['success' => true, 'brands' => $brands]);
     }
 
     public function brandsShow($id)
     {
-        $brand = Brand::with(['items' => function($q) {
-                $q->where('is_inactive', false);
-            }])->findOrFail($id);
+        $brand = Brand::with(['items' => function ($q) {
+            $q->where('is_inactive', false);
+        }])->findOrFail($id);
+
         return response()->json(['success' => true, 'brand' => $brand]);
     }
 
@@ -71,6 +94,7 @@ class CustomerApiController extends Controller
         // تنسيق البيانات كما يحتاجها التطبيق
         $products->getCollection()->transform(function ($item) {
             $defaultPack = $item->packs->where('is_default_pack', true)->first() ?? $item->packs->first();
+
             return [
                 'id' => $item->id,
                 'name' => $item->name_ar ?: $item->name_en,
@@ -113,27 +137,37 @@ class CustomerApiController extends Controller
                 'packs' => $packs,
                 'category' => $item->category?->name,
                 'brand' => $item->brand?->name,
-            ]
+            ],
         ]);
     }
 
     public function offersIndex()
     {
-        // إذا كان لديك نموذج Offer، قم بجلبه. حالياً نرجع منتجات عليها عروض افتراضية (مثلاً last 5 items)
-        $offers = Item::where('is_inactive', false)
-            ->where('is_new', true) // أو أي شرط للعرض
-            ->limit(10)
+        $offers = Offer::with(['item', 'itemPack.packType'])
+            ->active()
             ->get()
-            ->map(function ($item) {
-                $defaultPack = $item->packs->first();
+            ->map(function ($offer) {
+                $item = $offer->item;
+                $defaultPack = $item ? $item->packs->first() : null;
+                $offerPack = $offer->itemPack;
+
                 return [
-                    'id' => $item->id,
-                    'name' => $item->name_ar ?: $item->name_en,
-                    'image' => $item->main_image_url,
-                    'price' => $defaultPack ? $defaultPack->price : 0,
-                    'old_price' => $defaultPack ? $defaultPack->price * 1.2 : 0, // وهمي
+                    'id' => $offer->id,
+                    'title' => $offer->title,
+                    'description' => $offer->description,
+                    'item_id' => $offer->item_id,
+                    'item_pack_id' => $offer->item_pack_id,
+                    'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
+                    'pack_type' => $offerPack ? ($offerPack->packType->name_ar ?? $offerPack->packType->name_en ?? '') : ($defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : ''),
+                    'image' => $offer->display_image,
+                    'old_price' => (float) $offer->old_price,
+                    'new_price' => (float) $offer->new_price,
+                    'discount_percentage' => (float) $offer->discount_percentage,
+                    'start_date' => $offer->start_date?->format('Y-m-d H:i'),
+                    'end_date' => $offer->end_date?->format('Y-m-d H:i'),
                 ];
             });
+
         return response()->json(['success' => true, 'offers' => $offers]);
     }
 
@@ -158,6 +192,7 @@ class CustomerApiController extends Controller
             ->get()
             ->map(function ($item) {
                 $defaultPack = $item->packs->where('is_default_pack', true)->first() ?? $item->packs->first();
+
                 return [
                     'id' => $item->id,
                     'name' => $item->name_ar ?: $item->name_en,
@@ -189,13 +224,47 @@ class CustomerApiController extends Controller
             'dashboard' => [
                 'total_orders' => 0,
                 'total_favorites' => 0,
-            ]
+            ],
         ]);
     }
 
     public function financialStatement(Request $request)
     {
         return response()->json(['success' => true, 'statement' => []]);
+    }
+
+    public function orderHistory(Request $request)
+    {
+        $customer = $request->user();
+
+        $invoices = Invoice::where('customer_id', $customer->id)
+            ->with(['items.item' => function ($q) {
+                $q->select('id', 'name_ar', 'name_en');
+            }])
+            ->orderBy('invoice_date', 'desc')
+            ->get()->map(function ($invoice) {
+                return [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'date' => $invoice->invoice_date->format('Y-m-d'),
+                    'total_amount' => $invoice->total_amount,
+                    'status' => $invoice->status,
+                    'items_count' => $invoice->items->count(),
+                    'items' => $invoice->items->map(function ($item) {
+                        return [
+                            'name' => $item->item->name_ar ?? $item->item->name_en ?? 'Product',
+                            'quantity' => $item->quantity,
+                            'unit_price' => $item->unit_price,
+                            'subtotal' => $item->subtotal,
+                        ];
+                    }),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'orders' => $invoices,
+        ]);
     }
 
     // جلب قائمة الاستبيانات النشطة مع حالة العميل
@@ -209,15 +278,16 @@ class CustomerApiController extends Controller
             ->get()
             ->map(function ($survey) use ($customer) {
                 $answered = $survey->isAnsweredByCustomer($customer->id);
+
                 return [
-                    'id'                => $survey->id,
-                    'title'             => $survey->title,
-                    'description'       => $survey->description,
+                    'id' => $survey->id,
+                    'title' => $survey->title,
+                    'description' => $survey->description,
                     'estimated_minutes' => $survey->estimated_minutes,
-                    'questions_count'   => $survey->questions_count,
-                    'is_answered'       => $answered,
-                    'starts_at'         => $survey->starts_at?->toDateTimeString(),
-                    'ends_at'           => $survey->ends_at?->toDateTimeString(),
+                    'questions_count' => $survey->questions_count,
+                    'is_answered' => $answered,
+                    'starts_at' => $survey->starts_at?->toDateTimeString(),
+                    'ends_at' => $survey->ends_at?->toDateTimeString(),
                 ];
             });
 
@@ -233,27 +303,27 @@ class CustomerApiController extends Controller
         if ($survey->isAnsweredByCustomer($customer->id)) {
             return response()->json([
                 'success' => false,
-                'message' => 'لقد أجبت على هذا الاستبيان مسبقاً'
+                'message' => 'لقد أجبت على هذا الاستبيان مسبقاً',
             ], 409);
         }
 
         $questions = $survey->questions->map(function ($q) {
             return [
-                'id'            => $q->id,
+                'id' => $q->id,
                 'question_text' => $q->question_text,
                 'question_type' => $q->question_type,
-                'options'       => $q->options,
-                'is_required'   => $q->is_required,
-                'sort_order'    => $q->sort_order,
+                'options' => $q->options,
+                'is_required' => $q->is_required,
+                'sort_order' => $q->sort_order,
             ];
         });
 
         return response()->json([
-            'success'  => true,
-            'survey'   => [
-                'id'                => $survey->id,
-                'title'             => $survey->title,
-                'description'       => $survey->description,
+            'success' => true,
+            'survey' => [
+                'id' => $survey->id,
+                'title' => $survey->title,
+                'description' => $survey->description,
                 'estimated_minutes' => $survey->estimated_minutes,
             ],
             'questions' => $questions,
@@ -270,55 +340,55 @@ class CustomerApiController extends Controller
         if ($survey->isAnsweredByCustomer($customer->id)) {
             return response()->json([
                 'success' => false,
-                'message' => 'لقد أجبت على هذا الاستبيان مسبقاً'
+                'message' => 'لقد أجبت على هذا الاستبيان مسبقاً',
             ], 409);
         }
 
         $request->validate([
-            'answers'   => 'required|array',
+            'answers' => 'required|array',
             'answers.*' => 'nullable|string|max:2000',
         ]);
 
         DB::transaction(function () use ($request, $survey, $customer) {
             $response = SurveyResponse::create([
-                'survey_id'    => $survey->id,
-                'customer_id'  => $customer->id,
+                'survey_id' => $survey->id,
+                'customer_id' => $customer->id,
                 'submitted_at' => now(),
             ]);
 
             foreach ($survey->questions as $question) {
                 $answerValue = $request->answers[$question->id] ?? null;
                 SurveyAnswer::create([
-                    'survey_response_id'  => $response->id,
-                    'survey_question_id'  => $question->id,
-                    'answer_text'         => $answerValue,
+                    'survey_response_id' => $response->id,
+                    'survey_question_id' => $question->id,
+                    'answer_text' => $answerValue,
                 ]);
             }
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'تم إرسال إجاباتك بنجاح! شكراً لمشاركتك.'
+            'message' => 'تم إرسال إجاباتك بنجاح! شكراً لمشاركتك.',
         ]);
     }
 
     public function notifications(Request $request)
     {
         $customer = $request->user();
-        
-        $notificationsQuery = \App\Models\Notification::where(function($query) use ($customer) {
+
+        $notificationsQuery = Notification::where(function ($query) use ($customer) {
             // إشعارات للجميع: customers تحتوي على "all"
             $query->whereJsonContains('customers', 'all')
                   // أو channel = 'all'
-                  ->orWhere('channel', 'all')
+                ->orWhere('channel', 'all')
                   // أو العميل محدد بالاسم أو ID في مصفوفة customers
-                  ->orWhere(function($q) use ($customer) {
-                      $q->whereJsonContains('customers', (string)$customer->id)
+                ->orWhere(function ($q) use ($customer) {
+                    $q->whereJsonContains('customers', (string) $customer->id)
                         ->orWhereJsonContains('customers', $customer->id);
-                  });
+                });
         })
-        ->where('is_sent', true)
-        ->latest();
+            ->where('is_sent', true)
+            ->latest();
 
         $notificationsList = $notificationsQuery->get();
 
@@ -327,12 +397,12 @@ class CustomerApiController extends Controller
 
         $unreadCount = 0;
 
-        $notifications = $notificationsList->map(function($notif) use ($readNotifications, &$unreadCount) {
+        $notifications = $notificationsList->map(function ($notif) use ($readNotifications, &$unreadCount) {
             $isRead = $readNotifications->has($notif->id);
-            if (!$isRead) {
+            if (! $isRead) {
                 $unreadCount++;
             }
-            
+
             $isStarred = $isRead ? (bool) $readNotifications[$notif->id]->pivot->is_starred : false;
             $isArchived = $isRead ? (bool) $readNotifications[$notif->id]->pivot->is_archived : false;
 
@@ -350,16 +420,16 @@ class CustomerApiController extends Controller
         });
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'notifications' => $notifications,
-            'unread_count' => $unreadCount
+            'unread_count' => $unreadCount,
         ]);
     }
 
     public function updateFcmToken(Request $request)
     {
         $request->validate([
-            'fcm_token' => 'required|string'
+            'fcm_token' => 'required|string',
         ]);
 
         $customer = $request->user();
@@ -371,15 +441,15 @@ class CustomerApiController extends Controller
     public function markNotificationRead(Request $request, $id)
     {
         $customer = $request->user();
-        
+
         // التحقق من وجود الإشعار
-        $notification = \App\Models\Notification::find($id);
-        if (!$notification) {
+        $notification = Notification::find($id);
+        if (! $notification) {
             return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
         }
 
         // إضافة الإشعار إلى قائمة الإشعارات المقروءة إذا لم يكن مقروءاً بالفعل
-        if (!$customer->readNotifications()->where('notification_id', $id)->exists()) {
+        if (! $customer->readNotifications()->where('notification_id', $id)->exists()) {
             $customer->readNotifications()->attach($id, ['read_at' => now()]);
         }
 
@@ -389,9 +459,9 @@ class CustomerApiController extends Controller
     public function toggleNotificationRead(Request $request, $id)
     {
         $customer = $request->user();
-        
-        $notification = \App\Models\Notification::find($id);
-        if (!$notification) {
+
+        $notification = Notification::find($id);
+        if (! $notification) {
             return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
         }
 
@@ -413,11 +483,13 @@ class CustomerApiController extends Controller
     public function toggleNotificationStar(Request $request, $id)
     {
         $customer = $request->user();
-        $notification = \App\Models\Notification::find($id);
-        if (!$notification) return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
+        $notification = Notification::find($id);
+        if (! $notification) {
+            return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
+        }
 
         $pivotRow = $customer->readNotifications()->where('notification_id', $id)->first();
-        $newState = $pivotRow ? !$pivotRow->pivot->is_starred : true;
+        $newState = $pivotRow ? ! $pivotRow->pivot->is_starred : true;
 
         if ($pivotRow) {
             $customer->readNotifications()->updateExistingPivot($id, ['is_starred' => $newState]);
@@ -432,11 +504,13 @@ class CustomerApiController extends Controller
     public function toggleNotificationArchive(Request $request, $id)
     {
         $customer = $request->user();
-        $notification = \App\Models\Notification::find($id);
-        if (!$notification) return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
+        $notification = Notification::find($id);
+        if (! $notification) {
+            return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
+        }
 
         $pivotRow = $customer->readNotifications()->where('notification_id', $id)->first();
-        $newState = $pivotRow ? !$pivotRow->pivot->is_archived : true;
+        $newState = $pivotRow ? ! $pivotRow->pivot->is_archived : true;
 
         if ($pivotRow) {
             $customer->readNotifications()->updateExistingPivot($id, ['is_archived' => $newState]);
@@ -450,13 +524,50 @@ class CustomerApiController extends Controller
 
     public function faq(Request $request)
     {
-        $faqs = \App\Models\Faq::all();
+        $faqs = Faq::all();
+
         return response()->json(['success' => true, 'faq' => $faqs]);
     }
 
     public function privacyPolicy(Request $request)
     {
-        return response()->json(['success' => true, 'content' => 'سياسة الخصوصية...']);
+        $customer = $request->user();
+
+        $organizationId = null;
+        if ($customer) {
+            $activeOrg = $customer->activeOrganization;
+            if (! $activeOrg) {
+                $activeOrg = $customer->activeOrganizations()->first();
+            }
+            if ($activeOrg) {
+                $organizationId = $activeOrg->id;
+            }
+        }
+
+        $policy = PrivacyPolicy::where('type', 'privacy_policy')
+            ->where('is_active', true)
+            ->when($organizationId, function ($q) use ($organizationId) {
+                $q->where(function ($sub) use ($organizationId) {
+                    $sub->whereNull('organization_id')
+                        ->orWhere('organization_id', $organizationId);
+                });
+            })
+            ->latest()
+            ->first();
+
+        if (! $policy) {
+            return response()->json([
+                'success' => true,
+                'content' => null,
+                'message' => 'سياسة الخصوصية غير متوفرة حالياً',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'content' => $policy->content,
+            'title' => $policy->title,
+        ]);
     }
 
     public function aboutUs(Request $request)
@@ -468,7 +579,7 @@ class CustomerApiController extends Controller
             // First try the direct active_organization_id relation
             $activeOrg = $customer->activeOrganization;
             // If not set, fallback to first active organization from pivot
-            if (!$activeOrg) {
+            if (! $activeOrg) {
                 $activeOrg = $customer->activeOrganizations()->first();
             }
             if ($activeOrg) {
@@ -476,7 +587,7 @@ class CustomerApiController extends Controller
             }
         } else {
             // If no authenticated user, get the first active organization's about
-            $about = \App\Models\OrganizationAbout::where('is_active', true)->first();
+            $about = OrganizationAbout::where('is_active', true)->first();
         }
 
         // Return the about object with proper data transformation
@@ -503,71 +614,126 @@ class CustomerApiController extends Controller
         return response()->json(['success' => true, 'content' => $content]);
     }
 
-    private function parseJsonField($field)
+    public function contactInfo(Request $request)
     {
-        if (empty($field)) {
-            return [];
-        }
+        $organizationId = $request->query('organization_id');
 
-        if (is_array($field)) {
-            return $field;
-        }
-
-        if (is_string($field)) {
-            $decoded = json_decode($field, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                return $decoded ?? [];
-            }
-        }
-
-        return [];
-    }
-
-    private function parseStatsField($field)
-    {
-        if (empty($field)) {
-            return [];
-        }
-
-        $stats = [];
-
-        if (is_array($field)) {
-            $stats = $field;
-        } elseif (is_string($field)) {
-            $decoded = json_decode($field, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $stats = $decoded;
-            }
-        }
-
-        // If stats is a flat array, convert to key-value pairs
-        if (!empty($stats) && !isset($stats[0]['key']) && !isset($stats[0]['value'])) {
-            $formatted = [];
-            $keys = array_keys($stats);
-            foreach ($keys as $key) {
-                if (!is_numeric($key) && !is_null($stats[$key])) {
-                    $formatted[] = ['key' => $key, 'value' => $stats[$key]];
+        if (! $organizationId) {
+            $customer = $request->user();
+            if ($customer) {
+                $organizationId = $customer->active_organization_id;
+                if (! $organizationId) {
+                    $activeOrg = $customer->activeOrganizations()->first();
+                    if ($activeOrg) {
+                        $organizationId = $activeOrg->id;
+                    }
                 }
             }
-            return $formatted;
         }
 
-        return $stats;
+        $organization = null;
+        if ($organizationId) {
+            $organization = Organization::find($organizationId);
+        }
+
+        if (! $organization) {
+            $organization = Organization::first();
+        }
+
+        if (! $organization) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'phone' => null,
+                    'whatsapp' => null,
+                    'email' => null,
+                    'website' => null,
+                    'address' => null,
+                    'latitude' => null,
+                    'longitude' => null,
+                ],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'phone' => $organization->phone,
+                'whatsapp' => $organization->whatsapp,
+                'email' => $organization->email,
+                'website' => $organization->website,
+                'address' => $organization->address,
+                'latitude' => $organization->latitude,
+                'longitude' => $organization->longitude,
+            ],
+        ]);
     }
 
     public function contactUs(Request $request)
     {
-        // تخزين رسالة الاتصال
-        return response()->json(['success' => true, 'message' => 'تم إرسال رسالتك']);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'subject' => 'nullable|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        $organizationId = $request->query('organization_id');
+
+        if (! $organizationId) {
+            $customer = $request->user();
+            if ($customer) {
+                $organizationId = $customer->active_organization_id;
+                if (! $organizationId) {
+                    $activeOrg = $customer->activeOrganizations()->first();
+                    if ($activeOrg) {
+                        $organizationId = $activeOrg->id;
+                    }
+                }
+            }
+        }
+
+        $contactMessage = ContactMessage::create([
+            'organization_id' => $organizationId,
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'subject' => $request->subject,
+            'message' => $request->message,
+            'status' => 'new',
+        ]);
+
+        $organization = null;
+        if ($organizationId) {
+            $organization = Organization::find($organizationId);
+        }
+
+        if ($organization && $organization->forward_contact_messages_to_email) {
+            try {
+                $recipient = $organization->contact_email_recipient ?? $organization->email;
+                if ($recipient) {
+                    Mail::to($recipient)->send(new ContactMessageMail($contactMessage));
+                    $contactMessage->update([
+                        'forwarded_to_email' => true,
+                        'forwarded_at' => now(),
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Failed to forward contact message: '.$e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إرسال رسالتك بنجاح',
+        ]);
     }
 
-    
-
-
-     public function organizationsList(Request $request)
+    public function organizationsList(Request $request)
     {
         $customer = $request->user();
-        
+
         // جلب المنظمات المرتبطة بالعميل مع حالة النشاط
         $organizations = $customer->organizations()->get()->map(function ($org) use ($customer) {
             return [
@@ -591,17 +757,17 @@ class CustomerApiController extends Controller
     public function switchOrganization(Request $request)
     {
         $request->validate([
-            'organization_id' => 'required|exists:organizations,id'
+            'organization_id' => 'required|exists:organizations,id',
         ]);
 
         $customer = $request->user();
         $organizationId = $request->organization_id;
 
         // التحقق من أن العميل مرتبط بهذه المنظمة
-        if (!$customer->organizations()->where('organization_id', $organizationId)->exists()) {
+        if (! $customer->organizations()->where('organization_id', $organizationId)->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'أنت غير مرتبط بهذه المنظمة'
+                'message' => 'أنت غير مرتبط بهذه المنظمة',
             ], 403);
         }
 
@@ -611,7 +777,127 @@ class CustomerApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'تم تغيير المنظمة بنجاح',
-            'active_organization_id' => $organizationId
+            'active_organization_id' => $organizationId,
+        ]);
+    }
+
+    public function favorites(Request $request)
+    {
+        $customer = $request->user();
+        $favoriteItemIds = $customer->favorites()->pluck('item_id')->toArray();
+
+        $favorites = Item::whereIn('id', $favoriteItemIds)
+            ->with(['images', 'category', 'brand'])
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'name_ar' => $item->name_ar,
+                    'name_en' => $item->name_en ?? $item->name_ar,
+                    'price' => $item->price,
+                    'image' => $item->image ? asset('uploads/'.$item->image) : ($item->images->isNotEmpty() ? asset('uploads/'.$item->images->first()->image_path) : null),
+                    'category_id' => $item->category_id,
+                    'brand_id' => $item->brand_id,
+                    'is_favorite' => true,
+                ];
+            });
+
+        return response()->json(['success' => true, 'data' => $favorites]);
+    }
+
+    public function toggleFavorite(Request $request)
+    {
+        $customer = $request->user();
+
+        $request->validate([
+            'item_id' => 'required|integer|exists:items,id',
+        ]);
+
+        $itemId = $request->item_id;
+        $favorite = $customer->favorites()->where('item_id', $itemId)->first();
+
+        if ($favorite) {
+            $favorite->delete();
+
+            return response()->json(['success' => true, 'is_favorite' => false, 'message' => 'تمت الإزالة من المفضلة']);
+        }
+
+        $customer->favorites()->create(['item_id' => $itemId]);
+
+        return response()->json(['success' => true, 'is_favorite' => true, 'message' => 'تمت الإضافة للمفضلة']);
+    }
+
+    public function invoices(Request $request)
+    {
+        $customer = $request->user();
+
+        $invoices = Invoice::where('customer_id', $customer->id)
+            ->with('items.item')
+            ->latest()
+            ->paginate(10);
+
+        $data = $invoices->items();
+
+        return response()->json([
+            'success' => true,
+            'data' => collect($data)->map(function ($invoice) {
+                return [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'invoice_date' => $invoice->invoice_date->format('Y-m-d'),
+                    'total_amount' => (float) $invoice->total_amount,
+                    'status' => $invoice->status,
+                    'items_count' => $invoice->items->count(),
+                    'notes' => $invoice->notes,
+                    'created_at' => $invoice->created_at->toDateTimeString(),
+                ];
+            }),
+            'meta' => [
+                'current_page' => $invoices->currentPage(),
+                'last_page' => $invoices->lastPage(),
+                'per_page' => $invoices->perPage(),
+                'total' => $invoices->total(),
+            ],
+        ]);
+    }
+
+    public function invoiceDetail(Request $request, $id)
+    {
+        $customer = $request->user();
+
+        $invoice = Invoice::where('customer_id', $customer->id)
+            ->with(['items.item', 'items.warehouse'])
+            ->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'invoice_date' => $invoice->invoice_date->format('Y-m-d'),
+                'total_amount' => (float) $invoice->total_amount,
+                'status' => $invoice->status,
+                'notes' => $invoice->notes,
+                'created_at' => $invoice->created_at->toDateTimeString(),
+                'items' => $invoice->items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'item_id' => $item->item_id,
+                        'item_name_ar' => $item->item->name_ar ?? null,
+                        'item_name_en' => $item->item->name_en ?? null,
+                        'item_image' => $item->item->image
+                            ? asset('uploads/'.$item->item->image)
+                            : ($item->item->images->isNotEmpty()
+                                ? asset('uploads/'.$item->item->images->first()->image_path)
+                                : null),
+                        'warehouse_id' => $item->warehouse_id,
+                        'warehouse_name' => $item->warehouse->name ?? null,
+                        'quantity' => (float) $item->quantity,
+                        'unit_price' => (float) $item->unit_price,
+                        'subtotal' => (float) $item->subtotal,
+                    ];
+                }),
+            ],
         ]);
     }
 
@@ -620,19 +906,19 @@ class CustomerApiController extends Controller
         $customer = $request->user();
         $lastId = $request->input('last_id', 0);
 
-        $notificationsQuery = \App\Models\Notification::where(function($query) use ($customer) {
+        $notificationsQuery = Notification::where(function ($query) use ($customer) {
             // إشعارات للجميع: customers تحتوي على "all"
             $query->whereJsonContains('customers', 'all')
                   // أو channel = 'all'
-                  ->orWhere('channel', 'all')
+                ->orWhere('channel', 'all')
                   // أو العميل محدد بالـ ID في مصفوفة customers
-                  ->orWhere(function($q) use ($customer) {
-                      $q->whereJsonContains('customers', (string)$customer->id)
+                ->orWhere(function ($q) use ($customer) {
+                    $q->whereJsonContains('customers', (string) $customer->id)
                         ->orWhereJsonContains('customers', $customer->id);
-                  });
+                });
         })
-        ->where('is_sent', true)
-        ->latest();
+            ->where('is_sent', true)
+            ->latest();
 
         $allNotifications = $notificationsQuery->get();
 
@@ -643,34 +929,34 @@ class CustomerApiController extends Controller
 
         foreach ($allNotifications as $notif) {
             $isRead = $readNotifications->has($notif->id);
-            if (!$isRead) {
+            if (! $isRead) {
                 $unreadCount++;
             }
 
             // إذا كان هذا الإشعار أحدث من آخر إشعار يعلمه التطبيق
-            if ($notif->id > (int)$lastId) {
+            if ($notif->id > (int) $lastId) {
                 $isStarred = $isRead ? (bool) $readNotifications[$notif->id]->pivot->is_starred : false;
                 $isArchived = $isRead ? (bool) $readNotifications[$notif->id]->pivot->is_archived : false;
-                
+
                 $newNotifications->push([
-                    'id'         => $notif->id,
-                    'subject'    => $notif->subject_ar ?: $notif->subject_en,
-                    'body'       => $notif->body_ar ?: $notif->body_en,
-                    'image'      => $notif->image_url ?? null,
-                    'icon_type'  => $notif->icon_type ?? 'notification',
-                    'is_read'    => $isRead,
+                    'id' => $notif->id,
+                    'subject' => $notif->subject_ar ?: $notif->subject_en,
+                    'body' => $notif->body_ar ?: $notif->body_en,
+                    'image' => $notif->image_url ?? null,
+                    'icon_type' => $notif->icon_type ?? 'notification',
+                    'is_read' => $isRead,
                     'is_starred' => $isStarred,
-                    'is_archived'=> $isArchived,
+                    'is_archived' => $isArchived,
                     'created_at' => $notif->created_at->diffForHumans(),
                 ]);
             }
         }
 
         return response()->json([
-            'success'            => true,
-            'new_notifications'  => $newNotifications,
-            'count'              => $newNotifications->count(),
-            'unread_count'       => $unreadCount
+            'success' => true,
+            'new_notifications' => $newNotifications,
+            'count' => $newNotifications->count(),
+            'unread_count' => $unreadCount,
         ]);
     }
 }

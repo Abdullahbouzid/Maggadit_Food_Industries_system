@@ -1,16 +1,17 @@
 <?php
+
 namespace App\Http\Middleware;
+
 use Closure;
+
 class Localization
 {
+    public function handle($request, Closure $next)
+    {
+        if (session()->has('locale')) {
+            app()->setLocale(session('locale'));
+        }
 
-
-
-public function handle($request, Closure $next)
-{
-    if (session()->has('locale')) {
-        app()->setLocale(session('locale'));
+        return $next($request);
     }
-    return $next($request);
-}
 }

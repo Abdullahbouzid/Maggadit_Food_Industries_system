@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/ItemModel.php
 
 namespace App\Models;
@@ -11,5 +12,6 @@ class ItemModel extends Model
     use HasFactory;
 
     protected $fillable = ['code', 'name_en', 'name_ar', 'is_active', 'sort_order'];
+
     protected $casts = ['is_active' => 'boolean'];
 }

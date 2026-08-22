@@ -56,37 +56,13 @@
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
     <script>
-        // ========== بيانات وهمية للسلة (أمثلة) ==========
-        let cartItems = [
-            {
-                id: 1,
-                name_ar: "حذاء رياضي ماجديت برو",
-                name_en: "Maggadit Pro Sports Shoes",
-                price: 299,
-                quantity: 1,
-                image: "👟",
-                discount: 0
-            },
-            {
-                id: 2,
-                name_ar: "تي شيرت قطني - أزرق",
-                name_en: "Cotton T-Shirt Blue",
-                price: 89,
-                quantity: 2,
-                image: "👕",
-                discount: 10
-            },
-            {
-                id: 3,
-                name_ar: "ساعة ذكية",
-                name_en: "Smart Watch",
-                price: 459,
-                quantity: 1,
-                image: "⌚",
-                discount: 0
-            }
-        ];
+        // استرجاع السلة من التخزين المحلي
+        let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
         let deliveryFee = 15; // رسوم توصيل ثابتة
+
+        function saveCart() {
+            localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
+        }
 
         // ========== ترجمة الواجهة ==========
         const translations = {
@@ -137,13 +113,13 @@
         // تنسيق العملة
         function formatPrice(price) {
             const t = translations[currentLang];
-            return `${price.toFixed(2)} ${t.currency}`;
+            return `${parseFloat(price).toFixed(2)} ${t.currency}`;
         }
 
         // حساب المجموع الفرعي والإجمالي
         function calculateTotals() {
-            let subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            let total = subtotal + deliveryFee;
+            let subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * parseInt(item.quantity)), 0);
+            let total = subtotal > 0 ? subtotal + deliveryFee : 0;
             return { subtotal, total };
         }
 
@@ -180,15 +156,20 @@
             cartItems.forEach((item, index) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg';
+                
+                let imageContent = item.image && item.image.startsWith('http') 
+                    ? `<img src="${item.image}" class="w-full h-full object-cover">`
+                    : `<span>${item.image || '📦'}</span>`;
+
                 itemDiv.innerHTML = `
                     <div class="flex flex-row">
-                        <div class="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-4xl">
-                            ${item.image}
+                        <div class="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-4xl overflow-hidden">
+                            ${imageContent}
                         </div>
                         <div class="flex-1 p-3 text-right">
                             <div class="flex justify-between items-start">
                                 <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">${item.discount > 0 ? `-${item.discount}%` : 'جديد'}</span>
-                                <h3 class="font-bold text-gray-800">${currentLang === 'ar' ? item.name_ar : item.name_en}</h3>
+                                <h3 class="font-bold text-gray-800">${currentLang === 'ar' ? (item.name_ar || item.name) : (item.name_en || item.name)}</h3>
                             </div>
                             <div class="flex justify-between items-center mt-2">
                                 <div class="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1">
@@ -242,6 +223,7 @@
             const index = parseInt(e.currentTarget.getAttribute('data-index'));
             if (!isNaN(index) && cartItems[index]) {
                 cartItems[index].quantity++;
+                saveCart();
                 renderCart();
             }
         }
@@ -254,6 +236,7 @@
                 } else {
                     cartItems.splice(index, 1);
                 }
+                saveCart();
                 renderCart();
             }
         }
@@ -262,6 +245,7 @@
             const index = parseInt(e.currentTarget.getAttribute('data-index'));
             if (!isNaN(index) && cartItems[index]) {
                 cartItems.splice(index, 1);
+                saveCart();
                 renderCart();
                 showToastMessage(translations[currentLang].delete_btn + ' ' + (currentLang === 'ar' ? 'تم الحذف' : 'removed'), false);
             }
@@ -275,12 +259,50 @@
             renderCart();
         }
 
-        // زر الدفع (تم استبدال الـ route المحذوف)
+        // زر الدفع
         document.getElementById('checkout-btn')?.addEventListener('click', () => {
-            showToastMessage(currentLang === 'ar' ? 'جاري التوجيه إلى بوابة الدفع (تجريبي)' : 'Redirecting to payment gateway (demo)', false);
-            setTimeout(() => {
-                alert(currentLang === 'ar' ? 'هذه مجرد واجهة توضيحية. سيتم ربطها ببوابة الدفع الفعلية لاحقاً.' : 'This is a demo interface. It will be connected to the actual payment gateway later.');
-            }, 1000);
+            if (cartItems.length === 0) {
+                showToastMessage(currentLang === 'ar' ? 'السلة فارغة' : 'Cart is empty', true);
+                return;
+            }
+
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const originalText = checkoutBtn.innerText;
+            checkoutBtn.innerText = currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...';
+            checkoutBtn.disabled = true;
+
+            fetch('{{ route('customer.checkout') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ items: cartItems })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToastMessage(data.message, false);
+                    cartItems = []; // تفريغ السلة
+                    saveCart(); // تحديث التخزين المحلي
+                    renderCart();
+                    
+                    // توجيه المستخدم لصفحة الطلبات بعد ثانيتين
+                    setTimeout(() => {
+                        window.location.href = '{{ route('customer.order_history') }}';
+                    }, 2000);
+                } else {
+                    showToastMessage(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء الطلب' : 'Error occurred'), true);
+                    checkoutBtn.innerText = originalText;
+                    checkoutBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToastMessage(currentLang === 'ar' ? 'حدث خطأ في الاتصال' : 'Connection error', true);
+                checkoutBtn.innerText = originalText;
+                checkoutBtn.disabled = false;
+            });
         });
 
         // زر استعراض العروض (ارتباط وهمي)

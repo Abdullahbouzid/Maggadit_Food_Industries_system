@@ -1,8 +1,10 @@
 <?php
+
 // app/Models/Item.php
 
 namespace App\Models;
 
+use App\Services\Customer\ImagePathService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -18,7 +20,7 @@ class Item extends Model
         'weight_tolerance', 'low_stock_qty', 'is_inactive', 'is_new', 'is_price_protected',
         'is_power_sku', 'is_default_batch', 'is_temp_credit', 'is_batch_priced',
         'is_initiative', 'force_default_pack', 'has_serial_number',
-        'required_by_liter', 'required_by_weight' ,'created_by', 'updated_by'
+        'required_by_liter', 'required_by_weight', 'created_by', 'updated_by',
     ];
 
     protected $casts = [
@@ -72,7 +74,6 @@ class Item extends Model
         return $this->hasMany(ItemImage::class)->orderBy('sort_order');
     }
 
-
     // داخل نموذج Item
     public function getPriceAttribute()
     {
@@ -82,6 +83,7 @@ class Item extends Model
             return $defaultPack->price ?? 0;
         }
         $firstPack = $this->packs()->first();
+
         return $firstPack ? ($firstPack->price ?? 0) : 0;
     }
 
@@ -99,15 +101,15 @@ class Item extends Model
 
     public function getMainImageUrlAttribute()
     {
+        $service = app(ImagePathService::class);
+
         if ($this->image) {
-            // إذا كان التطبيق يعمل كـ APK، نستخدم رابط الاستضافة دائماً
-            return 'https://blue-beaver-923812.hostingersite.com/uploads/' . $this->image;
+            return $service->normalize($this->image);
         }
 
-        // محاولة جلب أول صورة من الصور الإضافية
         $firstImage = $this->images()->first();
         if ($firstImage) {
-            return 'https://blue-beaver-923812.hostingersite.com/uploads/' . $firstImage->image_path;
+            return $service->normalize($firstImage->image_path);
         }
 
         return null;

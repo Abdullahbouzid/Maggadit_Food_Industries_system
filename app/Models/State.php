@@ -11,7 +11,7 @@ class State extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'code', 'country_id', 'name_en', 'name_ar', 'description', 'is_active', 'sort_order'
+        'code', 'country_id', 'name_en', 'name_ar', 'description', 'is_active', 'sort_order',
     ];
 
     protected $casts = [
@@ -27,6 +27,7 @@ class State extends Model
     {
         return $this->hasMany(Area::class);
     }
+
     public function warehouses()
     {
         return $this->hasMany(Warehouse::class);

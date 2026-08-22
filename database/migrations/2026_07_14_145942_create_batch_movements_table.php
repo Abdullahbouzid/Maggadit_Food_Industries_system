@@ -1,4 +1,5 @@
 <?php
+
 // database/migrations/2026_07_14_000004_create_batch_movements_table.php
 
 use Illuminate\Database\Migrations\Migration;
@@ -17,7 +18,7 @@ return new class extends Migration
             // $table->enum('movement_type', ['in', 'transfer']);
             $table->decimal('quantity', 15, 3);
             $table->date('movement_date')->nullable();
-            $table->string('movement_type')->change();  
+            $table->string('movement_type')->default('in');
             $table->text('notes')->nullable();
             $table->timestamps();
         });

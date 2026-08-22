@@ -1,10 +1,11 @@
 <?php
-namespace App\Exports; 
+
+namespace App\Exports;
+
 use App\Models\Vendor;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Illuminate\Http\Request;
-
 
 class VendorsExport implements FromCollection, WithHeadings
 {
@@ -23,9 +24,9 @@ class VendorsExport implements FromCollection, WithHeadings
             $search = $this->request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('vendor_name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('contact_person', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('contact_person', 'like', "%{$search}%");
             });
         }
 
@@ -61,7 +62,3 @@ class VendorsExport implements FromCollection, WithHeadings
         ];
     }
 }
-
-
-
-

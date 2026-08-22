@@ -1,13 +1,14 @@
 <?php
+
 // app/Exports/UomsExport.php
 
 namespace App\Exports;
 
 use App\Models\Uom;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Http\Request;
 
 class UomsExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -26,9 +27,9 @@ class UomsExport implements FromCollection, WithHeadings, WithMapping
             $search = $this->request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name_en', 'like', "%{$search}%")
-                  ->orWhere('name_ar', 'like', "%{$search}%")
-                  ->orWhere('uom_symbol', 'like', "%{$search}%");
+                    ->orWhere('name_en', 'like', "%{$search}%")
+                    ->orWhere('name_ar', 'like', "%{$search}%")
+                    ->orWhere('uom_symbol', 'like', "%{$search}%");
             });
         }
 
@@ -46,7 +47,7 @@ class UomsExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'ID', 'Code', 'Name (English)', 'Name (Arabic)', 'UOM Symbol', 'Description', 'Is Active', 'Sort Order', 'Image Path', 'Created At'
+            'ID', 'Code', 'Name (English)', 'Name (Arabic)', 'UOM Symbol', 'Description', 'Is Active', 'Sort Order', 'Image Path', 'Created At',
         ];
     }
 

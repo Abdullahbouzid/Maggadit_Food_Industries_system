@@ -33,20 +33,20 @@ class Notification extends Model
     // Accessor للحصول على رابط الصورة الكامل
     public function getImageUrlAttribute()
     {
-        return $this->image ? asset('uploads/' . $this->image) : null;
+        return $this->image ? asset('uploads/'.$this->image) : null;
     }
 
     // Accessor للحصول على رابط الفيديو
     public function getVideoUrlAttribute()
     {
-        return $this->video ? asset('uploads/' . $this->video) : $this->video;
+        return $this->video ? asset('uploads/'.$this->video) : $this->video;
     }
 
     // علاقة القراءة مع العملاء
     public function readers()
     {
         return $this->belongsToMany(Customer::class, 'notification_reads')
-                    ->withPivot('read_at', 'is_starred', 'is_archived')
-                    ->withTimestamps();
+            ->withPivot('read_at', 'is_starred', 'is_archived')
+            ->withTimestamps();
     }
 }

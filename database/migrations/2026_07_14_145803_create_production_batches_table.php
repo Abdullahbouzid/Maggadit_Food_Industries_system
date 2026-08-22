@@ -1,4 +1,5 @@
 <?php
+
 // database/migrations/2026_07_14_000001_create_production_batches_table.php
 
 use Illuminate\Database\Migrations\Migration;

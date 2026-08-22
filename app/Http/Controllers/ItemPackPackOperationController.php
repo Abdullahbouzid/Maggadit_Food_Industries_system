@@ -1,10 +1,10 @@
 <?php
+
 // app/Http/Controllers/ItemPackPackOperationController.php
 
 namespace App\Http\Controllers;
 
 use App\Models\ItemPack;
-use App\Models\PackOperation;
 use Illuminate\Http\Request;
 
 class ItemPackPackOperationController extends Controller
@@ -26,6 +26,7 @@ class ItemPackPackOperationController extends Controller
     {
         $pack = ItemPack::findOrFail($itemPackId);
         $pack->packOperations()->detach($packOperationId);
+
         return response()->json(['success' => true]);
     }
 }

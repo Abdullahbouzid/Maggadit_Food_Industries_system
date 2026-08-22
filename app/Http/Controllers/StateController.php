@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\State;
-use App\Models\Country;
-use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\StatesExport;
 use App\Imports\StatesImport;
+use App\Models\Country;
+use App\Models\State;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StateController extends Controller
 {
@@ -17,10 +19,10 @@ class StateController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name_en', 'like', "%{$search}%")
-                  ->orWhere('name_ar', 'like', "%{$search}%");
+                    ->orWhere('name_en', 'like', "%{$search}%")
+                    ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
 
@@ -46,6 +48,7 @@ class StateController extends Controller
     public function create()
     {
         $countries = Country::orderBy('name')->get();
+
         return view('dashboard.data_definition.w&v.state.create', compact('countries'));
     }
 
@@ -74,13 +77,14 @@ class StateController extends Controller
     public function edit(State $state)
     {
         $countries = Country::orderBy('name')->get();
+
         return view('dashboard.data_definition.w&v.state.edit', compact('state', 'countries'));
     }
 
     public function update(Request $request, State $state)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:50|unique:states,code,' . $state->id,
+            'code' => 'required|string|max:50|unique:states,code,'.$state->id,
             'country_id' => 'required|exists:countries,id',
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
@@ -97,6 +101,7 @@ class StateController extends Controller
     public function destroy(State $state)
     {
         $state->delete();
+
         return redirect()->route('states.index')->with('success', 'State deleted successfully.');
     }
 
@@ -104,9 +109,9 @@ class StateController extends Controller
     public function export(Request $request)
     {
         try {
-            return Excel::download(new StatesExport($request), 'states_' . date('Y-m-d_Hi') . '.xlsx');
+            return Excel::download(new StatesExport($request), 'states_'.date('Y-m-d_Hi').'.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: ' . $e->getMessage());
+            return back()->with('error', 'Export failed: '.$e->getMessage());
         }
     }
 
@@ -114,15 +119,22 @@ class StateController extends Controller
     public function downloadTemplate()
     {
         try {
-            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
-                public function collection() { return collect([]); }
-                public function headings(): array {
+            $export = new class implements FromCollection, WithHeadings
+            {
+                public function collection()
+                {
+                    return collect([]);
+                }
+
+                public function headings(): array
+                {
                     return ['code', 'name_en', 'name_ar', 'description', 'is_active', 'sort_order'];
                 }
             };
+
             return Excel::download($export, 'states_template.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Template download failed: ' . $e->getMessage());
+            return back()->with('error', 'Template download failed: '.$e->getMessage());
         }
     }
 
@@ -130,7 +142,7 @@ class StateController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv'
+            'import_file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
         try {
@@ -146,7 +158,7 @@ class StateController extends Controller
 
             return redirect()->route('states.index')->with('success', 'States imported successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: ' . $e->getMessage());
+            return back()->with('error', 'Import failed: '.$e->getMessage());
         }
     }
 }

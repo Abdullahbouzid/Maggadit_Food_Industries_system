@@ -3,28 +3,32 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Validator as ValidatorFacade;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Session;
-
-use App\Models\Customer;
-use App\Models\Brand;
-use App\Models\Item;
-use App\Models\Category;
+use App\Http\Traits\Customer\JsonFieldParser;
 use App\Models\Banner;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Faq;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Item;
+use App\Models\Notification;
+use App\Models\Offer;
+use App\Models\OrganizationAbout;
+use App\Services\Customer\ImagePathService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
 
 class CustomerAppController extends Controller
 {
+    use JsonFieldParser;
+
     private $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
+
+    public function __construct(private ImagePathService $imagePathService) {}
 
     /**
      * عرض لوحة التحكم الرئيسية (Dashboard)
@@ -49,10 +53,10 @@ class CustomerAppController extends Controller
                 $brands = $this->parseData($data['brands'] ?? []);
                 $products = $this->parseData($data['products'] ?? []);
             } else {
-                Log::warning("Dashboard API returned non-success status: " . $response->status());
+                Log::warning('Dashboard API returned non-success status: '.$response->status());
             }
         } catch (\Exception $e) {
-            Log::error("Dashboard API Error: " . $e->getMessage());
+            Log::error('Dashboard API Error: '.$e->getMessage());
         }
 
         // إذا كانت البيانات فارغة، نستخدم البيانات المحلية كـ Fallback
@@ -72,7 +76,7 @@ class CustomerAppController extends Controller
             });
         }
         if ($products->isEmpty()) {
-            $products = Item::all()->map(function ($item) {
+            $products = Item::limit(50)->get()->map(function ($item) {
                 return $this->applyImagePath($item, 'image');
             });
         }
@@ -80,7 +84,37 @@ class CustomerAppController extends Controller
         $customer = Auth::guard('customer')->user();
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
-        return view('app_android.customer_dashboard', compact('banners', 'categories', 'brands', 'products', 'favoriteItemIds'));
+        $offers = collect();
+        try {
+            $offers = Offer::with(['item', 'itemPack.packType'])
+                ->active()
+                ->get()
+                ->map(function ($offer) {
+                    $item = $offer->item;
+                    $defaultPack = $item ? $item->packs->first() : null;
+                    $offerPack = $offer->itemPack;
+
+                    return (object) [
+                        'id' => $offer->id,
+                        'title' => $offer->title,
+                        'description' => $offer->description,
+                        'item_id' => $offer->item_id,
+                        'item_pack_id' => $offer->item_pack_id,
+                        'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
+                        'pack_type' => $offerPack ? ($offerPack->packType->name_ar ?? $offerPack->packType->name_en ?? '') : ($defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : ''),
+                        'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
+                        'old_price' => (float) $offer->old_price,
+                        'new_price' => (float) $offer->new_price,
+                        'discount_percentage' => (float) $offer->discount_percentage,
+                        'start_date' => $offer->start_date?->format('Y-m-d H:i'),
+                        'end_date' => $offer->end_date?->format('Y-m-d H:i'),
+                    ];
+                });
+        } catch (\Exception $e) {
+            Log::error('Offers Error: '.$e->getMessage());
+        }
+
+        return view('app_android.customer_dashboard', compact('banners', 'categories', 'brands', 'products', 'favoriteItemIds', 'offers'));
     }
 
     /**
@@ -88,30 +122,9 @@ class CustomerAppController extends Controller
      */
     public function categoriesIndex()
     {
-        try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/categories");
-            if ($response->successful()) {
-                $data = $response->json();
-                // جلب المصفوفة الصحيحة من الرد
-                $rawData = $data['categories'] ?? ($data['data'] ?? $data);
+        $categories = Category::where('show_in_customer_app', true)->get()->map(function ($category) {
+            $category->products_count = $category->items()->where('is_inactive', false)->count();
 
-                // التأكد أننا لا نمرر المصفوفة الكاملة إذا كانت تحتوي على success
-                if (isset($data['success']) && !isset($data['data']) && !isset($data['categories'])) {
-                     $rawData = []; // أو تعامل خاص
-                }
-
-                $categories = $this->parseData(is_array($rawData) ? $rawData : []);
-
-                if ($categories->isNotEmpty()) {
-                    return view('app_android.categories.index', compact('categories'));
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("Categories API Error: " . $e->getMessage());
-        }
-
-        // Fallback إلى قاعدة البيانات المحلية
-        $categories = Category::all()->map(function ($category) {
             return $this->applyImagePath($category, 'image');
         });
 
@@ -130,13 +143,7 @@ class CustomerAppController extends Controller
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/categories/{$id}");
             if ($response->successful()) {
                 $data = $response->json();
-                // جلب بيانات الفئة من المفتاح الصحيح
                 $categoryData = $data['category'] ?? $data;
-
-                // التأكد من أنها ليست الاستجابة الكاملة
-                if (isset($data['success']) && !isset($data['category'])) {
-                     // محاولة إيجاد البيانات إذا كانت الاستجابة غير مباشرة
-                }
 
                 $category = (object) $categoryData;
                 $category = $this->applyImagePath($category, 'image');
@@ -146,21 +153,26 @@ class CustomerAppController extends Controller
                 } elseif (isset($data['items'])) {
                     $items = $this->parseData($data['items']);
                 }
+
+                if (is_array($category->items ?? null)) {
+                    $category->items = collect($category->items);
+                }
             }
         } catch (\Exception $e) {
-            Log::error("Category Show API Error: " . $e->getMessage());
+            Log::error('Category Show API Error: '.$e->getMessage());
         }
 
-        if (!$category) {
+        if (! $category) {
             $category = Category::find($id);
-            if (!$category) {
+            if (! $category) {
                 abort(404, 'الفئة غير موجودة');
             }
             $category = $this->applyImagePath($category, 'image');
         }
 
+        $category->products_count = $category->items->count() ?? ($category->products_count ?? 0);
+
         if ($items->isEmpty()) {
-            // جلب المنتجات التابعة لهذه الفئة محلياً
             $items = Item::where('category_id', $id)->get()->map(function ($item) {
                 return $this->applyImagePath($item, 'image');
             });
@@ -177,30 +189,9 @@ class CustomerAppController extends Controller
      */
     public function brandsIndex()
     {
-        try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands");
-            if ($response->successful()) {
-                $data = $response->json();
-                // جلب المصفوفة الصحيحة من الرد
-                $rawData = $data['brands'] ?? ($data['data'] ?? $data);
+        $brands = Brand::where('show_in_customer_app', true)->get()->map(function ($brand) {
+            $brand->products_count = $brand->items()->where('is_inactive', false)->count();
 
-                // إذا كان الرد يحتوي على success ولم نجد مفتاحاً للماركات، فهذا يعني أننا حصلنا على الرد كاملاً
-                if (isset($data['success']) && !isset($data['data']) && !isset($data['brands'])) {
-                    $rawData = [];
-                }
-
-                $brands = $this->parseData(is_array($rawData) ? $rawData : []);
-
-                if ($brands->isNotEmpty()) {
-                    return view('app_android.brands.index', compact('brands'));
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("Brands API Error: " . $e->getMessage());
-        }
-
-        // Fallback إلى قاعدة البيانات المحلية
-        $brands = Brand::all()->map(function ($brand) {
             return $this->applyImagePath($brand, 'logo');
         });
 
@@ -219,12 +210,7 @@ class CustomerAppController extends Controller
             $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands/{$id}");
             if ($response->successful()) {
                 $data = $response->json();
-                // جلب بيانات الماركة من المفتاح الصحيح
                 $brandData = $data['brand'] ?? $data;
-
-                if (isset($data['success']) && !isset($data['brand'])) {
-                    // معالجة
-                }
 
                 $brand = (object) $brandData;
                 $brand = $this->applyImagePath($brand, 'logo');
@@ -234,21 +220,26 @@ class CustomerAppController extends Controller
                 } elseif (isset($data['items'])) {
                     $items = $this->parseData($data['items']);
                 }
+
+                if (is_array($brand->items ?? null)) {
+                    $brand->items = collect($brand->items);
+                }
             }
         } catch (\Exception $e) {
-            Log::error("Brand Show API Error: " . $e->getMessage());
+            Log::error('Brand Show API Error: '.$e->getMessage());
         }
 
-        if (!$brand) {
+        if (! $brand) {
             $brand = Brand::find($id);
-            if (!$brand) {
+            if (! $brand) {
                 abort(404, 'الماركة غير موجودة');
             }
             $brand = $this->applyImagePath($brand, 'logo');
         }
 
+        $brand->products_count = $brand->items->count() ?? ($brand->products_count ?? 0);
+
         if ($items->isEmpty()) {
-            // جلب المنتجات التابعة لهذه الماركة محلياً
             $items = Item::where('brand_id', $id)->get()->map(function ($item) {
                 return $this->applyImagePath($item, 'image');
             });
@@ -274,7 +265,7 @@ class CustomerAppController extends Controller
                 $rawData = $data['products'] ?? ($data['data'] ?? $data);
 
                 // إذا كان الرد يحتوي على success ولم نجد مفتاحاً للمنتجات، فهذا يعني أننا حصلنا على الرد كاملاً
-                if (isset($data['success']) && !isset($data['data']) && !isset($data['products'])) {
+                if (isset($data['success']) && ! isset($data['data']) && ! isset($data['products'])) {
                     $rawData = [];
                 }
 
@@ -288,15 +279,16 @@ class CustomerAppController extends Controller
                 if ($items->isNotEmpty()) {
                     $customer = Auth::guard('customer')->user();
                     $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
                     return view('app_android.products.index', compact('items', 'favoriteItemIds'));
                 }
             }
         } catch (\Exception $e) {
-            Log::error("Products API Error: " . $e->getMessage());
+            Log::error('Products API Error: '.$e->getMessage());
         }
 
         // Fallback: جلب من قاعدة البيانات المحلية
-        $items = Item::all()->map(function ($item) {
+        $items = Item::limit(50)->get()->map(function ($item) {
             return $this->applyImagePath($item, 'image');
         });
 
@@ -305,6 +297,7 @@ class CustomerAppController extends Controller
 
         return view('app_android.products.index', compact('items', 'favoriteItemIds'));
     }
+
     /**
      * عرض العروض
      */
@@ -317,7 +310,7 @@ class CustomerAppController extends Controller
                 // جلب المصفوفة الصحيحة من الرد
                 $rawData = $data['offers'] ?? ($data['data'] ?? $data);
 
-                if (isset($data['success']) && !isset($data['data']) && !isset($data['offers'])) {
+                if (isset($data['success']) && ! isset($data['data']) && ! isset($data['offers'])) {
                     $rawData = [];
                 }
 
@@ -328,11 +321,12 @@ class CustomerAppController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            Log::error("Offers API Error: " . $e->getMessage());
+            Log::error('Offers API Error: '.$e->getMessage());
         }
 
         // Fallback: بيانات افتراضية
         $offers = collect();
+
         return view('app_android.offers.index', compact('offers'));
     }
 
@@ -341,7 +335,7 @@ class CustomerAppController extends Controller
      */
     private function parseData($items)
     {
-        return collect($items)->filter(function($item) {
+        return collect($items)->filter(function ($item) {
             // التأكد من أن العنصر هو مصفوفة أو كائن ويحتوي على معرف (id)
             if (is_array($item)) {
                 return isset($item['id']);
@@ -349,109 +343,44 @@ class CustomerAppController extends Controller
             if (is_object($item)) {
                 return isset($item->id);
             }
+
             return false;
         })->map(function ($item) {
             $item = (object) $item;
 
             // معالجة الصور حسب الحقل المتاح
             if (isset($item->image)) {
-                $item->image = $this->normalizeImagePath($item->image);
+                $item->image = $this->imagePathService->normalize($item->image);
             }
             if (isset($item->logo)) {
-                $item->logo = $this->normalizeImagePath($item->logo);
+                $item->logo = $this->imagePathService->normalize($item->logo);
             }
 
             return $item;
         });
     }
 
-    /**
-     * تطبيق تطبيع مسار الصورة على نموذج أو كائن معين
-     * @param mixed $model  النموذج أو الكائن
-     * @param string $field اسم الحقل الذي يحوي المسار (image, logo, ...)
-     * @return mixed
-     */
     private function applyImagePath($model, string $field)
     {
         if (is_object($model)) {
-            // التحقق مما إذا كان كائناً عادياً أو نموذج Eloquent
             if (isset($model->$field) || (method_exists($model, 'getAttribute') && $model->getAttribute($field) !== null)) {
                 $value = $model->$field;
-                if (!empty($value)) {
-                    $model->$field = $this->normalizeImagePath($value);
+                if (! empty($value)) {
+                    $model->$field = $this->imagePathService->normalize($value);
                 } else {
                     $model->$field = null;
                 }
             }
         } elseif (is_array($model) && isset($model[$field])) {
             $value = $model[$field];
-            if (!empty($value)) {
-                $model[$field] = $this->normalizeImagePath($value);
+            if (! empty($value)) {
+                $model[$field] = $this->imagePathService->normalize($value);
             } else {
                 $model[$field] = null;
             }
         }
+
         return $model;
-    }
-
-    /**
-     * توحيد مسار الصورة: إذا كان رابطاً كاملاً نستخدمه، وإلا نضيفه إلى مجلد uploads أو نربطه بالسيرفر الرئيسي
-     */
-    private function normalizeImagePath($path)
-    {
-        if (empty($path)) {
-            return null;
-        }
-
-        // 1. إذا كان رابطاً كاملاً (http/https)
-        if (filter_var($path, FILTER_VALIDATE_URL)) {
-            // إذا كان الرابط يشير للسيرفر الرئيسي بمسار storage للصور التي نعلم أنها في uploads، نحاول تصحيحه
-            if (str_contains($path, 'hostingersite.com/storage/')) {
-                if (str_contains($path, '/items/') || str_contains($path, '/categories/') || str_contains($path, '/brands/')) {
-                    return str_replace('/storage/', '/uploads/', $path);
-                }
-            }
-            return $path;
-        }
-
-        $cleanPath = ltrim($path, '/');
-        $baseUrlDomain = 'https://blue-beaver-923812.hostingersite.com';
-
-        // 2. معالجة المسارات التي تبدأ بـ 'storage/'
-        if (str_starts_with($cleanPath, 'storage/')) {
-            $relativePath = substr($cleanPath, 8);
-            if (Storage::disk('public')->exists($relativePath)) {
-                return asset('storage/' . $relativePath);
-            }
-            // إذا لم يوجد محلياً، نرجعه من السيرفر الرئيسي
-            return $baseUrlDomain . '/storage/' . $relativePath;
-        }
-
-        // 3. معالجة المسارات التي تبدأ بـ 'uploads/'
-        if (str_starts_with($cleanPath, 'uploads/')) {
-            $relativePath = substr($cleanPath, 8);
-            if (file_exists(public_path('uploads/' . $relativePath))) {
-                return asset('uploads/' . $relativePath);
-            }
-            return $baseUrlDomain . '/uploads/' . $relativePath;
-        }
-
-        // 4. البحث الافتراضي في uploads ثم storage
-        if (file_exists(public_path('uploads/' . $cleanPath))) {
-            return asset('uploads/' . $cleanPath);
-        }
-
-        if (Storage::disk('public')->exists($cleanPath)) {
-            return asset('storage/' . $cleanPath);
-        }
-
-        // 5. الحل الأخير: ربط المسار بالسيرفر الرئيسي (بما أن معظم الصور مخزنة هناك في uploads)
-        // إذا كان المسار يحتوي على 'items' أو 'categories' أو 'brands'، نرجحه من uploads السيرفر
-        if (str_contains($cleanPath, 'items/') || str_contains($cleanPath, 'categories/') || str_contains($cleanPath, 'brands/')) {
-            return $baseUrlDomain . '/uploads/' . $cleanPath;
-        }
-
-        return $baseUrlDomain . '/storage/' . $cleanPath;
     }
 
     /**
@@ -460,6 +389,7 @@ class CustomerAppController extends Controller
     public function myInfo()
     {
         $customer = Auth::guard('customer')->user();
+
         return view('app_android.more.my_info', compact('customer'));
     }
 
@@ -504,11 +434,11 @@ class CustomerAppController extends Controller
                 // معالجة صورة الأفتار محلياً إذا تغيرت
                 if ($request->hasFile('avatar')) {
                     $file = $request->file('avatar');
-                    $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
                     $file->move(public_path('uploads/customers'), $filename);
 
-                    if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
-                        @unlink(public_path('uploads/customers/' . $customer->avatar));
+                    if ($customer->avatar && file_exists(public_path('uploads/customers/'.$customer->avatar))) {
+                        @unlink(public_path('uploads/customers/'.$customer->avatar));
                     }
 
                     $customer->avatar = $filename;
@@ -516,11 +446,11 @@ class CustomerAppController extends Controller
                     $extension = explode('/', explode(':', substr($request->avatar, 0, strpos($request->avatar, ';')))[1])[1];
                     $dataBase64 = substr($request->avatar, strpos($request->avatar, ',') + 1);
                     $decodedData = base64_decode($dataBase64);
-                    $filename = $remoteUser['avatar'] ?? (time() . '_' . uniqid() . '.' . $extension);
-                    file_put_contents(public_path('uploads/customers/' . $filename), $decodedData);
+                    $filename = $remoteUser['avatar'] ?? (time().'_'.uniqid().'.'.$extension);
+                    file_put_contents(public_path('uploads/customers/'.$filename), $decodedData);
 
-                    if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
-                        @unlink(public_path('uploads/customers/' . $customer->avatar));
+                    if ($customer->avatar && file_exists(public_path('uploads/customers/'.$customer->avatar))) {
+                        @unlink(public_path('uploads/customers/'.$customer->avatar));
                     }
 
                     $customer->avatar = $filename;
@@ -533,7 +463,7 @@ class CustomerAppController extends Controller
                 $customer->username = $remoteUser['username'];
 
                 if ($request->filled('password')) {
-                    $customer->password = \Illuminate\Support\Facades\Hash::make($request->password);
+                    $customer->password = Hash::make($request->password);
                 }
 
                 $customer->save();
@@ -541,6 +471,7 @@ class CustomerAppController extends Controller
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json(['success' => true, 'message' => 'تم تحديث البيانات بنجاح', 'customer' => $customer]);
                 }
+
                 return redirect()->back()->with('success', 'تم تحديث البيانات بنجاح');
             }
 
@@ -548,13 +479,15 @@ class CustomerAppController extends Controller
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['errors' => $errors], 422);
             }
+
             return redirect()->back()->withErrors($errors)->withInput();
 
         } catch (\Exception $e) {
-            Log::error("Update Profile Error: " . $e->getMessage());
+            Log::error('Update Profile Error: '.$e->getMessage());
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['errors' => ['error' => ['حدث خطأ أثناء الاتصال بالسيرفر']]], 500);
             }
+
             return redirect()->back()->with('error', 'حدث خطأ أثناء الاتصال بالسيرفر');
         }
     }
@@ -572,18 +505,18 @@ class CustomerAppController extends Controller
             if ($response->successful()) {
                 $data = $response->json();
                 if (isset($data['faq'])) {
-                    $faqs = collect($data['faq'])->map(function($item) {
+                    $faqs = collect($data['faq'])->map(function ($item) {
                         return (object) $item;
                     });
                 }
             }
         } catch (\Exception $e) {
-            Log::error("FAQ API Error: " . $e->getMessage());
+            Log::error('FAQ API Error: '.$e->getMessage());
         }
 
         // Fallback إلى قاعدة البيانات المحلية
         if ($faqs->isEmpty()) {
-            $faqs = \App\Models\Faq::all();
+            $faqs = Faq::all();
         }
 
         // تجميع الأسئلة حسب الفئة
@@ -598,8 +531,8 @@ class CustomerAppController extends Controller
     public function notificationsIndex()
     {
         $notifications = collect();
-        $unreadCount   = 0;
-        $token         = Session::get('api_token');
+        $unreadCount = 0;
+        $token = Session::get('api_token');
 
         // محاولة جلب الإشعارات عبر API
         if ($token) {
@@ -611,15 +544,15 @@ class CustomerAppController extends Controller
 
                 if ($response->successful()) {
                     $data = $response->json();
-                    if (!empty($data['notifications'])) {
-                        $notifications = collect($data['notifications'])->map(fn($item) => (object) $item);
-                        $unreadCount   = $data['unread_count'] ?? count($notifications);
+                    if (! empty($data['notifications'])) {
+                        $notifications = collect($data['notifications'])->map(fn ($item) => (object) $item);
+                        $unreadCount = $data['unread_count'] ?? count($notifications);
                     }
                 } else {
-                    Log::warning("Notifications API non-success: " . $response->status() . ' body: ' . substr($response->body(), 0, 200));
+                    Log::warning('Notifications API non-success: '.$response->status().' body: '.substr($response->body(), 0, 200));
                 }
             } catch (\Exception $e) {
-                Log::error("Notifications API Error: " . $e->getMessage());
+                Log::error('Notifications API Error: '.$e->getMessage());
             }
         }
 
@@ -628,27 +561,27 @@ class CustomerAppController extends Controller
             $customer = Auth::guard('customer')->user();
             $customerId = $customer?->id;
 
-            $dbNotifs = \App\Models\Notification::where(function($query) use ($customerId) {
+            $dbNotifs = Notification::where(function ($query) use ($customerId) {
                 $query->whereJsonContains('customers', 'all')
-                      ->orWhere('channel', 'all');
+                    ->orWhere('channel', 'all');
                 if ($customerId) {
-                    $query->orWhere(function($q) use ($customerId) {
-                        $q->whereJsonContains('customers', (string)$customerId)
-                          ->orWhereJsonContains('customers', $customerId);
+                    $query->orWhere(function ($q) use ($customerId) {
+                        $q->whereJsonContains('customers', (string) $customerId)
+                            ->orWhereJsonContains('customers', $customerId);
                     });
                 }
             })
-            ->where('is_sent', true)
-            ->latest()
-            ->get();
+                ->where('is_sent', true)
+                ->latest()
+                ->get();
 
-            $notifications = $dbNotifs->map(function($n) {
+            $notifications = $dbNotifs->map(function ($n) {
                 return (object) [
-                    'id'         => $n->id,
-                    'subject'    => $n->subject_ar ?: $n->subject_en,
-                    'body'       => $n->body_ar ?: $n->body_en,
-                    'image'      => null,
-                    'icon_type'  => $n->icon_type ?? 'notification',
+                    'id' => $n->id,
+                    'subject' => $n->subject_ar ?: $n->subject_en,
+                    'body' => $n->body_ar ?: $n->body_en,
+                    'image' => null,
+                    'icon_type' => $n->icon_type ?? 'notification',
                     'created_at' => $n->created_at->diffForHumans(),
                 ];
             });
@@ -661,7 +594,7 @@ class CustomerAppController extends Controller
     public function favorites(Request $request)
     {
         $customer = $request->user('customer') ?: Auth::guard('customer')->user();
-        if (!$customer) {
+        if (! $customer) {
             return redirect()->route('mobile.login');
         }
 
@@ -669,7 +602,7 @@ class CustomerAppController extends Controller
         $favoriteItemIds = $customer->favorites()->pluck('item_id')->toArray();
 
         $favoriteItems = collect();
-        if (!empty($favoriteItemIds)) {
+        if (! empty($favoriteItemIds)) {
             // We fetch the items from local DB as fallback
             $favoriteItems = Item::whereIn('id', $favoriteItemIds)->get()->map(function ($item) {
                 return collect([
@@ -677,13 +610,12 @@ class CustomerAppController extends Controller
                     'name_ar' => $item->name,
                     'name_en' => $item->name_en ?? $item->name,
                     'price' => $item->price,
-                    'image' => $this->normalizeImagePath($item->image),
-               
+                    'image' => $this->imagePathService->normalize($item->image),
 
-                    'inStock' => true // Placeholder
+                    'inStock' => true, // Placeholder
                 ]);
             });
-            
+
             // Try fetching from API to get fresh data if possible
             try {
                 $token = Session::get('api_token');
@@ -696,12 +628,12 @@ class CustomerAppController extends Controller
                             $rawData = $rawData['data'];
                         }
                         $items = $this->parseData(is_array($rawData) ? $rawData : []);
-                        
+
                         if ($items->isNotEmpty()) {
                             // Filter API items by favorite IDs
-                            $favoriteItems = $items->filter(function($item) use ($favoriteItemIds) {
+                            $favoriteItems = $items->filter(function ($item) use ($favoriteItemIds) {
                                 return in_array($item->id, $favoriteItemIds);
-                            })->map(function($item) {
+                            })->map(function ($item) {
                                 return collect([
                                     'id' => $item->id,
                                     'name_ar' => $item->name ?? $item->name_en,
@@ -709,14 +641,14 @@ class CustomerAppController extends Controller
                                     'price' => $item->price ?? 0,
                                     'image' => $item->image,
                                     'discount' => $item->discount ?? 0,
-                                    'inStock' => true // Placeholder if API doesn't return stock
+                                    'inStock' => true, // Placeholder if API doesn't return stock
                                 ]);
                             })->values();
                         }
                     }
                 }
             } catch (\Exception $e) {
-                Log::error("Favorites API Error: " . $e->getMessage());
+                Log::error('Favorites API Error: '.$e->getMessage());
             }
         }
 
@@ -726,12 +658,12 @@ class CustomerAppController extends Controller
     public function toggleFavorite(Request $request)
     {
         $customer = $request->user('customer') ?: Auth::guard('customer')->user();
-        if (!$customer) {
+        if (! $customer) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
         $request->validate([
-            'item_id' => 'required|integer'
+            'item_id' => 'required|integer',
         ]);
 
         $itemId = $request->item_id;
@@ -740,9 +672,11 @@ class CustomerAppController extends Controller
 
         if ($favorite) {
             $favorite->delete();
+
             return response()->json(['success' => true, 'is_favorite' => false, 'message' => 'تمت الإزالة من المفضلة']);
         } else {
             $customer->favorites()->create(['item_id' => $itemId]);
+
             return response()->json(['success' => true, 'is_favorite' => true, 'message' => 'تمت الإضافة للمفضلة']);
         }
     }
@@ -762,10 +696,10 @@ class CustomerAppController extends Controller
                 $product = $this->applyImagePath($product, 'image');
             }
         } catch (\Exception $e) {
-            Log::error("Product Show API Error: " . $e->getMessage());
+            Log::error('Product Show API Error: '.$e->getMessage());
         }
 
-        if (!$product) {
+        if (! $product) {
             $product = Item::find($id);
             if ($product) {
                 $product = $this->applyImagePath($product, 'image');
@@ -783,6 +717,7 @@ class CustomerAppController extends Controller
     public function more(Request $request)
     {
         $customer = $request->user('customer') ?: Auth::guard('customer')->user();
+
         return view('app_android.more', compact('customer'));
     }
 
@@ -796,14 +731,14 @@ class CustomerAppController extends Controller
 
         if ($customer) {
             $activeOrg = $customer->activeOrganization;
-            if (!$activeOrg) {
+            if (! $activeOrg) {
                 $activeOrg = $customer->activeOrganizations()->first();
             }
             if ($activeOrg) {
                 $about = $activeOrg->about()->where('is_active', true)->first() ?: $activeOrg->about;
             }
         } else {
-            $about = \App\Models\OrganizationAbout::where('is_active', true)->first();
+            $about = OrganizationAbout::where('is_active', true)->first();
         }
 
         return view('app_android.more.about_us', compact('about'));
@@ -819,7 +754,7 @@ class CustomerAppController extends Controller
 
         if ($customer) {
             $activeOrg = $customer->activeOrganization;
-            if (!$activeOrg) {
+            if (! $activeOrg) {
                 $activeOrg = $customer->activeOrganizations()->first();
             }
             if ($activeOrg) {
@@ -841,59 +776,105 @@ class CustomerAppController extends Controller
                 'statistics' => $this->parseStatsField($about->statistics),
                 'image_url' => $about->image_url,
                 'cover_image_url' => $about->cover_image_url,
-            ] : null
+            ] : null,
         ]);
     }
 
-   private function parseJsonField($field)
-   {
-       if (empty($field)) {
-           return [];
-       }
+    public function checkout(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+        }
 
-       if (is_array($field)) {
-           return $field;
-       }
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:items,id',
+            'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.price' => 'required|numeric',
+        ]);
 
-       if (is_string($field)) {
-           $decoded = json_decode($field, true);
-           if (json_last_error() === JSON_ERROR_NONE) {
-               return $decoded ?? [];
-           }
-       }
+        $totalAmount = 0;
+        foreach ($request->items as $item) {
+            $totalAmount += ($item['price'] * $item['quantity']);
+        }
 
-       return [];
-   }
+        // يمكن إضافة رسوم توصيل
+        $totalAmount += 15;
 
-   private function parseStatsField($field)
-   {
-       if (empty($field)) {
-           return [];
-       }
+        // إنشاء الفاتورة (Invoice)
+        $invoice = Invoice::create([
+            'customer_id' => $customer->id,
+            'invoice_number' => 'INV-'.strtoupper(uniqid()),
+            'invoice_date' => now(),
+            'total_amount' => $totalAmount,
+            'status' => 'pending',
+            'notes' => 'تم الطلب من التطبيق',
+        ]);
 
-       $stats = [];
+        // إضافة الأصناف للفاتورة
+        foreach ($request->items as $item) {
+            InvoiceItem::create([
+                'invoice_id' => $invoice->id,
+                'item_id' => $item['id'],
+                'warehouse_id' => null, // يتم تحديده لاحقاً من قبل المسؤول في لوحة التحكم
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['price'],
+                'subtotal' => $item['price'] * $item['quantity'],
+            ]);
+        }
 
-       if (is_array($field)) {
-           $stats = $field;
-       } elseif (is_string($field)) {
-           $decoded = json_decode($field, true);
-           if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-               $stats = $decoded;
-           }
-       }
+        return response()->json([
+            'success' => true,
+            'message' => 'تم استلام طلبك بنجاح! جاري معالجته.',
+            'invoice_id' => $invoice->id,
+        ]);
+    }
 
-       // If stats is a flat array, convert to key-value pairs
-       if (!empty($stats) && !isset($stats[0]['key']) && !isset($stats[0]['value'])) {
-           $formatted = [];
-           $keys = array_keys($stats);
-           foreach ($keys as $key) {
-               if (!is_numeric($key) && !is_null($stats[$key])) {
-                   $formatted[] = ['key' => $key, 'value' => $stats[$key]];
-               }
-           }
-           return $formatted;
-       }
+    public function orderHistory(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+        if (! $customer) {
+            return redirect()->route('mobile.login');
+        }
 
-       return $stats;
-   }
+        $invoices = Invoice::where('customer_id', $customer->id)
+            ->with(['items.item' => function ($q) {
+                $q->select('id', 'name_ar', 'name_en');
+            }, 'items.warehouse'])
+            ->orderBy('invoice_date', 'desc')
+            ->get();
+
+        $orders = $invoices->map(function ($invoice) {
+            return [
+                'id' => $invoice->invoice_number,
+                'date' => $invoice->invoice_date->format('Y-m-d'),
+                'total' => $invoice->total_amount,
+                'status' => $invoice->status,
+                'status_text' => $invoice->status == 'delivered' || $invoice->status == 'completed' ? 'مكتمل' :
+                                ($invoice->status == 'pending' ? 'قيد المعالجة' : 'ملغي'),
+                'items' => $invoice->items->map(function ($item) {
+                    return [
+                        'name' => $item->item->name_ar ?? $item->item->name_en ?? 'منتج',
+                        'qty' => $item->quantity,
+                        'price' => $item->unit_price,
+                        'warehouse' => $item->warehouse ? $item->warehouse->name : 'غير محدد',
+                    ];
+                })->toArray(),
+                'address' => 'العنوان المسجل (افتراضي)',
+                'phone' => $customer->username ?? 'غير متوفر',
+                'payment_method' => 'عند الاستلام',
+                'delivery_fee' => 15,
+                'coupon_discount' => 0,
+            ];
+        })->toArray();
+
+        $stats = [
+            'all' => $invoices->count(),
+            'pending' => $invoices->where('status', 'pending')->count(),
+            'delivered' => $invoices->whereIn('status', ['delivered', 'completed'])->count(),
+        ];
+
+        return view('app_android.more.order_history', compact('orders', 'stats'));
+    }
 }

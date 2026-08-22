@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SalesOrderType;
-use Illuminate\Http\Request;
 use App\Exports\SalesOrderTypesExport;
 use App\Imports\SalesOrderTypesImport;
+use App\Models\SalesOrderType;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SalesOrderTypeController extends Controller
@@ -16,9 +18,9 @@ class SalesOrderTypeController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
@@ -33,7 +35,9 @@ class SalesOrderTypeController extends Controller
         $perPage = $request->get('per_page', 20);
         if ($perPage === 'all') {
             $perPage = $query->count();
-            if ($perPage == 0) $perPage = 1;
+            if ($perPage == 0) {
+                $perPage = 1;
+            }
         }
 
         $salesOrderTypes = $query->paginate($perPage)->appends($request->query());
@@ -86,8 +90,8 @@ class SalesOrderTypeController extends Controller
     public function update(Request $request, SalesOrderType $salesOrderType)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:sales_order_types,name,' . $salesOrderType->id,
-            'code' => 'required|string|max:50|unique:sales_order_types,code,' . $salesOrderType->id,
+            'name' => 'required|string|max:255|unique:sales_order_types,name,'.$salesOrderType->id,
+            'code' => 'required|string|max:50|unique:sales_order_types,code,'.$salesOrderType->id,
             'active' => 'boolean',
             'default' => 'boolean',
         ]);
@@ -110,6 +114,7 @@ class SalesOrderTypeController extends Controller
                 ->with('error', 'Cannot delete the default Sales Order Type.');
         }
         $salesOrderType->delete();
+
         return redirect()->route('sales-order-types.index')
             ->with('success', 'Sales Order Type deleted successfully.');
     }
@@ -118,9 +123,9 @@ class SalesOrderTypeController extends Controller
     public function export(Request $request)
     {
         try {
-            return Excel::download(new SalesOrderTypesExport($request), 'sales_order_types_' . date('Y-m-d_Hi') . '.xlsx');
+            return Excel::download(new SalesOrderTypesExport($request), 'sales_order_types_'.date('Y-m-d_Hi').'.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: ' . $e->getMessage());
+            return back()->with('error', 'Export failed: '.$e->getMessage());
         }
     }
 
@@ -128,19 +133,22 @@ class SalesOrderTypeController extends Controller
     public function downloadTemplate()
     {
         try {
-            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+            $export = new class implements FromCollection, WithHeadings
+            {
                 public function collection()
                 {
                     return collect([]);
                 }
+
                 public function headings(): array
                 {
                     return ['name', 'code', 'active', 'default'];
                 }
             };
+
             return Excel::download($export, 'sales_order_types_template.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Template download failed: ' . $e->getMessage());
+            return back()->with('error', 'Template download failed: '.$e->getMessage());
         }
     }
 
@@ -148,7 +156,7 @@ class SalesOrderTypeController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv'
+            'import_file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
         try {
@@ -165,7 +173,7 @@ class SalesOrderTypeController extends Controller
             return redirect()->route('sales-order-types.index')
                 ->with('success', 'Import successful.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: ' . $e->getMessage());
+            return back()->with('error', 'Import failed: '.$e->getMessage());
         }
     }
 }

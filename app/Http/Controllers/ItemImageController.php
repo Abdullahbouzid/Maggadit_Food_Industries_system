@@ -1,10 +1,11 @@
 <?php
+
 // app/Http/Controllers/ItemImageController.php
 
 namespace App\Http\Controllers;
 
-use App\Models\ItemImage;
 use App\Models\Item;
+use App\Models\ItemImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,18 +16,20 @@ class ItemImageController extends Controller
         $query = ItemImage::with('item');
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('item', function($q) use ($search) {
+            $query->whereHas('item', function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")->orWhere('name_en', 'like', "%{$search}%");
             });
         }
         $perPage = $request->get('per_page', 20);
         $images = $query->orderBy('sort_order')->paginate($perPage);
+
         return view('dashboard.data_definition.data_product.item_images.index', compact('images'));
     }
 
     public function create()
     {
         $items = Item::orderBy('name_en')->get();
+
         return view('dashboard.data_definition.data_product.item_images.create', compact('items'));
     }
 
@@ -58,6 +61,7 @@ class ItemImageController extends Controller
     public function edit(ItemImage $itemImage)
     {
         $items = Item::orderBy('name_en')->get();
+
         return view('dashboard.data_definition.data_product.item_images.edit', compact('itemImage', 'items'));
     }
 
@@ -87,6 +91,7 @@ class ItemImageController extends Controller
     {
         Storage::disk('uploads')->delete($itemImage->image_path);
         $itemImage->delete();
+
         return redirect()->route('item-images.index')->with('success', 'Image deleted.');
     }
 }
