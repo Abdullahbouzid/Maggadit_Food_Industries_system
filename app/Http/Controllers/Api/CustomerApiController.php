@@ -78,7 +78,7 @@ class CustomerApiController extends Controller
     public function productsIndex(Request $request)
     {
         $query = Item::where('is_inactive', false)
-            ->with(['category', 'brand', 'packs']); // packs علاقة مهمة للسعر
+            ->with(['category', 'brand', 'packs']);
 
         // تصفية حسب التصنيف
         if ($request->has('category_id')) {
@@ -87,6 +87,14 @@ class CustomerApiController extends Controller
         // تصفية حسب الماركة
         if ($request->has('brand_id')) {
             $query->where('brand_id', $request->brand_id);
+        }
+        // بحث بالاسم
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name_ar', 'like', "%{$search}%")
+                    ->orWhere('name_en', 'like', "%{$search}%");
+            });
         }
 
         $products = $query->paginate(20);
@@ -102,7 +110,7 @@ class CustomerApiController extends Controller
                 'price' => $defaultPack ? $defaultPack->price : 0,
                 'old_price' => null,
                 'rate' => 0,
-                'is_favorite' => false, // يمكن لاحقاً جلبه من المفضلة إذا كان المستخدم مسجلاً
+                'is_favorite' => false,
             ];
         });
 
