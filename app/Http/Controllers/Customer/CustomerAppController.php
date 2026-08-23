@@ -24,14 +24,7 @@ use Illuminate\Support\Facades\Session;
 
 class CustomerAppController extends Controller
 {
-    use JsonFieldParser;
-
-    private $baseUrl;
-
-    public function __construct(private ImagePathService $imagePathService)
-    {
-        $this->baseUrl = rtrim(env('CUSTOMER_APP_BASE_URL', env('APP_URL', url('/'))), '/');
-    }
+    private $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
 
     /**
      * عرض لوحة التحكم الرئيسية (Dashboard)
@@ -284,7 +277,8 @@ class CustomerAppController extends Controller
                 $data = $response->json();
                 $rawData = $data['products'] ?? ($data['data'] ?? $data);
 
-                if (isset($data['success']) && ! isset($data['data']) && ! isset($data['products'])) {
+                // إذا كان الرد يحتوي على success ولم نجد مفتاحاً للمنتجات، فهذا يعني أننا حصلنا على الرد كاملاً
+                if (isset($data['success']) && !isset($data['data']) && !isset($data['products'])) {
                     $rawData = [];
                 }
 
@@ -297,8 +291,7 @@ class CustomerAppController extends Controller
                 if ($items->isNotEmpty()) {
                     $customer = Auth::guard('customer')->user();
                     $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
-
-                    return view('app_android.products.index', compact('items', 'favoriteItemIds', 'categories', 'brands'));
+                    return view('app_android.products.index', compact('items', 'favoriteItemIds'));
                 }
             }
         } catch (\Exception $e) {
@@ -306,22 +299,7 @@ class CustomerAppController extends Controller
         }
 
         // Fallback: جلب من قاعدة البيانات المحلية
-        $query = Item::where('is_inactive', false);
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name_ar', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%");
-            });
-        }
-        if ($categoryId) {
-            $query->where('category_id', $categoryId);
-        }
-        if ($brandId) {
-            $query->where('brand_id', $brandId);
-        }
-
-        $items = $query->limit(50)->get()->map(function ($item) {
+        $items = Item::all()->map(function ($item) {
             return $this->applyImagePath($item, 'image');
         });
 
@@ -336,30 +314,41 @@ class CustomerAppController extends Controller
      */
     public function offersIndex()
     {
-        $offers = Offer::with(['item', 'itemPack.packType'])
-            ->active()
-            ->get()
-            ->map(function ($offer) {
-                $item = $offer->item;
-                $defaultPack = $item ? $item->packs->first() : null;
-                $offerPack = $offer->itemPack;
+        $offers = collect();
 
-                return (object) [
-                    'id' => $offer->id,
-                    'title' => $offer->title,
-                    'description' => $offer->description,
-                    'item_id' => $offer->item_id,
-                    'item_pack_id' => $offer->item_pack_id,
-                    'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                    'pack_type' => $offerPack ? ($offerPack->packType->name_ar ?? $offerPack->packType->name_en ?? '') : ($defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : ''),
-                    'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
-                    'old_price' => (float) $offer->old_price,
-                    'new_price' => (float) $offer->new_price,
-                    'discount_percentage' => (float) $offer->discount_percentage,
-                    'start_date' => $offer->start_date?->format('Y-m-d H:i'),
-                    'end_date' => $offer->end_date?->format('Y-m-d H:i'),
-                ];
-            });
+        try {
+            // Attempt to fetch offers from remote API
+            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/offers");
+            if ($response->successful()) {
+                $data = $response->json();
+                $rawData = $data['offers'] ?? ($data['data'] ?? $data);
+
+                if (isset($data['success']) && !isset($data['data']) && !isset($data['offers'])) {
+                    $rawData = [];
+                }
+
+                if (is_array($rawData) && isset($rawData['data']) && is_array($rawData['data'])) {
+                    $rawData = $rawData['data'];
+                }
+
+                $offers = $this->parseData(is_array($rawData) ? $rawData : []);
+
+                if ($offers->isNotEmpty()) {
+                    return view('app_android.offers.index', compact('offers'));
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("Offers API Error: " . $e->getMessage());
+        }
+
+        // Fallback: use local offers from DB if model exists, otherwise empty collection
+        try {
+            if (class_exists(\App\Models\Offer::class)) {
+                $offers = \App\Models\Offer::with(['item', 'itemPack.packType'])->active()->get();
+            }
+        } catch (\Exception $e) {
+            Log::warning('Local Offers fetch failed: ' . $e->getMessage());
+        }
 
         return view('app_android.offers.index', compact('offers'));
     }
