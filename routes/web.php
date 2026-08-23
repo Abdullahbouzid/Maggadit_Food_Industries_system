@@ -12,6 +12,11 @@ use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\Customer\CustomerAppController;
+use App\Http\Controllers\Customer\CustomerCatalogController;
+use App\Http\Controllers\Customer\CustomerDashboardController;
+use App\Http\Controllers\Customer\CustomerOrderController;
+use App\Http\Controllers\Customer\CustomerPagesController;
+use App\Http\Controllers\Customer\CustomerProfileController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
@@ -204,13 +209,13 @@ Route::get('/', function (Request $request) {
 Route::prefix('customer')->name('customer.')->group(function () {
 
     // مسارات عامة (لا تحتاج جلسة) - لعرض البيانات للمستخدم غير المسجل
-    Route::get('/categories', [CustomerAppController::class, 'categoriesIndex'])->name('categories.index');
-    Route::get('/categories/{id}', [CustomerAppController::class, 'categoriesShow'])->name('categories.show');
-    Route::get('/brands', [CustomerAppController::class, 'brandsIndex'])->name('brands');
-    Route::get('/brands/{id}', [CustomerAppController::class, 'brandsShow'])->name('brands.show');
-    Route::get('/product/{id}', [CustomerAppController::class, 'productShow'])->name('product.show');
-    Route::get('/products', [CustomerAppController::class, 'productsIndex'])->name('products');
-    Route::get('/showoffers', [CustomerAppController::class, 'offersIndex'])->name('offer');
+    Route::get('/categories', [CustomerCatalogController::class, 'categoriesIndex'])->name('categories.index');
+    Route::get('/categories/{id}', [CustomerCatalogController::class, 'categoriesShow'])->name('categories.show');
+    Route::get('/brands', [CustomerCatalogController::class, 'brandsIndex'])->name('brands');
+    Route::get('/brands/{id}', [CustomerCatalogController::class, 'brandsShow'])->name('brands.show');
+    Route::get('/product/{id}', [CustomerCatalogController::class, 'productShow'])->name('product.show');
+    Route::get('/products', [CustomerCatalogController::class, 'productsIndex'])->name('products');
+    Route::get('/showoffers', [CustomerCatalogController::class, 'offersIndex'])->name('offer');
 
     // ===================================================================
     // مسارات APK التي تحمي نفسها عبر JavaScript (getToken + redirect)
@@ -311,7 +316,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('organizations.switch');
     });
-    Route::get('/notifications', [CustomerAppController::class, 'notificationsIndex'])->name('notifications');
+    Route::get('/notifications', [CustomerProfileController::class, 'notificationsIndex'])->name('notifications');
     Route::get('/privacy-policy', function () {
         $policy = PrivacyPolicy::where('type', 'privacy_policy')
             ->where('is_active', true)
@@ -328,19 +333,19 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
         return view('app_android.more.privacy_policy', compact('policy'));
     })->name('terms');
-    Route::get('/about-us', [CustomerAppController::class, 'aboutUsWeb'])->name('about');
+    Route::get('/about-us', [CustomerPagesController::class, 'aboutUsWeb'])->name('about');
     Route::get('/contact-us', function () {
         return view('app_android.more.contact_us');
     })->name('contact');
-    Route::get('/faq', [CustomerAppController::class, 'faqIndex'])->name('faq');
+    Route::get('/faq', [CustomerPagesController::class, 'faqIndex'])->name('faq');
 
     // مسارات محمية (تتطلب تسجيل دخول بجلسة PHP)
     Route::middleware('check.customer.session')->group(function () {
-        Route::get('/dashboard', [CustomerAppController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard', [CustomerDashboardController::class, 'dashboard'])->name('dashboard');
 
-        Route::get('/more', [CustomerAppController::class, 'more'])->name('more');
+        Route::get('/more', [CustomerPagesController::class, 'more'])->name('more');
         Route::get('/offers', function () {
-            $offers = Offer::with(['item', 'itemPack.uom'])
+            $offers = \App\Models\Offer::with(['item', 'itemPack.uom'])
                 ->active()
                 ->get()
                 ->map(function ($offer) {
@@ -372,18 +377,18 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/cart', function () {
             return view('app_android.cart');
         })->name('cart');
-        Route::post('/checkout', [CustomerAppController::class, 'checkout'])->name('checkout');
-        Route::get('/favorite', [CustomerAppController::class, 'favorites'])->name('favorite');
-        Route::post('/favorite/toggle', [CustomerAppController::class, 'toggleFavorite'])->name('favorite.toggle');
+        Route::post('/checkout', [CustomerOrderController::class, 'checkout'])->name('checkout');
+        Route::get('/favorite', [CustomerProfileController::class, 'favorites'])->name('favorite');
+        Route::post('/favorite/toggle', [CustomerProfileController::class, 'toggleFavorite'])->name('favorite.toggle');
         Route::get('/financial-statement', function () {
             return view('app_android.more.financial_statement');
         })->name('financial_statement');
-        Route::get('/order-history', [CustomerAppController::class, 'orderHistory'])->name('order_history');
+        Route::get('/order-history', [CustomerOrderController::class, 'orderHistory'])->name('order_history');
         Route::get('/order/{id}', function ($id) {
             return view('app_android.more.order_details', ['orderId' => $id]);
         })->name('order_details');
-        Route::get('/my-info', [CustomerAppController::class, 'myInfo'])->name('my_info');
-        Route::post('/my-info', [CustomerAppController::class, 'updateInfo'])->name('my_info.update');
+        Route::get('/my-info', [CustomerProfileController::class, 'myInfo'])->name('my_info');
+        Route::post('/my-info', [CustomerProfileController::class, 'updateInfo'])->name('my_info.update');
     });
 });
 
