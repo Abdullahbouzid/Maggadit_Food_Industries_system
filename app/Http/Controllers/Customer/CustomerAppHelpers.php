@@ -64,12 +64,15 @@ trait CustomerAppHelpers
 
             if (isset($item->image)) {
                 $item->image = $this->imagePathService->normalize($item->image);
+            } elseif (isset($item->images) && is_array($item->images) && count($item->images) > 0) {
+                $firstImage = $item->images[0];
+                $item->image = $this->imagePathService->normalize($firstImage);
             }
             if (isset($item->logo)) {
                 $item->logo = $this->imagePathService->normalize($item->logo);
             }
 
-            return $item;
+            return $this->normalizeItem($item);
         });
     }
 
@@ -94,5 +97,22 @@ trait CustomerAppHelpers
         }
 
         return $model;
+    }
+
+    private function normalizeItem($item)
+    {
+        if (is_array($item)) {
+            $item['name'] = $item['name_ar'] ?? $item['name_en'] ?? ($item['name'] ?? 'منتج');
+            $item['description'] = $item['definition'] ?? ($item['description'] ?? '');
+            return $item;
+        }
+
+        if (is_object($item)) {
+            $item->name = $item->name_ar ?? $item->name_en ?? ($item->name ?? 'منتج');
+            $item->description = $item->definition ?? ($item->description ?? '');
+            return $item;
+        }
+
+        return $item;
     }
 }

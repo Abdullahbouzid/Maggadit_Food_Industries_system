@@ -63,7 +63,8 @@ class CustomerDashboardController extends Controller
         }
         if ($products->isEmpty()) {
             $products = Item::limit(50)->get()->map(function ($item) {
-                return $this->applyImagePath($item, 'image');
+                $item = $this->applyImagePath($item, 'image');
+                return $this->normalizeItem($item);
             });
         }
 

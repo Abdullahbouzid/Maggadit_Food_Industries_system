@@ -73,7 +73,8 @@ class CustomerCatalogController extends Controller
 
         if ($items->isEmpty()) {
             $items = Item::where('category_id', $id)->get()->map(function ($item) {
-                return $this->applyImagePath($item, 'image');
+                $item = $this->applyImagePath($item, 'image');
+                return $this->normalizeItem($item);
             });
         }
 
@@ -134,7 +135,8 @@ class CustomerCatalogController extends Controller
 
         if ($items->isEmpty()) {
             $items = Item::where('brand_id', $id)->get()->map(function ($item) {
-                return $this->applyImagePath($item, 'image');
+                $item = $this->applyImagePath($item, 'image');
+                return $this->normalizeItem($item);
             });
         }
 
@@ -192,7 +194,8 @@ class CustomerCatalogController extends Controller
         }
 
         $items = Item::all()->map(function ($item) {
-            return $this->applyImagePath($item, 'image');
+            $item = $this->applyImagePath($item, 'image');
+            return $this->normalizeItem($item);
         });
 
         $customer = Auth::guard('customer')->user();
@@ -210,7 +213,30 @@ class CustomerCatalogController extends Controller
                 $data = $response->json();
                 $productData = $data['product'] ?? $data;
                 $product = (object) $productData;
-                $product = $this->applyImagePath($product, 'image');
+
+                if (! isset($product->image) && isset($product->images) && is_array($product->images) && count($product->images) > 0) {
+                    $product->image = $product->images[0];
+                } elseif (! isset($product->image)) {
+                    $product->image = null;
+                }
+
+                if (isset($product->image)) {
+                    $product = $this->applyImagePath($product, 'image');
+                }
+
+                if (! isset($product->price) && isset($product->packs) && is_array($product->packs)) {
+                    $defaultPack = collect($product->packs)->firstWhere('is_default', true);
+                    if (! $defaultPack) {
+                        $defaultPack = $product->packs[0] ?? null;
+                    }
+                    $product->price = (float) ($defaultPack['price'] ?? 0);
+                }
+
+                if (! isset($product->old_price)) {
+                    $product->old_price = null;
+                }
+
+                $product = $this->normalizeItem($product);
             }
         } catch (\Exception $e) {
             Log::error('Product Show API Error: '.$e->getMessage());
@@ -220,6 +246,7 @@ class CustomerCatalogController extends Controller
             $product = Item::find($id);
             if ($product) {
                 $product = $this->applyImagePath($product, 'image');
+                $product = $this->normalizeItem($product);
             } else {
                 abort(404, 'المنتج غير موجود');
             }
