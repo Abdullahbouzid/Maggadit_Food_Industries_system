@@ -26,9 +26,12 @@ class CustomerAppController extends Controller
 {
     use JsonFieldParser;
 
-    private $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
+    private $baseUrl;
 
-    public function __construct(private ImagePathService $imagePathService) {}
+    public function __construct(private ImagePathService $imagePathService)
+    {
+        $this->baseUrl = rtrim(env('CUSTOMER_APP_BASE_URL', env('APP_URL', url('/'))), '/');
+    }
 
     /**
      * عرض لوحة التحكم الرئيسية (Dashboard)
@@ -254,22 +257,37 @@ class CustomerAppController extends Controller
     /**
      * عرض جميع المنتجات
      */
-    public function productsIndex()
+    public function productsIndex(Request $request)
     {
+        $search = $request->query('search');
+        $categoryId = $request->query('category_id');
+        $brandId = $request->query('brand_id');
+
+        $categories = Category::where('show_in_customer_app', true)->get();
+        $brands = Brand::where('show_in_customer_app', true)->get();
+
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/products");
+            $url = "{$this->baseUrl}/customer/products";
+            $queryParams = [];
+            if ($search) {
+                $queryParams['search'] = $search;
+            }
+            if ($categoryId) {
+                $queryParams['category_id'] = $categoryId;
+            }
+            if ($brandId) {
+                $queryParams['brand_id'] = $brandId;
+            }
+
+            $response = Http::withoutVerifying()->get($url, $queryParams);
             if ($response->successful()) {
                 $data = $response->json();
-
-                // جلب المصفوفة الصحيحة من الرد
                 $rawData = $data['products'] ?? ($data['data'] ?? $data);
 
-                // إذا كان الرد يحتوي على success ولم نجد مفتاحاً للمنتجات، فهذا يعني أننا حصلنا على الرد كاملاً
                 if (isset($data['success']) && ! isset($data['data']) && ! isset($data['products'])) {
                     $rawData = [];
                 }
 
-                // معالجة حالة الترقيم (Pagination)
                 if (is_array($rawData) && isset($rawData['data']) && is_array($rawData['data'])) {
                     $rawData = $rawData['data'];
                 }
@@ -280,7 +298,7 @@ class CustomerAppController extends Controller
                     $customer = Auth::guard('customer')->user();
                     $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
-                    return view('app_android.products.index', compact('items', 'favoriteItemIds'));
+                    return view('app_android.products.index', compact('items', 'favoriteItemIds', 'categories', 'brands'));
                 }
             }
         } catch (\Exception $e) {
@@ -288,14 +306,29 @@ class CustomerAppController extends Controller
         }
 
         // Fallback: جلب من قاعدة البيانات المحلية
-        $items = Item::limit(50)->get()->map(function ($item) {
+        $query = Item::where('is_inactive', false);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name_ar', 'like', "%{$search}%")
+                    ->orWhere('name_en', 'like', "%{$search}%");
+            });
+        }
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+        if ($brandId) {
+            $query->where('brand_id', $brandId);
+        }
+
+        $items = $query->limit(50)->get()->map(function ($item) {
             return $this->applyImagePath($item, 'image');
         });
 
         $customer = Auth::guard('customer')->user();
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
-        return view('app_android.products.index', compact('items', 'favoriteItemIds'));
+        return view('app_android.products.index', compact('items', 'favoriteItemIds', 'categories', 'brands'));
     }
 
     /**
@@ -303,29 +336,30 @@ class CustomerAppController extends Controller
      */
     public function offersIndex()
     {
-        try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/offers");
-            if ($response->successful()) {
-                $data = $response->json();
-                // جلب المصفوفة الصحيحة من الرد
-                $rawData = $data['offers'] ?? ($data['data'] ?? $data);
+        $offers = Offer::with(['item', 'itemPack.packType'])
+            ->active()
+            ->get()
+            ->map(function ($offer) {
+                $item = $offer->item;
+                $defaultPack = $item ? $item->packs->first() : null;
+                $offerPack = $offer->itemPack;
 
-                if (isset($data['success']) && ! isset($data['data']) && ! isset($data['offers'])) {
-                    $rawData = [];
-                }
-
-                $offers = $this->parseData(is_array($rawData) ? $rawData : []);
-
-                if ($offers->isNotEmpty()) {
-                    return view('app_android.offers.index', compact('offers'));
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Offers API Error: '.$e->getMessage());
-        }
-
-        // Fallback: بيانات افتراضية
-        $offers = collect();
+                return (object) [
+                    'id' => $offer->id,
+                    'title' => $offer->title,
+                    'description' => $offer->description,
+                    'item_id' => $offer->item_id,
+                    'item_pack_id' => $offer->item_pack_id,
+                    'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
+                    'pack_type' => $offerPack ? ($offerPack->packType->name_ar ?? $offerPack->packType->name_en ?? '') : ($defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : ''),
+                    'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
+                    'old_price' => (float) $offer->old_price,
+                    'new_price' => (float) $offer->new_price,
+                    'discount_percentage' => (float) $offer->discount_percentage,
+                    'start_date' => $offer->start_date?->format('Y-m-d H:i'),
+                    'end_date' => $offer->end_date?->format('Y-m-d H:i'),
+                ];
+            });
 
         return view('app_android.offers.index', compact('offers'));
     }

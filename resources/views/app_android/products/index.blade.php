@@ -13,6 +13,62 @@
             </button>
         </div>
 
+        {{-- Filters Section --}}
+        <div class="bg-white rounded-3xl shadow-lg p-4 mb-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-gray-800 text-base">تصفية المنتجات</h3>
+                <button id="reset-filters" class="text-xs text-purple-600 font-semibold">مسح الفلاتر</button>
+            </div>
+            
+            {{-- Search Input --}}
+            <div class="mb-3">
+                <div class="relative">
+                    <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="search-input" placeholder="ابحث عن منتج..." 
+                           value="{{ request('search') }}"
+                           class="w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm bg-gray-50">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                {{-- Category Filter --}}
+                <div>
+                    <label class="form-label text-xs font-semibold text-gray-600 mb-1 block">الفئة</label>
+                    <select id="category-filter" class="form-select form-select-sm w-full border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200">
+                        <option value="">كل الفئات</option>
+                        @foreach($categories ?? [] as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Brand Filter --}}
+                <div>
+                    <label class="form-label text-xs font-semibold text-gray-600 mb-1 block">الماركة</label>
+                    <select id="brand-filter" class="form-select form-select-sm w-full border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200">
+                        <option value="">كل الماركات</option>
+                        @foreach($brands ?? [] as $brand)
+                            <option value="{{ $brand->id }}" {{ request('brand_id') == $brand->id ? 'selected' : '' }}>
+                                {{ $brand->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <button id="apply-filters" class="w-full mt-3 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-purple-700 transition">
+                <i class="fas fa-filter ml-1"></i> تطبيق الفلاتر
+            </button>
+        </div>
+
+        {{-- Products Count --}}
+        <div class="mb-3">
+            <span class="text-sm text-gray-500">{{ $items->count() }} منتج</span>
+        </div>
+
+        {{-- Products Grid --}}
         <div class="grid grid-cols-2 gap-4">
             @forelse($items as $item)
                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
@@ -143,6 +199,31 @@
                 })
                 .catch(err => console.error(err));
             });
+        });
+
+        // Filter functionality
+        document.getElementById('apply-filters')?.addEventListener('click', function() {
+            const search = document.getElementById('search-input').value.trim();
+            const categoryId = document.getElementById('category-filter').value;
+            const brandId = document.getElementById('brand-filter').value;
+
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (categoryId) params.set('category_id', categoryId);
+            if (brandId) params.set('brand_id', brandId);
+
+            window.location.href = '{{ route('customer.products') }}?' + params.toString();
+        });
+
+        document.getElementById('reset-filters')?.addEventListener('click', function() {
+            window.location.href = '{{ route('customer.products') }}';
+        });
+
+        // Allow Enter key on search input
+        document.getElementById('search-input')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('apply-filters')?.click();
+            }
         });
     </script>
 @endsection
