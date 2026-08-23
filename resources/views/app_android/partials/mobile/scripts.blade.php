@@ -42,7 +42,7 @@
 (function() {
     'use strict';
 
-    const API_BASE    = 'https://blue-beaver-923812.hostingersite.com/api/customer';
+    const API_BASE    = window.location.origin + '/api/customer';
     const API_TOKEN   = '{{ session("api_token") }}';
     const POLL_INTERVAL = 10000; // 10 ثواني
     const LS_LAST_ID  = 'mgd_last_notif_id';

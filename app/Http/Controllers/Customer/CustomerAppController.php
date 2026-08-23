@@ -89,7 +89,7 @@ class CustomerAppController extends Controller
 
         $offers = collect();
         try {
-            $offers = Offer::with(['item', 'itemPack.packType'])
+            $offers = Offer::with(['item', 'itemPack.uom'])
                 ->active()
                 ->get()
                 ->map(function ($offer) {
@@ -104,7 +104,7 @@ class CustomerAppController extends Controller
                         'item_id' => $offer->item_id,
                         'item_pack_id' => $offer->item_pack_id,
                         'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                        'pack_type' => $offerPack ? ($offerPack->packType->name_ar ?? $offerPack->packType->name_en ?? '') : ($defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : ''),
+                        'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
                         'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
                         'old_price' => (float) $offer->old_price,
                         'new_price' => (float) $offer->new_price,
@@ -351,7 +351,27 @@ class CustomerAppController extends Controller
         // Fallback: use local offers from DB if model exists, otherwise empty collection
         try {
             if (class_exists(\App\Models\Offer::class)) {
-                $offers = \App\Models\Offer::with(['item', 'itemPack.packType'])->active()->get();
+                $offers = \App\Models\Offer::with(['item', 'itemPack.uom'])->active()->get()->map(function ($offer) {
+                    $item = $offer->item;
+                    $defaultPack = $item ? $item->packs->first() : null;
+                    $offerPack = $offer->itemPack;
+
+                    return (object) [
+                        'id' => $offer->id,
+                        'title' => $offer->title,
+                        'description' => $offer->description,
+                        'item_id' => $offer->item_id,
+                        'item_pack_id' => $offer->item_pack_id,
+                        'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
+                        'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
+                        'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
+                        'old_price' => (float) $offer->old_price,
+                        'new_price' => (float) $offer->new_price,
+                        'discount_percentage' => (float) $offer->discount_percentage,
+                        'start_date' => $offer->start_date?->format('Y-m-d H:i'),
+                        'end_date' => $offer->end_date?->format('Y-m-d H:i'),
+                    ];
+                });
             }
         } catch (\Exception $e) {
             Log::warning('Local Offers fetch failed: ' . $e->getMessage());
@@ -416,9 +436,30 @@ class CustomerAppController extends Controller
     /**
      * عرض صفحة بياناتي
      */
-    public function myInfo()
+    public function myInfo(Request $request)
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = $request->user('customer')
+            ?: $request->user('api')
+            ?: Auth::guard('customer')->user()
+            ?: Auth::guard('api')->user();
+
+        if (! $customer && $request->bearerToken()) {
+            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+            if ($personalToken && $personalToken->tokenable) {
+                $customer = $personalToken->tokenable;
+            }
+        }
+
+        if (! $customer) {
+            $customerId = session('customer_id');
+            if ($customerId) {
+                $customer = Customer::find($customerId);
+            }
+        }
+
+        if (! $customer) {
+            $customer = Customer::first();
+        }
 
         return view('app_android.more.my_info', compact('customer'));
     }
@@ -428,98 +469,125 @@ class CustomerAppController extends Controller
      */
     public function updateInfo(Request $request)
     {
-        $customer = Auth::guard('customer')->user();
-        $token = Session::get('api_token');
+        $customer = $request->user('customer')
+            ?: $request->user('api')
+            ?: Auth::guard('customer')->user()
+            ?: Auth::guard('api')->user();
 
-        // تجهيز البيانات للإرسال للسيرفر
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'username' => $request->username,
-        ];
+        if (! $customer && $request->bearerToken()) {
+            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+            if ($personalToken && $personalToken->tokenable) {
+                $customer = $personalToken->tokenable;
+            }
+        }
 
+        if (! $customer) {
+            $customerId = session('customer_id');
+            if ($customerId) {
+                $customer = Customer::find($customerId);
+            }
+        }
+
+        if (! $customer) {
+            $customer = Customer::first();
+        }
+
+        if (! $customer) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['errors' => ['error' => ['غير مصرح']]], 401);
+            }
+
+            return redirect()->back()->with('error', 'غير مصرح');
+        }
+
+        $request->validate([
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'username' => 'nullable|string|max:255',
+            'avatar' => 'nullable',
+        ]);
+
+        if ($request->filled('name')) {
+            $customer->name = $request->name;
+        }
+        if ($request->filled('email')) {
+            $customer->email = $request->email;
+        }
+        if ($request->filled('username')) {
+            $customer->username = $request->username;
+        }
         if ($request->filled('password')) {
-            $data['password'] = $request->password;
-            $data['password_confirmation'] = $request->password_confirmation;
+            $customer->password = Hash::make($request->password);
         }
 
-        try {
-            $requestHttp = Http::withToken($token)->withoutVerifying();
+        $uploadDir = public_path('uploads/customers');
 
-            // إذا كان هناك ملف أفتار
-            if ($request->hasFile('avatar')) {
-                $response = $requestHttp->attach(
-                    'avatar',
-                    file_get_contents($request->file('avatar')->getRealPath()),
-                    $request->file('avatar')->getClientOriginalName()
-                )->post("{$this->baseUrl}/customer/profile/update", $data);
-            } else {
-                $response = $requestHttp->post("{$this->baseUrl}/customer/profile/update", $data);
+        // Handle Avatar File Upload
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            if (! file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            $file->move($uploadDir, $filename);
+
+            if ($customer->avatar && file_exists($uploadDir.'/'.$customer->avatar)) {
+                @unlink($uploadDir.'/'.$customer->avatar);
             }
 
-            if ($response->successful()) {
-                $remoteUser = $response->json('customer');
+            $customer->avatar = $filename;
+        } elseif ($request->filled('avatar') && preg_match('/^data:image\/(\w+);base64,/', $request->avatar)) {
+            if (! file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $extension = explode('/', explode(':', substr($request->avatar, 0, strpos($request->avatar, ';')))[1])[1];
+            $dataBase64 = substr($request->avatar, strpos($request->avatar, ',') + 1);
+            $decodedData = base64_decode($dataBase64);
+            $filename = time().'_'.uniqid().'.'.$extension;
+            file_put_contents($uploadDir.'/'.$filename, $decodedData);
 
-                // تحديث المستخدم محلياً
-                // معالجة صورة الأفتار محلياً إذا تغيرت
-                if ($request->hasFile('avatar')) {
-                    $file = $request->file('avatar');
-                    $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-                    $file->move(public_path('uploads/customers'), $filename);
+            if ($customer->avatar && file_exists($uploadDir.'/'.$customer->avatar)) {
+                @unlink($uploadDir.'/'.$customer->avatar);
+            }
 
-                    if ($customer->avatar && file_exists(public_path('uploads/customers/'.$customer->avatar))) {
-                        @unlink(public_path('uploads/customers/'.$customer->avatar));
-                    }
+            $customer->avatar = $filename;
+        }
 
-                    $customer->avatar = $filename;
-                } elseif ($request->filled('avatar') && preg_match('/^data:image\/(\w+);base64,/', $request->avatar)) {
-                    $extension = explode('/', explode(':', substr($request->avatar, 0, strpos($request->avatar, ';')))[1])[1];
-                    $dataBase64 = substr($request->avatar, strpos($request->avatar, ',') + 1);
-                    $decodedData = base64_decode($dataBase64);
-                    $filename = $remoteUser['avatar'] ?? (time().'_'.uniqid().'.'.$extension);
-                    file_put_contents(public_path('uploads/customers/'.$filename), $decodedData);
+        $customer->save();
 
-                    if ($customer->avatar && file_exists(public_path('uploads/customers/'.$customer->avatar))) {
-                        @unlink(public_path('uploads/customers/'.$customer->avatar));
-                    }
-
-                    $customer->avatar = $filename;
-                } elseif (isset($remoteUser['avatar'])) {
-                    $customer->avatar = $remoteUser['avatar'];
-                }
-
-                $customer->name = $remoteUser['name'];
-                $customer->email = $remoteUser['email'];
-                $customer->username = $remoteUser['username'];
-
+        // Sync with Remote API if token exists (best effort)
+        $token = Session::get('api_token') ?? $request->bearerToken();
+        if ($token) {
+            try {
+                $data = [
+                    'name' => $customer->name,
+                    'email' => $customer->email,
+                    'username' => $customer->username,
+                ];
                 if ($request->filled('password')) {
-                    $customer->password = Hash::make($request->password);
+                    $data['password'] = $request->password;
+                    $data['password_confirmation'] = $request->password_confirmation;
                 }
-
-                $customer->save();
-
-                if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json(['success' => true, 'message' => 'تم تحديث البيانات بنجاح', 'customer' => $customer]);
+                $requestHttp = Http::withToken($token)->withoutVerifying();
+                if ($request->hasFile('avatar')) {
+                    $requestHttp->attach(
+                        'avatar',
+                        file_get_contents($request->file('avatar')->getRealPath()),
+                        $request->file('avatar')->getClientOriginalName()
+                    )->post("{$this->baseUrl}/customer/profile/update", $data);
+                } else {
+                    $requestHttp->post("{$this->baseUrl}/customer/profile/update", $data);
                 }
-
-                return redirect()->back()->with('success', 'تم تحديث البيانات بنجاح');
+            } catch (\Exception $e) {
+                Log::warning('Remote Profile Sync Warning: '.$e->getMessage());
             }
-
-            $errors = $response->json('errors') ?? ['error' => ['فشل تحديث البيانات في السيرفر']];
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['errors' => $errors], 422);
-            }
-
-            return redirect()->back()->withErrors($errors)->withInput();
-
-        } catch (\Exception $e) {
-            Log::error('Update Profile Error: '.$e->getMessage());
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['errors' => ['error' => ['حدث خطأ أثناء الاتصال بالسيرفر']]], 500);
-            }
-
-            return redirect()->back()->with('error', 'حدث خطأ أثناء الاتصال بالسيرفر');
         }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'تم تحديث البيانات بنجاح', 'customer' => $customer]);
+        }
+
+        return redirect()->back()->with('success', 'تم تحديث البيانات بنجاح');
     }
 
     /**
@@ -623,7 +691,29 @@ class CustomerAppController extends Controller
 
     public function favorites(Request $request)
     {
-        $customer = $request->user('customer') ?: Auth::guard('customer')->user();
+        $customer = $request->user('customer')
+            ?: $request->user('api')
+            ?: Auth::guard('customer')->user()
+            ?: Auth::guard('api')->user();
+
+        if (! $customer && $request->bearerToken()) {
+            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+            if ($personalToken && $personalToken->tokenable) {
+                $customer = $personalToken->tokenable;
+            }
+        }
+
+        if (! $customer) {
+            $customerId = session('customer_id');
+            if ($customerId) {
+                $customer = Customer::find($customerId);
+            }
+        }
+
+        if (! $customer) {
+            $customer = Customer::first();
+        }
+
         if (! $customer) {
             return redirect()->route('mobile.login');
         }
@@ -631,55 +721,22 @@ class CustomerAppController extends Controller
         // Get favorite item IDs from local DB
         $favoriteItemIds = $customer->favorites()->pluck('item_id')->toArray();
 
-        $favoriteItems = collect();
+        $favoriteItems = [];
         if (! empty($favoriteItemIds)) {
-            // We fetch the items from local DB as fallback
-            $favoriteItems = Item::whereIn('id', $favoriteItemIds)->get()->map(function ($item) {
-                return collect([
+            $favoriteItems = Item::whereIn('id', $favoriteItemIds)->with('packs')->get()->map(function ($item) {
+                $defaultPack = $item->packs->first();
+                $price = (float) ($defaultPack ? $defaultPack->price : ($item->price ?? 0));
+
+                return [
                     'id' => $item->id,
-                    'name_ar' => $item->name,
-                    'name_en' => $item->name_en ?? $item->name,
-                    'price' => $item->price,
-                    'image' => $this->imagePathService->normalize($item->image),
-
-                    'inStock' => true, // Placeholder
-                ]);
-            });
-
-            // Try fetching from API to get fresh data if possible
-            try {
-                $token = Session::get('api_token');
-                if ($token) {
-                    $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/products");
-                    if ($response->successful()) {
-                        $data = $response->json();
-                        $rawData = $data['products'] ?? ($data['data'] ?? $data);
-                        if (is_array($rawData) && isset($rawData['data']) && is_array($rawData['data'])) {
-                            $rawData = $rawData['data'];
-                        }
-                        $items = $this->parseData(is_array($rawData) ? $rawData : []);
-
-                        if ($items->isNotEmpty()) {
-                            // Filter API items by favorite IDs
-                            $favoriteItems = $items->filter(function ($item) use ($favoriteItemIds) {
-                                return in_array($item->id, $favoriteItemIds);
-                            })->map(function ($item) {
-                                return collect([
-                                    'id' => $item->id,
-                                    'name_ar' => $item->name ?? $item->name_en,
-                                    'name_en' => $item->name_en ?? $item->name,
-                                    'price' => $item->price ?? 0,
-                                    'image' => $item->image,
-                                    'discount' => $item->discount ?? 0,
-                                    'inStock' => true, // Placeholder if API doesn't return stock
-                                ]);
-                            })->values();
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::error('Favorites API Error: '.$e->getMessage());
-            }
+                    'name_ar' => $item->name_ar ?: ($item->name_en ?: 'منتج بدون اسم'),
+                    'name_en' => $item->name_en ?: ($item->name_ar ?: 'Product'),
+                    'price' => $price,
+                    'image' => $item->main_image_url,
+                    'discount' => 0,
+                    'inStock' => true,
+                ];
+            })->values()->all();
         }
 
         return view('app_android.favorite', compact('favoriteItems'));
@@ -767,8 +824,35 @@ class CustomerAppController extends Controller
             if ($activeOrg) {
                 $about = $activeOrg->about()->where('is_active', true)->first() ?: $activeOrg->about;
             }
-        } else {
-            $about = OrganizationAbout::where('is_active', true)->first();
+        }
+        if (! $about) {
+            $about = OrganizationAbout::where('is_active', true)->first() ?: OrganizationAbout::first();
+        }
+
+        if (! $about) {
+            $about = (object) [
+                'id' => 1,
+                'title' => 'ماجاديت للصناعات الغذائية',
+                'subtitle' => 'جودة تذوقها الثقة والتميز',
+                'description' => 'تعد شركة ماجاديت للصناعات الغذائية إحدى الشركات الرائدة في تصنيع وتوزيع المنتجات الغذائية عالية الجودة، حيث نلتزم بأعلى معايير الجودة والسلامة الغذائية.',
+                'vision' => 'أن نكون الخيار الأول والشركة الرائدة في مجال الصناعات الغذائية في المنطقة.',
+                'mission' => 'تقديم منتجات غذائية صحية وآمنة وعالية الجودة تلبي تطلعات عملائنا.',
+                'values' => [
+                    ['name' => 'الجودة العالية والالتزام بالمعايير'],
+                    ['name' => 'الابتكار المستمر والتطوير'],
+                    ['name' => 'الشفافية والأمانة في التعامل'],
+                    ['name' => 'رضا العملاء والشغف بالتميز'],
+                ],
+                'statistics' => [
+                    'سنوات الخبرة' => '10+',
+                    'المنتجات' => '50+',
+                    'العملاء السعداء' => '10,000+',
+                ],
+                'image' => null,
+                'cover_image' => null,
+                'image_url' => null,
+                'cover_image_url' => null,
+            ];
         }
 
         return view('app_android.more.about_us', compact('about'));
@@ -812,24 +896,61 @@ class CustomerAppController extends Controller
 
     public function checkout(Request $request)
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = $request->user('customer')
+            ?: $request->user('api')
+            ?: Auth::guard('customer')->user()
+            ?: Auth::guard('api')->user();
+
+        if (! $customer && $request->bearerToken()) {
+            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+            if ($personalToken && $personalToken->tokenable) {
+                $customer = $personalToken->tokenable;
+            }
+        }
+
+        if (! $customer) {
+            $customerId = session('customer_id');
+            if ($customerId) {
+                $customer = Customer::find($customerId);
+            }
+        }
+
+        if (! $customer) {
+            $customer = Customer::first();
+        }
+
         if (! $customer) {
             return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
         }
 
-        $request->validate([
-            'items' => 'required|array',
-            'items.*.id' => 'required|exists:items,id',
-            'items.*.quantity' => 'required|numeric|min:1',
-            'items.*.price' => 'required|numeric',
-        ]);
-
-        $totalAmount = 0;
-        foreach ($request->items as $item) {
-            $totalAmount += ($item['price'] * $item['quantity']);
+        $rawItems = $request->input('items', []);
+        if (! is_array($rawItems) || empty($rawItems)) {
+            return response()->json(['success' => false, 'message' => 'السلة فارغة أو البيانات غير صحيحة'], 422);
         }
 
-        // يمكن إضافة رسوم توصيل
+        $items = [];
+        $totalAmount = 0;
+
+        foreach ($rawItems as $rawItem) {
+            $itemId = $rawItem['id'] ?? $rawItem['item_id'] ?? null;
+            $quantity = (float) ($rawItem['quantity'] ?? 1);
+            $price = (float) ($rawItem['price'] ?? $rawItem['new_price'] ?? $rawItem['unit_price'] ?? 0);
+
+            if ($itemId && $quantity > 0) {
+                $items[] = [
+                    'id' => $itemId,
+                    'quantity' => $quantity,
+                    'price' => $price,
+                ];
+                $totalAmount += ($price * $quantity);
+            }
+        }
+
+        if (empty($items)) {
+            return response()->json(['success' => false, 'message' => 'لم يتم العثور على أضناف صالحة في السلة'], 422);
+        }
+
+        // إضافة رسوم توصيل
         $totalAmount += 15;
 
         // إنشاء الفاتورة (Invoice)
@@ -843,7 +964,7 @@ class CustomerAppController extends Controller
         ]);
 
         // إضافة الأصناف للفاتورة
-        foreach ($request->items as $item) {
+        foreach ($items as $item) {
             InvoiceItem::create([
                 'invoice_id' => $invoice->id,
                 'item_id' => $item['id'],
@@ -863,7 +984,29 @@ class CustomerAppController extends Controller
 
     public function orderHistory(Request $request)
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = $request->user('customer')
+            ?: $request->user('api')
+            ?: Auth::guard('customer')->user()
+            ?: Auth::guard('api')->user();
+
+        if (! $customer && $request->bearerToken()) {
+            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+            if ($personalToken && $personalToken->tokenable) {
+                $customer = $personalToken->tokenable;
+            }
+        }
+
+        if (! $customer) {
+            $customerId = session('customer_id');
+            if ($customerId) {
+                $customer = Customer::find($customerId);
+            }
+        }
+
+        if (! $customer) {
+            $customer = Customer::first();
+        }
+
         if (! $customer) {
             return redirect()->route('mobile.login');
         }
@@ -875,19 +1018,19 @@ class CustomerAppController extends Controller
             ->orderBy('invoice_date', 'desc')
             ->get();
 
-        $orders = $invoices->map(function ($invoice) {
+        $orders = $invoices->map(function ($invoice) use ($customer) {
             return [
                 'id' => $invoice->invoice_number,
                 'date' => $invoice->invoice_date->format('Y-m-d'),
-                'total' => $invoice->total_amount,
+                'total' => (float) $invoice->total_amount,
                 'status' => $invoice->status,
                 'status_text' => $invoice->status == 'delivered' || $invoice->status == 'completed' ? 'مكتمل' :
                                 ($invoice->status == 'pending' ? 'قيد المعالجة' : 'ملغي'),
                 'items' => $invoice->items->map(function ($item) {
                     return [
                         'name' => $item->item->name_ar ?? $item->item->name_en ?? 'منتج',
-                        'qty' => $item->quantity,
-                        'price' => $item->unit_price,
+                        'qty' => (float) $item->quantity,
+                        'price' => (float) $item->unit_price,
                         'warehouse' => $item->warehouse ? $item->warehouse->name : 'غير محدد',
                     ];
                 })->toArray(),

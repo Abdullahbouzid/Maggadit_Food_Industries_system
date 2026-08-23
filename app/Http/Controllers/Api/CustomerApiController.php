@@ -151,7 +151,7 @@ class CustomerApiController extends Controller
 
     public function offersIndex()
     {
-        $offers = Offer::with(['item', 'itemPack.packType'])
+        $offers = Offer::with(['item', 'itemPack.uom'])
             ->active()
             ->get()
             ->map(function ($offer) {
@@ -166,7 +166,7 @@ class CustomerApiController extends Controller
                     'item_id' => $offer->item_id,
                     'item_pack_id' => $offer->item_pack_id,
                     'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                    'pack_type' => $offerPack ? ($offerPack->packType->name_ar ?? $offerPack->packType->name_en ?? '') : ($defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : ''),
+                    'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
                     'image' => $offer->display_image,
                     'old_price' => (float) $offer->old_price,
                     'new_price' => (float) $offer->new_price,
@@ -648,31 +648,16 @@ class CustomerApiController extends Controller
             $organization = Organization::first();
         }
 
-        if (! $organization) {
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'phone' => null,
-                    'whatsapp' => null,
-                    'email' => null,
-                    'website' => null,
-                    'address' => null,
-                    'latitude' => null,
-                    'longitude' => null,
-                ],
-            ]);
-        }
-
         return response()->json([
             'success' => true,
             'data' => [
-                'phone' => $organization->phone,
-                'whatsapp' => $organization->whatsapp,
-                'email' => $organization->email,
-                'website' => $organization->website,
-                'address' => $organization->address,
-                'latitude' => $organization->latitude,
-                'longitude' => $organization->longitude,
+                'phone' => $organization?->phone ?: '+966500000000',
+                'whatsapp' => $organization?->whatsapp ?: '+966500000000',
+                'email' => $organization?->email ?: 'info@maggadit.com',
+                'website' => $organization?->website ?: 'https://maggadit.com',
+                'address' => $organization?->address ?: 'المملكة العربية السعودية - الرياض',
+                'latitude' => (float) ($organization?->latitude ?: 24.7136),
+                'longitude' => (float) ($organization?->longitude ?: 46.6753),
             ],
         ]);
     }

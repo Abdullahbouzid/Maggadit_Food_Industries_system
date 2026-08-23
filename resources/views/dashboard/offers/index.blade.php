@@ -88,16 +88,17 @@
                                                 @endif
                                             </td>
                                             <td>
-                                            @if($offer->item && $offer->item->packs->first() && $offer->item->packs->first()->packType)
-                                                <br><small class="text-muted">{{ $offer->item->packs->first()->packType->name_ar ?? $offer->item->packs->first()->packType->name_en }}</small>
-                                            @endif
-                                            @if($offer->itemPack)
-                                                <br><small class="text-muted">العبوة: {{ $offer->itemPack->packType->name_ar ?? $offer->itemPack->packType->name_en ?? '' }}</small>
-                                            @endif
-                                        </td>
+                                                <strong>{{ $offer->item?->name_ar ?: $offer->item?->name_en }}</strong>
+                                                @if($offer->item && $offer->item->packs->first() && $offer->item->packs->first()->uom)
+                                                    <br><small class="text-muted">{{ $offer->item->packs->first()->uom->name_ar ?? $offer->item->packs->first()->uom->name_en }}</small>
+                                                @endif
+                                                @if($offer->itemPack)
+                                                    <br><small class="text-muted">العبوة: {{ $offer->itemPack->uom->name_ar ?? $offer->itemPack->uom->name_en ?? '' }}</small>
+                                                @endif
+                                            </td>
                                             <td>
-                                                @if($offer->item && $offer->item->packs->first() && $offer->item->packs->first()->packType)
-                                                    <span class="badge bg-info">{{ $offer->item->packs->first()->packType->name_ar ?? $offer->item->packs->first()->packType->name_en }}</span>
+                                                @if($offer->item && $offer->item->packs->first() && $offer->item->packs->first()->uom)
+                                                    <span class="badge bg-info">{{ $offer->item->packs->first()->uom->name_ar ?? $offer->item->packs->first()->uom->name_en }}</span>
                                                 @else
                                                     <span class="text-muted">—</span>
                                                 @endif

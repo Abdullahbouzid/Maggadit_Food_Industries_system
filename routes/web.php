@@ -340,7 +340,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
         Route::get('/more', [CustomerAppController::class, 'more'])->name('more');
         Route::get('/offers', function () {
-            $offers = Offer::with(['item', 'itemPack.packType'])
+            $offers = Offer::with(['item', 'itemPack.uom'])
                 ->active()
                 ->get()
                 ->map(function ($offer) {
@@ -355,7 +355,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
                         'item_id' => $offer->item_id,
                         'item_pack_id' => $offer->item_pack_id,
                         'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                        'pack_type' => $offerPack ? ($offerPack->packType->name_ar ?? $offerPack->packType->name_en ?? '') : ($defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : ''),
+                        'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
                         'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
                         'old_price' => (float) $offer->old_price,
                         'new_price' => (float) $offer->new_price,

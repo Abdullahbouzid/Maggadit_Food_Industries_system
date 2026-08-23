@@ -85,12 +85,24 @@
             }, 2000);
         }
 
-        // دالة محاكاة الإضافة إلى السلة (بدون Route حقيقي)
         function addToCart(product) {
-            // هنا يمكنك إرسال طلب إلى الخادم، لكن نكتفي بتوضيح
+            let cart = JSON.parse(localStorage.getItem('maggadit_cart') || '[]');
+            const existingIndex = cart.findIndex(item => item.id === product.id);
+            if (existingIndex > -1) {
+                cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name_ar: product.name_ar,
+                    name_en: product.name_en || product.name_ar,
+                    price: product.price,
+                    image: product.image,
+                    quantity: 1,
+                    discount: product.discount || 0
+                });
+            }
+            localStorage.setItem('maggadit_cart', JSON.stringify(cart));
             showToastMessage(currentLang === 'ar' ? `تم إضافة ${currentLang === 'ar' ? product.name_ar : product.name_en} إلى السلة` : `Added ${currentLang === 'ar' ? product.name_ar : product.name_en} to cart`, false);
-            // يمكنك أيضاً إزالة المنتج من المفضلة بعد الإضافة
-            // removeFromFav(product.id);
         }
 
         function removeFromFav(id) {

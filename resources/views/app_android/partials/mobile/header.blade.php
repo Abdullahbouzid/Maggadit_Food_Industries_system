@@ -1,5 +1,5 @@
 <style>
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; padding: 8px 16px; display: flex; justify-content: space-around; z-index: 20; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; padding: 8px 16px; display: flex; justify-content: space-around; z-index: 9999 !important; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; transition: 0.2s; font-size: 12px; }
         .nav-item i { font-size: 22px; margin-bottom: 4px; }
         .nav-item.active { color: #9879b6; }
@@ -13,7 +13,7 @@
         .lang-switch { background: white; padding: 6px 12px; border-radius: 40px; font-size: 0.75rem; font-weight: 600; color: #9879b6; border: 1px solid #e2e8f0; cursor: pointer; }
         
         /* BOTTOM NAVIGATION PREMIUM */
-        .bottom-nav-premium { position: fixed; bottom: 16px; left: 16px; right: 16px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(20px); border-radius: 40px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.02); display: flex; justify-content: space-around; align-items: center; padding: 8px 12px; z-index: 30; border: 1px solid rgba(152, 121, 182, 0.2); transition: all 0.3s ease; }
+        .bottom-nav-premium { position: fixed; bottom: 16px; left: 16px; right: 16px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(20px); border-radius: 40px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.02); display: flex; justify-content: space-around; align-items: center; padding: 8px 12px; z-index: 9999 !important; border: 1px solid rgba(152, 121, 182, 0.2); transition: all 0.3s ease; }
         .nav-item-premium { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1); color: #94a3b8; position: relative; flex: 1; padding: 8px 0; border-radius: 32px; }
         .nav-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 28px; transition: all 0.25s ease; position: relative; }
         .nav-item-premium i { font-size: 22px; transition: transform 0.2s ease, color 0.2s; }

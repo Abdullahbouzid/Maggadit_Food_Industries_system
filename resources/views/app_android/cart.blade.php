@@ -271,12 +271,18 @@
             checkoutBtn.innerText = currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...';
             checkoutBtn.disabled = true;
 
+            const token = localStorage.getItem('customer_token') || localStorage.getItem('api_token');
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            };
+            if (token) {
+                headers['Authorization'] = 'Bearer ' + token;
+            }
+
             fetch('{{ route('customer.checkout') }}', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
+                headers: headers,
                 body: JSON.stringify({ items: cartItems })
             })
             .then(response => response.json())

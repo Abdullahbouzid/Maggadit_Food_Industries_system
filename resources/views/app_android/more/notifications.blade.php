@@ -109,7 +109,7 @@
     'use strict';
 
     // ===== إعدادات =====
-    const API_BASE  = 'https://blue-beaver-923812.hostingersite.com/api/customer';
+    const API_BASE  = window.location.origin + '/api/customer';
     const API_TOKEN = '{{ session("api_token") }}';
     const LS_LAST   = 'mgd_last_notif_id';
     const LS_READ   = 'mgd_read_ids';      // قائمة IDs المقروءة

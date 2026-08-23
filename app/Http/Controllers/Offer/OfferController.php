@@ -11,7 +11,7 @@ class OfferController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Offer::with(['item', 'itemPack.packType'])->latest();
+        $query = Offer::with(['item', 'itemPack.uom'])->latest();
 
         if ($request->filled('status')) {
             if ($request->status == 'active') {
@@ -43,7 +43,7 @@ class OfferController extends Controller
     {
         $items = Item::where('is_inactive', false)->get()->map(function ($item) {
             $defaultPack = $item->packs->first();
-            $packType = $defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : '';
+            $packType = $defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : '';
 
             $nameDisplay = $item->name_ar && $item->name_en
                 ? $item->name_ar.' / '.$item->name_en
@@ -60,7 +60,7 @@ class OfferController extends Controller
                 'packs' => $item->packs->map(function ($pack) {
                     return [
                         'id' => $pack->id,
-                        'name' => $pack->packType ? ($pack->packType->name_ar ?? $pack->packType->name_en ?? 'بدون اسم') : 'بدون اسم',
+                        'name' => $pack->uom ? ($pack->uom->name_ar ?? $pack->uom->name_en ?? 'بدون اسم') : 'بدون اسم',
                         'price' => (float) ($pack->price ?? 0),
                         'quantity' => (float) ($pack->quantity ?? 0),
                     ];
@@ -101,7 +101,7 @@ class OfferController extends Controller
 
     public function show(Offer $offer)
     {
-        $offer->load('item', 'itemPack.packType');
+        $offer->load('item', 'itemPack.uom');
 
         return view('dashboard.offers.show', compact('offer'));
     }
@@ -110,7 +110,7 @@ class OfferController extends Controller
     {
         $items = Item::where('is_inactive', false)->get()->map(function ($item) {
             $defaultPack = $item->packs->first();
-            $packType = $defaultPack ? ($defaultPack->packType->name_ar ?? $defaultPack->packType->name_en ?? '') : '';
+            $packType = $defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : '';
 
             $nameDisplay = $item->name_ar && $item->name_en
                 ? $item->name_ar.' / '.$item->name_en
@@ -127,7 +127,7 @@ class OfferController extends Controller
                 'packs' => $item->packs->map(function ($pack) {
                     return [
                         'id' => $pack->id,
-                        'name' => $pack->packType ? ($pack->packType->name_ar ?? $pack->packType->name_en ?? 'بدون اسم') : 'بدون اسم',
+                        'name' => $pack->uom ? ($pack->uom->name_ar ?? $pack->uom->name_en ?? 'بدون اسم') : 'بدون اسم',
                         'price' => (float) ($pack->price ?? 0),
                         'quantity' => (float) ($pack->quantity ?? 0),
                     ];
