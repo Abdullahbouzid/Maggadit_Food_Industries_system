@@ -13,7 +13,7 @@
             </div>
             <h3 id="empty-title" class="text-xl font-bold text-gray-700 mb-2">سلة التسوق فارغة</h3>
             <p id="empty-message" class="text-gray-400 text-sm mb-6">أضف بعض المنتجات الرائعة إلى سلتك</p>
-            <a href="http://127.0.0.1:8002/customer/products" id="empty-shop-btn" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
+            <a href="{{ route('customer.products') }}" id="empty-shop-btn" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
                 استعرض العروض
             </a>
         </div>
@@ -308,7 +308,7 @@
         // زر استعراض العروض (ارتباط وهمي)
         document.getElementById('empty-shop-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
-            window.location.href = 'http://127.0.0.1:8002/customer/products';
+            window.location.href = '{{ route('customer.products') }}';
         });
 
         // زر تبديل اللغة (إذا كان موجوداً في الهيدر)

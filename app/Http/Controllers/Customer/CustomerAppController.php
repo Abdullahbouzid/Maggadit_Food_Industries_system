@@ -25,6 +25,13 @@ use Illuminate\Support\Facades\Session;
 class CustomerAppController extends Controller
 {
     private $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
+    
+    protected $imagePathService;
+
+    public function __construct(ImagePathService $imagePathService)
+    {
+        $this->imagePathService = $imagePathService;
+    }
 
     /**
      * عرض لوحة التحكم الرئيسية (Dashboard)
