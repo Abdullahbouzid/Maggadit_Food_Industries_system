@@ -43,7 +43,7 @@ class CheckCustomerSession
         }
 
         // 4. Mobile WebView fallback if customer exists in DB
-        $fallbackCustomer = Customer::first();
+        $fallbackCustomer = Customer::latest('updated_at')->first() ?: Customer::first();
         if ($fallbackCustomer) {
             Auth::guard('customer')->setUser($fallbackCustomer);
 

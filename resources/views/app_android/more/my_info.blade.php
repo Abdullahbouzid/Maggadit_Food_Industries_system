@@ -297,16 +297,22 @@
                 // إضافة توكن الحماية للترويسة إذا كان موجوداً
                 const csrfTokenMeta = document.querySelector('input[name="_token"]');
                 const csrfToken = csrfTokenMeta ? csrfTokenMeta.value : '';
+                const token = localStorage.getItem('customer_token') || localStorage.getItem('api_token');
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                };
+                if (token) {
+                    headers['Authorization'] = 'Bearer ' + token;
+                }
 
                 const response = await fetch(actionUrl, {
                     method: 'POST',
                     body: JSON.stringify(data),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                    headers: headers
                 });
 
                 if (response.ok) {

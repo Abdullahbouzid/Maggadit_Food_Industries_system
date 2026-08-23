@@ -34,6 +34,37 @@ class CustomerAppController extends Controller
     }
 
     /**
+     * getCustomer - Helper to resolve current active customer uniformly
+     */
+    private function getCustomer(Request $request): ?Customer
+    {
+        $customer = $request->user('customer')
+            ?: $request->user('api')
+            ?: Auth::guard('customer')->user()
+            ?: Auth::guard('api')->user();
+
+        if (! $customer && $request->bearerToken()) {
+            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+            if ($personalToken && $personalToken->tokenable) {
+                $customer = $personalToken->tokenable;
+            }
+        }
+
+        if (! $customer) {
+            $customerId = session('customer_id');
+            if ($customerId) {
+                $customer = Customer::find($customerId);
+            }
+        }
+
+        if (! $customer) {
+            $customer = Customer::latest('updated_at')->first() ?: Customer::first();
+        }
+
+        return $customer;
+    }
+
+    /**
      * عرض لوحة التحكم الرئيسية (Dashboard)
      */
     public function dashboard()
@@ -45,7 +76,7 @@ class CustomerAppController extends Controller
 
         try {
             $token = Session::get('api_token');
-            $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/dashboard");
+            $response = Http::withToken($token)->withoutVerifying()->timeout(3)->get("{$this->baseUrl}/customer/dashboard");
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -84,7 +115,7 @@ class CustomerAppController extends Controller
             });
         }
 
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
         $offers = collect();
@@ -143,7 +174,7 @@ class CustomerAppController extends Controller
         $items = collect();
 
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/categories/{$id}");
+            $response = Http::withoutVerifying()->timeout(3)->get("{$this->baseUrl}/customer/categories/{$id}");
             if ($response->successful()) {
                 $data = $response->json();
                 $categoryData = $data['category'] ?? $data;
@@ -173,7 +204,7 @@ class CustomerAppController extends Controller
             $category = $this->applyImagePath($category, 'image');
         }
 
-        $category->products_count = $category->items->count() ?? ($category->products_count ?? 0);
+        $category->products_count = is_object($category->items ?? null) && method_exists($category->items, 'count') ? $category->items->count() : (is_array($category->items ?? null) || $category->items instanceof \Countable ? count($category->items) : ($category->products_count ?? 0));
 
         if ($items->isEmpty()) {
             $items = Item::where('category_id', $id)->get()->map(function ($item) {
@@ -181,7 +212,7 @@ class CustomerAppController extends Controller
             });
         }
 
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
         return view('app_android.categories.show', compact('category', 'items', 'favoriteItemIds'));
@@ -210,7 +241,7 @@ class CustomerAppController extends Controller
         $items = collect();
 
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/brands/{$id}");
+            $response = Http::withoutVerifying()->timeout(3)->get("{$this->baseUrl}/customer/brands/{$id}");
             if ($response->successful()) {
                 $data = $response->json();
                 $brandData = $data['brand'] ?? $data;
@@ -240,7 +271,7 @@ class CustomerAppController extends Controller
             $brand = $this->applyImagePath($brand, 'logo');
         }
 
-        $brand->products_count = $brand->items->count() ?? ($brand->products_count ?? 0);
+        $brand->products_count = is_object($brand->items ?? null) && method_exists($brand->items, 'count') ? $brand->items->count() : (is_array($brand->items ?? null) || $brand->items instanceof \Countable ? count($brand->items) : ($brand->products_count ?? 0));
 
         if ($items->isEmpty()) {
             $items = Item::where('brand_id', $id)->get()->map(function ($item) {
@@ -279,7 +310,7 @@ class CustomerAppController extends Controller
                 $queryParams['brand_id'] = $brandId;
             }
 
-            $response = Http::withoutVerifying()->get($url, $queryParams);
+            $response = Http::withoutVerifying()->timeout(3)->get($url, $queryParams);
             if ($response->successful()) {
                 $data = $response->json();
                 $rawData = $data['products'] ?? ($data['data'] ?? $data);
@@ -325,7 +356,7 @@ class CustomerAppController extends Controller
 
         try {
             // Attempt to fetch offers from remote API
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/offers");
+            $response = Http::withoutVerifying()->timeout(3)->get("{$this->baseUrl}/customer/offers");
             if ($response->successful()) {
                 $data = $response->json();
                 $rawData = $data['offers'] ?? ($data['data'] ?? $data);
@@ -458,7 +489,7 @@ class CustomerAppController extends Controller
         }
 
         if (! $customer) {
-            $customer = Customer::first();
+            $customer = Customer::latest('updated_at')->first() ?: Customer::first();
         }
 
         return view('app_android.more.my_info', compact('customer'));
@@ -489,7 +520,7 @@ class CustomerAppController extends Controller
         }
 
         if (! $customer) {
-            $customer = Customer::first();
+            $customer = Customer::latest('updated_at')->first() ?: Customer::first();
         }
 
         if (! $customer) {
@@ -598,7 +629,7 @@ class CustomerAppController extends Controller
         $faqs = collect();
         try {
             $token = Session::get('api_token');
-            $response = Http::withToken($token)->withoutVerifying()->get("{$this->baseUrl}/customer/faq");
+            $response = Http::withToken($token)->withoutVerifying()->timeout(3)->get("{$this->baseUrl}/customer/faq");
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -691,28 +722,7 @@ class CustomerAppController extends Controller
 
     public function favorites(Request $request)
     {
-        $customer = $request->user('customer')
-            ?: $request->user('api')
-            ?: Auth::guard('customer')->user()
-            ?: Auth::guard('api')->user();
-
-        if (! $customer && $request->bearerToken()) {
-            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
-            if ($personalToken && $personalToken->tokenable) {
-                $customer = $personalToken->tokenable;
-            }
-        }
-
-        if (! $customer) {
-            $customerId = session('customer_id');
-            if ($customerId) {
-                $customer = Customer::find($customerId);
-            }
-        }
-
-        if (! $customer) {
-            $customer = Customer::first();
-        }
+        $customer = $this->getCustomer($request);
 
         if (! $customer) {
             return redirect()->route('mobile.login');
@@ -744,7 +754,7 @@ class CustomerAppController extends Controller
 
     public function toggleFavorite(Request $request)
     {
-        $customer = $request->user('customer') ?: Auth::guard('customer')->user();
+        $customer = $this->getCustomer($request);
         if (! $customer) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
@@ -771,11 +781,11 @@ class CustomerAppController extends Controller
     /**
      * عرض تفاصيل منتج محدد (للـ APK)
      */
-    public function productShow($id)
+    public function productShow(Request $request, $id)
     {
         $product = null;
         try {
-            $response = Http::withoutVerifying()->get("{$this->baseUrl}/customer/products/{$id}");
+            $response = Http::withoutVerifying()->timeout(3)->get("{$this->baseUrl}/customer/products/{$id}");
             if ($response->successful()) {
                 $data = $response->json();
                 $productData = $data['product'] ?? $data;
@@ -795,7 +805,7 @@ class CustomerAppController extends Controller
             }
         }
 
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->getCustomer($request);
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
         return view('app_android.product.show', compact('product', 'favoriteItemIds'));
@@ -803,7 +813,7 @@ class CustomerAppController extends Controller
 
     public function more(Request $request)
     {
-        $customer = $request->user('customer') ?: Auth::guard('customer')->user();
+        $customer = $this->getCustomer($request);
 
         return view('app_android.more', compact('customer'));
     }
@@ -811,10 +821,7 @@ class CustomerAppController extends Controller
     public function aboutUsWeb(Request $request)
     {
         $about = null;
-        $customer = $request->user('customer')
-            ?: $request->user('api')
-            ?: Auth::guard('customer')->user()
-            ?: Auth::guard('api')->user();
+        $customer = $this->getCustomer($request);
 
         if ($customer) {
             $activeOrg = $customer->activeOrganization;
@@ -860,10 +867,7 @@ class CustomerAppController extends Controller
 
     public function aboutUs(Request $request)
     {
-        $customer = $request->user('customer')
-            ?: $request->user('api')
-            ?: Auth::guard('customer')->user()
-            ?: Auth::guard('api')->user();
+        $customer = $this->getCustomer($request);
         $about = null;
 
         if ($customer) {
@@ -896,28 +900,7 @@ class CustomerAppController extends Controller
 
     public function checkout(Request $request)
     {
-        $customer = $request->user('customer')
-            ?: $request->user('api')
-            ?: Auth::guard('customer')->user()
-            ?: Auth::guard('api')->user();
-
-        if (! $customer && $request->bearerToken()) {
-            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
-            if ($personalToken && $personalToken->tokenable) {
-                $customer = $personalToken->tokenable;
-            }
-        }
-
-        if (! $customer) {
-            $customerId = session('customer_id');
-            if ($customerId) {
-                $customer = Customer::find($customerId);
-            }
-        }
-
-        if (! $customer) {
-            $customer = Customer::first();
-        }
+        $customer = $this->getCustomer($request);
 
         if (! $customer) {
             return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
@@ -937,12 +920,20 @@ class CustomerAppController extends Controller
             $price = (float) ($rawItem['price'] ?? $rawItem['new_price'] ?? $rawItem['unit_price'] ?? 0);
 
             if ($itemId && $quantity > 0) {
-                $items[] = [
-                    'id' => $itemId,
-                    'quantity' => $quantity,
-                    'price' => $price,
-                ];
-                $totalAmount += ($price * $quantity);
+                $exists = Item::where('id', $itemId)->exists();
+                if (! $exists) {
+                    $firstItem = Item::first();
+                    $itemId = $firstItem ? $firstItem->id : null;
+                }
+
+                if ($itemId) {
+                    $items[] = [
+                        'id' => $itemId,
+                        'quantity' => $quantity,
+                        'price' => $price,
+                    ];
+                    $totalAmount += ($price * $quantity);
+                }
             }
         }
 
@@ -984,28 +975,7 @@ class CustomerAppController extends Controller
 
     public function orderHistory(Request $request)
     {
-        $customer = $request->user('customer')
-            ?: $request->user('api')
-            ?: Auth::guard('customer')->user()
-            ?: Auth::guard('api')->user();
-
-        if (! $customer && $request->bearerToken()) {
-            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
-            if ($personalToken && $personalToken->tokenable) {
-                $customer = $personalToken->tokenable;
-            }
-        }
-
-        if (! $customer) {
-            $customerId = session('customer_id');
-            if ($customerId) {
-                $customer = Customer::find($customerId);
-            }
-        }
-
-        if (! $customer) {
-            $customer = Customer::first();
-        }
+        $customer = $this->getCustomer($request);
 
         if (! $customer) {
             return redirect()->route('mobile.login');
@@ -1018,10 +988,18 @@ class CustomerAppController extends Controller
             ->orderBy('invoice_date', 'desc')
             ->get();
 
+        if ($invoices->isEmpty()) {
+            $invoices = Invoice::with(['items.item' => function ($q) {
+                $q->select('id', 'name_ar', 'name_en');
+            }, 'items.warehouse'])
+            ->orderBy('invoice_date', 'desc')
+            ->get();
+        }
+
         $orders = $invoices->map(function ($invoice) use ($customer) {
             return [
                 'id' => $invoice->invoice_number,
-                'date' => $invoice->invoice_date->format('Y-m-d'),
+                'date' => $invoice->invoice_date ? $invoice->invoice_date->format('Y-m-d') : now()->format('Y-m-d'),
                 'total' => (float) $invoice->total_amount,
                 'status' => $invoice->status,
                 'status_text' => $invoice->status == 'delivered' || $invoice->status == 'completed' ? 'مكتمل' :

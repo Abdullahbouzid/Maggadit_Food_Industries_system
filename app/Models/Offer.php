@@ -51,8 +51,12 @@ class Offer extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-            ->where('start_date', '<=', now()->addDay())
-            ->where('end_date', '>=', now());
+            ->where(function ($q) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', now()->addDays(30));
+            })
+            ->where(function ($q) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+            });
     }
 
     public function getFormattedDiscountAttribute()

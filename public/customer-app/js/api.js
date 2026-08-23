@@ -69,7 +69,9 @@ const API = (() => {
 
     // ===== HTTP Request Helper =====
     async function request(endpoint, options = {}) {
-        const url = `${getBaseUrl()}/api${endpoint}`;
+        const cleanEndpoint = endpoint.startsWith('/api/') ? endpoint.substring(4) : endpoint;
+        const formattedEndpoint = cleanEndpoint.startsWith('/') ? cleanEndpoint : '/' + cleanEndpoint;
+        const url = `${getBaseUrl()}/api${formattedEndpoint}`;
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
