@@ -337,6 +337,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/contact-us', function () {
         return view('app_android.more.contact_us');
     })->name('contact');
+    Route::post('/contact-us', [CustomerPagesController::class, 'contactUs'])->name('contact.submit');
     Route::get('/faq', [CustomerPagesController::class, 'faqIndex'])->name('faq');
 
     // مسارات محمية (تتطلب تسجيل دخول بجلسة PHP)

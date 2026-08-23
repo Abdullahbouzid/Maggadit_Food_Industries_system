@@ -282,7 +282,12 @@
 
             fetch('{{ route('customer.checkout') }}', {
                 method: 'POST',
-                headers: headers,
+                headers: {
+                    ...headers,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
                 body: JSON.stringify({ items: cartItems })
             })
             .then(response => response.json())

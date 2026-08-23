@@ -312,7 +312,13 @@
                 const response = await fetch(actionUrl, {
                     method: 'POST',
                     body: JSON.stringify(data),
-                    headers: headers
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    credentials: 'same-origin',
                 });
 
                 if (response.ok) {

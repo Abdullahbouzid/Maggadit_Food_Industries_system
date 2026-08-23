@@ -9,7 +9,6 @@ use App\Services\Customer\ImagePathService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
@@ -24,27 +23,10 @@ class CustomerProfileController extends Controller
 
     public function myInfo(Request $request)
     {
-        $customer = $request->user('customer')
-            ?: $request->user('api')
-            ?: Auth::guard('customer')->user()
-            ?: Auth::guard('api')->user();
-
-        if (! $customer && $request->bearerToken()) {
-            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
-            if ($personalToken && $personalToken->tokenable) {
-                $customer = $personalToken->tokenable;
-            }
-        }
+        $customer = $this->getCustomer($request);
 
         if (! $customer) {
-            $customerId = session('customer_id');
-            if ($customerId) {
-                $customer = Customer::find($customerId);
-            }
-        }
-
-        if (! $customer) {
-            $customer = Customer::latest('updated_at')->first() ?: Customer::first();
+            return redirect()->route('mobile.login');
         }
 
         return view('app_android.more.my_info', compact('customer'));
@@ -52,28 +34,7 @@ class CustomerProfileController extends Controller
 
     public function updateInfo(Request $request)
     {
-        $customer = $request->user('customer')
-            ?: $request->user('api')
-            ?: Auth::guard('customer')->user()
-            ?: Auth::guard('api')->user();
-
-        if (! $customer && $request->bearerToken()) {
-            $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
-            if ($personalToken && $personalToken->tokenable) {
-                $customer = $personalToken->tokenable;
-            }
-        }
-
-        if (! $customer) {
-            $customerId = session('customer_id');
-            if ($customerId) {
-                $customer = Customer::find($customerId);
-            }
-        }
-
-        if (! $customer) {
-            $customer = Customer::latest('updated_at')->first() ?: Customer::first();
-        }
+        $customer = $this->getCustomer($request);
 
         if (! $customer) {
             if ($request->expectsJson() || $request->ajax()) {
@@ -136,33 +97,6 @@ class CustomerProfileController extends Controller
         }
 
         $customer->save();
-
-        $token = Session::get('api_token') ?? $request->bearerToken();
-        if ($token) {
-            try {
-                $data = [
-                    'name' => $customer->name,
-                    'email' => $customer->email,
-                    'username' => $customer->username,
-                ];
-                if ($request->filled('password')) {
-                    $data['password'] = $request->password;
-                    $data['password_confirmation'] = $request->password_confirmation;
-                }
-                $requestHttp = Http::withToken($token)->withoutVerifying();
-                if ($request->hasFile('avatar')) {
-                    $requestHttp->attach(
-                        'avatar',
-                        file_get_contents($request->file('avatar')->getRealPath()),
-                        $request->file('avatar')->getClientOriginalName()
-                    )->post("{$this->baseUrl}/customer/profile/update", $data);
-                } else {
-                    $requestHttp->post("{$this->baseUrl}/customer/profile/update", $data);
-                }
-            } catch (\Exception $e) {
-                Log::warning('Remote Profile Sync Warning: '.$e->getMessage());
-            }
-        }
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json(['success' => true, 'message' => 'تم تحديث البيانات بنجاح', 'customer' => $customer]);
@@ -230,61 +164,34 @@ class CustomerProfileController extends Controller
 
     public function notificationsIndex()
     {
-        $notifications = collect();
-        $unreadCount = 0;
-        $token = Session::get('api_token');
+        $customer = Auth::guard('customer')->user();
+        $customerId = $customer?->id;
 
-        if ($token) {
-            try {
-                $response = Http::withToken($token)
-                    ->withoutVerifying()
-                    ->timeout(8)
-                    ->get("{$this->baseUrl}/customer/notifications");
-
-                if ($response->successful()) {
-                    $data = $response->json();
-                    if (! empty($data['notifications'])) {
-                        $notifications = collect($data['notifications'])->map(fn ($item) => (object) $item);
-                        $unreadCount = $data['unread_count'] ?? count($notifications);
-                    }
-                } else {
-                    Log::warning('Notifications API non-success: '.$response->status().' body: '.substr($response->body(), 0, 200));
-                }
-            } catch (\Exception $e) {
-                Log::error('Notifications API Error: '.$e->getMessage());
+        $dbNotifs = \App\Models\Notification::where(function ($query) use ($customerId) {
+            $query->whereJsonContains('customers', 'all')
+                ->orWhere('channel', 'all');
+            if ($customerId) {
+                $query->orWhere(function ($q) use ($customerId) {
+                    $q->whereJsonContains('customers', (string) $customerId)
+                        ->orWhereJsonContains('customers', $customerId);
+                });
             }
-        }
+        })
+            ->where('is_sent', true)
+            ->latest()
+            ->get();
 
-        if ($notifications->isEmpty()) {
-            $customer = Auth::guard('customer')->user();
-            $customerId = $customer?->id;
-
-            $dbNotifs = Notification::where(function ($query) use ($customerId) {
-                $query->whereJsonContains('customers', 'all')
-                    ->orWhere('channel', 'all');
-                if ($customerId) {
-                    $query->orWhere(function ($q) use ($customerId) {
-                        $q->whereJsonContains('customers', (string) $customerId)
-                            ->orWhereJsonContains('customers', $customerId);
-                    });
-                }
-            })
-                ->where('is_sent', true)
-                ->latest()
-                ->get();
-
-            $notifications = $dbNotifs->map(function ($n) {
-                return (object) [
-                    'id' => $n->id,
-                    'subject' => $n->subject_ar ?: $n->subject_en,
-                    'body' => $n->body_ar ?: $n->body_en,
-                    'image' => null,
-                    'icon_type' => $n->icon_type ?? 'notification',
-                    'created_at' => $n->created_at->diffForHumans(),
-                ];
-            });
-            $unreadCount = count($notifications);
-        }
+        $notifications = $dbNotifs->map(function ($n) {
+            return (object) [
+                'id' => $n->id,
+                'subject' => $n->subject_ar ?: $n->subject_en,
+                'body' => $n->body_ar ?: $n->body_en,
+                'image' => null,
+                'icon_type' => $n->icon_type ?? 'notification',
+                'created_at' => $n->created_at->diffForHumans(),
+            ];
+        });
+        $unreadCount = count($notifications);
 
         return view('app_android.more.notifications', compact('notifications', 'unreadCount'));
     }

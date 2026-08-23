@@ -105,7 +105,13 @@
             const orgId = localStorage.getItem('active_organization_id');
             const url = orgId ? `/api/customer/contact-info?organization_id=${orgId}` : '/api/customer/contact-info';
             
-            fetch(url)
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+            })
                 .then(r => r.json())
                 .then(res => {
                     if (res.success && res.data) {
@@ -176,6 +182,7 @@
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': token,
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({ name, email, message }),
             })
             .then(r => r.json())

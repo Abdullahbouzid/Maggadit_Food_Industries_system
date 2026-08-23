@@ -108,30 +108,79 @@ class CustomerPagesController extends Controller
 
     public function faqIndex()
     {
-        $faqs = collect();
-        try {
-            $token = \Illuminate\Support\Facades\Session::get('api_token');
-            $response = Http::withToken($token)->withoutVerifying()->timeout(3)->get("{$this->baseUrl}/customer/faq");
-
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['faq'])) {
-                    $faqs = collect($data['faq'])->map(function ($item) {
-                        return (object) $item;
-                    });
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('FAQ API Error: '.$e->getMessage());
-        }
-
-        if ($faqs->isEmpty()) {
-            $faqs = Faq::all();
-        }
-
+        $faqs = Faq::all();
         $faqsByCategory = $faqs->groupBy('category');
 
         return view('app_android.more.faq', compact('faqsByCategory'));
+    }
+
+    public function contactUs(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'subject' => 'nullable|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        $organizationId = $request->query('organization_id');
+
+        if (! $organizationId) {
+            $customer = $this->getCustomer($request);
+            if ($customer) {
+                $organizationId = $customer->active_organization_id;
+                if (! $organizationId) {
+                    $activeOrg = $customer->activeOrganizations()->first();
+                    if ($activeOrg) {
+                        $organizationId = $activeOrg->id;
+                    }
+                }
+            }
+        }
+
+        $contactMessage = \App\Models\ContactMessage::create([
+            'organization_id' => $organizationId,
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'subject' => $request->subject,
+            'message' => $request->message,
+            'status' => 'new',
+        ]);
+
+        $organization = null;
+        if ($organizationId) {
+            $organization = \App\Models\Organization::find($organizationId);
+        }
+
+        if (! $organization) {
+            $organization = \App\Models\Organization::first();
+        }
+
+        if ($organization && $organization->forward_contact_messages_to_email) {
+            try {
+                $recipient = $organization->contact_email_recipient ?? $organization->email;
+                if ($recipient) {
+                    \Illuminate\Support\Facades\Mail::to($recipient)->send(new \App\Mail\ContactMessageMail($contactMessage));
+                    $contactMessage->update([
+                        'forwarded_to_email' => true,
+                        'forwarded_at' => now(),
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Failed to forward contact message: '.$e->getMessage());
+            }
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إرسال رسالتك بنجاح',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'تم إرسال رسالتك بنجاح');
     }
 
     private function parseJsonField($value)

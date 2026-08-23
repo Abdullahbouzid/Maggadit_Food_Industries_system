@@ -108,14 +108,6 @@ class CustomerOrderController extends Controller
             ->orderBy('invoice_date', 'desc')
             ->get();
 
-        if ($invoices->isEmpty()) {
-            $invoices = Invoice::with(['items.item' => function ($q) {
-                $q->select('id', 'name_ar', 'name_en');
-            }, 'items.warehouse'])
-            ->orderBy('invoice_date', 'desc')
-            ->get();
-        }
-
         $orders = $invoices->map(function ($invoice) use ($customer) {
             return [
                 'id' => $invoice->invoice_number,
