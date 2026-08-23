@@ -7,6 +7,7 @@ use App\Http\Traits\Customer\JsonFieldParser;
 use App\Models\Banner;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Customer;
 use App\Models\Faq;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -36,7 +37,7 @@ class CustomerAppController extends Controller
     /**
      * getCustomer - Helper to resolve current active customer uniformly
      */
-    private function getCustomer(Request $request): ?Customer
+    private function getCustomer(Request $request): ?\App\Models\Customer
     {
         $customer = $request->user('customer')
             ?: $request->user('api')
