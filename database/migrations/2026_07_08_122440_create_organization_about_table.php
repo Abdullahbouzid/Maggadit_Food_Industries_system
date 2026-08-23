@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('organization_abouts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('organization_id')->constrained()->onDelete('cascade');
-            
+
             // الحقول الرئيسية كما طلبت (عناوين رئيسية كأعمدة)
             $table->string('title')->nullable();              // العنوان الرئيسي
             $table->text('description')->nullable();          // الوصف / القصة
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('cover_image')->nullable();        // صورة الغلاف
             $table->json('statistics')->nullable();           // إحصائيات (مثلاً: {'years':15, 'products':200})
             $table->boolean('is_active')->default(true);
-            
+
             $table->timestamps();
         });
     }

@@ -13,7 +13,7 @@ class Device extends Model
     protected $fillable = [
         'name_en', 'name_ar', 'serial', 'organization_id',
         'model_no', 'brand', 'remark', 'purchase_date',
-        'warranty_expiry', 'is_inactive'
+        'warranty_expiry', 'is_inactive',
     ];
 
     protected $casts = [

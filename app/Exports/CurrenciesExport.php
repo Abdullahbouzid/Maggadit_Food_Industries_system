@@ -1,13 +1,14 @@
 <?php
+
 // app/Exports/CurrenciesExport.php
 
 namespace App\Exports;
 
 use App\Models\Currency;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Http\Request;
 
 class CurrenciesExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -24,10 +25,10 @@ class CurrenciesExport implements FromQuery, WithHeadings, WithMapping
 
         if ($this->request->filled('search')) {
             $search = $this->request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('coin_description', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('coin_description', 'like', "%{$search}%");
             });
         }
 
@@ -41,7 +42,7 @@ class CurrenciesExport implements FromQuery, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'ID', 'Name', 'Code', 'Coin Description', 'Base Currency', 'Created At'
+            'ID', 'Name', 'Code', 'Coin Description', 'Base Currency', 'Created At',
         ];
     }
 

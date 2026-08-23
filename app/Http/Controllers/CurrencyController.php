@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Currency;
-use Illuminate\Http\Request;
 use App\Exports\CurrenciesExport;
 use App\Imports\CurrenciesImport;
+use App\Models\Currency;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CurrencyController extends Controller
@@ -16,10 +18,10 @@ class CurrencyController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('coin_description', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('coin_description', 'like', "%{$search}%");
             });
         }
 
@@ -30,7 +32,9 @@ class CurrencyController extends Controller
         $perPage = $request->get('per_page', 20);
         if ($perPage === 'all') {
             $perPage = $query->count();
-            if ($perPage == 0) $perPage = 1;
+            if ($perPage == 0) {
+                $perPage = 1;
+            }
         }
 
         $currencies = $query->paginate($perPage)->appends($request->query());
@@ -83,8 +87,8 @@ class CurrencyController extends Controller
     public function update(Request $request, Currency $currency)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:currencies,name,' . $currency->id,
-            'code' => 'required|string|max:10|unique:currencies,code,' . $currency->id,
+            'name' => 'required|string|max:255|unique:currencies,name,'.$currency->id,
+            'code' => 'required|string|max:10|unique:currencies,code,'.$currency->id,
             'coin_description' => 'nullable|string|max:255',
             'base_currency' => 'boolean',
         ]);
@@ -108,6 +112,7 @@ class CurrencyController extends Controller
                 ->with('error', 'Cannot delete the base currency.');
         }
         $currency->delete();
+
         return redirect()->route('currencies.index')
             ->with('success', 'Currency deleted successfully.');
     }
@@ -115,31 +120,38 @@ class CurrencyController extends Controller
     public function export(Request $request)
     {
         try {
-            return Excel::download(new CurrenciesExport($request), 'currencies_' . date('Y-m-d_Hi') . '.xlsx');
+            return Excel::download(new CurrenciesExport($request), 'currencies_'.date('Y-m-d_Hi').'.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: ' . $e->getMessage());
+            return back()->with('error', 'Export failed: '.$e->getMessage());
         }
     }
 
     public function downloadTemplate()
     {
         try {
-            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
-                public function collection() { return collect([]); }
-                public function headings(): array {
+            $export = new class implements FromCollection, WithHeadings
+            {
+                public function collection()
+                {
+                    return collect([]);
+                }
+
+                public function headings(): array
+                {
                     return ['name', 'code', 'coin_description', 'base_currency'];
                 }
             };
+
             return Excel::download($export, 'currencies_template.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Template download failed: ' . $e->getMessage());
+            return back()->with('error', 'Template download failed: '.$e->getMessage());
         }
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv'
+            'import_file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
         try {
@@ -156,7 +168,7 @@ class CurrencyController extends Controller
             return redirect()->route('currencies.index')
                 ->with('success', 'Import successful.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: ' . $e->getMessage());
+            return back()->with('error', 'Import failed: '.$e->getMessage());
         }
     }
 }

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\VehicleType;
-use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\VehicleTypesExport;
 use App\Imports\VehicleTypesImport;
+use App\Models\VehicleType;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Facades\Excel;
 
 class VehicleTypeController extends Controller
 {
@@ -16,10 +18,10 @@ class VehicleTypeController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name_en', 'like', "%{$search}%")
-                  ->orWhere('name_ar', 'like', "%{$search}%");
+                    ->orWhere('name_en', 'like', "%{$search}%")
+                    ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
 
@@ -75,7 +77,7 @@ class VehicleTypeController extends Controller
     public function update(Request $request, VehicleType $vehicleType)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:50|unique:vehicle_types,code,' . $vehicleType->id,
+            'code' => 'required|string|max:50|unique:vehicle_types,code,'.$vehicleType->id,
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -91,6 +93,7 @@ class VehicleTypeController extends Controller
     public function destroy(VehicleType $vehicleType)
     {
         $vehicleType->delete();
+
         return redirect()->route('vehicle-types.index')->with('success', 'Vehicle Type deleted successfully.');
     }
 
@@ -98,9 +101,9 @@ class VehicleTypeController extends Controller
     public function export(Request $request)
     {
         try {
-            return Excel::download(new VehicleTypesExport($request), 'vehicle_types_' . date('Y-m-d_Hi') . '.xlsx');
+            return Excel::download(new VehicleTypesExport($request), 'vehicle_types_'.date('Y-m-d_Hi').'.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: ' . $e->getMessage());
+            return back()->with('error', 'Export failed: '.$e->getMessage());
         }
     }
 
@@ -108,15 +111,22 @@ class VehicleTypeController extends Controller
     public function downloadTemplate()
     {
         try {
-            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
-                public function collection() { return collect([]); }
-                public function headings(): array {
+            $export = new class implements FromCollection, WithHeadings
+            {
+                public function collection()
+                {
+                    return collect([]);
+                }
+
+                public function headings(): array
+                {
                     return ['code', 'name_en', 'name_ar', 'description', 'is_active', 'sort_order'];
                 }
             };
+
             return Excel::download($export, 'vehicle_types_template.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Template download failed: ' . $e->getMessage());
+            return back()->with('error', 'Template download failed: '.$e->getMessage());
         }
     }
 
@@ -124,7 +134,7 @@ class VehicleTypeController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv'
+            'import_file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
         try {
@@ -140,7 +150,7 @@ class VehicleTypeController extends Controller
 
             return redirect()->route('vehicle-types.index')->with('success', 'Vehicle Types imported successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: ' . $e->getMessage());
+            return back()->with('error', 'Import failed: '.$e->getMessage());
         }
     }
 }

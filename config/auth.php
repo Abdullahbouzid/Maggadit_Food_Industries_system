@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Customer;
+use App\Models\User;
+
 return [
     'defaults' => [
         'guard' => 'web',
@@ -28,13 +31,13 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\User::class,
+            'model' => User::class,
         ],
 
         // provider خاص بنموذج Customer
         'customers' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Customer::class,
+            'model' => Customer::class,
         ],
     ],
 

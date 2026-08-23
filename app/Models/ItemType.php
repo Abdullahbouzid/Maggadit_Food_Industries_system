@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/ItemType.php
 
 namespace App\Models;
@@ -11,7 +12,7 @@ class ItemType extends Model
     use HasFactory;
 
     protected $fillable = [
-        'code', 'name', 'description', 'image', 'is_active', 'sort_order'
+        'code', 'name', 'description', 'image', 'is_active', 'sort_order',
     ];
 
     protected $casts = [
@@ -21,6 +22,6 @@ class ItemType extends Model
     // يمكنك إضافة accessor لصورة كاملة الرابط
     public function getImageUrlAttribute()
     {
-        return $this->image ? asset('uploads/' . $this->image) : null;
+        return $this->image ? asset('uploads/'.$this->image) : null;
     }
 }

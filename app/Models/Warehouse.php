@@ -16,7 +16,7 @@ class Warehouse extends Model
         'gps_latitude', 'gps_longitude', 'zip_code',
         'country_id', 'state_id', 'city_id', 'area_id', 'street',
         'destinations', 'sources', 'employees',
-        'is_active', 'sort_order'
+        'is_active', 'sort_order',
     ];
 
     protected $casts = [

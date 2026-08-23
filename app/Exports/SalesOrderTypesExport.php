@@ -1,13 +1,14 @@
 <?php
+
 // app/Exports/SalesOrderTypesExport.php
 
 namespace App\Exports;
 
 use App\Models\SalesOrderType;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Http\Request;
 
 class SalesOrderTypesExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -24,9 +25,9 @@ class SalesOrderTypesExport implements FromQuery, WithHeadings, WithMapping
 
         if ($this->request->filled('search')) {
             $search = $this->request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
@@ -44,7 +45,7 @@ class SalesOrderTypesExport implements FromQuery, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'ID', 'Name', 'Code', 'Active', 'Default', 'Created At'
+            'ID', 'Name', 'Code', 'Active', 'Default', 'Created At',
         ];
     }
 

@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AreasExport;
+use App\Imports\AreasImport;
 use App\Models\Area;
 use App\Models\State;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\AreasExport;
-use App\Imports\AreasImport;
 
 class AreaController extends Controller
 {
@@ -17,10 +19,10 @@ class AreaController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name_en', 'like', "%{$search}%")
-                  ->orWhere('name_ar', 'like', "%{$search}%");
+                    ->orWhere('name_en', 'like', "%{$search}%")
+                    ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
 
@@ -51,6 +53,7 @@ class AreaController extends Controller
     public function create()
     {
         $states = State::where('is_active', true)->orderBy('name_en')->get();
+
         return view('dashboard.data_definition.w&v.area.create', compact('states'));
     }
 
@@ -74,19 +77,21 @@ class AreaController extends Controller
     public function show(Area $area)
     {
         $area->load('state');
+
         return view('dashboard.data_definition.w&v.area.show', compact('area'));
     }
 
     public function edit(Area $area)
     {
         $states = State::where('is_active', true)->orderBy('name_en')->get();
+
         return view('dashboard.data_definition.w&v.area.edit', compact('area', 'states'));
     }
 
     public function update(Request $request, Area $area)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:50|unique:areas,code,' . $area->id,
+            'code' => 'required|string|max:50|unique:areas,code,'.$area->id,
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -103,6 +108,7 @@ class AreaController extends Controller
     public function destroy(Area $area)
     {
         $area->delete();
+
         return redirect()->route('areas.index')->with('success', 'Area deleted successfully.');
     }
 
@@ -110,9 +116,9 @@ class AreaController extends Controller
     public function export(Request $request)
     {
         try {
-            return Excel::download(new AreasExport($request), 'areas_' . date('Y-m-d_Hi') . '.xlsx');
+            return Excel::download(new AreasExport($request), 'areas_'.date('Y-m-d_Hi').'.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Export failed: ' . $e->getMessage());
+            return back()->with('error', 'Export failed: '.$e->getMessage());
         }
     }
 
@@ -120,15 +126,22 @@ class AreaController extends Controller
     public function downloadTemplate()
     {
         try {
-            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
-                public function collection() { return collect([]); }
-                public function headings(): array {
+            $export = new class implements FromCollection, WithHeadings
+            {
+                public function collection()
+                {
+                    return collect([]);
+                }
+
+                public function headings(): array
+                {
                     return ['code', 'name_en', 'name_ar', 'description', 'state_id', 'is_active', 'sort_order'];
                 }
             };
+
             return Excel::download($export, 'areas_template.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Template download failed: ' . $e->getMessage());
+            return back()->with('error', 'Template download failed: '.$e->getMessage());
         }
     }
 
@@ -136,7 +149,7 @@ class AreaController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv'
+            'import_file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
         try {
@@ -152,7 +165,7 @@ class AreaController extends Controller
 
             return redirect()->route('areas.index')->with('success', 'Areas imported successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: ' . $e->getMessage());
+            return back()->with('error', 'Import failed: '.$e->getMessage());
         }
     }
 }

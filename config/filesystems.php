@@ -59,18 +59,15 @@ return [
             'throw' => false,
             'report' => false,
         ],
-        
 
-    // … القرص الافتراضي public يبقى كما هو (لن نستخدمه)
-    // قرص جديد للملفات العامة
-    'uploads' => [
-        'driver' => 'local',
-        'root'   => public_path('uploads'),          // <‑‑ المجلد الجديد
-        'url'    => rtrim(env('APP_URL', 'http://localhost'), '/').'/uploads',
-        'visibility' => 'public',
-    ],
-
-
+        // … القرص الافتراضي public يبقى كما هو (لن نستخدمه)
+        // قرص جديد للملفات العامة
+        'uploads' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),          // <‑‑ المجلد الجديد
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/uploads',
+            'visibility' => 'public',
+        ],
 
     ],
 

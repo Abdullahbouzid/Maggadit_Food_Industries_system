@@ -15,7 +15,7 @@ class ProductionBatch extends Model
         'production_date',
         'expiry_date',
         'status',
-        'notes'
+        'notes',
     ];
 
     protected $casts = [
@@ -26,6 +26,5 @@ class ProductionBatch extends Model
     public function batchItems()
     {
         return $this->hasMany(BatchItem::class, 'batch_id');
-    }   
-    
+    }
 }

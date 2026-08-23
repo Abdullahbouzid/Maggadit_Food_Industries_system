@@ -6,6 +6,25 @@
     @include('app_android.partials.mobile.header', ['title' => __('messages.dashboard_title')])
 
     <div class="p-4 space-y-6 mb-5" dir="rtl">
+    <style>
+        .offer-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .offer-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 0 0 0 20px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: -2px 2px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+    </style>
 
    {{-- ========== شريط الدعايات (Carousel) مع بطاقات وتمرير تلقائي ========== --}}
         <div class="relative">
@@ -115,7 +134,11 @@
                                         <span class="text-gray-400 text-xs line-through mr-1">{{ number_format($product->old_price) }} ر.س</span>
                                     @endif
                                 </div>
-                                <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" data-name="{{ $product->name ?? $product->name_en }}" data-price="{{ $product->price ?? 0 }}">شراء</button>
+                                <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" 
+                                        data-id="{{ $product->id }}"
+                                        data-name="{{ $product->name ?? $product->name_en }}" 
+                                        data-price="{{ $product->price ?? 0 }}"
+                                        data-image="{{ $product->image ?? '📦' }}">إضافة إلى السلة</button>
                             </div>
                         </div>
                     </div>
@@ -129,72 +152,105 @@
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">عروض حصرية</h2>
-                <a href="{{ route('customer.offer') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
+                <a href="{{ route('customer.offers') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div class="space-y-4">
                 @forelse($offers ?? [] as $offer)
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card">
+                        <div class="offer-badge">
+                            -{{ $offer->discount_percentage ?? 0 }}%
+                        </div>
                         <div class="flex flex-row">
                             <div class="relative w-28 h-28 overflow-hidden">
                                 @if($offer->image)
                                     <img src="{{ $offer->image }}" alt="{{ $offer->title }}" class="w-full h-full object-cover">
                                 @else
-                                    <div class="w-full h-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl">
+                                    <div class="w-full h-28 bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl">
                                         🛍️
                                     </div>
                                 @endif
-                                <div class="absolute top-1 left-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md">{{ $offer->discount ?? '-50%' }}</div>
                             </div>
                             <div class="flex-1 p-3 text-right">
-                                <h3 class="font-bold text-gray-800 text-base">{{ $offer->title }}</h3>
-                                <p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{{ $offer->description }}</p>
+                                <h3 class="font-bold text-gray-800 text-base">{{ $offer->title ?: ($offer->name ?? 'عرض') }}</h3>
+                                @if($offer->description)
+                                    <p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{{ $offer->description }}</p>
+                                @endif
                                 <div class="flex justify-between items-center mt-3">
                                     <div class="flex items-center gap-1 text-[11px] text-gray-500">
                                         <span class="text-amber-500">⏰</span>
-                                        <span>ينتهي: {{ \Carbon\Carbon::parse($offer->expiry_date)->format('d M Y') }}</span>
+                                        <span>ينتهي: {{ \Carbon\Carbon::parse($offer->end_date)->format('d M Y') }}</span>
                                     </div>
+                                    <button class="add-to-cart bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition" 
+                                            data-id="{{ $offer->item_id }}" 
+                                            data-name="{{ $offer->name ?? $offer->title ?? 'عرض' }}" 
+                                            data-price="{{ $offer->new_price }}"
+                                            data-image="{{ $offer->image ?? '' }}">
+                                        إضافة إلى السلة
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 @empty
-                    <!-- بيانات تجريبية ثابتة -->
-                    @php
-                        $offers = [
-                            ['id' => 1, 'title' => 'تخفيضات الصيف الكبرى', 'description' => 'خصم يصل إلى 50% على جميع الملابس الصيفية والإكسسوارات الأصلية. سارع بالشراء!', 'discount' => '-50%', 'expiry' => '31 يوليو 2025'],
-                            ['id' => 2, 'title' => 'عرض خاص على الإلكترونيات', 'description' => 'احصل على خصم 30% على أحدث الأجهزة الإلكترونية لفترة محدودة.', 'discount' => '-30%', 'expiry' => '15 أغسطس 2025'],
-                        ];
-                    @endphp
-                    @foreach($offers as $offer)
-                        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                            <div class="flex flex-row">
-                                <div class="relative w-28 h-28 bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl overflow-hidden">
-                                    <span>🛍️</span>
-                                    <div class="absolute top-1 left-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md">{{ $offer['discount'] }}</div>
-                                </div>
-                                <div class="flex-1 p-3 text-right">
-                                    <h3 class="font-bold text-gray-800 text-base">{{ $offer['title'] }}</h3>
-                                    <p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{{ $offer['description'] }}</p>
-                                    <div class="flex justify-between items-center mt-3">
-                                        <div class="flex items-center gap-1 text-[11px] text-gray-500">
-                                            <span class="text-amber-500">⏰</span>
-                                            <span>ينتهي: {{ $offer['expiry'] }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                    <div class="text-center py-8">
+                        <i class="fas fa-tag text-gray-300 text-4xl mb-3"></i>
+                        <p class="text-gray-500">لا توجد عروض متاحة حالياً</p>
+                    </div>
                 @endforelse
             </div>
-            <br><br><br>
         </div>
-
+        <br>
+        <br>
+       
     </div>
+
+    <!-- Toast container -->
+    <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <script>
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('cart-toast');
+            if (!toast) return;
+            toast.innerText = msg;
+            toast.style.background = isError ? '#dc2626' : '#1f2937';
+            toast.classList.remove('opacity-0', 'translate-y-10');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-10');
+            }, 2000);
+        }
+
+        document.querySelectorAll('.add-to-cart').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                let id = this.getAttribute('data-id');
+                let name = this.getAttribute('data-name');
+                let price = this.getAttribute('data-price');
+                let image = this.getAttribute('data-image');
+                
+                let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
+                let existingItemIndex = cartItems.findIndex(item => item.id == id);
+                
+                if (existingItemIndex > -1) {
+                    cartItems[existingItemIndex].quantity += 1;
+                } else {
+                    cartItems.push({
+                        id: id,
+                        name: name,
+                        price: price,
+                        quantity: 1,
+                        image: image,
+                        discount: 0
+                    });
+                }
+                
+                localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
+                showToast(`✅ تم إضافة "${name}" إلى السلة`);
+            });
+        });
         // ========== Carousel with Auto-Scroll ==========
         const carousel = document.getElementById('ad-carousel');
         const dots = document.querySelectorAll('#ad-dots .rounded-full');

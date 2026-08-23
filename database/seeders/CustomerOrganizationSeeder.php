@@ -1,12 +1,12 @@
 <?php
+
 // database/seeders/CustomerOrganizationSeeder.php
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Customer;
 use App\Models\Organization;
-
+use Illuminate\Database\Seeder;
 
 class CustomerOrganizationSeeder extends Seeder
 {

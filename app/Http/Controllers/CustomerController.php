@@ -2,56 +2,59 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CustomersExport;
+use App\Imports\CustomersImport;
 use App\Models\Customer;
 use App\Models\Organization;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\CustomersExport;
-use App\Imports\CustomersImport;
+
 class CustomerController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
- public function index(Request $request)
-{
-    $query = Customer::query();
+    public function index(Request $request)
+    {
+        $query = Customer::query();
 
-    // البحث
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('username', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
-        });
+        // البحث
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // عدد السجلات لكل صفحة
+        $perPage = $request->input('per_page', 15);
+        if ($perPage === 'all') {
+            $perPage = 999999; // عدد كبير جداً لعرض الكل مع بقاء pagination
+        }
+
+        $customers = $query->paginate($perPage);
+
+        // الإحصائيات
+        $totalCustomers = Customer::count();
+        $withAvatar = Customer::whereNotNull('avatar')->count();
+        $withActiveOrganization = Customer::whereNotNull('active_organization_id')->count();
+        $withoutOrganization = Customer::whereNull('active_organization_id')->count();
+
+        return view('dashboard.customers.index', compact(
+            'customers',
+            'totalCustomers',
+            'withAvatar',
+            'withActiveOrganization',
+            'withoutOrganization'
+        ));
     }
-
-    // عدد السجلات لكل صفحة
-    $perPage = $request->input('per_page', 15);
-    if ($perPage === 'all') {
-        $perPage = 999999; // عدد كبير جداً لعرض الكل مع بقاء pagination
-    }
-
-    $customers = $query->paginate($perPage);
-
-    // الإحصائيات
-    $totalCustomers = Customer::count();
-    $withAvatar = Customer::whereNotNull('avatar')->count();
-    $withActiveOrganization = Customer::whereNotNull('active_organization_id')->count();
-    $withoutOrganization = Customer::whereNull('active_organization_id')->count();
-
-    return view('dashboard.customers.index', compact(
-        'customers',
-        'totalCustomers',
-        'withAvatar',
-        'withActiveOrganization',
-        'withoutOrganization'
-    ));
-}
 
     /**
      * Show the form for creating a new resource.
@@ -59,6 +62,7 @@ class CustomerController extends Controller
     public function create()
     {
         $organizations = Organization::pluck('name', 'id');
+
         return view('dashboard.customers.create', compact('organizations'));
     }
 
@@ -87,7 +91,7 @@ class CustomerController extends Controller
         // معالجة الصورة
         if ($request->hasFile('avatar')) {
             $avatar = $request->file('avatar');
-            $avatarName = time() . '.' . $avatar->getClientOriginalExtension();
+            $avatarName = time().'.'.$avatar->getClientOriginalExtension();
             $avatar->move(public_path('uploads/customers'), $avatarName);
             $input['avatar'] = $avatarName;
         }
@@ -121,6 +125,7 @@ class CustomerController extends Controller
     public function edit(Customer $customer)
     {
         $organizations = Organization::pluck('name', 'id');
+
         return view('dashboard.customers.edit', compact('customer', 'organizations'));
     }
 
@@ -131,8 +136,8 @@ class CustomerController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:customers,username,' . $customer->id,
-            'email' => 'required|string|email|max:255|unique:customers,email,' . $customer->id,
+            'username' => 'required|string|max:255|unique:customers,username,'.$customer->id,
+            'email' => 'required|string|email|max:255|unique:customers,email,'.$customer->id,
             'password' => 'nullable|string|min:8|confirmed',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'active_organization_id' => 'nullable|exists:organizations,id',
@@ -149,11 +154,11 @@ class CustomerController extends Controller
         // معالجة الصورة
         if ($request->hasFile('avatar')) {
             // حذف الصورة القديمة إذا وجدت
-            if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
-                unlink(public_path('uploads/customers/' . $customer->avatar));
+            if ($customer->avatar && file_exists(public_path('uploads/customers/'.$customer->avatar))) {
+                unlink(public_path('uploads/customers/'.$customer->avatar));
             }
             $avatar = $request->file('avatar');
-            $avatarName = time() . '.' . $avatar->getClientOriginalExtension();
+            $avatarName = time().'.'.$avatar->getClientOriginalExtension();
             $avatar->move(public_path('uploads/customers'), $avatarName);
             $input['avatar'] = $avatarName;
         } else {
@@ -174,7 +179,7 @@ class CustomerController extends Controller
         // تحديث العلاقة مع المنظمة النشطة
         if ($request->filled('active_organization_id')) {
             // التأكد من إضافة العميل إلى هذه المنظمة في الجدول الوسيط
-            if (!$customer->organizations()->where('organization_id', $request->active_organization_id)->exists()) {
+            if (! $customer->organizations()->where('organization_id', $request->active_organization_id)->exists()) {
                 $customer->organizations()->attach($request->active_organization_id, ['is_active' => false]);
             }
             // تعيين المنظمة النشطة باستخدام الدالة المعدة
@@ -199,8 +204,8 @@ class CustomerController extends Controller
     public function destroy(Customer $customer)
     {
         // حذف الصورة إذا وجدت
-        if ($customer->avatar && file_exists(public_path('uploads/customers/' . $customer->avatar))) {
-            unlink(public_path('uploads/customers/' . $customer->avatar));
+        if ($customer->avatar && file_exists(public_path('uploads/customers/'.$customer->avatar))) {
+            unlink(public_path('uploads/customers/'.$customer->avatar));
         }
 
         $customer->delete();
@@ -209,12 +214,12 @@ class CustomerController extends Controller
             ->with('success', 'Customer deleted successfully.');
     }
 
-       public function export(Request $request)
+    public function export(Request $request)
     {
         try {
-            return Excel::download(new CustomersExport($request), 'customers_' . date('Y-m-d_Hi') . '.xlsx');
+            return Excel::download(new CustomersExport($request), 'customers_'.date('Y-m-d_Hi').'.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'فشل التصدير: ' . $e->getMessage());
+            return back()->with('error', 'فشل التصدير: '.$e->getMessage());
         }
     }
 
@@ -224,19 +229,22 @@ class CustomerController extends Controller
     public function downloadTemplate()
     {
         try {
-            $export = new class implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+            $export = new class implements FromCollection, WithHeadings
+            {
                 public function collection()
                 {
                     return collect([]);
                 }
+
                 public function headings(): array
                 {
                     return ['name', 'username', 'email', 'password', 'active_organization_name']; // الأعمدة المطلوبة
                 }
             };
+
             return Excel::download($export, 'customers_template.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'فشل تنزيل القالب: ' . $e->getMessage());
+            return back()->with('error', 'فشل تنزيل القالب: '.$e->getMessage());
         }
     }
 
@@ -246,13 +254,13 @@ class CustomerController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|file|mimes:xlsx,xls,csv'
+            'import_file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
         try {
             $import = new CustomersImport;
             Excel::import($import, $request->file('import_file'));
-            
+
             $errors = $import->getErrors();
             if (count($errors) > 0) {
                 return redirect()->route('customers.index')
@@ -262,7 +270,7 @@ class CustomerController extends Controller
 
             return redirect()->route('customers.index')->with('success', 'تم استيراد العملاء بنجاح.');
         } catch (\Exception $e) {
-            return back()->with('error', 'فشل الاستيراد: ' . $e->getMessage());
+            return back()->with('error', 'فشل الاستيراد: '.$e->getMessage());
         }
     }
 }

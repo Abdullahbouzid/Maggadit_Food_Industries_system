@@ -1,10 +1,14 @@
 <?php
+
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Http\Request;
+
 require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
-$request = Illuminate\Http\Request::create('/mobile/register', 'POST', [
+$request = Request::create('/mobile/register', 'POST', [
     'name' => 'Test User 2',
     'username' => 'testuser2',
     'email' => 'test2@example.com',
@@ -13,5 +17,5 @@ $request = Illuminate\Http\Request::create('/mobile/register', 'POST', [
 $request->headers->set('Accept', 'application/json');
 
 $response = app()->handle($request);
-echo "Status: " . $response->getStatusCode() . "\n";
-echo "Content: " . $response->getContent() . "\n";
+echo 'Status: '.$response->getStatusCode()."\n";
+echo 'Content: '.$response->getContent()."\n";

@@ -37,6 +37,13 @@
                     <span class="align-middle">Roles</span>
                 </a>
             </li>
+            <li class="sidebar-item {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('invoices.index') }}">
+                    <i class="align-middle" data-feather="file-text"></i>
+                    <span class="align-middle">Invoices</span>
+                </a>
+            </li>
+            
             <li class="sidebar-item {{ request()->routeIs('permissions.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('permissions.index') }}">
                     <i class="align-middle" data-feather="key"></i>
@@ -100,6 +107,7 @@
                 ['label' => 'customer demographics', 'icon' => 'user-plus', 'route' => route('customers.index'), 'disabled' => false],
                 ['label' => 'contact information', 'icon' => 'phone', 'route' => '#', 'disabled' => false],
                 ['label' => 'loyalty & segments', 'icon' => 'award', 'route' => '#', 'disabled' => false],
+                ['label' => 'organization about', 'icon' => 'info', 'route' => route('organization-about.index'), 'disabled' => false],
             ]
         ],
         'products' => [
@@ -232,8 +240,22 @@
                             <i data-feather="bell" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
                             <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">إرسال إشعار</small>
                         </div>
-                    </a>
-                     <!-- 5. Organization About (جديد) -->
+                     </a>
+                     <!-- 5. Offers -->
+                     <a href="{{ route('offers.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
+                         <div class="card-body d-flex flex-column align-items-center py-4">
+                             <i data-feather="tag" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
+                             <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">العروض</small>
+                         </div>
+                     </a>
+                     <!-- 6. Contact Messages -->
+                     <a href="{{ route('contact-messages.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
+                         <div class="card-body d-flex flex-column align-items-center py-4">
+                             <i data-feather="message-square" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
+                             <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">خدمة العملاء</small>
+                         </div>
+                     </a>
+                     <!-- 7. Organization About (جديد) -->
                     <a href="{{ route('organization-about.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
                         <div class="card-body d-flex flex-column align-items-center py-4">
                             <i data-feather="info" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>

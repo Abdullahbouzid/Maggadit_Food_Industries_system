@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/Uom.php
 
 namespace App\Models;
@@ -13,7 +14,7 @@ class Uom extends Model
     protected $table = 'uoms';
 
     protected $fillable = [
-        'code', 'name_en', 'name_ar', 'uom_symbol', 'description', 'image', 'is_active', 'sort_order'
+        'code', 'name_en', 'name_ar', 'uom_symbol', 'description', 'image', 'is_active', 'sort_order',
     ];
 
     protected $casts = [
@@ -22,6 +23,6 @@ class Uom extends Model
 
     public function getImageUrlAttribute()
     {
-        return $this->image ? asset('uploads/' . $this->image) : null;
+        return $this->image ? asset('uploads/'.$this->image) : null;
     }
 }

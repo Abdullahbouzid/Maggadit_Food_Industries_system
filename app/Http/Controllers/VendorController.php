@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vendor;
-use Illuminate\Http\Request;
 use App\Exports\VendorsExport;
 use App\Imports\VendorsImport;
+use App\Models\Vendor;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class VendorController extends Controller
@@ -18,9 +18,9 @@ class VendorController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('vendor_name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('contact_person', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('contact_person', 'like', "%{$search}%");
             });
         }
 
@@ -40,10 +40,12 @@ class VendorController extends Controller
             'vendors', 'totalVendors', 'activeVendors', 'inactiveVendors', 'totalCommission'
         ));
     }
+
     public function create()
     {
         return view('dashboard.data_definition.master.General.vendors.create');
     }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -62,47 +64,36 @@ class VendorController extends Controller
 
         return redirect()->route('vendors.index')->with('success', 'Vendor created successfully.');
     }
+
     public function show(Vendor $vendor)
     {
         return view('dashboard.data_definition.master.General.vendors.show', compact('vendor'));
     }
+
     public function edit(Vendor $vendor)
     {
-                               
+
         return view('dashboard.data_definition.master.General.vendors.edit', compact('vendor'));
     }
+
     public function update(Request $request, Vendor $vendor)
     {
         $request->validate([
             'vendor_name' => 'required|string|max:255',
-            'code' => 'required|string|max:255|unique:vendors,code,' . $vendor->id,
+            'code' => 'required|string|max:255|unique:vendors,code,'.$vendor->id,
             'phone' => 'nullable|string|max:20',
             'fax' => 'nullable|string|max:20',
             'contact_person' => 'nullable|string|max:255',
             'contact_number' => 'nullable|string|max:20',
-            'street' => 'nullable|string|max:255',  
+            'street' => 'nullable|string|max:255',
             'commission_percentage' => 'nullable|numeric|min:0|max:100',
             'inactive' => 'boolean',
-        ]); 
+        ]);
 
+        $vendor->update($request->all());
 
-        $vendor->update($request->all());   
         return redirect()->route('vendors.index')->with('success', 'Vendor updated successfully.');
-    }   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    }
 
     public function export(Request $request)
     {
@@ -111,7 +102,7 @@ class VendorController extends Controller
 
     public function downloadTemplate()
     {
-        return Excel::download(new VendorsExport(new Request()), 'vendors_template.xlsx');
+        return Excel::download(new VendorsExport(new Request), 'vendors_template.xlsx');
     }
 
     public function import(Request $request)
@@ -122,14 +113,13 @@ class VendorController extends Controller
 
         try {
             Excel::import(new VendorsImport, $request->file('file'));
+
             return redirect()->route('vendors.index')->with('success', 'Vendors imported successfully.');
         } catch (\Exception $e) {
-            return redirect()->route('vendors.index')->with('error', 'Error importing vendors: ' . $e->getMessage());
+            return redirect()->route('vendors.index')->with('error', 'Error importing vendors: '.$e->getMessage());
         }
     }
 
-
     // Other CRUD methods (create, store, show, edit, update, destroy) would go here
-
 
 }

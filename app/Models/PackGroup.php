@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/PackGroup.php
 
 namespace App\Models;
@@ -13,7 +14,7 @@ class PackGroup extends Model
     protected $table = 'pack_groups';
 
     protected $fillable = [
-        'code', 'name_en', 'name_ar', 'is_active', 'sort_order'
+        'code', 'name_en', 'name_ar', 'is_active', 'sort_order',
     ];
 
     protected $casts = [

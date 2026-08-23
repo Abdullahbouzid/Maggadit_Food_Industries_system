@@ -18,15 +18,15 @@
         <div class="grid grid-cols-3 gap-2 mb-5">
             <div class="bg-white rounded-xl shadow p-2 text-center">
                 <p class="text-xs text-gray-400">الكل</p>
-                <p class="text-xl font-bold text-gray-800">4</p>
+                <p class="text-xl font-bold text-gray-800">{{ $stats['all'] ?? 0 }}</p>
             </div>
             <div class="bg-white rounded-xl shadow p-2 text-center">
                 <p class="text-xs text-gray-400">قيد المعالجة</p>
-                <p class="text-xl font-bold text-yellow-600">1</p>
+                <p class="text-xl font-bold text-yellow-600">{{ $stats['pending'] ?? 0 }}</p>
             </div>
             <div class="bg-white rounded-xl shadow p-2 text-center">
                 <p class="text-xs text-gray-400">تم التوصيل</p>
-                <p class="text-xl font-bold text-green-600">2</p>
+                <p class="text-xl font-bold text-green-600">{{ $stats['delivered'] ?? 0 }}</p>
             </div>
         </div>
 
@@ -42,23 +42,7 @@
 
         <!-- قائمة الطلبات -->
         <div class="space-y-3" id="orders-container">
-            @php
-                $orders = [
-                    ['id' => '#1001', 'date' => '2025-05-20', 'total' => 299, 'status' => 'delivered', 'status_text' => 'تم التوصيل', 'items' => [
-                        ['name' => 'حذاء رياضي نيكي', 'qty' => 1, 'price' => 299],
-                    ], 'address' => 'الرياض - حي النخيل، شارع الأمير سلطان، مبنى 12', 'phone' => '05xxxxxxxx', 'payment_method' => 'بطاقة ائتمان', 'delivery_fee' => 0, 'coupon_discount' => 0],
-                    ['id' => '#1002', 'date' => '2025-05-15', 'total' => 1299, 'status' => 'pending', 'status_text' => 'قيد المعالجة', 'items' => [
-                        ['name' => 'ساعة ابل', 'qty' => 1, 'price' => 1299],
-                    ], 'address' => 'جدة - شارع الأندلس، برج الأعمال، الطابق 5', 'phone' => '05yyyyyyyy', 'payment_method' => 'محفظة رقمية', 'delivery_fee' => 15, 'coupon_discount' => 0],
-                    ['id' => '#1003', 'date' => '2025-05-10', 'total' => 89, 'status' => 'cancelled', 'status_text' => 'تم الإلغاء', 'items' => [
-                        ['name' => 'تي شيرت قطني', 'qty' => 1, 'price' => 89],
-                    ], 'address' => 'الدمام - حي الفيصلية، شارع البحرين', 'phone' => '05zzzzzzzz', 'payment_method' => 'بطاقة مدى', 'delivery_fee' => 0, 'coupon_discount' => 0],
-                    ['id' => '#1004', 'date' => '2025-05-05', 'total' => 459, 'status' => 'delivered', 'status_text' => 'تم التوصيل', 'items' => [
-                        ['name' => 'حذاء رياضي اديداس', 'qty' => 1, 'price' => 359],
-                        ['name' => 'جورب رياضي', 'qty' => 2, 'price' => 50],
-                    ], 'address' => 'مكة المكرمة - العزيزية، مجمع الأندلس', 'phone' => '05wwwwwwww', 'payment_method' => 'تحويل بنكي', 'delivery_fee' => 20, 'coupon_discount' => 10],
-                ];
-            @endphp
+
             @foreach($orders as $index => $order)
                 <div class="bg-white rounded-2xl shadow-md p-4 border border-gray-100 order-card" data-status="{{ $order['status'] }}">
                     <div class="flex justify-between items-start">
@@ -194,7 +178,7 @@
         const closeBtn = document.getElementById('close-order-modal');
 
         function showOrderDetails(data) {
-            document.getElementById('modal-order-id').innerText = data.id;
+                document.getElementById('modal-order-id').innerText = data.id;
             document.getElementById('modal-order-date').innerText = new Date(data.date).toLocaleDateString('ar-EG');
             document.getElementById('modal-order-status').innerText = data.status;
             
@@ -206,11 +190,14 @@
             
             // عرض المنتجات
             let itemsHtml = '';
-            data.items.forEach(item => {
+             data.items.forEach(item => {
                 itemsHtml += `<div class="flex justify-between text-xs">
                                 <span>${item.name} × ${item.qty}</span>
-                                <span>${item.price * item.qty} ر.س</span>
+                                <span class="text-gray-500">${item.price * item.qty} ر.س</span>
                             </div>`;
+                if (item.warehouse) {
+                    itemsHtml += `<div class="text-xs text-gray-400 mr-4">المخزن: ${item.warehouse}</div>`;
+                }
             });
             document.getElementById('modal-order-items').innerHTML = itemsHtml;
             

@@ -1,10 +1,10 @@
 <?php
+
 // app/Http/Controllers/ItemPackPackGroupController.php
 
 namespace App\Http\Controllers;
 
 use App\Models\ItemPack;
-use App\Models\PackGroup;
 use Illuminate\Http\Request;
 
 class ItemPackPackGroupController extends Controller
@@ -26,6 +26,7 @@ class ItemPackPackGroupController extends Controller
     {
         $pack = ItemPack::findOrFail($itemPackId);
         $pack->packGroups()->detach($packGroupId);
+
         return response()->json(['success' => true]);
     }
 }
