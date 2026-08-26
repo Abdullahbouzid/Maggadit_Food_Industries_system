@@ -305,6 +305,10 @@
 
                 if (response.ok) {
                     const data = await response.json();
+                    if (data.token) {
+                        localStorage.setItem('api_token', data.token);
+                        localStorage.setItem('customer_token', data.token);
+                    }
                     if (data.success && data.redirect) {
                         window.location.href = data.redirect;
                     } else {

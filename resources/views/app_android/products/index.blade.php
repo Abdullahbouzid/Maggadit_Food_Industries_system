@@ -69,7 +69,7 @@
         </div>
 
         {{-- Products Grid --}}
-        <div class="grid grid-cols-2 gap-4">
+        <div id="products-grid" class="grid grid-cols-2 gap-4">
             @forelse($items as $item)
                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
                     <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ in_array($item->id, $favoriteItemIds ?? []) ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $item->id }}">
@@ -228,5 +228,69 @@
                 document.getElementById('apply-filters')?.click();
             }
         });
+
+        // Dynamic Proxy Fallback Fetcher for Products
+        const productsGrid = document.getElementById('products-grid');
+        if (productsGrid && productsGrid.children.length <= 1 && productsGrid.querySelector('p')) {
+            fetch('/customer/proxy/products')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.products) {
+                        const items = data.products.data || data.products;
+                        if (Array.isArray(items) && items.length > 0) {
+                            productsGrid.innerHTML = items.map(item => `
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
+                                    <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn text-gray-400" data-id="${item.id}">
+                                        <i class="far fa-heart text-lg"></i>
+                                    </button>
+                                    <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
+                                        ${item.image ? `<img src="${item.image}" class="w-full h-full object-cover" onerror="this.outerHTML='<span class=\'text-5xl text-gray-400\'>📦</span>'">` : '<span class="text-5xl text-gray-400">📦</span>'}
+                                    </div>
+                                    <div class="p-3">
+                                        <h3 class="font-bold text-gray-800 text-sm">${item.name || item.name_ar || 'منتج'}</h3>
+                                        <div class="flex items-center gap-1 mt-1">
+                                            <span class="text-yellow-500 text-xs">★</span>
+                                            <span class="text-xs text-gray-600">${parseFloat(item.rate || 0).toFixed(1)}</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="text-purple-700 font-bold">${parseFloat(item.price || 0).toFixed(2)} ر.س</span>
+                                            ${item.old_price ? `<span class="text-gray-400 text-xs line-through mr-1">${parseFloat(item.old_price).toFixed(2)} ر.س</span>` : ''}
+                                        </div>
+                                        <button class="add-to-cart mt-2 w-full bg-purple-600 text-white text-xs py-2 rounded-full hover:bg-purple-700 transition"
+                                                data-id="${item.id}"
+                                                data-name="${item.name || item.name_ar || 'منتج'}"
+                                                data-price="${item.price || 0}"
+                                                data-image="${item.image || '📦'}">
+                                            <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('');
+
+                            // Re-bind click events
+                            document.querySelectorAll('.add-to-cart').forEach(btn => {
+                                btn.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    let id = this.getAttribute('data-id');
+                                    let name = this.getAttribute('data-name');
+                                    let price = this.getAttribute('data-price');
+                                    let image = this.getAttribute('data-image');
+                                    
+                                    let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
+                                    let existingItemIndex = cartItems.findIndex(item => item.id == id);
+                                    if (existingItemIndex > -1) {
+                                        cartItems[existingItemIndex].quantity += 1;
+                                    } else {
+                                        cartItems.push({ id, name, price, quantity: 1, image, discount: 0 });
+                                    }
+                                    localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
+                                    showToast(`✅ تم إضافة "${name}" إلى السلة`);
+                                });
+                            });
+                        }
+                    }
+                })
+                .catch(err => console.error("Products proxy error:", err));
+        }
     </script>
 @endsection

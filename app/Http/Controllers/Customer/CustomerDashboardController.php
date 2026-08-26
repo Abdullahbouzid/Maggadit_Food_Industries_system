@@ -48,6 +48,16 @@ class CustomerDashboardController extends Controller
                 return $this->applyImagePath($category, 'image');
             });
         }
+        if ($categories->isEmpty()) {
+            $catData = $this->fetchRemoteData('customer/categories');
+            if ($catData && isset($catData['categories'])) {
+                $categories = collect($catData['categories'])->map(function ($cat) {
+                    $c = (object) $cat;
+                    $c->image = isset($c->image) ? $this->imagePathService->normalize($c->image) : null;
+                    return $c;
+                });
+            }
+        }
 
         $brands = Brand::where('show_in_customer_app', true)
             ->get()
@@ -59,6 +69,16 @@ class CustomerDashboardController extends Controller
             $brands = Brand::all()->map(function ($brand) {
                 return $this->applyImagePath($brand, 'logo');
             });
+        }
+        if ($brands->isEmpty()) {
+            $brandData = $this->fetchRemoteData('customer/brands');
+            if ($brandData && isset($brandData['brands'])) {
+                $brands = collect($brandData['brands'])->map(function ($brand) {
+                    $b = (object) $brand;
+                    $b->logo = isset($b->logo) ? $this->imagePathService->normalize($b->logo) : null;
+                    return $b;
+                });
+            }
         }
 
         $products = Item::where('is_inactive', false)
@@ -81,6 +101,21 @@ class CustomerDashboardController extends Controller
 
                 return $item;
             });
+
+        if ($products->isEmpty()) {
+            $prodData = $this->fetchRemoteData('customer/products');
+            if ($prodData && isset($prodData['products'])) {
+                $rawProds = isset($prodData['products']['data']) ? $prodData['products']['data'] : $prodData['products'];
+                $products = collect($rawProds)->map(function ($item) {
+                    $itemObj = (object) $item;
+                    $itemObj->name = $itemObj->name ?? ($itemObj->name_ar ?? 'منتج');
+                    $itemObj->image = isset($itemObj->image) ? $this->imagePathService->normalize($itemObj->image) : null;
+                    $itemObj->price = (float) ($itemObj->price ?? 0);
+                    $itemObj->old_price = isset($itemObj->old_price) ? (float) $itemObj->old_price : null;
+                    return $itemObj;
+                });
+            }
+        }
 
         $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
@@ -116,6 +151,21 @@ class CustomerDashboardController extends Controller
                     'end_date' => $offer->end_date?->format('Y-m-d H:i'),
                 ];
             });
+
+        if ($offers->isEmpty()) {
+            $offerData = $this->fetchRemoteData('customer/offers');
+            if ($offerData && isset($offerData['offers'])) {
+                $rawOffers = isset($offerData['offers']['data']) ? $offerData['offers']['data'] : $offerData['offers'];
+                $offers = collect($rawOffers)->map(function ($offer) {
+                    $o = (object) $offer;
+                    $o->name = $o->title ?? ($o->name ?? 'عرض خاص');
+                    $o->image = isset($o->image) ? $this->imagePathService->normalize($o->image) : null;
+                    $o->old_price = (float) ($o->old_price ?? 0);
+                    $o->new_price = (float) ($o->new_price ?? 0);
+                    return $o;
+                });
+            }
+        }
 
         return view('app_android.customer_dashboard', compact('banners', 'categories', 'brands', 'products', 'favoriteItemIds', 'offers'));
     }

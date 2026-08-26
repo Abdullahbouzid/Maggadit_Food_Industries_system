@@ -37,7 +37,7 @@
         }
     </style>
 
-    <div class="p-4 space-y-4" dir="rtl">
+    <div id="offers-container" class="p-4 space-y-4" dir="rtl">
         <div class="mb-4">
             <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100">
                 <i class="fas fa-arrow-right"></i>
@@ -142,5 +142,75 @@
                 showToast(`✅ تم إضافة "${name}" إلى السلة`);
             });
         });
+
+        // Dynamic Proxy Fallback Fetcher for Offers
+        const offersContainer = document.getElementById('offers-container');
+        if (offersContainer && offersContainer.children.length <= 1 && offersContainer.querySelector('p')) {
+            fetch('/customer/proxy/offers')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.offers) {
+                        const items = data.offers.data || data.offers;
+                        if (Array.isArray(items) && items.length > 0) {
+                            offersContainer.innerHTML = items.map(offer => `
+                                <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card">
+                                    <div class="offer-badge">-${offer.discount_percentage || 0}%</div>
+                                    <div class="bg-gradient-to-r from-amber-500 to-orange-600 p-3 text-white">
+                                        <br>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm">⏰ عرض خاص</span>
+                                        </div>
+                                        <h3 class="font-bold text-lg mt-1">${offer.title || offer.name || 'عرض'}</h3>
+                                        ${offer.description ? `<p class="text-xs opacity-90">${offer.description}</p>` : ''}
+                                    </div>
+                                    <div class="p-3 space-y-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center text-2xl overflow-hidden flex-shrink-0">
+                                                ${offer.image ? `<img src="${offer.image}" alt="${offer.name || ''}" class="w-full h-full object-cover" onerror="this.outerHTML='<span class=\'text-4xl\'>🛍️</span>'">` : '<span class="text-4xl">🛍️</span>'}
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="font-semibold text-sm">${offer.name || offer.title || 'عرض'}</p>
+                                                <div>
+                                                    <span class="text-purple-700 font-bold">${parseFloat(offer.new_price || 0).toFixed(2)} ر.س</span>
+                                                    ${offer.old_price ? `<span class="text-gray-400 text-xs line-through mr-1">${parseFloat(offer.old_price).toFixed(2)} ر.س</span>` : ''}
+                                                </div>
+                                            </div>
+                                            <button class="add-to-cart bg-purple-600 text-white text-xs px-3 py-2 rounded-full flex-shrink-0" 
+                                                    data-id="${offer.item_id || offer.id}" 
+                                                    data-name="${offer.name || offer.title || 'عرض'}" 
+                                                    data-price="${offer.new_price || 0}"
+                                                    data-image="${offer.image || ''}">
+                                                إضافة إلى السلة
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+
+                            // Re-bind events
+                            document.querySelectorAll('.add-to-cart').forEach(btn => {
+                                btn.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    let id = this.getAttribute('data-id');
+                                    let name = this.getAttribute('data-name');
+                                    let price = this.getAttribute('data-price');
+                                    let image = this.getAttribute('data-image');
+                                    
+                                    let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
+                                    let existingItemIndex = cartItems.findIndex(item => item.id == id);
+                                    if (existingItemIndex > -1) {
+                                        cartItems[existingItemIndex].quantity += 1;
+                                    } else {
+                                        cartItems.push({ id, name, price, quantity: 1, image, discount: 0 });
+                                    }
+                                    localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
+                                    showToast(`✅ تم إضافة "${name}" إلى السلة`);
+                                });
+                            });
+                        }
+                    }
+                })
+                .catch(err => console.error("Offers proxy error:", err));
+        }
     </script>
 @endsection

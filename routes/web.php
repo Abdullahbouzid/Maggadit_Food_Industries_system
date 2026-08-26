@@ -112,7 +112,7 @@ Route::post('/mobile/register', function (Request $request) {
             $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
+                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
             }
 
             return redirect()->route('customer.dashboard');
@@ -168,7 +168,7 @@ Route::post('/mobile/login', function (Request $request) {
             $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false)]);
+                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
             }
 
             return redirect()->route('customer.dashboard');
@@ -315,6 +315,69 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
             }
         })->name('organizations.switch');
+
+        // Proxy للمنتجات والعروض والماركات والتصنيفات والمفضلة
+        Route::get('/categories', function () use ($baseUrl) {
+            try {
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/categories");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('categories');
+
+        Route::get('/brands', function () use ($baseUrl) {
+            try {
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/brands");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('brands');
+
+        Route::get('/products', function (Request $request) use ($baseUrl) {
+            try {
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/products", $request->all());
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('products');
+
+        Route::get('/offers', function () use ($baseUrl) {
+            try {
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/offers");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('offers');
+
+        Route::get('/favorites', function () use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'favorites' => []]);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/favorites");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'favorites' => []], 503);
+            }
+        })->name('favorites');
+
+        Route::post('/favorites/toggle', function (Request $request) use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/favorites/toggle", $request->all());
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('favorites.toggle');
     });
     Route::get('/notifications', [CustomerProfileController::class, 'notificationsIndex'])->name('notifications');
     Route::get('/privacy-policy', function () {

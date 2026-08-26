@@ -60,7 +60,7 @@
                 <h2 class="text-lg font-bold text-gray-800">الفئات</h2>
                 <a href="{{ route('customer.categories.index') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
-            <div class="flex overflow-x-auto space-x-3 space-x-reverse pb-2 hide-scrollbar">
+            <div id="dash-categories" class="flex overflow-x-auto space-x-3 space-x-reverse pb-2 hide-scrollbar">
                 @forelse($categories as $category)
                     <div class="flex-shrink-0 text-center w-20 cursor-pointer" onclick="window.location='{{ route('customer.categories.show', $category->id) }}'">
                         <div class="w-16 h-16 mx-auto rounded-full overflow-hidden shadow-sm transition hover:scale-105 bg-gray-100 flex items-center justify-center border border-gray-100">
@@ -84,7 +84,7 @@
                 <h2 class="text-lg font-bold text-gray-800">ماركات شهيرة</h2>
                 <a href="{{ route('customer.brands') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
-            <div class="flex overflow-x-auto space-x-3 space-x-reverse pb-2 hide-scrollbar">
+            <div id="dash-brands" class="flex overflow-x-auto space-x-3 space-x-reverse pb-2 hide-scrollbar">
                 @forelse($brands as $brand)
                     <div class="flex-shrink-0 text-center w-24 cursor-pointer" onclick="window.location='{{ route('customer.brands.show', $brand->id) }}'">
                         <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition hover:shadow-md bg-gray-100 flex items-center justify-center border border-gray-100">
@@ -108,7 +108,7 @@
                 <h2 class="text-lg font-bold text-gray-800">أفضل المنتجات</h2>
                 <a href="{{ route('customer.products') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div id="dash-products" class="grid grid-cols-2 gap-4">
                 @forelse($products as $product)
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='{{ route('customer.product.show', $product->id) }}'">
                         <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ in_array($product->id, $favoriteItemIds ?? []) ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $product->id }}">
@@ -158,7 +158,7 @@
                 <h2 class="text-lg font-bold text-gray-800">عروض حصرية</h2>
                 <a href="{{ route('customer.offers') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
-            <div class="space-y-4">
+            <div id="dash-offers" class="space-y-4">
                 @forelse($offers ?? [] as $offer)
                     <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer" onclick="window.location='{{ route('customer.product.show', $offer->item_id) }}'">
                         @if($offer->discount_percentage > 0)
@@ -392,5 +392,126 @@
                 .catch(err => console.error(err));
             });
         });
+
+        // Dynamic Proxy Fallback Fetcher for Dashboard Categories
+        const dashCategories = document.getElementById('dash-categories');
+        if (dashCategories && dashCategories.children.length <= 1 && dashCategories.innerText.includes('لا توجد')) {
+            fetch('/customer/proxy/categories')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.categories && data.categories.length > 0) {
+                        dashCategories.innerHTML = data.categories.map(c => `
+                            <div class="flex-shrink-0 text-center w-20 cursor-pointer" onclick="window.location='/customer/categories/${c.id}'">
+                                <div class="w-16 h-16 mx-auto rounded-full overflow-hidden shadow-sm transition hover:scale-105 bg-gray-100 flex items-center justify-center border border-gray-100">
+                                    ${c.image ? `<img src="${c.image}" alt="${c.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/64?text=📁';">` : '<span class="text-2xl">📁</span>'}
+                                </div>
+                                <p class="text-xs mt-1 text-gray-700 font-medium truncate">${c.name}</p>
+                            </div>
+                        `).join('');
+                    }
+                }).catch(e => console.error(e));
+        }
+
+        // Dynamic Proxy Fallback Fetcher for Dashboard Brands
+        const dashBrands = document.getElementById('dash-brands');
+        if (dashBrands && dashBrands.children.length <= 1 && dashBrands.innerText.includes('لا توجد')) {
+            fetch('/customer/proxy/brands')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.brands && data.brands.length > 0) {
+                        dashBrands.innerHTML = data.brands.map(b => `
+                            <div class="flex-shrink-0 text-center w-24 cursor-pointer" onclick="window.location='/customer/brands/${b.id}'">
+                                <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition hover:shadow-md bg-gray-100 flex items-center justify-center border border-gray-100">
+                                    ${b.logo ? `<img src="${b.logo}" alt="${b.name}" class="w-full h-full object-contain p-2" onerror="this.onerror=null; this.src='https://via.placeholder.com/80?text=🏷️';">` : '<span class="text-3xl">🏷️</span>'}
+                                </div>
+                                <p class="text-xs mt-1 font-semibold text-gray-800 truncate">${b.name}</p>
+                            </div>
+                        `).join('');
+                    }
+                }).catch(e => console.error(e));
+        }
+
+        // Dynamic Proxy Fallback Fetcher for Dashboard Products
+        const dashProducts = document.getElementById('dash-products');
+        if (dashProducts && dashProducts.children.length <= 1 && dashProducts.innerText.includes('لا توجد')) {
+            fetch('/customer/proxy/products')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.products) {
+                        const items = data.products.data || data.products;
+                        if (Array.isArray(items) && items.length > 0) {
+                            dashProducts.innerHTML = items.slice(0, 10).map(p => `
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='/customer/products/${p.id}'">
+                                    <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn text-gray-400" data-id="${p.id}">
+                                        <i class="far fa-heart text-lg"></i>
+                                    </button>
+                                    <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
+                                        ${p.image ? `<img src="${p.image}" alt="${p.name || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=📦';">` : '<span class="text-5xl text-gray-400">📦</span>'}
+                                    </div>
+                                    <div class="p-3">
+                                        <h3 class="font-bold text-gray-800 text-sm line-clamp-1">${p.name || p.name_ar || 'منتج'}</h3>
+                                        <div class="flex items-center gap-1 mt-1">
+                                            <span class="text-yellow-500 text-xs">★</span>
+                                            <span class="text-xs text-gray-600">${parseFloat(p.rate || 0).toFixed(1)}</span>
+                                        </div>
+                                        <div class="mt-2 flex items-center justify-between">
+                                            <div>
+                                                <span class="text-purple-700 font-bold text-sm">${parseFloat(p.price || 0).toFixed(2)} ر.س</span>
+                                                ${p.old_price ? `<span class="text-gray-400 text-xs line-through block">${parseFloat(p.old_price).toFixed(2)} ر.س</span>` : ''}
+                                            </div>
+                                            <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" 
+                                                    data-id="${p.id}"
+                                                    data-name="${p.name || p.name_ar || 'منتج'}" 
+                                                    data-price="${p.price || 0}"
+                                                    data-image="${p.image || ''}">إضافة</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    }
+                }).catch(e => console.error(e));
+        }
+
+        // Dynamic Proxy Fallback Fetcher for Dashboard Offers
+        const dashOffers = document.getElementById('dash-offers');
+        if (dashOffers && dashOffers.children.length <= 1 && dashOffers.innerText.includes('لا توجد')) {
+            fetch('/customer/proxy/offers')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.offers) {
+                        const items = data.offers.data || data.offers;
+                        if (Array.isArray(items) && items.length > 0) {
+                            dashOffers.innerHTML = items.map(o => `
+                                <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer" onclick="window.location='/customer/products/${o.item_id || o.id}'">
+                                    ${o.discount_percentage ? `<div class="offer-badge">-${parseFloat(o.discount_percentage).toFixed(0)}%</div>` : ''}
+                                    <div class="flex flex-row">
+                                        <div class="relative w-28 h-28 overflow-hidden bg-gray-100 flex-shrink-0">
+                                            ${o.image ? `<img src="${o.image}" alt="${o.name || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/112?text=🛍️';">` : '<div class="w-full h-28 bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl">🛍️</div>'}
+                                        </div>
+                                        <div class="flex-1 p-3 text-right flex flex-col justify-between">
+                                            <div>
+                                                <h3 class="font-bold text-gray-800 text-base leading-tight line-clamp-1">${o.title || o.name || 'عرض خاص'}</h3>
+                                                ${o.description ? `<p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">${o.description}</p>` : ''}
+                                            </div>
+                                            <div class="flex justify-between items-center mt-2">
+                                                <div class="flex items-center gap-1 text-[11px] text-gray-500">
+                                                    <span class="text-amber-500">⏰</span>
+                                                    <span>عرض مستمر</span>
+                                                </div>
+                                                <button class="add-to-cart bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition" 
+                                                        data-id="${o.item_id || o.id}" 
+                                                        data-name="${o.name || o.title || 'عرض'}" 
+                                                        data-price="${o.new_price || 0}"
+                                                        data-image="${o.image || ''}">إضافة للسلة</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    }
+                }).catch(e => console.error(e));
+        }
     </script>
 @endsection

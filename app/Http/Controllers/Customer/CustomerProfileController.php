@@ -133,6 +133,27 @@ class CustomerProfileController extends Controller
             })->values()->all();
         }
 
+        if (empty($favoriteItems)) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData('customer/favorites', $token);
+                if ($remoteData && isset($remoteData['favorites'])) {
+                    $favoriteItems = collect($remoteData['favorites'])->map(function ($item) {
+                        $i = (object) $item;
+                        return [
+                            'id' => $i->id,
+                            'name_ar' => $i->name ?? ($i->name_ar ?? 'منتج'),
+                            'name_en' => $i->name_en ?? ($i->name ?? 'Product'),
+                            'price' => (float) ($i->price ?? 0),
+                            'image' => isset($i->image) ? $this->imagePathService->normalize($i->image) : null,
+                            'discount' => 0,
+                            'inStock' => true,
+                        ];
+                    })->all();
+                }
+            }
+        }
+
         return view('app_android.favorite', compact('favoriteItems'));
     }
 

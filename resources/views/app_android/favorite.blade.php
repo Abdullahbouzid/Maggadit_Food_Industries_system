@@ -241,6 +241,26 @@
         // تحميل البداية
         updateUILanguage();
         renderFavorites();
+
+        if (favoriteItems.length === 0) {
+            fetch('/customer/proxy/favorites')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.favorites && Array.isArray(data.favorites) && data.favorites.length > 0) {
+                        favoriteItems = data.favorites.map(item => ({
+                            id: item.id,
+                            name_ar: item.name || item.name_ar || 'منتج',
+                            name_en: item.name_en || item.name || 'Product',
+                            price: parseFloat(item.price || 0),
+                            image: item.image || null,
+                            discount: 0,
+                            inStock: true
+                        }));
+                        renderFavorites();
+                    }
+                })
+                .catch(err => console.error("Favorites proxy error:", err));
+        }
     </script>
 
     <!-- Fontawesome -->

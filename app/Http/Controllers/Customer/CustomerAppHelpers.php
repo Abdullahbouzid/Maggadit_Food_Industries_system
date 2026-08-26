@@ -99,6 +99,24 @@ trait CustomerAppHelpers
         return $model;
     }
 
+    private function fetchRemoteData(string $endpoint, ?string $token = null, array $params = [])
+    {
+        try {
+            $url = "{$this->baseUrl}/{$endpoint}";
+            $request = \Illuminate\Support\Facades\Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->timeout(5);
+            if ($token) {
+                $request = $request->withToken($token);
+            }
+            $response = $request->get($url, $params);
+            if ($response->successful()) {
+                return $response->json();
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to fetch remote data from {$endpoint}: " . $e->getMessage());
+        }
+        return null;
+    }
+
     private function normalizeItem($item)
     {
         if (is_array($item)) {
