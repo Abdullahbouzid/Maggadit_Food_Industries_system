@@ -271,6 +271,14 @@
             checkoutBtn.innerText = currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...';
             checkoutBtn.disabled = true;
 
+            const validItems = cartItems.filter(item => item.id && item.price > 0);
+            if (validItems.length === 0) {
+                showToastMessage(currentLang === 'ar' ? 'لا توجد منتجات صالحة في السلة' : 'No valid items in cart', true);
+                checkoutBtn.innerText = originalText;
+                checkoutBtn.disabled = false;
+                return;
+            }
+
             const token = localStorage.getItem('customer_token') || localStorage.getItem('api_token');
             const headers = {
                 'Content-Type': 'application/json',
@@ -288,17 +296,24 @@
                     'X-Requested-With': 'XMLHttpRequest',
                 },
                 credentials: 'same-origin',
-                body: JSON.stringify({ items: cartItems })
+                body: JSON.stringify({ items: validItems })
             })
-            .then(response => response.json())
+            .then(response => {
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    return response.text().then(text => {
+                        throw new Error('Invalid response from server');
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     showToastMessage(data.message, false);
-                    cartItems = []; // تفريغ السلة
-                    saveCart(); // تحديث التخزين المحلي
+                    cartItems = [];
+                    saveCart();
                     renderCart();
                     
-                    // توجيه المستخدم لصفحة الطلبات بعد ثانيتين
                     setTimeout(() => {
                         window.location.href = '{{ route('customer.order_history') }}';
                     }, 2000);
@@ -309,8 +324,8 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showToastMessage(currentLang === 'ar' ? 'حدث خطأ في الاتصال' : 'Connection error', true);
+                console.error('Checkout error:', error);
+                showToastMessage(currentLang === 'ar' ? 'حدث خطأ في الاتصال، تأكد من تسجيل الدخول' : 'Connection error, please login', true);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
             });

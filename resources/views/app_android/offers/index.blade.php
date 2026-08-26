@@ -145,7 +145,7 @@
 
         // Dynamic Proxy Fallback Fetcher for Offers
         const offersContainer = document.getElementById('offers-container');
-        if (offersContainer && offersContainer.children.length <= 1 && offersContainer.querySelector('p')) {
+        if (offersContainer && !offersContainer.querySelector('.offer-card')) {
             fetch('/customer/proxy/offers')
                 .then(res => res.json())
                 .then(data => {
@@ -166,7 +166,7 @@
                                     <div class="p-3 space-y-3">
                                         <div class="flex items-center gap-3">
                                             <div class="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center text-2xl overflow-hidden flex-shrink-0">
-                                                ${offer.image ? `<img src="${offer.image}" alt="${offer.name || ''}" class="w-full h-full object-cover" onerror="this.outerHTML='<span class=\'text-4xl\'>🛍️</span>'">` : '<span class="text-4xl">🛍️</span>'}
+                                                ${offer.image ? `<img src="${offer.image}" alt="${offer.name || ''}" class="w-full h-full object-cover" onerror="this.outerHTML='<span class=\\'text-4xl\\'>🛍️</span>'">` : '<span class="text-4xl">🛍️</span>'}
                                             </div>
                                             <div class="flex-1">
                                                 <p class="font-semibold text-sm">${offer.name || offer.title || 'عرض'}</p>
@@ -203,6 +203,15 @@
                                     } else {
                                         cartItems.push({ id, name, price, quantity: 1, image, discount: 0 });
                                     }
+                                    localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
+                                    showToast(`✅ تم إضافة "${name}" إلى السلة`);
+                                });
+                            });
+                        }
+                    }
+                })
+                .catch(err => console.error("Offers proxy error:", err));
+        }
                                     localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
                                     showToast(`✅ تم إضافة "${name}" إلى السلة`);
                                 });

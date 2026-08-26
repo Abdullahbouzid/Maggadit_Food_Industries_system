@@ -49,25 +49,37 @@
                 <p class="text-sm text-gray-500 mb-4">سنقوم بالرد عليك في أقرب وقت ممكن</p>
                 <form id="contact-form" class="space-y-4">
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">الاسم الكامل <span class="text-danger">*</span></label>
-                        <input type="text" id="contact-name" placeholder="أدخل اسمك" required
-                               class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                    <div class="grid grid-cols-1 gap-3 mb-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">الاسم الكامل <span class="text-danger">*</span></label>
+                            <input type="text" id="contact-name" placeholder="أدخل اسمك" required
+                                   class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">رقم الهاتف</label>
+                            <input type="tel" id="contact-phone-input" placeholder="رقم هاتفك"
+                                   class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
+                            <input type="email" id="contact-email-input" placeholder="بريدك الإلكتروني" required
+                                   class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">الموضوع</label>
+                            <input type="text" id="contact-subject" placeholder="موضوع الرسالة"
+                                   class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">الرسالة <span class="text-danger">*</span></label>
+                            <textarea id="contact-message" rows="4" placeholder="اكتب رسالتك هنا..." required
+                                      class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition"></textarea>
+                        </div>
+                        <button type="submit" id="contact-submit-btn"
+                                class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-paper-plane ml-2"></i> <span id="contact-btn-text">إرسال الرسالة</span>
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input type="email" id="contact-email-input" placeholder="بريدك الإلكتروني" required
-                               class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">الرسالة <span class="text-danger">*</span></label>
-                        <textarea id="contact-message" rows="4" placeholder="اكتب رسالتك هنا..." required
-                                  class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition"></textarea>
-                    </div>
-                    <button type="submit" id="contact-submit-btn"
-                            class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-paper-plane ml-2"></i> <span id="contact-btn-text">إرسال الرسالة</span>
-                    </button>
                 </form>
             </div>
 
@@ -156,7 +168,9 @@
             const btn = document.getElementById('contact-submit-btn');
             const btnText = document.getElementById('contact-btn-text');
             const name = document.getElementById('contact-name').value.trim();
+            const phone = document.getElementById('contact-phone-input').value.trim();
             const email = document.getElementById('contact-email-input').value.trim();
+            const subject = document.getElementById('contact-subject').value.trim();
             const message = document.getElementById('contact-message').value.trim();
             const token = document.querySelector('input[name="_token"]').value;
 
@@ -183,7 +197,7 @@
                     'X-CSRF-TOKEN': token,
                 },
                 credentials: 'same-origin',
-                body: JSON.stringify({ name, email, message }),
+                body: JSON.stringify({ name, email, phone, subject, message }),
             })
             .then(r => r.json())
             .then(res => {

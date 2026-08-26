@@ -24,7 +24,7 @@
             <h2 class="text-xl font-bold text-gray-800">{{ $brand->name }}</h2>
             <div class="mt-2 inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-3 py-1 rounded-full">
                 <i class="fas fa-box-open text-sm"></i>
-                <span class="text-sm font-semibold">{{ $items->count() }} منتج</span>
+                <span class="text-sm font-semibold">{{ $brand->products_count ?? ($items->count() ?? 0) }} منتج</span>
             </div>
         </div>
 

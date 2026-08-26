@@ -513,5 +513,31 @@
                     }
                 }).catch(e => console.error(e));
         }
+
+        // Dynamic Proxy Fallback Fetcher for Dashboard Banners
+        const adCarousel = document.getElementById('ad-carousel');
+        if (adCarousel && adCarousel.querySelector('.bg-gray-200')) {
+            fetch('/customer/proxy/dashboard')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.banners && data.banners.length > 0) {
+                        const carousel = document.getElementById('ad-carousel');
+                        carousel.innerHTML = data.banners.map(banner => `
+                            <div class="flex-shrink-0 w-full snap-start">
+                                <a href="${banner.url || '#'}" class="block w-full h-40 mx-1 rounded-2xl overflow-hidden">
+                                    <img src="${banner.image || 'https://via.placeholder.com/400x160?text=📢'}" alt="Banner" class="w-full h-full object-cover">
+                                </a>
+                            </div>
+                        `).join('');
+                        
+                        const dotsContainer = document.getElementById('ad-dots');
+                        if (dotsContainer) {
+                            dotsContainer.innerHTML = data.banners.map((_, i) => `
+                                <div class="w-2 h-2 rounded-full bg-gray-300 transition-all duration-300 ${i === 0 ? 'w-4 bg-purple-600' : ''}" data-index="${i}"></div>
+                            `).join('');
+                        }
+                    }
+                }).catch(e => console.error(e));
+        }
     </script>
 @endsection

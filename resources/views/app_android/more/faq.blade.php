@@ -48,7 +48,16 @@
             @endforeach
         </div>
 
-        <!-- رسالة عند عدم وجود نتائج -->
+        <!-- رسالة عند عدم وجود أسئلة -->
+        <div id="no-faqs" class="hidden text-center py-10">
+            <div class="w-32 h-32 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-question-circle text-5xl text-gray-300"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700 mb-2">لا توجد أسئلة شائعة</h3>
+            <p class="text-gray-400 text-sm">لم يتم إضافة أسئلة شائعة بعد</p>
+        </div>
+
+        <!-- رسالة عند عدم وجود نتائج بحث -->
         <div id="no-results" class="hidden text-center py-8">
             <i class="fas fa-search text-gray-300 text-5xl mb-3"></i>
             <p class="text-gray-400">لا توجد أسئلة مطابقة لبحثك</p>
@@ -178,7 +187,69 @@
             });
 
             // ===== تنفيذ التصفية الأولية (تأكد من أن الكل ظاهر) =====
+            const faqItems = document.querySelectorAll('.faq-item');
+            const noFaqsEl = document.getElementById('no-faqs');
+            
+            if (faqItems.length === 0) {
+                noFaqsEl.classList.remove('hidden');
+            }
+            
             filterFaqs();
         });
+        
+        // ===== Proxy Fallback for FAQs =====
+        if (document.querySelectorAll('.faq-item').length === 0) {
+            fetch('/customer/proxy/faqs')
+                .then(r => r.json())
+                .then(res => {
+                    if (res && res.data) {
+                        const faqs = res.data;
+                        const container = document.getElementById('faq-container');
+                        container.innerHTML = '';
+                        
+                        Object.entries(faqs).forEach(([category, items]) => {
+                            items.forEach(faq => {
+                                const div = document.createElement('div');
+                                div.className = 'faq-item bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300';
+                                div.setAttribute('data-category', category || 'عام');
+                                div.setAttribute('data-question', faq.question);
+                                div.setAttribute('data-answer', faq.answer);
+                                div.innerHTML = `
+                                    <div class="faq-question p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition">
+                                        <h3 class="font-semibold text-gray-800 text-sm">${faq.question}</h3>
+                                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                                    </div>
+                                    <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 px-4 pb-0">
+                                        <p class="text-gray-600 text-sm leading-relaxed pb-4 border-t border-gray-100 pt-3">${faq.answer}</p>
+                                    </div>
+                                `;
+                                container.appendChild(div);
+                            });
+                        });
+                        
+                        document.getElementById('no-faqs').classList.add('hidden');
+                        
+                        document.querySelectorAll('.faq-question').forEach(question => {
+                            question.addEventListener('click', function(e) {
+                                const parent = this.closest('.faq-item');
+                                if (parent.classList.contains('hidden')) return;
+                                const answerDiv = parent.querySelector('.faq-answer');
+                                const icon = this.querySelector('i');
+                                const isOpen = answerDiv.style.maxHeight && answerDiv.style.maxHeight !== '0px';
+                                if (!isOpen) {
+                                    answerDiv.style.maxHeight = answerDiv.scrollHeight + 'px';
+                                    answerDiv.style.paddingBottom = '12px';
+                                    icon.classList.add('rotate-180');
+                                } else {
+                                    answerDiv.style.maxHeight = null;
+                                    answerDiv.style.paddingBottom = '0px';
+                                    icon.classList.remove('rotate-180');
+                                }
+                            });
+                        });
+                    }
+                })
+                .catch(err => console.error("FAQs proxy error:", err));
+        }
     </script>
 @endsection

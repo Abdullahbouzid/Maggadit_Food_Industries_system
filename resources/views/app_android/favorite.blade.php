@@ -246,10 +246,10 @@
             fetch('/customer/proxy/favorites')
                 .then(res => res.json())
                 .then(data => {
-                    if (data && data.favorites && Array.isArray(data.favorites) && data.favorites.length > 0) {
-                        favoriteItems = data.favorites.map(item => ({
+                    if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
+                        favoriteItems = data.data.map(item => ({
                             id: item.id,
-                            name_ar: item.name || item.name_ar || 'منتج',
+                            name_ar: item.name_ar || item.name || 'منتج',
                             name_en: item.name_en || item.name || 'Product',
                             price: parseFloat(item.price || 0),
                             image: item.image || null,

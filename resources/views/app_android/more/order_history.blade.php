@@ -42,7 +42,6 @@
 
         <!-- قائمة الطلبات -->
         <div class="space-y-3" id="orders-container">
-
             @foreach($orders as $index => $order)
                 <div class="bg-white rounded-2xl shadow-md p-4 border border-gray-100 order-card" data-status="{{ $order['status'] }}">
                     <div class="flex justify-between items-start">
@@ -75,6 +74,15 @@
                     </button>
                 </div>
             @endforeach
+        </div>
+
+        <!-- رسالة عند عدم وجود طلبات -->
+        <div id="no-orders" class="hidden text-center py-10">
+            <div class="w-32 h-32 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-box-open text-5xl text-gray-300"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700 mb-2">لا توجد طلبات</h3>
+            <p class="text-gray-400 text-sm">لم تقم بأي طلبات حتى الآن</p>
         </div>
         <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
             <br><br>
@@ -148,6 +156,11 @@
         // فلترة الطلبات حسب الحالة
         const statusBtns = document.querySelectorAll('.status-filter');
         const orderCards = document.querySelectorAll('.order-card');
+        const noOrdersEl = document.getElementById('no-orders');
+
+        if (orderCards.length === 0 && noOrdersEl) {
+            noOrdersEl.classList.remove('hidden');
+        }
 
         function filterOrders() {
             let activeStatus = document.querySelector('.status-filter.active')?.getAttribute('data-status') || 'all';

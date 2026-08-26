@@ -365,7 +365,6 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'favorites' => []], 503);
             }
         })->name('favorites');
-
         Route::post('/favorites/toggle', function (Request $request) use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {
@@ -373,11 +372,34 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
             try {
                 $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/favorites/toggle", $request->all());
+
                 return response()->json($response->json(), $response->status());
             } catch (Exception $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
             }
         })->name('favorites.toggle');
+
+        Route::get('/faqs', function () use ($baseUrl) {
+            try {
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/faqs");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('faqs');
+
+        Route::get('/dashboard', function () use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/dashboard");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('dashboard');
     });
     Route::get('/notifications', [CustomerProfileController::class, 'notificationsIndex'])->name('notifications');
     Route::get('/privacy-policy', function () {
