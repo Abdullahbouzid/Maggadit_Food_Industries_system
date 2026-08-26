@@ -26,13 +26,8 @@
                     data-image="{{ $product->image ?? '📦' }}">
                 <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
             </button>
-            <button class="toggle-favorite-btn mt-3 w-full flex items-center justify-center py-2 rounded-full border border-gray-300 transition"
-                    data-id="{{ $product->id }}"
-                    @if(in_array($product->id, $favoriteItemIds ?? []))
-                        class="text-red-500"
-                    @else
-                        class="text-gray-400"
-                    @endif>
+            <button class="toggle-favorite-btn mt-3 w-full flex items-center justify-center py-2 rounded-full border border-gray-300 transition {{ in_array($product->id, $favoriteItemIds ?? []) ? 'text-red-500' : 'text-gray-400' }}"
+                    data-id="{{ $product->id }}">
                 <i class="{{ in_array($product->id, $favoriteItemIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
                 <span class="ml-2">{{ in_array($product->id, $favoriteItemIds ?? []) ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة' }}</span>
             </button>

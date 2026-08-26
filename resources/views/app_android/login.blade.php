@@ -253,7 +253,8 @@
 
             document.getElementById('brand-title').innerText = t.brand_title;
             document.getElementById('brand-sub').innerText = t.brand_sub;
-            document.getElementById('brand-en').innerText = t.brand_en;
+            const brandEn = document.getElementById('brand-en');
+            if (brandEn) brandEn.innerText = t.brand_en;
             document.getElementById('username-label').innerText = t.username_label;
             document.getElementById('username-input').placeholder = t.username_placeholder;
             document.getElementById('password-label').innerText = t.password_label;

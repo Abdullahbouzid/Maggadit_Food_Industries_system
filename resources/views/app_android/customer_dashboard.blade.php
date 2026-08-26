@@ -60,20 +60,20 @@
                 <h2 class="text-lg font-bold text-gray-800">الفئات</h2>
                 <a href="{{ route('customer.categories.index') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
-            <div class="flex overflow-x-auto space-x-3 space-x-reverse pb-2">
+            <div class="flex overflow-x-auto space-x-3 space-x-reverse pb-2 hide-scrollbar">
                 @forelse($categories as $category)
                     <div class="flex-shrink-0 text-center w-20 cursor-pointer" onclick="window.location='{{ route('customer.categories.show', $category->id) }}'">
-                        <div class="w-16 h-16 mx-auto rounded-full overflow-hidden shadow-sm transition hover:scale-105 bg-gray-100 flex items-center justify-center">
+                        <div class="w-16 h-16 mx-auto rounded-full overflow-hidden shadow-sm transition hover:scale-105 bg-gray-100 flex items-center justify-center border border-gray-100">
                             @if($category->image)
-                                <img src="{{ $category->image }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
+                                <img src="{{ $category->image }}" alt="{{ $category->name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/64?text=📁';">
                             @else
                                 <span class="text-2xl">{{ $category->icon ?? '📁' }}</span>
                             @endif
                         </div>
-                        <p class="text-xs mt-1 text-gray-700">{{ $category->name }}</p>
+                        <p class="text-xs mt-1 text-gray-700 font-medium truncate">{{ $category->name }}</p>
                     </div>
                 @empty
-                    <div class="text-center text-gray-500 w-full">لا توجد فئات لعرضها</div>
+                    <div class="text-center text-gray-500 w-full py-2">لا توجد فئات لعرضها</div>
                 @endforelse
             </div>
         </div>
@@ -84,20 +84,20 @@
                 <h2 class="text-lg font-bold text-gray-800">ماركات شهيرة</h2>
                 <a href="{{ route('customer.brands') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
-            <div class="flex overflow-x-auto space-x-3 space-x-reverse pb-2">
+            <div class="flex overflow-x-auto space-x-3 space-x-reverse pb-2 hide-scrollbar">
                 @forelse($brands as $brand)
                     <div class="flex-shrink-0 text-center w-24 cursor-pointer" onclick="window.location='{{ route('customer.brands.show', $brand->id) }}'">
-                        <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition hover:shadow-md bg-gray-100 flex items-center justify-center">
+                        <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition hover:shadow-md bg-gray-100 flex items-center justify-center border border-gray-100">
                             @if($brand->logo)
-                                <img src="{{ $brand->logo }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-2">
+                                <img src="{{ $brand->logo }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-2" onerror="this.onerror=null; this.src='https://via.placeholder.com/80?text=🏷️';">
                             @else
                                 <span class="text-3xl">{{ $brand->logo_emoji ?? '🏷️' }}</span>
                             @endif
                         </div>
-                        <p class="text-xs mt-1 font-semibold text-gray-800">{{ $brand->name }}</p>
+                        <p class="text-xs mt-1 font-semibold text-gray-800 truncate">{{ $brand->name }}</p>
                     </div>
                 @empty
-                    <div class="text-center text-gray-500 w-full">لا توجد ماركات لعرضها</div>
+                    <div class="text-center text-gray-500 w-full py-2">لا توجد ماركات لعرضها</div>
                 @endforelse
             </div>
         </div>
@@ -110,40 +110,44 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 @forelse($products as $product)
-                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='{{ route('customer.product.show', $product->id) }}'">
                         <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ in_array($product->id, $favoriteItemIds ?? []) ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $product->id }}">
                             <i class="{{ in_array($product->id, $favoriteItemIds ?? []) ? 'fas' : 'far' }} fa-heart text-lg"></i>
                         </button>
                         <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                             @if($product->image)
-                                <img src="{{ $product->image }}" alt="{{ $product->name ?? $product->name_en }}" class="w-full h-full object-cover">
+                                <img src="{{ $product->image }}" alt="{{ $product->name ?? $product->name_en }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=📦';">
                             @else
                                 <span class="text-5xl text-gray-400">📦</span>
                             @endif
                         </div>
                         <div class="p-3">
-                            <h3 class="font-bold text-gray-800 text-sm">{{ $product->name ?? $product->name_en }}</h3>
+                            <h3 class="font-bold text-gray-800 text-sm line-clamp-1">{{ $product->name ?? $product->name_en }}</h3>
                             <div class="flex items-center gap-1 mt-1">
                                 <span class="text-yellow-500 text-xs">★</span>
                                 <span class="text-xs text-gray-600">{{ number_format($product->rate ?? 0, 1) }}</span>
                             </div>
                             <div class="mt-2 flex items-center justify-between">
                                 <div>
-                                    <span class="text-purple-700 font-bold">{{ number_format($product->price ?? 0) }} ر.س</span>
-                                    @if(isset($product->old_price) && $product->old_price)
-                                        <span class="text-gray-400 text-xs line-through mr-1">{{ number_format($product->old_price) }} ر.س</span>
+                                    @if(isset($product->price) && $product->price > 0)
+                                        <span class="text-purple-700 font-bold text-sm">{{ number_format($product->price, 2) }} ر.س</span>
+                                    @else
+                                        <span class="text-purple-700 font-bold text-sm">حسب الطلب</span>
+                                    @endif
+                                    @if(isset($product->old_price) && $product->old_price > 0)
+                                        <span class="text-gray-400 text-xs line-through block">{{ number_format($product->old_price, 2) }} ر.س</span>
                                     @endif
                                 </div>
                                 <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" 
                                         data-id="{{ $product->id }}"
                                         data-name="{{ $product->name ?? $product->name_en }}" 
                                         data-price="{{ $product->price ?? 0 }}"
-                                        data-image="{{ $product->image ?? '📦' }}">إضافة إلى السلة</button>
+                                        data-image="{{ $product->image ?? '' }}">إضافة</button>
                             </div>
                         </div>
                     </div>
                 @empty
-                    <p class="text-center text-gray-500 col-span-2">لا توجد منتجات لعرضها</p>
+                    <p class="text-center text-gray-500 col-span-2 py-4">لا توجد منتجات لعرضها</p>
                 @endforelse
             </div>
         </div>
@@ -156,43 +160,47 @@
             </div>
             <div class="space-y-4">
                 @forelse($offers ?? [] as $offer)
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card">
-                        <div class="offer-badge">
-                            -{{ $offer->discount_percentage ?? 0 }}%
-                        </div>
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer" onclick="window.location='{{ route('customer.product.show', $offer->item_id) }}'">
+                        @if($offer->discount_percentage > 0)
+                            <div class="offer-badge">
+                                -{{ number_format($offer->discount_percentage, 0) }}%
+                            </div>
+                        @endif
                         <div class="flex flex-row">
-                            <div class="relative w-28 h-28 overflow-hidden">
+                            <div class="relative w-28 h-28 overflow-hidden bg-gray-100 flex-shrink-0">
                                 @if($offer->image)
-                                    <img src="{{ $offer->image }}" alt="{{ $offer->title }}" class="w-full h-full object-cover">
+                                    <img src="{{ $offer->image }}" alt="{{ $offer->title }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/112?text=🛍️';">
                                 @else
                                     <div class="w-full h-28 bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl">
                                         🛍️
                                     </div>
                                 @endif
                             </div>
-                            <div class="flex-1 p-3 text-right">
-                                <h3 class="font-bold text-gray-800 text-base">{{ $offer->title ?: ($offer->name ?? 'عرض') }}</h3>
-                                @if($offer->description)
-                                    <p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{{ $offer->description }}</p>
-                                @endif
-                                <div class="flex justify-between items-center mt-3">
+                            <div class="flex-1 p-3 text-right flex flex-col justify-between">
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-base leading-tight line-clamp-1">{{ $offer->title ?: ($offer->name ?? 'عرض خاص') }}</h3>
+                                    @if($offer->description)
+                                        <p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{{ $offer->description }}</p>
+                                    @endif
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
                                     <div class="flex items-center gap-1 text-[11px] text-gray-500">
                                         <span class="text-amber-500">⏰</span>
-                                        <span>ينتهي: {{ \Carbon\Carbon::parse($offer->end_date)->format('d M Y') }}</span>
+                                        <span>{{ $offer->end_date ? 'ينتهي: ' . \Carbon\Carbon::parse($offer->end_date)->format('d M Y') : 'عرض مستمر' }}</span>
                                     </div>
                                     <button class="add-to-cart bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition" 
                                             data-id="{{ $offer->item_id }}" 
                                             data-name="{{ $offer->name ?? $offer->title ?? 'عرض' }}" 
                                             data-price="{{ $offer->new_price }}"
                                             data-image="{{ $offer->image ?? '' }}">
-                                        إضافة إلى السلة
+                                        إضافة للسلة
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-8">
+                    <div class="text-center py-8 bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <i class="fas fa-tag text-gray-300 text-4xl mb-3"></i>
                         <p class="text-gray-500">لا توجد عروض متاحة حالياً</p>
                     </div>
@@ -226,6 +234,7 @@
         document.querySelectorAll('.add-to-cart').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = this.getAttribute('data-id');
                 let name = this.getAttribute('data-name');
                 let price = this.getAttribute('data-price');

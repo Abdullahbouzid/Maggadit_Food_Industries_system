@@ -202,13 +202,13 @@
 
         // عرض الإشعارات القادمة من السيرفر
         @if(session('success'))
-            setTimeout(() => showMobileToast("{{ session('success') }}", 'success'), 500);
+            setTimeout(() => showMobileToast(@json(session('success')), 'success'), 500);
         @endif
 
         @if($errors->any())
             setTimeout(() => {
                 @foreach($errors->all() as $error)
-                    showMobileToast("{{ $error }}", 'error');
+                    showMobileToast(@json($error), 'error');
                 @endforeach
             }, 500);
         @endif

@@ -31,11 +31,23 @@ class CustomerDashboardController extends Controller
                 return $this->applyImagePath($banner, 'image');
             });
 
+        if ($banners->isEmpty()) {
+            $banners = Banner::orderBy('order', 'asc')->get()->map(function ($banner) {
+                return $this->applyImagePath($banner, 'image');
+            });
+        }
+
         $categories = Category::where('show_in_customer_app', true)
             ->get()
             ->map(function ($category) {
                 return $this->applyImagePath($category, 'image');
             });
+
+        if ($categories->isEmpty()) {
+            $categories = Category::all()->map(function ($category) {
+                return $this->applyImagePath($category, 'image');
+            });
+        }
 
         $brands = Brand::where('show_in_customer_app', true)
             ->get()
@@ -43,13 +55,31 @@ class CustomerDashboardController extends Controller
                 return $this->applyImagePath($brand, 'logo');
             });
 
+        if ($brands->isEmpty()) {
+            $brands = Brand::all()->map(function ($brand) {
+                return $this->applyImagePath($brand, 'logo');
+            });
+        }
+
         $products = Item::where('is_inactive', false)
-            ->with(['category', 'brand', 'packs'])
+            ->with(['category', 'brand', 'packs', 'images'])
             ->limit(10)
             ->get()
             ->map(function ($item) {
-                $item = $this->applyImagePath($item, 'image');
-                return $this->normalizeItem($item);
+                $item = $this->normalizeItem($item);
+                $item->image = $item->main_image_url ?: ($item->image ? $this->imagePathService->normalize($item->image) : null);
+
+                // Get price from active offer if available
+                $offer = Offer::where('item_id', $item->id)->where('is_active', true)->first();
+                if ($offer) {
+                    $item->price = (float) $offer->new_price;
+                    $item->old_price = (float) $offer->old_price;
+                } else {
+                    $item->price = (float) ($item->price ?? 0);
+                    $item->old_price = null;
+                }
+
+                return $item;
             });
 
         $customer = $this->getCustomer(request());
@@ -58,7 +88,7 @@ class CustomerDashboardController extends Controller
         $offers = Offer::with(['item', 'itemPack.uom'])
             ->where('is_active', true)
             ->where(function ($q) {
-                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+                $q->whereNull('start_date')->orWhere('start_date', '<=', now()->addDays(30));
             })
             ->where(function ($q) {
                 $q->whereNull('end_date')->orWhere('end_date', '>=', now());
@@ -68,6 +98,7 @@ class CustomerDashboardController extends Controller
                 $item = $offer->item;
                 $defaultPack = $item ? $item->packs->first() : null;
                 $offerPack = $offer->itemPack;
+                $imageUrl = $offer->image ? $this->imagePathService->normalize($offer->image) : ($item ? $item->main_image_url : null);
 
                 return (object) [
                     'id' => $offer->id,
@@ -75,9 +106,9 @@ class CustomerDashboardController extends Controller
                     'description' => $offer->description,
                     'item_id' => $offer->item_id,
                     'item_pack_id' => $offer->item_pack_id,
-                    'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
+                    'name' => $item ? ($item->name_ar ?: $item->name_en) : ($offer->title ?: 'عرض خاص'),
                     'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
-                    'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
+                    'image' => $imageUrl,
                     'old_price' => (float) $offer->old_price,
                     'new_price' => (float) $offer->new_price,
                     'discount_percentage' => (float) $offer->discount_percentage,
