@@ -120,7 +120,7 @@
                                                         @if($item->item)
                                                             @foreach($item->item->packs as $pack)
                                                                 <option value="{{ $pack->id }}" {{ old("items.$loop->iteration.item_pack_id", $item->item_pack_id) == $pack->id ? 'selected' : '' }}>
-                                                                    {{ $pack->barcode }} (كمية: {{ $pack->quantity }})
+                                                                     {{ $pack->barcode }} (كمية: {{ $pack->quantity_in_pack }})
                                                                 </option>
                                                             @endforeach
                                                         @endif
@@ -188,7 +188,7 @@
                 if (selectedItem && selectedItem.packs) {
                     selectedItem.packs.forEach(pack => {
                         const selectedPack = pack.id == packId ? 'selected' : '';
-                        packOptions += `<option value="${pack.id}" ${selectedPack}>${pack.barcode} (كمية: ${pack.quantity})</option>`;
+                        packOptions += `<option value="${pack.id}" ${selectedPack}>${pack.barcode} (كمية: ${pack.quantity_in_pack})</option>`;
                     });
                 }
             }

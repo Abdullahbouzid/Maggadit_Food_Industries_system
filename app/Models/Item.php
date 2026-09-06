@@ -114,4 +114,9 @@ class Item extends Model
 
         return null;
     }
+
+    public function priceListItems()
+    {
+        return $this->hasMany(PriceListVersionItem::class);
+    }
 }

@@ -35,6 +35,7 @@ use App\Http\Controllers\OrganizationAboutController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PackageStatusController;
 use App\Http\Controllers\PackGroupController;
+use App\Http\Controllers\PackDefinitionController;
 use App\Http\Controllers\PackOperationController;
 use App\Http\Controllers\ProductionBatchController;
 use App\Http\Controllers\ProfileController;
@@ -42,6 +43,8 @@ use App\Http\Controllers\SalesOrderTypeController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\UomController;
+use App\Http\Controllers\PackTypeController;
+use App\Http\Controllers\PackCapacityController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VehicleTypeController;
 use App\Http\Controllers\VendorController;
@@ -419,6 +422,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         return view('app_android.more.privacy_policy', compact('policy'));
     })->name('terms');
     Route::get('/about-us', [CustomerPagesController::class, 'aboutUsWeb'])->name('about');
+    Route::get('/contact-info', [CustomerPagesController::class, 'contactInfo'])->name('contact.info');
     Route::get('/contact-us', function () {
         return view('app_android.more.contact_us');
     })->name('contact');
@@ -473,10 +477,14 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/order/{id}', function ($id) {
             return view('app_android.more.order_details', ['orderId' => $id]);
         })->name('order_details');
+        Route::get('/order/{id}/pdf', [CustomerOrderController::class, 'downloadPdf'])->name('order_pdf');
+        Route::get('/customer/orders/{id}/pdf', [CustomerOrderController::class, 'downloadPdf'])->name('customer_order_pdf');
         Route::get('/my-info', [CustomerProfileController::class, 'myInfo'])->name('my_info');
         Route::post('/my-info', [CustomerProfileController::class, 'updateInfo'])->name('my_info.update');
     });
 });
+
+Route::get('/offers/get-item-price', [\App\Http\Controllers\Offer\OfferController::class, 'getItemPrice'])->name('offers.get_item_price');
 
 // ========== الجزء الثاني: لوحة تحكم الأدمن (Admin) ==========
 // تستخدم Auth العادي (gurad web) الخاص بجدول users
@@ -588,6 +596,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('pack-groups/import', [PackGroupController::class, 'import'])->name('pack-groups.import');
     Route::get('pack-groups/download-template', [PackGroupController::class, 'downloadTemplate'])->name('pack-groups.template');
 
+    Route::resource('pack-definitions', PackDefinitionController::class);
+    Route::get('pack-definitions/{packDefinition}/show-ajax', [PackDefinitionController::class, 'showAjax'])->name('pack-definitions.show-ajax');
+    Route::resource('pack-types', PackTypeController::class);
+    Route::resource('pack-capacities', PackCapacityController::class);
+
     Route::resource('items', ItemController::class);
     Route::get('items/export/data', [ItemController::class, 'export'])->name('items.export');
     Route::post('items/import', [ItemController::class, 'import'])->name('items.import');
@@ -634,6 +647,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('warehouse-movements/export', [WarehouseMovementController::class, 'export'])->name('warehouse-movements.export');
     Route::get('warehouse-movements/{warehouse_movement}/export-detail', [WarehouseMovementController::class, 'exportDetail'])->name('warehouse-movements.export-detail');
+    Route::get('warehouse-movements/available-items/{warehouse}', [WarehouseMovementController::class, 'getAvailableItems'])->name('warehouse-movements.available-items');
     Route::resource('warehouse-movements', WarehouseMovementController::class);
 
     Route::resource('production-batches', ProductionBatchController::class);
@@ -672,6 +686,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/get-warehouses/{itemId}', [InvoiceController::class, 'getWarehousesForItem'])->name('invoices.warehouses');
 
     Route::resource('offers', OfferController::class);
+
+    Route::resource('price-lists', \App\Http\Controllers\Admin\PriceListController::class);
+    Route::post('price-lists/{priceList}/toggle-status', [\App\Http\Controllers\Admin\PriceListController::class, 'toggleStatus'])->name('price-lists.toggle-status');
+    Route::post('price-lists/{priceList}/versions', [\App\Http\Controllers\Admin\PriceListController::class, 'createVersion'])->name('price-lists.versions.store');
+    Route::get('price-lists/{priceList}/versions/{version}/edit', [\App\Http\Controllers\Admin\PriceListController::class, 'editVersion'])->name('price-lists.versions.edit');
+    Route::put('price-lists/{priceList}/versions/{version}', [\App\Http\Controllers\Admin\PriceListController::class, 'updateVersion'])->name('price-lists.versions.update');
+    Route::delete('price-lists/{priceList}/versions/{version}', [\App\Http\Controllers\Admin\PriceListController::class, 'destroyVersion'])->name('price-lists.versions.destroy');
+    Route::get('price-lists/customers', [\App\Http\Controllers\Admin\PriceListController::class, 'customers'])->name('price-lists.customers');
+    Route::post('customers/{customer}/price-list', [\App\Http\Controllers\Admin\PriceListController::class, 'updateCustomerPriceList'])->name('customers.price-list.update');
 
     Route::resource('contact-messages', ContactMessageController::class);
     Route::post('contact-messages/{contactMessage}/forward', [ContactMessageController::class, 'forward'])->name('contact-messages.forward');

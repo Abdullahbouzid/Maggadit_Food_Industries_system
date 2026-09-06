@@ -91,7 +91,7 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $item->batchItem->item->name_en ?? 'غير معروف' }} ({{ $item->batchItem->item->code ?? '' }})</td>
-                                            <td>{{ $item->batchItem->pack ? $item->batchItem->pack->barcode . ' (Qty: ' . $item->batchItem->pack->quantity . ')' : 'بدون عبوة' }}</td>
+                                             <td>{{ $item->batchItem->pack ? $item->batchItem->pack->barcode . ' (Qty: ' . $item->batchItem->pack->quantity_in_pack . ')' : 'بدون عبوة' }}</td>
                                             <td>{{ number_format($item->quantity, 3) }}</td>
                                             <td>{{ $item->notes ?? '-' }}</td>
                                         </tr>

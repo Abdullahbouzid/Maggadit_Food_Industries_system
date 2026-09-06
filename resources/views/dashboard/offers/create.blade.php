@@ -21,7 +21,20 @@
                     <div class="card border-0 shadow-sm rounded-4">
                         <div class="card-body p-4">
                             <div class="row g-4">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">قائمة الأسعار المطبقة</label>
+                                    <select name="price_list_id" id="price-list-select" class="form-control">
+                                        <option value="">اختر قائمة الأسعار (افتراضي/الكل)</option>
+                                        @foreach($priceLists as $pl)
+                                            <option value="{{ $pl->id }}" {{ old('price_list_id') == $pl->id ? 'selected' : '' }}>
+                                                {{ $pl->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="form-text text-muted">سيتم جلب آخر تحديث لسعر المنتج في القائمة المختارة</div>
+                                </div>
+
+                                <div class="col-md-4">
                                     <label class="form-label fw-semibold">المنتج <span class="text-danger">*</span></label>
                                     <select name="item_id" id="item-select" class="form-control" required>
                                         <option value="">اختر المنتج</option>
@@ -42,7 +55,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6 d-none" id="pack-select-container">
+                                <div class="col-md-4 d-none" id="pack-select-container">
                                     <label class="form-label fw-semibold">العبوة <span class="text-danger">*</span></label>
                                     <select name="item_pack_id" id="pack-select" class="form-control">
                                         <option value="">اختر العبوة</option>
@@ -66,6 +79,7 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">السعر القديم <span class="text-danger">*</span></label>
                                     <input type="number" step="0.01" name="old_price" id="old-price" class="form-control" value="{{ old('old_price') }}" required>
+                                    <small id="price-source-info" class="text-primary font-weight-bold d-block mt-1"></small>
                                 </div>
 
                                 <div class="col-md-4">
@@ -96,7 +110,7 @@
 
                                 <div class="col-12">
                                     <div class="form-check form-switch">
-                                        <input type="checkbox" name="is_active" class="form-check-input" id="isActive" value="1" {{ old('is_active') ? 'checked' : '' }}>
+                                        <input type="checkbox" name="is_active" class="form-check-input" id="isActive" value="1" {{ old('is_active', 1) ? 'checked' : '' }}>
                                         <label class="form-check-label fw-semibold" for="isActive">نشط</label>
                                     </div>
                                 </div>
@@ -135,7 +149,9 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
-        feather.replace();
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
         
         if (typeof $.fn.select2 !== 'undefined') {
             $('#item-select').select2({
@@ -144,6 +160,34 @@
                 width: '100%'
             });
         }
+
+        function fetchItemPrice() {
+            const itemId = $('#item-select').val();
+            const packId = $('#pack-select').val();
+            const priceListId = $('#price-list-select').val();
+
+            if (!itemId) return;
+
+            $.ajax({
+                url: "{{ route('offers.get_item_price') }}",
+                data: {
+                    item_id: itemId,
+                    item_pack_id: packId,
+                    price_list_id: priceListId
+                },
+                success: function(res) {
+                    if (res.success && res.price > 0) {
+                        $('#old-price').val(res.price);
+                        $('#price-source-info').text('المصدر: ' + res.source + ' (' + res.price + ' ر.س)');
+                        calculateDiscount();
+                    }
+                }
+            });
+        }
+
+        $('#price-list-select').on('change', function() {
+            fetchItemPrice();
+        });
 
         $('#item-select').on('change', function() {
             const selectedOption = $(this).find('option:selected');
@@ -154,7 +198,7 @@
             let packs = [];
             if (packsData) {
                 try {
-                    packs = JSON.parse(packsData);
+                    packs = typeof packsData === 'string' ? JSON.parse(packsData) : packsData;
                 } catch (e) {
                     packs = [];
                 }
@@ -176,31 +220,19 @@
                 $('#pack-select-container').removeClass('d-none');
                 packSelect.val(packs[0].id).trigger('change');
             } else {
-                packSelect.append('<option value="0" data-price="' + price + '" data-quantity="0">بدون عبوة</option>');
+                packSelect.append('<option value="" data-price="' + price + '" data-quantity="0">بدون عبوة</option>');
                 $('#pack-select-container').removeClass('d-none');
-                packSelect.val('0').trigger('change');
+                fetchItemPrice();
             }
             
             $('#current-pack').text(pack ? 'الوحدة: ' + pack : '');
-            calculateDiscount();
         });
 
         $('#pack-select').on('change', function() {
-            const selectedOption = $(this).find('option:selected');
-            const price = parseFloat(selectedOption.data('price')) || 0;
-            const quantity = parseFloat(selectedOption.data('quantity')) || 0;
-            
-            if (price > 0) {
-                $('#old-price').val(price);
-                $('#pack-price').text(price.toFixed(2));
-                $('#pack-quantity').text(quantity);
-                $('#selected-pack-info').removeClass('d-none');
-                $('#selected-item-info').removeClass('d-none');
-            } else {
-                $('#old-price').val('');
-                $('#selected-pack-info').addClass('d-none');
-            }
-            
+            fetchItemPrice();
+        });
+
+        $('#new-price, #old-price').on('input change', function() {
             calculateDiscount();
         });
 

@@ -8,6 +8,7 @@ class Invoice extends Model
 {
     protected $fillable = [
         'customer_id',
+        'price_list_id',
         'invoice_number',
         'invoice_date',
         'total_amount',
@@ -23,6 +24,11 @@ class Invoice extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function priceList()
+    {
+        return $this->belongsTo(PriceList::class);
     }
 
     public function items()

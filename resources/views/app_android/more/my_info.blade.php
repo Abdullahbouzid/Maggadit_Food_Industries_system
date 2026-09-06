@@ -262,27 +262,29 @@
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحفظ...';
 
                 try {
-                    const formData = new FormData(this);
-                    const data = Object.fromEntries(formData.entries());
-                    
-                    // تحويل الصورة إلى Base64 في حال تم تحديد صورة جديدة حتى يتم إرسالها بصيغة JSON
+                    const data = {
+                        name: this.querySelector('[name="name"]').value,
+                        username: this.querySelector('[name="username"]').value,
+                        email: this.querySelector('[name="email"]').value,
+                    };
+
                     const fileInput = document.getElementById('avatar-input');
                     if (fileInput.files && fileInput.files[0]) {
                         const reader = new FileReader();
                         reader.readAsDataURL(fileInput.files[0]);
-                        reader.onload = async function() {
-                            data.avatar = reader.result;
-                            await sendProfileData(data, submitBtn, originalText, editForm.action);
-                        };
-                        reader.onerror = async function(error) {
-                            console.error('Error reading file:', error);
-                            delete data.avatar;
-                            await sendProfileData(data, submitBtn, originalText, editForm.action);
-                        }
-                    } else {
-                        delete data.avatar; // إذا لم تكن هناك صورة، نحذف الحقل لتجنب إرسال قيمة فارغة
-                        await sendProfileData(data, submitBtn, originalText, editForm.action);
+                        await new Promise((resolve, reject) => {
+                            reader.onload = function() {
+                                data.avatar = reader.result;
+                                resolve();
+                            };
+                            reader.onerror = function(error) {
+                                console.error('Error reading file:', error);
+                                reject(error);
+                            };
+                        });
                     }
+
+                    await sendProfileData(data, submitBtn, originalText, editForm.action);
                 } catch (error) {
                     console.error("Preparation Error:", error);
                     showMobileToast('فشل تجهيز البيانات', 'error');
@@ -318,7 +320,7 @@
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken
                     },
-                    credentials: 'same-origin',
+                    credentials: 'include',
                 });
 
                 if (response.ok) {

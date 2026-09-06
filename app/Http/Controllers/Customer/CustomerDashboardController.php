@@ -81,46 +81,63 @@ class CustomerDashboardController extends Controller
             }
         }
 
+        $customer = $this->getCustomer(request());
+        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
         $products = Item::where('is_inactive', false)
-            ->with(['category', 'brand', 'packs', 'images'])
+            ->with(['category', 'brand', 'packs.packType', 'packs.packCapacity.uom', 'images'])
             ->limit(10)
-            ->get()
-            ->map(function ($item) {
-                $item = $this->normalizeItem($item);
-                $item->image = $item->main_image_url ?: ($item->image ? $this->imagePathService->normalize($item->image) : null);
+            ->get();
 
-                // Get price from active offer if available
-                $offer = Offer::where('item_id', $item->id)->where('is_active', true)->first();
-                if ($offer) {
-                    $item->price = (float) $offer->new_price;
-                    $item->old_price = (float) $offer->old_price;
-                } else {
-                    $item->price = (float) ($item->price ?? 0);
-                    $item->old_price = null;
+        $productCards = collect();
+        foreach ($products as $item) {
+            $item = $this->normalizeItem($item);
+            $itemImage = $item->main_image_url ?: ($item->image ? $this->imagePathService->normalize($item->image) : null);
+            $offer = Offer::where('item_id', $item->id)->where('is_active', true)->first();
+
+            $packs = $item->packs;
+            if ($packs->isEmpty()) {
+                $priceInfo = $this->getItemPriceRecord($item, $customer);
+                $productCards->push([
+                    'id' => $item->id,
+                    'pack_id' => null,
+                    'name' => $item->name,
+                    'image' => $itemImage,
+                    'price' => $offer ? (float) $offer->new_price : $priceInfo['price'],
+                    'old_price' => $offer ? (float) $offer->old_price : null,
+                    'pack_name' => '',
+                    'uom_name' => '',
+                    'pack_quantity' => 1,
+                    'favorite' => in_array($item->id, $favoriteItemIds),
+                ]);
+            } else {
+                foreach ($packs as $pack) {
+                    $capacity = $pack->packCapacity;
+                    $uom = $capacity?->uom;
+                    $uomName = $uom ? ($uom->name_ar ?? $uom->name_en) : '';
+                    $packName = $pack->display_name ?? ($uomName ?: ('عبوة ' . (float) $pack->quantity_in_pack));
+                    $priceInfo = $this->getItemPriceRecord($item, $customer, $pack->id);
+
+                    $productCards->push([
+                        'id' => $item->id,
+                        'pack_id' => $pack->id,
+                        'name' => $item->name,
+                        'image' => $itemImage,
+                        'price' => $offer ? (float) $offer->new_price : $priceInfo['price'],
+                        'old_price' => $offer ? (float) $offer->old_price : null,
+                        'pack_name' => $packName,
+                        'uom_name' => $uomName,
+                        'pack_quantity' => (float) $pack->quantity_in_pack,
+                        'favorite' => in_array($item->id, $favoriteItemIds),
+                    ]);
                 }
-
-                return $item;
-            });
-
-        if ($products->isEmpty()) {
-            $prodData = $this->fetchRemoteData('customer/products');
-            if ($prodData && isset($prodData['products'])) {
-                $rawProds = isset($prodData['products']['data']) ? $prodData['products']['data'] : $prodData['products'];
-                $products = collect($rawProds)->map(function ($item) {
-                    $itemObj = (object) $item;
-                    $itemObj->name = $itemObj->name ?? ($itemObj->name_ar ?? 'منتج');
-                    $itemObj->image = isset($itemObj->image) ? $this->imagePathService->normalize($itemObj->image) : null;
-                    $itemObj->price = (float) ($itemObj->price ?? 0);
-                    $itemObj->old_price = isset($itemObj->old_price) ? (float) $itemObj->old_price : null;
-                    return $itemObj;
-                });
             }
         }
 
         $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
-        $offers = Offer::with(['item', 'itemPack.uom'])
+        $offers = Offer::with(['item', 'itemPack.packType', 'itemPack.packCapacity.uom'])
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('start_date')->orWhere('start_date', '<=', now()->addDays(30));
@@ -135,6 +152,30 @@ class CustomerDashboardController extends Controller
                 $offerPack = $offer->itemPack;
                 $imageUrl = $offer->image ? $this->imagePathService->normalize($offer->image) : ($item ? $item->main_image_url : null);
 
+                $packName = '';
+                $uomName = '';
+                $packQuantity = 0;
+                $packPrice = (float) $offer->new_price;
+
+                $resolvePack = function ($pack) {
+                    $uom = $pack?->packCapacity?->uom;
+                    $uomLabel = $uom ? ($uom->name_ar ?? $uom->name_en ?? '') : '';
+                    $typeLabel = $pack?->packType?->name ?? '';
+                    return [$uomLabel, $typeLabel];
+                };
+
+                if ($offerPack) {
+                    [$uomLabel, $typeLabel] = $resolvePack($offerPack);
+                    $packName = $uomLabel ?: ($typeLabel ?: ('عبوة ' . (float) $offerPack->quantity_in_pack));
+                    $uomName = $uomLabel;
+                    $packQuantity = (float) $offerPack->quantity_in_pack;
+                } elseif ($defaultPack) {
+                    [$uomLabel, $typeLabel] = $resolvePack($defaultPack);
+                    $packName = $uomLabel ?: ($typeLabel ?: ('عبوة ' . (float) $defaultPack->quantity_in_pack));
+                    $uomName = $uomLabel;
+                    $packQuantity = (float) $defaultPack->quantity_in_pack;
+                }
+
                 return (object) [
                     'id' => $offer->id,
                     'title' => $offer->title,
@@ -142,7 +183,9 @@ class CustomerDashboardController extends Controller
                     'item_id' => $offer->item_id,
                     'item_pack_id' => $offer->item_pack_id,
                     'name' => $item ? ($item->name_ar ?: $item->name_en) : ($offer->title ?: 'عرض خاص'),
-                    'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
+                    'pack_type' => $uomName,
+                    'pack_name' => $packName,
+                    'pack_quantity' => $packQuantity,
                     'image' => $imageUrl,
                     'old_price' => (float) $offer->old_price,
                     'new_price' => (float) $offer->new_price,
@@ -167,6 +210,6 @@ class CustomerDashboardController extends Controller
             }
         }
 
-        return view('app_android.customer_dashboard', compact('banners', 'categories', 'brands', 'products', 'favoriteItemIds', 'offers'));
+        return view('app_android.customer_dashboard', compact('banners', 'categories', 'brands', 'productCards', 'favoriteItemIds', 'offers'));
     }
 }

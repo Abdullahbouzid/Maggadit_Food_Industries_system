@@ -10,8 +10,10 @@ use App\Models\Category;
 use App\Models\Item;
 use App\Models\ItemModel;
 use App\Models\ItemType;
+use App\Models\PackCapacity;
 use App\Models\PackGroup;
 use App\Models\PackOperation;
+use App\Models\PackType;
 use App\Models\Uom;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
@@ -75,13 +77,15 @@ class ItemController extends Controller
         $brands = Brand::where('show_in_customer_app', true)->orderBy('name')->get();
         $models = ItemModel::where('is_active', true)->orderBy('name_en')->get();
         $suppliers = Vendor::orderBy('vendor_name')->get();
-        $uoms = Uom::where('is_active', true)->orderBy('name_en')->get();
+        $packTypes = PackType::orderBy('name_en')->get();
+        $packCapacities = PackCapacity::with('uom')->orderBy('value')->get();
         $packOperations = PackOperation::where('is_active', true)->orderBy('name_en')->get();
         $packGroups = PackGroup::where('is_active', true)->orderBy('name_en')->get();
+        $packDefinitions = \App\Models\PackDefinition::with(['packType', 'packCapacity', 'packCapacity.uom'])->orderBy('sort_order')->orderBy('name_en')->get();
 
         return view('dashboard.data_definition.data_product.items.create', compact(
             'itemTypes', 'categories', 'brands', 'models', 'suppliers',
-            'uoms', 'packOperations', 'packGroups'
+            'packTypes', 'packCapacities', 'packOperations', 'packGroups', 'packDefinitions'
         ));
     }
 
@@ -117,22 +121,7 @@ class ItemController extends Controller
             'required_by_liter' => 'boolean',
             'required_by_weight' => 'boolean',
             'packs' => 'nullable|array',
-            'packs.*.uom_id' => 'required_with:packs|nullable|exists:uoms,id',
-            'packs.*.quantity' => 'required_with:packs|nullable|numeric',
-            'packs.*.barcode' => 'required_with:packs|nullable|string|max:255',
-            'packs.*.pack_operation_ids' => 'nullable|array',
-            'packs.*.pack_operation_ids.*' => 'nullable|exists:pack_operations,id',
-            'packs.*.pack_group_ids' => 'nullable|array',
-            'packs.*.pack_group_ids.*' => 'nullable|exists:pack_groups,id',
-            'packs.*.serial_separator' => 'nullable|string|max:50',
-            'packs.*.equivalency_factor' => 'nullable|numeric|min:0',
-            'packs.*.height' => 'nullable|numeric|min:0',
-            'packs.*.width' => 'nullable|numeric|min:0',
-            'packs.*.depth' => 'nullable|numeric|min:0',
-            'packs.*.weight' => 'nullable|numeric|min:0',
-            'packs.*.is_weight_priced' => 'boolean',
-            'packs.*.allow_fraction_in_qty' => 'boolean',
-            'packs.*.is_default_pack' => 'boolean',
+            'packs.*.pack_definition_id' => 'required_with:packs|nullable|exists:pack_definitions,id',
             'additional_images' => 'nullable|array',
             'additional_images.*' => 'nullable|image|max:2048',
         ]);
@@ -143,30 +132,32 @@ class ItemController extends Controller
 
         $item = Item::create($validated);
 
-        // Save packs
+        // Save packs from pack definitions
         if ($request->has('packs')) {
             foreach ($request->packs as $index => $packData) {
-                $pack = $item->packs()->create([
-                    'uom_id' => $packData['uom_id'],
-                    'quantity' => $packData['quantity'],
-                    'barcode' => $packData['barcode'],
-                    'serial_separator' => $packData['serial_separator'] ?? null,
-                    'equivalency_factor' => $packData['equivalency_factor'] ?? null,
-                    'height' => $packData['height'] ?? null,
-                    'width' => $packData['width'] ?? null,
-                    'depth' => $packData['depth'] ?? null,
-                    'weight' => $packData['weight'] ?? null,
-                    'is_weight_priced' => $packData['is_weight_priced'] ?? false,
-                    'allow_fraction_in_qty' => $packData['allow_fraction_in_qty'] ?? false,
-                    'is_default_pack' => $packData['is_default_pack'] ?? false,
-                    'sort_order' => $index,
-                ]);
+                if (isset($packData['pack_definition_id'])) {
+                    $packDef = \App\Models\PackDefinition::with(['packType', 'packCapacity', 'packOperations', 'packGroups'])->find($packData['pack_definition_id']);
+                    if ($packDef) {
+                        $pack = $item->packs()->create([
+                            'pack_type_id' => $packDef->pack_type_id,
+                            'pack_capacity_id' => $packDef->pack_capacity_id,
+                            'quantity_in_pack' => $packDef->quantity_in_pack,
+                            'barcode' => $packDef->barcode,
+                            'serial_separator' => $packDef->serial_separator,
+                            'equivalency_factor' => $packDef->equivalency_factor,
+                            'height' => $packDef->height,
+                            'width' => $packDef->width,
+                            'depth' => $packDef->depth,
+                            'weight' => $packDef->weight,
+                            'is_weight_priced' => $packDef->is_weight_priced,
+                            'allow_fraction_in_qty' => $packDef->allow_fraction_in_qty,
+                            'is_default_pack' => $packDef->is_default_pack,
+                            'sort_order' => $index,
+                        ]);
 
-                if (! empty($packData['pack_operation_ids'])) {
-                    $pack->packOperations()->sync($packData['pack_operation_ids']);
-                }
-                if (! empty($packData['pack_group_ids'])) {
-                    $pack->packGroups()->sync($packData['pack_group_ids']);
+                        $pack->packOperations()->sync($packDef->packOperations->pluck('id'));
+                        $pack->packGroups()->sync($packDef->packGroups->pluck('id'));
+                    }
                 }
             }
         }
@@ -187,26 +178,28 @@ class ItemController extends Controller
 
     public function show(Item $item)
     {
-        $item->load(['itemType', 'category', 'brand', 'model', 'supplier', 'packs.uom', 'packs.packOperations', 'packs.packGroups', 'images']);
+        $item->load(['itemType', 'category', 'brand', 'model', 'supplier', 'packs.packType', 'packs.packCapacity.uom', 'packs.packOperations', 'packs.packGroups', 'images']);
 
         return view('dashboard.data_definition.data_product.items.show', compact('item'));
     }
 
     public function edit(Item $item)
     {
-        $item->load(['packs.uom', 'packs.packOperations', 'packs.packGroups', 'images']);
+        $item->load(['packs.packType', 'packs.packCapacity.uom', 'packs.packOperations', 'packs.packGroups', 'images']);
         $itemTypes = ItemType::where('is_active', true)->orderBy('name')->get();
         $categories = Category::all();
         $brands = Brand::where('show_in_customer_app', true)->orderBy('name')->get();
         $models = ItemModel::where('is_active', true)->orderBy('name_en')->get();
         $suppliers = Vendor::orderBy('vendor_name')->get();
-        $uoms = Uom::where('is_active', true)->orderBy('name_en')->get();
+        $packTypes = PackType::orderBy('name_en')->get();
+        $packCapacities = PackCapacity::with('uom')->orderBy('value')->get();
         $packOperations = PackOperation::where('is_active', true)->orderBy('name_en')->get();
         $packGroups = PackGroup::where('is_active', true)->orderBy('name_en')->get();
+        $packDefinitions = \App\Models\PackDefinition::with(['packType', 'packCapacity', 'packCapacity.uom'])->orderBy('sort_order')->orderBy('name_en')->get();
 
         return view('dashboard.data_definition.data_product.items.edit', compact(
             'item', 'itemTypes', 'categories', 'brands', 'models', 'suppliers',
-            'uoms', 'packOperations', 'packGroups'
+            'packTypes', 'packCapacities', 'packOperations', 'packGroups', 'packDefinitions'
         ));
     }
 
@@ -242,22 +235,7 @@ class ItemController extends Controller
             'required_by_liter' => 'boolean',
             'required_by_weight' => 'boolean',
             'packs' => 'nullable|array',
-            'packs.*.uom_id' => 'nullable|exists:uoms,id',
-            'packs.*.quantity' => 'nullable|numeric',
-            'packs.*.barcode' => 'nullable|string|max:255',
-            'packs.*.pack_operation_ids' => 'nullable|array',
-            'packs.*.pack_operation_ids.*' => 'nullable|exists:pack_operations,id',
-            'packs.*.pack_group_ids' => 'nullable|array',
-            'packs.*.pack_group_ids.*' => 'nullable|exists:pack_groups,id',
-            'packs.*.serial_separator' => 'nullable|string|max:50',
-            'packs.*.equivalency_factor' => 'nullable|numeric|min:0',
-            'packs.*.height' => 'nullable|numeric|min:0',
-            'packs.*.width' => 'nullable|numeric|min:0',
-            'packs.*.depth' => 'nullable|numeric|min:0',
-            'packs.*.weight' => 'nullable|numeric|min:0',
-            'packs.*.is_weight_priced' => 'boolean',
-            'packs.*.allow_fraction_in_qty' => 'boolean',
-            'packs.*.is_default_pack' => 'boolean',
+            'packs.*.pack_definition_id' => 'nullable|exists:pack_definitions,id',
             'additional_images' => 'nullable|array',
             'additional_images.*' => 'nullable|image|max:2048',
             // أضف هذا الحقل إذا أردت السماح بحذف صور معينة
@@ -278,31 +256,58 @@ class ItemController extends Controller
         $item->packs()->delete();
         if ($request->has('packs')) {
             foreach ($request->packs as $index => $packData) {
-                // تأكد من وجود البيانات الأساسية
-                if (empty($packData['uom_id']) || ! isset($packData['quantity'])) {
-                    continue;
-                }
-                $pack = $item->packs()->create([
-                    'uom_id' => $packData['uom_id'],
-                    'quantity' => $packData['quantity'],
-                    'barcode' => $packData['barcode'] ?? null,
-                    'serial_separator' => $packData['serial_separator'] ?? null,
-                    'equivalency_factor' => $packData['equivalency_factor'] ?? null,
-                    'height' => $packData['height'] ?? null,
-                    'width' => $packData['width'] ?? null,
-                    'depth' => $packData['depth'] ?? null,
-                    'weight' => $packData['weight'] ?? null,
-                    'is_weight_priced' => $packData['is_weight_priced'] ?? false,
-                    'allow_fraction_in_qty' => $packData['allow_fraction_in_qty'] ?? false,
-                    'is_default_pack' => $packData['is_default_pack'] ?? false,
+                $packCreateData = [
                     'sort_order' => $index,
-                ]);
+                ];
 
-                if (! empty($packData['pack_operation_ids'])) {
-                    $pack->packOperations()->sync($packData['pack_operation_ids']);
+                if (isset($packData['pack_definition_id']) && $packData['pack_definition_id']) {
+                    $packDef = \App\Models\PackDefinition::with(['packType', 'packCapacity', 'packOperations', 'packGroups'])->find($packData['pack_definition_id']);
+                    if ($packDef) {
+                        $packCreateData['pack_definition_id'] = $packDef->id;
+                        $packCreateData['pack_type_id'] = $packDef->pack_type_id;
+                        $packCreateData['pack_capacity_id'] = $packDef->pack_capacity_id;
+                        $packCreateData['quantity_in_pack'] = $packDef->quantity_in_pack;
+                        $packCreateData['barcode'] = $packDef->barcode;
+                        $packCreateData['serial_separator'] = $packDef->serial_separator;
+                        $packCreateData['equivalency_factor'] = $packDef->equivalency_factor;
+                        $packCreateData['height'] = $packDef->height;
+                        $packCreateData['width'] = $packDef->width;
+                        $packCreateData['depth'] = $packDef->depth;
+                        $packCreateData['weight'] = $packDef->weight;
+                        $packCreateData['is_weight_priced'] = $packDef->is_weight_priced;
+                        $packCreateData['allow_fraction_in_qty'] = $packDef->allow_fraction_in_qty;
+                        $packCreateData['is_default_pack'] = $packDef->is_default_pack;
+
+                        $pack = $item->packs()->create($packCreateData);
+                        $pack->packOperations()->sync($packDef->packOperations->pluck('id'));
+                        $pack->packGroups()->sync($packDef->packGroups->pluck('id'));
+                        continue;
+                    }
                 }
-                if (! empty($packData['pack_group_ids'])) {
-                    $pack->packGroups()->sync($packData['pack_group_ids']);
+
+                if (!empty($packData['pack_type_id']) && !empty($packData['pack_capacity_id'])) {
+                    $packCreateData['pack_type_id'] = $packData['pack_type_id'] ?? null;
+                    $packCreateData['pack_capacity_id'] = $packData['pack_capacity_id'] ?? null;
+                    $packCreateData['quantity_in_pack'] = $packData['quantity_in_pack'] ?? 1;
+                    $packCreateData['barcode'] = $packData['barcode'] ?? null;
+                    $packCreateData['serial_separator'] = $packData['serial_separator'] ?? null;
+                    $packCreateData['equivalency_factor'] = $packData['equivalency_factor'] ?? null;
+                    $packCreateData['height'] = $packData['height'] ?? null;
+                    $packCreateData['width'] = $packData['width'] ?? null;
+                    $packCreateData['depth'] = $packData['depth'] ?? null;
+                    $packCreateData['weight'] = $packData['weight'] ?? null;
+                    $packCreateData['is_weight_priced'] = isset($packData['is_weight_priced']) ? 1 : 0;
+                    $packCreateData['allow_fraction_in_qty'] = isset($packData['allow_fraction_in_qty']) ? 1 : 0;
+                    $packCreateData['is_default_pack'] = isset($packData['is_default_pack']) ? 1 : 0;
+
+                    $pack = $item->packs()->create($packCreateData);
+
+                    if (!empty($packData['pack_operation_ids'])) {
+                        $pack->packOperations()->sync($packData['pack_operation_ids']);
+                    }
+                    if (!empty($packData['pack_group_ids'])) {
+                        $pack->packGroups()->sync($packData['pack_group_ids']);
+                    }
                 }
             }
         }

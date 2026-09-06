@@ -6,16 +6,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\ItemPack;
+use App\Models\PackCapacity;
+use App\Models\PackDefinition;
 use App\Models\PackGroup;
 use App\Models\PackOperation;
-use App\Models\Uom;
+use App\Models\PackType;
 use Illuminate\Http\Request;
 
 class ItemPackController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ItemPack::with(['item', 'uom']);
+        $query = ItemPack::with(['item', 'packType', 'packCapacity.uom']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -26,7 +28,7 @@ class ItemPackController extends Controller
                             ->orWhere('name_en', 'like', "%{$search}%")
                             ->orWhere('name_ar', 'like', "%{$search}%");
                     })
-                    ->orWhereHas('uom', function ($sub) use ($search) {
+                    ->orWhereHas('packCapacity.uom', function ($sub) use ($search) {
                         $sub->where('name_en', 'like', "%{$search}%")
                             ->orWhere('name_ar', 'like', "%{$search}%")
                             ->orWhere('uom_symbol', 'like', "%{$search}%");
@@ -57,12 +59,25 @@ class ItemPackController extends Controller
     public function create()
     {
         $items = Item::orderBy('name_en')->get();
-        $uoms = Uom::where('is_active', true)->orderBy('name_en')->get();
+        $packTypes = PackType::orderBy('name_en')->get();
+        $packCapacities = PackCapacity::with('uom')->orderBy('value')->get();
         $packOperations = PackOperation::where('is_active', true)->orderBy('name_en')->get();
         $packGroups = PackGroup::where('is_active', true)->orderBy('name_en')->get();
+        $packDefinitions = PackDefinition::orderBy('name_en')->get();
+        
+        // Prepare pack definitions data for JavaScript
+        $packDefinitionsData = $packDefinitions->mapWithKeys(function($d) {
+            return [$d->id => [
+                'name' => $d->name_ar ?? $d->name_en ?? $d->name ?? '#' . $d->id,
+                'code' => $d->code,
+                'pack_type' => $d->packType?->name_ar ?? $d->packType?->name_en ?? '-',
+                'capacity' => ($d->packCapacity?->value ?? '-') . ' ' . ($d->packCapacity?->uom?->code ?? ''),
+                'qty' => $d->quantity_in_pack,
+            ]];
+        })->toArray();
 
         return view('dashboard.data_definition.data_product.item_packs.create', compact(
-            'items', 'uoms', 'packOperations', 'packGroups'
+            'items', 'packTypes', 'packCapacities', 'packOperations', 'packGroups', 'packDefinitions', 'packDefinitionsData'
         ));
     }
 
@@ -70,39 +85,47 @@ class ItemPackController extends Controller
     {
         $validated = $request->validate([
             'item_id' => 'required|exists:items,id',
-            'uom_id' => 'required|exists:uoms,id',
-            'quantity' => 'required|numeric|min:0.001',
-            'barcode' => 'required|string|max:255|unique:item_packs,barcode',
-            'serial_separator' => 'nullable|string|max:20',
-            'equivalency_factor' => 'nullable|numeric|min:0',
-            'height' => 'nullable|numeric|min:0',
-            'width' => 'nullable|numeric|min:0',
-            'depth' => 'nullable|numeric|min:0',
-            'weight' => 'nullable|numeric|min:0',
-            'is_weight_priced' => 'boolean',
-            'allow_fraction_in_qty' => 'boolean',
-            'is_default_pack' => 'boolean',
-            'sort_order' => 'nullable|integer',
-            'pack_operation_ids' => 'nullable|array',
-            'pack_operation_ids.*' => 'exists:pack_operations,id',
-            'pack_group_ids' => 'nullable|array',
-            'pack_group_ids.*' => 'exists:pack_groups,id',
+            'pack_definition_ids' => 'required|array|min:1',
+            'pack_definition_ids.*' => 'exists:pack_definitions,id',
         ]);
 
-        $validated['is_weight_priced'] = $request->boolean('is_weight_priced');
-        $validated['allow_fraction_in_qty'] = $request->boolean('allow_fraction_in_qty');
-        $validated['is_default_pack'] = $request->boolean('is_default_pack');
+        $itemId = $validated['item_id'];
+        $packDefinitionIds = $validated['pack_definition_ids'];
 
-        $itemPack = ItemPack::create($validated);
-        $itemPack->packOperations()->sync($validated['pack_operation_ids'] ?? []);
-        $itemPack->packGroups()->sync($validated['pack_group_ids'] ?? []);
+        $createdCount = 0;
+        foreach ($packDefinitionIds as $packDefinitionId) {
+            $packDef = \App\Models\PackDefinition::find($packDefinitionId);
+            if ($packDef) {
+                $itemPack = ItemPack::create([
+                    'item_id' => $itemId,
+                    'pack_type_id' => $packDef->pack_type_id,
+                    'pack_capacity_id' => $packDef->pack_capacity_id,
+                    'quantity_in_pack' => $packDef->quantity_in_pack,
+                    'barcode' => $packDef->barcode,
+                    'serial_separator' => $packDef->serial_separator,
+                    'equivalency_factor' => $packDef->equivalency_factor,
+                    'height' => $packDef->height,
+                    'width' => $packDef->width,
+                    'depth' => $packDef->depth,
+                    'weight' => $packDef->weight,
+                    'is_weight_priced' => $packDef->is_weight_priced,
+                    'allow_fraction_in_qty' => $packDef->allow_fraction_in_qty,
+                    'is_default_pack' => $packDef->is_default_pack,
+                    'sort_order' => $createdCount,
+                ]);
 
-        return redirect()->route('item-packs.index')->with('success', 'Item Pack created successfully.');
+                $itemPack->packOperations()->sync($packDef->packOperations->pluck('id'));
+                $itemPack->packGroups()->sync($packDef->packGroups->pluck('id'));
+                $createdCount++;
+            }
+        }
+
+        return redirect()->route('item-packs.index')->with('success', $createdCount . ' Item Pack(s) created successfully.');
     }
 
     public function show(ItemPack $itemPack)
     {
-        $itemPack->load(['item', 'uom', 'packOperations', 'packGroups']);
+        $itemPack->load(['item', 'packType', 'packCapacity.uom', 'packOperations', 'packGroups']);
 
         return view('dashboard.data_definition.data_product.item_packs.show', compact('itemPack'));
     }
@@ -110,14 +133,16 @@ class ItemPackController extends Controller
     public function edit(ItemPack $itemPack)
     {
         $items = Item::orderBy('name_en')->get();
-        $uoms = Uom::where('is_active', true)->orderBy('name_en')->get();
+        $packTypes = PackType::orderBy('name_en')->get();
+        $packCapacities = PackCapacity::with('uom')->orderBy('value')->get();
         $packOperations = PackOperation::where('is_active', true)->orderBy('name_en')->get();
         $packGroups = PackGroup::where('is_active', true)->orderBy('name_en')->get();
+        $packDefinitions = PackDefinition::orderBy('name_en')->get();
 
         $itemPack->load(['packOperations', 'packGroups']);
 
         return view('dashboard.data_definition.data_product.item_packs.edit', compact(
-            'itemPack', 'items', 'uoms', 'packOperations', 'packGroups'
+            'itemPack', 'items', 'packTypes', 'packCapacities', 'packOperations', 'packGroups', 'packDefinitions'
         ));
     }
 
@@ -125,8 +150,10 @@ class ItemPackController extends Controller
     {
         $validated = $request->validate([
             'item_id' => 'required|exists:items,id',
-            'uom_id' => 'required|exists:uoms,id',
-            'quantity' => 'required|numeric|min:0.001',
+            'pack_definition_id' => 'nullable|exists:pack_definitions,id',
+            'pack_type_id' => 'required|exists:pack_types,id',
+            'pack_capacity_id' => 'required|exists:pack_capacities,id',
+            'quantity_in_pack' => 'required|numeric|min:0.001',
             'barcode' => 'required|string|max:255|unique:item_packs,barcode,'.$itemPack->id,
             'serial_separator' => 'nullable|string|max:20',
             'equivalency_factor' => 'nullable|numeric|min:0',

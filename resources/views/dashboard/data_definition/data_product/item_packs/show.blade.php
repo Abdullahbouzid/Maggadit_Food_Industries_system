@@ -22,12 +22,16 @@
                                 <p class="fs-5">{{ $itemPack->item->name_en ?? $itemPack->item->name_ar ?? '—' }} ({{ $itemPack->item->code ?? '—' }})</p>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="text-muted">UOM</h6>
-                                <p class="fs-5">{{ $itemPack->uom->name_en ?? $itemPack->uom->uom_symbol ?? '—' }}</p>
+                                <h6 class="text-muted">Pack Type</h6>
+                                <p class="fs-5">{{ $itemPack->packType->name_en ?? $itemPack->packType->name_ar ?? '—' }}</p>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="text-muted">Quantity</h6>
-                                <p class="fs-5">{{ rtrim(rtrim(number_format($itemPack->quantity, 3, '.', ''), '0'), '.') }}</p>
+                                <h6 class="text-muted">Pack Capacity</h6>
+                                <p class="fs-5">{{ $itemPack->packCapacity->formatted_value ?? '—' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Quantity in Pack</h6>
+                                <p class="fs-5">{{ rtrim(rtrim(number_format($itemPack->quantity_in_pack, 3, '.', ''), '0'), '.') }}</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="text-muted">Barcode</h6>

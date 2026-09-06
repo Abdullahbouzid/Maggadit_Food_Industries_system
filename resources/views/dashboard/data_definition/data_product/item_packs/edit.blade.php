@@ -20,7 +20,7 @@
                             @csrf
                             @method('PUT')
                             <div class="row g-4">
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <label class="form-label fw-semibold">Item <span class="text-danger">*</span></label>
                                     <select name="item_id" class="form-select @error('item_id') is-invalid @enderror" required>
                                         <option value="">Select item</option>
@@ -30,20 +30,40 @@
                                     </select>
                                     @error('item_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">UOM <span class="text-danger">*</span></label>
-                                    <select name="uom_id" class="form-select @error('uom_id') is-invalid @enderror" required>
-                                        <option value="">Select unit</option>
-                                        @foreach($uoms as $uom)
-                                            <option value="{{ $uom->id }}" {{ old('uom_id', $itemPack->uom_id) == $uom->id ? 'selected' : '' }}>{{ $uom->name_en }} ({{ $uom->uom_symbol }})</option>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Pack Definition</label>
+                                    <select name="pack_definition_id" class="form-select @error('pack_definition_id') is-invalid @enderror" id="packDefinitionSelect">
+                                        <option value="">Select pack definition</option>
+                                        @foreach($packDefinitions as $def)
+                                            <option value="{{ $def->id }}" {{ old('pack_definition_id', $itemPack->pack_definition_id) == $def->id ? 'selected' : '' }}>{{ $def->name_en ?? $def->name_ar }} ({{ $def->code }})</option>
                                         @endforeach
                                     </select>
-                                    @error('uom_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    @error('pack_definition_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Quantity <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.001" min="0.001" name="quantity" class="form-control @error('quantity') is-invalid @enderror" value="{{ old('quantity', $itemPack->quantity) }}" required>
-                                    @error('quantity') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Pack Type <span class="text-danger">*</span></label>
+                                    <select name="pack_type_id" class="form-select @error('pack_type_id') is-invalid @enderror" required>
+                                        <option value="">Select pack type</option>
+                                        @foreach($packTypes as $packType)
+                                            <option value="{{ $packType->id }}" {{ old('pack_type_id', $itemPack->pack_type_id) == $packType->id ? 'selected' : '' }}>{{ $packType->name_en ?? $packType->name_ar }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('pack_type_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Pack Capacity <span class="text-danger">*</span></label>
+                                    <select name="pack_capacity_id" class="form-select @error('pack_capacity_id') is-invalid @enderror" required>
+                                        <option value="">Select capacity</option>
+                                        @foreach($packCapacities as $capacity)
+                                            <option value="{{ $capacity->id }}" {{ old('pack_capacity_id', $itemPack->pack_capacity_id) == $capacity->id ? 'selected' : '' }}>{{ $capacity->name_en ?? $capacity->name_ar }} ({{ $capacity->uom->uom_symbol ?? '' }})</option>
+                                        @endforeach
+                                    </select>
+                                    @error('pack_capacity_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Quantity in Pack <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.001" min="0.001" name="quantity_in_pack" class="form-control @error('quantity_in_pack') is-invalid @enderror" value="{{ old('quantity_in_pack', $itemPack->quantity_in_pack) }}" required>
+                                    @error('quantity_in_pack') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Barcode <span class="text-danger">*</span></label>
@@ -128,3 +148,44 @@
     </div>
 </div>
 @endsection
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var select = document.getElementById('packDefinitionSelect');
+        if (!select) return;
+
+        select.addEventListener('change', function () {
+            var packDefinitionId = this.value;
+            if (!packDefinitionId) return;
+
+            fetch('/pack-definitions/' + packDefinitionId + '/show-ajax')
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    var setVal = function (name, value) {
+                        var el = document.querySelector('[name="' + name + '"]');
+                        if (el) el.value = value;
+                    };
+                    var setChecked = function (name, checked) {
+                        var el = document.querySelector('[name="' + name + '"]');
+                        if (el) el.checked = !!checked;
+                    };
+
+                    setVal('pack_type_id', data.pack_type_id);
+                    setVal('pack_capacity_id', data.pack_capacity_id);
+                    setVal('quantity_in_pack', data.quantity_in_pack);
+                    setVal('barcode', data.barcode);
+                    setVal('serial_separator', data.serial_separator);
+                    setVal('equivalency_factor', data.equivalency_factor);
+                    setVal('height', data.height);
+                    setVal('width', data.width);
+                    setVal('depth', data.depth);
+                    setVal('weight', data.weight);
+                    setChecked('is_weight_priced', data.is_weight_priced);
+                    setChecked('allow_fraction_in_qty', data.allow_fraction_in_qty);
+                    setChecked('is_default_pack', data.is_default_pack);
+                })
+                .catch(function (err) { console.error('Error fetching pack definition data', err); });
+        });
+    });
+</script>
+@endpush

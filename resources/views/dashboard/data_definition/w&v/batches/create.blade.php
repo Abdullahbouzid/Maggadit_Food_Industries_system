@@ -128,11 +128,12 @@
         feather.replace();
 
         // بيانات المنتجات والعبوات (من الـ Controller)
-        const items = @json($items);
+         const items = @json($items);
+        const warehouses = @json($warehouses ?? \App\Models\Warehouse::where('is_active', true)->get());
 
         let rowCounter = 0;
 
-        function createItemRow(itemId = '', packId = '', quantity = '') {
+         function createItemRow(itemId = '', packId = '', quantity = '', warehouseId = '') {
             rowCounter++;
             const rowId = 'item-row-' + rowCounter;
 
@@ -146,30 +147,41 @@
                 const selectedItem = items.find(i => i.id == itemId);
                 if (selectedItem && selectedItem.packs) {
                     selectedItem.packs.forEach(pack => {
-                        packOptions += `<option value="${pack.id}" ${pack.id == packId ? 'selected' : ''}>${pack.barcode} (كمية: ${pack.quantity})</option>`;
+                        packOptions += `<option value="${pack.id}" data-warehouse-id="${pack.warehouse_id || ''}" ${pack.id == packId ? 'selected' : ''}>${pack.display_text || pack.barcode}</option>`;
                     });
                 }
             }
 
+            let warehouseOptions = '<option value="">اختر مخزن</option>';
+            warehouses.forEach(wh => {
+                warehouseOptions += `<option value="${wh.id}" ${wh.id == warehouseId ? 'selected' : ''}>${wh.name_en || wh.name_ar}</option>`;
+            });
+
             const html = `
                 <div class="row g-3 align-items-end mb-3 item-row" id="${rowId}">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-semibold">المنتج</label>
                         <select name="items[${rowCounter}][item_id]" class="form-select item-select" required>
                             ${itemOptions}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label fw-semibold">العبوة</label>
                         <select name="items[${rowCounter}][item_pack_id]" class="form-select pack-select">
                             ${packOptions}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">المخزن <span class="text-info">(يتم تعبئته تلقائياً)</span></label>
+                        <select name="items[${rowCounter}][warehouse_id]" class="form-select warehouse-select">
+                            ${warehouseOptions}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <label class="form-label fw-semibold">الكمية <span class="text-danger">*</span></label>
                         <input type="number" step="0.001" min="0.001" name="items[${rowCounter}][quantity]" class="form-control quantity-input" value="${quantity}" required>
                     </div>
-                    <div class="col-md-2 d-flex justify-content-end">
+                    <div class="col-md-1 d-flex justify-content-end">
                         <button type="button" class="btn btn-outline-danger remove-item-row" style="margin-top: 24px;">
                             <i data-feather="trash-2"></i>
                         </button>
@@ -208,10 +220,12 @@
             }
         });
 
+        // Fetch packs via AJAX when item changes
         document.addEventListener('change', function(e) {
             if (e.target.classList.contains('item-select')) {
                 const itemId = e.target.value;
                 const packSelect = e.target.closest('.item-row').querySelector('.pack-select');
+                const warehouseSelect = e.target.closest('.item-row').querySelector('.warehouse-select');
                 packSelect.innerHTML = '<option value="">جاري التحميل...</option>';
                 packSelect.disabled = true;
 
@@ -223,10 +237,12 @@
                             data.forEach(pack => {
                                 const option = document.createElement('option');
                                 option.value = pack.id;
-                                option.textContent = pack.display_text;
+                                option.textContent = pack.display_text || pack.barcode;
+                                option.setAttribute('data-warehouse-id', pack.warehouse_id || '');
                                 packSelect.appendChild(option);
                             });
                             packSelect.disabled = false;
+                            packSelect.dispatchEvent(new Event('change'));
                         })
                         .catch(error => {
                             console.error('خطأ في تحميل العبوات:', error);
@@ -236,6 +252,25 @@
                 } else {
                     packSelect.innerHTML = '<option value="">اختر عبوة</option>';
                     packSelect.disabled = false;
+                }
+            }
+        });
+
+        // Auto-fill warehouse when pack changes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('pack-select')) {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                const warehouseId = selectedOption.getAttribute('data-warehouse-id');
+                const warehouseSelect = e.target.closest('.item-row').querySelector('.warehouse-select');
+
+                if (warehouseId && warehouseSelect) {
+                    const options = warehouseSelect.options;
+                    for (let i = 0; i < options.length; i++) {
+                        if (options[i].value == warehouseId) {
+                            options[i].selected = true;
+                            break;
+                        }
+                    }
                 }
             }
         });

@@ -100,8 +100,8 @@
                                     <td>{{ $loop->iteration + ($itemPacks->currentPage() - 1) * $itemPacks->perPage() }}</td>
                                     <td>{{ $pack->item->name_en ?? $pack->item->name_ar ?? '—' }}</td>
                                     <td><code>{{ $pack->barcode }}</code></td>
-                                    <td>{{ rtrim(rtrim(number_format($pack->quantity, 3, '.', ''), '0'), '.') }}</td>
-                                    <td>{{ $pack->uom->name_en ?? $pack->uom->uom_symbol ?? '—' }}</td>
+                                    <td>{{ rtrim(rtrim(number_format($pack->quantity_in_pack, 3, '.', ''), '0'), '.') }}</td>
+                                    <td>{{ $pack->packCapacity?->uom->name_en ?? $pack->packCapacity?->uom->uom_symbol ?? '—' }}</td>
                                     <td>{!! $pack->is_default_pack ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
                                     <td>{!! $pack->is_weight_priced ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
                                     <td class="text-end">

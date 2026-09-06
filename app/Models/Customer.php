@@ -20,6 +20,7 @@ class Customer extends Authenticatable
         'avatar',
         'fcm_token',
         'active_organization_id',
+        'price_list_id',
     ];
 
     protected $hidden = [
@@ -99,5 +100,11 @@ class Customer extends Authenticatable
     public function favorites()
     {
         return $this->hasMany(CustomerFavorite::class);
+    }
+
+    // قائمة الأسعار المسندة للعميل
+    public function priceList()
+    {
+        return $this->belongsTo(PriceList::class);
     }
 }

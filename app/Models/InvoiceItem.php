@@ -9,10 +9,13 @@ class InvoiceItem extends Model
     protected $fillable = [
         'invoice_id',
         'item_id',
+        'item_pack_id',
         'warehouse_id',
         'quantity',
         'unit_price',
         'subtotal',
+        'price_list_id',
+        'price_history_id',
     ];
 
     protected $casts = [
@@ -31,8 +34,23 @@ class InvoiceItem extends Model
         return $this->belongsTo(Item::class);
     }
 
+    public function itemPack()
+    {
+        return $this->belongsTo(ItemPack::class, 'item_pack_id');
+    }
+
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class);
+    }
+
+    public function priceList()
+    {
+        return $this->belongsTo(PriceList::class);
+    }
+
+    public function priceHistory()
+    {
+        return $this->belongsTo(PriceListVersionItem::class, 'price_history_id');
     }
 }

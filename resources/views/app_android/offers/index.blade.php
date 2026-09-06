@@ -83,7 +83,9 @@
                                 data-id="{{ $offer->item_id }}" 
                                 data-name="{{ $offer->name }}" 
                                 data-price="{{ $offer->new_price }}"
-                                data-image="{{ $offer->image ?? '' }}">
+                                data-image="{{ $offer->image ?? '' }}"
+                                data-pack-name="{{ $offer->pack_type ?? '' }}"
+                                data-uom-name="{{ $offer->pack_type ?? '' }}">
                             إضافة إلى السلة
                         </button>
                     </div>
@@ -119,11 +121,13 @@
                 e.preventDefault();
                 let id = this.getAttribute('data-id');
                 let name = this.getAttribute('data-name');
-                let price = this.getAttribute('data-price');
+                let price = parseFloat(this.getAttribute('data-price')) || 0;
                 let image = this.getAttribute('data-image');
+                let packName = this.getAttribute('data-pack-name') || '';
+                let uomName = this.getAttribute('data-uom-name') || '';
                 
                 let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
-                let existingItemIndex = cartItems.findIndex(item => item.id == id);
+                let existingItemIndex = cartItems.findIndex(item => item.id == id && item.pack_name == packName);
                 
                 if (existingItemIndex > -1) {
                     cartItems[existingItemIndex].quantity += 1;
@@ -131,6 +135,8 @@
                     cartItems.push({
                         id: id,
                         name: name,
+                        pack_name: packName,
+                        uom_name: uomName,
                         price: price,
                         quantity: 1,
                         image: image,
@@ -139,7 +145,7 @@
                 }
                 
                 localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
-                showToast(`✅ تم إضافة "${name}" إلى السلة`);
+                showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
             });
         });
 
@@ -179,7 +185,9 @@
                                                     data-id="${offer.item_id || offer.id}" 
                                                     data-name="${offer.name || offer.title || 'عرض'}" 
                                                     data-price="${offer.new_price || 0}"
-                                                    data-image="${offer.image || ''}">
+                                                    data-image="${offer.image || ''}"
+                                                    data-pack-name="${offer.pack_type || ''}"
+                                                    data-uom-name="${offer.pack_type || ''}">
                                                 إضافة إلى السلة
                                             </button>
                                         </div>
@@ -193,18 +201,20 @@
                                     e.preventDefault();
                                     let id = this.getAttribute('data-id');
                                     let name = this.getAttribute('data-name');
-                                    let price = this.getAttribute('data-price');
+                                    let price = parseFloat(this.getAttribute('data-price')) || 0;
                                     let image = this.getAttribute('data-image');
+                                    let packName = this.getAttribute('data-pack-name') || '';
+                                    let uomName = this.getAttribute('data-uom-name') || '';
                                     
                                     let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
-                                    let existingItemIndex = cartItems.findIndex(item => item.id == id);
+                                    let existingItemIndex = cartItems.findIndex(item => item.id == id && item.pack_name == packName);
                                     if (existingItemIndex > -1) {
                                         cartItems[existingItemIndex].quantity += 1;
                                     } else {
-                                        cartItems.push({ id, name, price, quantity: 1, image, discount: 0 });
+                                        cartItems.push({ id, name, pack_name: packName, uom_name: uomName, price, quantity: 1, image, discount: 0 });
                                     }
                                     localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
-                                    showToast(`✅ تم إضافة "${name}" إلى السلة`);
+                                    showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
                                 });
                             });
                         }

@@ -85,24 +85,34 @@
             }, 2000);
         }
 
-        function addToCart(product) {
+        function addToCart(product, pack = null) {
             let cart = JSON.parse(localStorage.getItem('maggadit_cart') || '[]');
-            const existingIndex = cart.findIndex(item => item.id === product.id);
+            const packId = pack ? pack.id : null;
+            const packName = pack ? pack.name : (product.pack_name || product.uom_name || '');
+            const uomName = pack ? (pack.uom_name || '') : (product.uom_name || '');
+            const price = pack ? pack.price : product.price;
+
+            const existingIndex = cart.findIndex(item => item.id === product.id && (item.pack_id === packId || (!item.pack_id && !packId)));
             if (existingIndex > -1) {
                 cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
             } else {
                 cart.push({
                     id: product.id,
-                    name_ar: product.name_ar,
-                    name_en: product.name_en || product.name_ar,
-                    price: product.price,
+                    pack_id: packId,
+                    name: product.name_ar || product.name,
+                    name_ar: product.name_ar || product.name,
+                    name_en: product.name_en || product.name_ar || product.name,
+                    pack_name: packName,
+                    uom_name: uomName,
+                    price: price,
                     image: product.image,
                     quantity: 1,
                     discount: product.discount || 0
                 });
             }
             localStorage.setItem('maggadit_cart', JSON.stringify(cart));
-            showToastMessage(currentLang === 'ar' ? `تم إضافة ${currentLang === 'ar' ? product.name_ar : product.name_en} إلى السلة` : `Added ${currentLang === 'ar' ? product.name_ar : product.name_en} to cart`, false);
+            const msg = currentLang === 'ar' ? `تم إضافة ${product.name_ar} ${packName ? '('+packName+')' : ''} إلى السلة` : `Added ${product.name_en} to cart`;
+            showToastMessage(msg, false);
         }
 
         function removeFromFav(id) {
@@ -114,7 +124,7 @@
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'X-Requested-With': 'XMLHttpRequest',
                 },
-                credentials: 'same-origin',
+                credentials: 'include',
                 body: JSON.stringify({ item_id: id })
             })
             .then(res => res.json())
@@ -149,35 +159,34 @@
             container.innerHTML = '';
             favoriteItems.forEach((item, index) => {
                 const itemCard = document.createElement('div');
-                itemCard.className = 'bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg';
+                itemCard.className = 'bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg p-3.5';
+                
+                let uomBadge = item.uom_name ? `<span class="bg-purple-100 text-purple-700 text-xs px-2.5 py-0.5 rounded-full font-bold"><i class="fas fa-box ml-1"></i>${item.uom_name}</span>` : '';
+
                 itemCard.innerHTML = `
-                    <div class="flex flex-row">
-                        <div class="w-24 h-24 bg-gray-100 flex items-center justify-center text-4xl overflow-hidden">
-                            ${item.image ? `<img src="${item.image}" alt="${currentLang === 'ar' ? item.name_ar : item.name_en}" class="w-full h-full object-cover">` : '📦'}
+                    <div class="flex flex-row gap-3.5">
+                        <div class="w-24 h-24 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl flex items-center justify-center text-4xl overflow-hidden border border-purple-100 flex-shrink-0">
+                            ${item.image ? `<img src="${item.image}" alt="${currentLang === 'ar' ? item.name_ar : item.name_en}" class="w-full h-full object-cover rounded-xl">` : '📦'}
                         </div>
-                        <div class="flex-1 p-3 text-right">
-                            <div class="flex justify-between items-start">
-                                <span class="text-xs ${item.discount > 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'} px-2 py-0.5 rounded-full">
-                                    ${item.discount > 0 ? `-${item.discount}%` : (currentLang === 'ar' ? 'جديد' : 'New')}
-                                </span>
-                                <h3 class="font-bold text-gray-800">${currentLang === 'ar' ? item.name_ar : item.name_en}</h3>
-                            </div>
-                            <div class="mt-2 flex justify-between items-center">
-                                <div class="text-left">
-                                    <span class="font-bold text-purple-700 text-lg">${formatPrice(item.price)}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button class="remove-fav bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-full transition" data-id="${item.id}">
-                                        <i class="fas fa-trash-alt ml-1"></i> ${t.remove_btn}
+                        <div class="flex-1 text-right flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start gap-1">
+                                    <h3 class="font-bold text-gray-800 text-sm leading-snug">${currentLang === 'ar' ? item.name_ar : item.name_en}</h3>
+                                    <button class="remove-fav text-red-500 hover:text-red-700 text-xs font-medium p-1 transition" data-id="${item.id}" title="${t.remove_btn}">
+                                        <i class="fas fa-heart text-red-500 text-base"></i>
                                     </button>
                                 </div>
+                                <div class="mt-1 flex items-center gap-2">
+                                    ${uomBadge}
+                                </div>
                             </div>
-                            <div class="mt-3">
+                            <div class="mt-3 flex items-center justify-between">
+                                <span class="font-extrabold text-purple-700 text-base">${formatPrice(item.price)}</span>
                                 ${item.inStock ? 
-                                    `<button class="add-to-cart-fav w-full bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold py-2 rounded-xl text-sm transition" data-id="${item.id}">
-                                        <i class="fas fa-shopping-cart ml-1"></i> ${t.add_to_cart}
+                                    `<button class="add-to-cart-fav bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm active:scale-95" data-id="${item.id}" data-pack-name="${item.pack_name || ''}" data-uom-name="${item.uom_name || ''}">
+                                        <i class="fas fa-cart-plus"></i> ${t.add_to_cart}
                                     </button>` :
-                                    `<div class="text-center text-red-500 text-xs font-semibold py-2">${t.out_of_stock}</div>`
+                                    `<span class="text-red-500 text-xs font-semibold">${t.out_of_stock}</span>`
                                 }
                             </div>
                         </div>
@@ -204,9 +213,11 @@
 
         function handleAddToCartClick(e) {
             const id = parseInt(e.currentTarget.getAttribute('data-id'));
+            const packName = e.currentTarget.getAttribute('data-pack-name') || '';
+            const uomName = e.currentTarget.getAttribute('data-uom-name') || '';
             const product = favoriteItems.find(item => item.id === id);
             if (product && product.inStock) {
-                addToCart(product);
+                addToCart({ ...product, pack_name: packName, uom_name: uomName });
                 // اختياري: إزالة من المفضلة بعد الإضافة (يمكنك تفعيل السطر التالي)
                 // removeFromFav(id);
             } else {

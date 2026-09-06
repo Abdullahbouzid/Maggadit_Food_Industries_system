@@ -124,7 +124,7 @@
                                                     <tr>
                                                         <td>{{ $loop->iteration }}</td>
                                                         <td>{{ $item->item->name_en ?? 'غير معروف' }}</td>
-                                                        <td>{{ $item->pack ? $item->pack->barcode . ' (Qty: ' . $item->pack->quantity . ')' : 'بدون عبوة' }}</td>
+                                                         <td>{{ $item->pack ? $item->pack->barcode . ' (Qty: ' . $item->pack->quantity_in_pack . ')' : 'بدون عبوة' }}</td>
                                                         <td>{{ number_format($item->quantity, 3) }}</td>
                                                         <td>{{ number_format($item->dispatched_quantity, 3) }}</td>
                                                         <td>{{ number_format($remaining, 3) }}</td>

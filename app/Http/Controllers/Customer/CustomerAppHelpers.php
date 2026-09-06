@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Models\Customer;
+use App\Models\Item;
+use App\Models\PriceListVersion;
+use App\Models\PriceListVersionItem;
 use App\Services\Customer\ImagePathService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -132,5 +135,58 @@ trait CustomerAppHelpers
         }
 
         return $item;
+    }
+
+    protected function getItemPrice(Item $item, ?Customer $customer = null, ?int $packId = null): float
+    {
+        $res = $this->getItemPriceRecord($item, $customer, $packId);
+        return $res['price'];
+    }
+
+    protected function getItemPriceRecord(Item $item, ?Customer $customer = null, ?int $packId = null): array
+    {
+        $price = 0;
+        $priceItemRecord = null;
+        $priceListId = $customer ? $customer->price_list_id : null;
+
+        if ($priceListId) {
+            $latestVersion = PriceListVersion::where('price_list_id', $priceListId)
+                ->where('effective_date', '<=', now())
+                ->orderByDesc('effective_date')
+                ->first();
+
+            if ($latestVersion) {
+                $priceItemRecord = PriceListVersionItem::where('price_list_version_id', $latestVersion->id)
+                    ->where('item_id', $item->id)
+                    ->when($packId, function ($q) use ($packId) {
+                        $q->where('item_pack_id', $packId);
+                    })
+                    ->orderByDesc('item_pack_id')
+                    ->first();
+
+                if ($priceItemRecord) {
+                    $price = (float) $priceItemRecord->price;
+                }
+            }
+        }
+
+        if (!$priceItemRecord && $packId) {
+            $pack = $item->packs ? $item->packs->firstWhere('id', $packId) : null;
+            if ($pack) {
+                $price = (float) ($pack->price ?? 0);
+            }
+        }
+
+        if ($price == 0 && !$priceItemRecord && $item->packs) {
+            $defaultPack = $item->packs->first();
+            $price = $defaultPack ? (float) ($defaultPack->price ?? 0) : 0;
+        }
+
+        return [
+            'price' => $price,
+            'price_list_id' => $priceListId,
+            'price_history_id' => $priceItemRecord ? $priceItemRecord->id : null,
+            'price_record' => $priceItemRecord
+        ];
     }
 }

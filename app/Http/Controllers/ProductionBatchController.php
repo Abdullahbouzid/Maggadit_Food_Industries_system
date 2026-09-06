@@ -60,11 +60,12 @@ class ProductionBatchController extends Controller
     public function create()
     {
         $items = Item::with('packs')->orderBy('name_en')->get();
+        $warehouses = Warehouse::where('is_active', true)->orderBy('name_en')->get();
         $lastBatch = ProductionBatch::orderBy('id', 'desc')->first();
         $nextNumber = $lastBatch ? intval(substr($lastBatch->batch_number, -3)) + 1 : 1;
         $batchNumber = 'BATCH-'.date('Ymd').'-'.str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
-        return view('dashboard.data_definition.w&v.batches.create', compact('items', 'batchNumber'));
+        return view('dashboard.data_definition.w&v.batches.create', compact('items', 'warehouses', 'batchNumber'));
     }
 
     /**
@@ -81,6 +82,7 @@ class ProductionBatchController extends Controller
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:items,id',
             'items.*.item_pack_id' => 'nullable|exists:item_packs,id',
+            'items.*.warehouse_id' => 'nullable|exists:warehouses,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
         ]);
 
@@ -95,11 +97,12 @@ class ProductionBatchController extends Controller
 
             // تجميع المكررات حسب (item_id, item_pack_id)
             $grouped = collect($validated['items'])->groupBy(function ($item) {
-                return $item['item_id'].'-'.($item['item_pack_id'] ?? 'null');
+                return $item['item_id'].'-'.($item['item_pack_id'] ?? 'null').'-'.($item['warehouse_id'] ?? 'null');
             })->map(function ($group) {
                 return [
                     'item_id' => $group->first()['item_id'],
                     'item_pack_id' => $group->first()['item_pack_id'],
+                    'warehouse_id' => $group->first()['warehouse_id'] ?? null,
                     'quantity' => $group->sum('quantity'),
                 ];
             });
@@ -109,6 +112,7 @@ class ProductionBatchController extends Controller
                     'batch_id' => $batch->id,
                     'item_id' => $itemData['item_id'],
                     'item_pack_id' => $itemData['item_pack_id'],
+                    'warehouse_id' => $itemData['warehouse_id'] ?? null,
                     'quantity' => $itemData['quantity'],
                     'dispatched_quantity' => 0,
                 ]);
@@ -155,6 +159,7 @@ class ProductionBatchController extends Controller
             'items.*.id' => 'nullable|exists:batch_items,id',
             'items.*.item_id' => 'required|exists:items,id',
             'items.*.item_pack_id' => 'nullable|exists:item_packs,id',
+            'items.*.warehouse_id' => 'nullable|exists:warehouses,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
         ]);
 
@@ -186,6 +191,7 @@ class ProductionBatchController extends Controller
                         $batchItem->update([
                             'item_id' => $itemData['item_id'],
                             'item_pack_id' => $itemData['item_pack_id'],
+                            'warehouse_id' => $itemData['warehouse_id'] ?? null,
                             'quantity' => $itemData['quantity'],
                             // لا نغير dispatched_quantity
                         ]);
@@ -196,6 +202,7 @@ class ProductionBatchController extends Controller
                         'batch_id' => $productionBatch->id,
                         'item_id' => $itemData['item_id'],
                         'item_pack_id' => $itemData['item_pack_id'],
+                        'warehouse_id' => $itemData['warehouse_id'] ?? null,
                         'quantity' => $itemData['quantity'],
                         'dispatched_quantity' => 0,
                     ]);
@@ -224,11 +231,12 @@ class ProductionBatchController extends Controller
     public function getPacks($itemId)
     {
         $item = Item::findOrFail($itemId);
-        $packs = $item->packs()->select('id', 'barcode', 'quantity as pack_quantity')->get();
+        $packs = $item->packs()->select('id', 'barcode', 'quantity_in_pack as pack_quantity', 'warehouse_id')->get();
 
-        // نضيف نصاً وصفياً لكل عبوة لعرضها في الـ select
         $packs->transform(function ($pack) {
             $pack->display_text = $pack->barcode.' (Qty: '.$pack->pack_quantity.')';
+            $pack->warehouse_id = $pack->warehouse_id;
+            $pack->warehouse_name = $pack->warehouse?->name_en ?? $pack->warehouse?->name_ar ?? null;
 
             return $pack;
         });
@@ -256,7 +264,12 @@ class ProductionBatchController extends Controller
         $batch = $productionBatch->load(['batchItems.item', 'batchItems.pack']);
         $warehouses = Warehouse::where('is_active', true)->orderBy('name_en')->get();
 
-        return view('dashboard.data_definition.w&v.batches.distribute', compact('batch', 'warehouses'));
+        // التحقق: هل تم توزيع الدفعة بالكامل؟
+        $totalProduced = $batch->batchItems->sum('quantity');
+        $totalDispatched = $batch->batchItems->sum('dispatched_quantity');
+        $isFullyDistributed = $totalProduced > 0 && $totalProduced <= $totalDispatched;
+
+        return view('dashboard.data_definition.w&v.batches.distribute', compact('batch', 'warehouses', 'isFullyDistributed'));
     }
 
     public function distribute(Request $request, ProductionBatch $productionBatch, BatchDistributionService $distributionService)
@@ -269,11 +282,24 @@ class ProductionBatchController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.001',
         ]);
 
-        $distributionService->distribute(
-            $productionBatch->id,
-            $validated,
-            $request->input('notes')
-        );
+        // التحقق قبل التوزيع
+        $totalProduced = $productionBatch->batchItems->sum('quantity');
+        $totalDispatched = $productionBatch->batchItems->sum('dispatched_quantity');
+        if ($totalProduced > 0 && $totalProduced <= $totalDispatched) {
+            return redirect()->back()->with('error', 'تم توزيع كافة كميات هذه الدفعة مسبقاً. لا يمكن التوزيع مرة أخرى.');
+        }
+
+        try {
+            $distributionService->distribute(
+                $productionBatch->id,
+                $validated,
+                $request->input('notes')
+            );
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        }
 
         return redirect()->route('production-batches.show', $productionBatch)
             ->with('success', 'تم توزيع الكميات بنجاح.');

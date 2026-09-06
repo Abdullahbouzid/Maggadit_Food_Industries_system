@@ -109,40 +109,51 @@
                 <a href="{{ route('customer.products') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div id="dash-products" class="grid grid-cols-2 gap-4">
-                @forelse($products as $product)
-                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='{{ route('customer.product.show', $product->id) }}'">
-                        <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ in_array($product->id, $favoriteItemIds ?? []) ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $product->id }}">
-                            <i class="{{ in_array($product->id, $favoriteItemIds ?? []) ? 'fas' : 'far' }} fa-heart text-lg"></i>
+                @forelse($productCards ?? $products as $product)
+                    @php
+                        $productId = is_array($product) ? ($product['id'] ?? 0) : $product->id;
+                        $productName = is_array($product) ? ($product['name'] ?? 'منتج') : ($product->name ?? $product->name_en ?? 'منتج');
+                        $productImage = is_array($product) ? ($product['image'] ?? '') : ($product->image ?? '');
+                        $productPrice = is_array($product) ? ($product['price'] ?? 0) : ($product->price ?? 0);
+                        $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
+                        $isFavorite = is_array($product) ? ($product['favorite'] ?? false) : in_array($productId, $favoriteItemIds ?? []);
+                    @endphp
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='{{ route('customer.product.show', $productId) }}'">
+                        @if($packName)
+                            <div class="absolute top-2 right-2 z-10">
+                                <span class="bg-purple-600 text-white text-[10px] px-2 py-1 rounded-full font-semibold">
+                                    {{ $packName }}
+                                </span>
+                            </div>
+                        @endif
+                        <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ $isFavorite ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $productId }}">
+                            <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart text-lg"></i>
                         </button>
                         <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
-                            @if($product->image)
-                                <img src="{{ $product->image }}" alt="{{ $product->name ?? $product->name_en }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=📦';">
+                            @if($productImage)
+                                <img src="{{ $productImage }}" alt="{{ $productName }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=📦';">
                             @else
                                 <span class="text-5xl text-gray-400">📦</span>
                             @endif
                         </div>
                         <div class="p-3">
-                            <h3 class="font-bold text-gray-800 text-sm line-clamp-1">{{ $product->name ?? $product->name_en }}</h3>
-                            <div class="flex items-center gap-1 mt-1">
-                                <span class="text-yellow-500 text-xs">★</span>
-                                <span class="text-xs text-gray-600">{{ number_format($product->rate ?? 0, 1) }}</span>
-                            </div>
+                            <h3 class="font-bold text-gray-800 text-sm line-clamp-1">{{ $productName }}</h3>
+                            @if($packName)
+                                <span class="inline-block mt-1 bg-gray-100 text-gray-700 text-[10px] px-2 py-0.5 rounded-full">
+                                    {{ $packName }}
+                                </span>
+                            @endif
                             <div class="mt-2 flex items-center justify-between">
                                 <div>
-                                    @if(isset($product->price) && $product->price > 0)
-                                        <span class="text-purple-700 font-bold text-sm">{{ number_format($product->price, 2) }} ر.س</span>
-                                    @else
-                                        <span class="text-purple-700 font-bold text-sm">حسب الطلب</span>
-                                    @endif
-                                    @if(isset($product->old_price) && $product->old_price > 0)
-                                        <span class="text-gray-400 text-xs line-through block">{{ number_format($product->old_price, 2) }} ر.س</span>
-                                    @endif
+                                    <span class="text-purple-700 font-bold text-sm">{{ number_format($productPrice, 2) }} ر.س</span>
                                 </div>
                                 <button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition add-to-cart" 
-                                        data-id="{{ $product->id }}"
-                                        data-name="{{ $product->name ?? $product->name_en }}" 
-                                        data-price="{{ $product->price ?? 0 }}"
-                                        data-image="{{ $product->image ?? '' }}">إضافة</button>
+                                        data-id="{{ $productId }}"
+                                        data-name="{{ $productName }}" 
+                                        data-price="{{ $productPrice }}"
+                                        data-image="{{ $productImage ?? '' }}"
+                                        data-pack-name="{{ $packName }}"
+                                        data-uom-name="">إضافة</button>
                             </div>
                         </div>
                     </div>
@@ -181,6 +192,22 @@
                                     <h3 class="font-bold text-gray-800 text-base leading-tight line-clamp-1">{{ $offer->title ?: ($offer->name ?? 'عرض خاص') }}</h3>
                                     @if($offer->description)
                                         <p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{{ $offer->description }}</p>
+                                    @endif
+                                    @if(!empty($offer->pack_name))
+                                        <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                                            <span class="bg-purple-100 text-purple-700 text-[11px] px-2 py-0.5 rounded-full font-medium">{{ $offer->pack_name }}</span>
+                                            @if(!empty($offer->pack_quantity))
+                                                <span class="text-[11px] text-gray-500">السعة: {{ (float)$offer->pack_quantity }} قطعة</span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                    @if(!empty($offer->pack_name))
+                                        <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                                            <span class="bg-purple-100 text-purple-700 text-[11px] px-2 py-0.5 rounded-full font-medium">{{ $offer->pack_name }}</span>
+                                            @if(!empty($offer->pack_quantity))
+                                                <span class="text-[11px] text-gray-500">السعة: {{ (float)$offer->pack_quantity }} قطعة</span>
+                                            @endif
+                                        </div>
                                     @endif
                                 </div>
                                 <div class="flex justify-between items-center mt-2">
@@ -237,11 +264,13 @@
                 e.stopPropagation();
                 let id = this.getAttribute('data-id');
                 let name = this.getAttribute('data-name');
-                let price = this.getAttribute('data-price');
+                let price = parseFloat(this.getAttribute('data-price')) || 0;
                 let image = this.getAttribute('data-image');
+                let packName = this.getAttribute('data-pack-name') || '';
+                let uomName = this.getAttribute('data-uom-name') || '';
                 
                 let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
-                let existingItemIndex = cartItems.findIndex(item => item.id == id);
+                let existingItemIndex = cartItems.findIndex(item => item.id == id && item.pack_name == packName);
                 
                 if (existingItemIndex > -1) {
                     cartItems[existingItemIndex].quantity += 1;
@@ -249,6 +278,8 @@
                     cartItems.push({
                         id: id,
                         name: name,
+                        pack_name: packName,
+                        uom_name: uomName,
                         price: price,
                         quantity: 1,
                         image: image,
@@ -257,7 +288,7 @@
                 }
                 
                 localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
-                showToast(`✅ تم إضافة "${name}" إلى السلة`);
+                showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
             });
         });
         // ========== Carousel with Auto-Scroll ==========
@@ -370,7 +401,7 @@
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
-                    credentials: 'same-origin',
+                    credentials: 'include',
                     body: JSON.stringify({ item_id: productId })
                 })
                 .then(res => res.json())

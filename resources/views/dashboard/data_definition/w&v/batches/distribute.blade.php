@@ -32,6 +32,13 @@
                 <form action="{{ route('production-batches.distribute.store', $batch) }}" method="POST">
                     @csrf
 
+                    @if(isset($isFullyDistributed) && $isFullyDistributed)
+                        <div class="alert alert-warning d-flex align-items-center">
+                            <i data-feather="lock" class="me-2"></i>
+                            <strong>تم توزيع كافة كميات هذه الدفعة مسبقاً. لا يمكن التوزيع مرة أخرى.</strong>
+                        </div>
+                    @endif
+
                     <div class="row">
                         <div class="col-lg-4">
                             <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -95,49 +102,49 @@
                                              @foreach($batch->batchItems as $index => $item)
                                                     @php
                                                         $remaining = $item->quantity - $item->dispatched_quantity;
+                                                        $isLocked = $remaining <= 0;
                                                     @endphp
-                                                    @if($remaining > 0)
-                                                    
+                                                    @if(!$isLocked)
+
                                                         <tr id="row-{{ $item->id }}">
                                                             <td>{{ $loop->iteration }}</td>
                                                             <td>{{ $item->item->name_en ?? 'غير معروف' }}</td>
-                                                            <td>{{ $item->pack ? $item->pack->barcode . ' (Qty: ' . $item->pack->quantity . ')' : 'بدون عبوة' }}</td>
+                                                             <td>{{ $item->pack ? $item->pack->barcode . ' (Qty: ' . $item->pack->quantity_in_pack . ')' : 'بدون عبوة' }}</td>
                                                             <td>{{ number_format($item->quantity, 3) }}</td>
                                                             <td>{{ number_format($item->dispatched_quantity, 3) }}</td>
-                                                            <td class="fw-bold @if($remaining == 0) text-success @else text-primary @endif">
+                                                            <td class="fw-bold text-primary">
                                                                 {{ number_format($remaining, 3) }}
                                                             </td>
                                                             <td id="stock-{{ $item->id }}">0</td>
                                                             <td>
                                                                 <input type="hidden" name="items[{{ $index }}][batch_item_id]" value="{{ $item->id }}">
-                                                                <input type="number" step="0.001" min="0" max="{{ $remaining }}" name="items[{{ $index }}][quantity]" class="form-control distribute-qty" value="0">
-                                                                @if($remaining == 0)
-                                                                    <small class="text-success">تم التوزيع بالكامل</small>
-                                                                @endif
+                                                                <input type="number" step="0.001" min="0" max="{{ $remaining }}" name="items[{{ $index }}][quantity]" class="form-control distribute-qty" value="0" required>
                                                             </td>
                                                         </tr>
-                                                       
+
                                                     @endif
-                                                     
+
                                                 @endforeach
                                                
                                             </tbody>
                                         </table>
                                     </div>
-                                                          @if($batch->batchItems->where('quantity', '>', 'dispatched_quantity')->count() == 0)
-                                                            <div class="alert alert-info">
-                                                                <i data-feather="info"></i> جميع المنتجات في هذه الدفعة تم توزيعها بالكامل.
+                                                          @if($batch->batchItems->filter(function($i) { return $i->quantity - $i->dispatched_quantity > 0; })->isEmpty())
+                                                            <div class="alert alert-warning d-flex align-items-center">
+                                                                <i data-feather="lock" class="me-2"></i>
+                                                                <strong>جميع المنتجات في هذه الدفعة تم توزيعها بالكامل. لا يمكن إضافة توزيعات جديدة.</strong>
                                                             </div>
                                                         @endif
                                     @if($batch->batchItems->isEmpty())
                                         <p class="text-muted text-center">لا توجد منتجات في هذه الدفعة لتوزيعها.</p>
                                     @endif
-                                 
+
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    @if(!isset($isFullyDistributed) || !$isFullyDistributed)
                     <div class="row mt-3">
                         <div class="col-12">
                             <button type="submit" class="btn btn-success btn-lg shadow-sm">
@@ -146,6 +153,15 @@
                             <a href="{{ route('production-batches.index') }}" class="btn btn-secondary btn-lg shadow-sm ms-2">إلغاء</a>
                         </div>
                     </div>
+                    @else
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <a href="{{ route('production-batches.show', $batch) }}" class="btn btn-secondary btn-lg shadow-sm">
+                                <i data-feather="arrow-left"></i> العودة لتفاصيل الدفعة
+                            </a>
+                        </div>
+                    </div>
+                    @endif
                 </form>
             </div>
         </main>

@@ -9,6 +9,7 @@ class Offer extends Model
     protected $fillable = [
         'item_id',
         'item_pack_id',
+        'price_list_id',
         'title',
         'description',
         'old_price',
@@ -19,6 +20,11 @@ class Offer extends Model
         'end_date',
         'is_active',
     ];
+
+    public function priceList()
+    {
+        return $this->belongsTo(PriceList::class);
+    }
 
     protected $casts = [
         'is_active' => 'boolean',

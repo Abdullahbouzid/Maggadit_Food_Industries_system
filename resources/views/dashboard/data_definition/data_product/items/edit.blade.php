@@ -144,99 +144,83 @@
                             </div>
 
                             {{-- Packs Card --}}
+                            {{-- Packs Card - Using Pack Definitions --}}
                             <div class="card border-0 shadow-sm rounded-4 mb-4">
                                 <div class="card-header bg-white border-0 pt-4 d-flex justify-content-between align-items-center">
-                                    <h5 class="fw-bold mb-0">Packs (Units of Measure)</h5>
-                                    <button type="button" class="btn btn-sm btn-primary" id="addPackBtn">+ Add Pack</button>
+                                    <h5 class="fw-bold mb-0">Packs (Pack Definitions)</h5>
+                                    <a href="{{ route('pack-definitions.create') }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i data-feather="plus-circle"></i> إضافة تعريف باكج جديد
+                                    </a>
                                 </div>
                                 <div class="card-body">
-                                    <div id="packsContainer">
-                                        {{-- Display existing packs --}}
-                                        @if($item->packs->count() > 0)
-                                            @foreach($item->packs as $packIndex => $pack)
-                                                <div class="pack-card border rounded-3 p-3 mb-3">
-                                                    <div class="row g-3">
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">UOM</label>
-                                                            <select name="packs[{{ $packIndex }}][uom_id]" class="form-select form-select-sm" required>
-                                                                <option value="">Select UOM</option>
-                                                                @foreach($uoms as $uom)
-                                                                    <option value="{{ $uom->id }}" {{ old("packs.$packIndex.uom_id", $pack->uom_id) == $uom->id ? 'selected' : '' }}>{{ $uom->name_en }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-2">
-                                                            <label class="form-label small">Quantity</label>
-                                                            <input type="number" step="any" name="packs[{{ $packIndex }}][quantity]" class="form-control form-control-sm" value="{{ old("packs.$packIndex.quantity", $pack->quantity) }}" required>
-                                                        </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">Barcode</label>
-                                                            <input type="text" name="packs[{{ $packIndex }}][barcode]" class="form-control form-control-sm" value="{{ old("packs.$packIndex.barcode", $pack->barcode) }}">
-                                                        </div>
-                                                        <div class="col-md-2">
-                                                            <label class="form-label small">Serial Separator</label>
-                                                            <input type="text" name="packs[{{ $packIndex }}][serial_separator]" class="form-control form-control-sm" value="{{ old("packs.$packIndex.serial_separator", $pack->serial_separator) }}">
-                                                        </div>
-                                                        <div class="col-md-2">
-                                                            <label class="form-label small">Equivalency Factor</label>
-                                                            <input type="number" step="0.01" name="packs[{{ $packIndex }}][equivalency_factor]" class="form-control form-control-sm" value="{{ old("packs.$packIndex.equivalency_factor", $pack->equivalency_factor) }}">
-                                                        </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">Height</label>
-                                                            <input type="number" step="any" name="packs[{{ $packIndex }}][height]" class="form-control form-control-sm" value="{{ old("packs.$packIndex.height", $pack->height) }}">
-                                                        </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">Width</label>
-                                                            <input type="number" step="any" name="packs[{{ $packIndex }}][width]" class="form-control form-control-sm" value="{{ old("packs.$packIndex.width", $pack->width) }}">
-                                                        </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">Depth</label>
-                                                            <input type="number" step="any" name="packs[{{ $packIndex }}][depth]" class="form-control form-control-sm" value="{{ old("packs.$packIndex.depth", $pack->depth) }}">
-                                                        </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">Weight</label>
-                                                            <input type="number" step="any" name="packs[{{ $packIndex }}][weight]" class="form-control form-control-sm" value="{{ old("packs.$packIndex.weight", $pack->weight) }}">
-                                                        </div>
-                                                        <div class="col-md-12">
-                                                            <div class="form-check form-check-inline">
-                                                                <input type="checkbox" name="packs[{{ $packIndex }}][is_weight_priced]" value="1" class="form-check-input" id="weightPriced{{ $packIndex }}" {{ old("packs.$packIndex.is_weight_priced", $pack->is_weight_priced) ? 'checked' : '' }}>
-                                                                <label class="form-check-label small" for="weightPriced{{ $packIndex }}">Weight Priced</label>
-                                                            </div>
-                                                            <div class="form-check form-check-inline">
-                                                                <input type="checkbox" name="packs[{{ $packIndex }}][allow_fraction_in_qty]" value="1" class="form-check-input" id="allowFraction{{ $packIndex }}" {{ old("packs.$packIndex.allow_fraction_in_qty", $pack->allow_fraction_in_qty) ? 'checked' : '' }}>
-                                                                <label class="form-check-label small" for="allowFraction{{ $packIndex }}">Allow Fraction Qty</label>
-                                                            </div>
-                                                            <div class="form-check form-check-inline">
-                                                                <input type="checkbox" name="packs[{{ $packIndex }}][is_default_pack]" value="1" class="form-check-input" id="defaultPack{{ $packIndex }}" {{ old("packs.$packIndex.is_default_pack", $pack->is_default_pack) ? 'checked' : '' }}>
-                                                                <label class="form-check-label small" for="defaultPack{{ $packIndex }}">Default Pack</label>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Pack Operations</label>
-                                                            <select name="packs[{{ $packIndex }}][pack_operation_ids][]" class="form-select form-select-sm" multiple>
-                                                                @foreach($packOperations as $op)
-                                                                    <option value="{{ $op->id }}" {{ in_array($op->id, old("packs.$packIndex.pack_operation_ids", $pack->packOperations->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $op->name_en }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Pack Groups</label>
-                                                            <select name="packs[{{ $packIndex }}][pack_group_ids][]" class="form-select form-select-sm" multiple>
-                                                                @foreach($packGroups as $group)
-                                                                    <option value="{{ $group->id }}" {{ in_array($group->id, old("packs.$packIndex.pack_group_ids", $pack->packGroups->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $group->name_en }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-end mt-2">
-                                                        <button type="button" class="btn btn-sm btn-outline-danger remove-pack">Remove Pack</button>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        @else
-                                            <div class="alert alert-info">No packs defined. Click "Add Pack" to add.</div>
-                                        @endif
+                                    <div class="alert alert-info mb-3">
+                                        <i data-feather="info"></i> اختر تعريفات الباكجات المطلوبة لهذا المنتج من الجدول أدناه.
                                     </div>
+
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-hover align-middle" id="packDefinitionsTable">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 40px;"><input type="checkbox" id="selectAllPacks" class="form-check-input"></th>
+                                                    <th>الاسم</th>
+                                                    <th>نوع الباكج</th>
+                                                    <th>السعة</th>
+                                                    <th>الكمية/عبوة</th>
+                                                    <th>الأبعاد</th>
+                                                    <th>الوزن</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @php
+                                                    $currentPackDefIds = $item->packs->pluck('pack_type_id')->toArray();
+                                                @endphp
+                                                @foreach($packDefinitions as $packDef)
+                                                    @php
+                                                        $packTypeName = $packDef->packType?->name_ar ?? $packDef->packType?->name_en ?? '-';
+                                                        $packCapacityValue = $packDef->packCapacity?->value ?? '-';
+                                                        $packCapacityUom = $packDef->packCapacity?->uom?->code ?? '';
+                                                        $isSelected = $item->packs->contains('pack_type_id', $packDef->pack_type_id);
+                                                    @endphp
+                                                    <tr class="pack-definition-row" data-pack-definition-id="{{ $packDef->id }}" style="cursor: pointer;">
+                                                        <td>
+                                                            <input type="checkbox" class="form-check-input pack-definition-checkbox" value="{{ $packDef->id }}" {{ $isSelected ? 'checked' : '' }}>
+                                                        </td>
+                                                        <td>
+                                                            <strong>{{ $packDef->name_ar ?? $packDef->name_en ?? $packDef->name ?? '#' . $packDef->id }}</strong>
+                                                            @if($packDef->description)
+                                                                <br><small class="text-muted">{{ Str::limit($packDef->description, 50) }}</small>
+                                                            @endif
+                                                        </td>
+                                                        <td><span class="badge bg-info">{{ $packTypeName }}</span></td>
+                                                        <td>{{ $packCapacityValue }} {{ $packCapacityUom }}</td>
+                                                        <td><span class="badge bg-primary">{{ $packDef->quantity_in_pack }}</span></td>
+                                                        <td>
+                                                            @if($packDef->height || $packDef->width || $packDef->depth)
+                                                                {{ $packDef->height }}×{{ $packDef->width }}×{{ $packDef->depth }}
+                                                            @else
+                                                                -
+                                                            @endif
+                                                        </td>
+                                                        <td>{{ $packDef->weight ?? '-' }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div id="noPackDefinitionsMessage" class="text-muted text-center py-3" style="display: {{ $packDefinitions->count() > 0 ? 'none' : 'block' }};">
+                                        <i data-feather="info"></i> لا توجد تعريفات باكجات. قم بإنشاء تعريف باكج أولاً.
+                                    </div>
+
+                                    {{-- Selected packs summary --}}
+                                    <div id="selectedPacksSummary" class="mt-3" style="display: none;">
+                                        <h6 class="fw-bold mb-2">الباكجات المحددة للمنتج:</h6>
+                                        <div id="selectedPacksList"></div>
+                                    </div>
+
+                                    {{-- Add Selected Button --}}
+                                    <button type="button" id="addSelectedPacksBtn" class="btn btn-primary btn-sm mb-2 w-100">
+                                        <i data-feather="plus-circle"></i> أضف الباكجات المحددة
+                                    </button>
                                 </div>
                             </div>
 
@@ -354,99 +338,180 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // === Manage Packs (Add / Remove) ===
-        let packIndex = {{ $item->packs->count() }};  // start with existing count
+        let packIndex = {{ $item->packs->count() }};
         const packsContainer = document.getElementById('packsContainer');
         const addPackBtn = document.getElementById('addPackBtn');
 
-        function getPackTemplate(index) {
+        // === Select All Pack Definitions ===
+        const selectAllCheckbox = document.getElementById('selectAllPacks');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                document.querySelectorAll('.pack-definition-checkbox').forEach(cb => {
+                    cb.checked = this.checked;
+                    cb.closest('tr').classList.toggle('table-active', this.checked);
+                });
+                updateSelectedSummary();
+            });
+        }
+
+        // === Toggle row selection on checkbox or row click ===
+        document.querySelectorAll('.pack-definition-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() {
+                this.closest('tr').classList.toggle('table-active', this.checked);
+                updateSelectedSummary();
+            });
+        });
+
+        document.querySelectorAll('.pack-definition-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                if (e.target.type === 'checkbox') return;
+                const cb = this.querySelector('.pack-definition-checkbox');
+                if (cb) {
+                    cb.checked = !cb.checked;
+                    this.classList.toggle('table-active', cb.checked);
+                    updateSelectedSummary();
+                }
+            });
+        });
+
+        // === Add Selected Pack Definitions as Cards ===
+        function updateSelectedSummary() {
+            const selectedSummary = document.getElementById('selectedPacksSummary');
+            const selectedList = document.getElementById('selectedPacksList');
+            const checked = document.querySelectorAll('.pack-definition-checkbox:checked');
+
+            if (checked.length === 0) {
+                selectedSummary.style.display = 'none';
+                return;
+            }
+
+            selectedSummary.style.display = 'block';
+            let html = '<div class="row g-2">';
+            checked.forEach(cb => {
+                const row = cb.closest('tr');
+                const name = row.querySelector('strong')?.innerText || '';
+                const type = row.querySelector('.badge.bg-info')?.innerText || '';
+                const qty = row.querySelector('.badge.bg-primary')?.innerText || '';
+                html += `<div class="col-auto"><span class="badge bg-success">${name} ${type ? '- ' + type : ''} ${qty ? '- ' + qty + ' units' : ''}</span></div>`;
+            });
+            html += '</div>';
+            selectedList.innerHTML = html;
+        }
+
+        // === Load Pack Definition Data via AJAX and Add to Form ===
+        function addPackDefinitionCard(packDefId) {
+            fetch('/pack-definitions/' + packDefId + '/show-ajax')
+                .then(r => r.json())
+                .then(data => {
+                    const newCard = getPackTemplate(packIndex++, data);
+                    packsContainer.insertAdjacentHTML('beforeend', newCard);
+                    const addedCard = packsContainer.lastElementChild;
+                    attachRemovePackEvent(addedCard);
+                })
+                .catch(err => console.error('Error loading pack definition:', err));
+        }
+
+        function getPackTemplate(index, data) {
+            const pt = {{ Js::from($packTypes->pluck('name_en', 'id')) }};
+            const pc = {{ Js::from($packCapacities->mapWithKeys(fn($c) => [$c->id => $c->name_en . ' (' . ($c->uom->uom_symbol ?? '') . ')'])->toArray()) }};
+            const po = {{ Js::from($packOperations->pluck('name_en', 'id')) }};
+            const pg = {{ Js::from($packGroups->pluck('name_en', 'id')) }};
+
+            let packTypeOptions = '<option value="">Select Type</option>';
+            Object.entries(pt).forEach(([id, name]) => {
+                packTypeOptions += `<option value="${id}" ${data.pack_type_id == id ? 'selected' : ''}>${name}</option>`;
+            });
+
+            let packCapOptions = '<option value="">Select Capacity</option>';
+            Object.entries(pc).forEach(([id, name]) => {
+                packCapOptions += `<option value="${id}" ${data.pack_capacity_id == id ? 'selected' : ''}>${name}</option>`;
+            });
+
+            let packOpOptions = '';
+            if (data.pack_operations && data.pack_operations.length > 0) {
+                data.pack_operations.forEach(id => {
+                    if (po[id]) packOpOptions += `<option value="${id}" selected>${po[id]}</option>`;
+                });
+            }
+
+            let packGrpOptions = '';
+            if (data.pack_groups && data.pack_groups.length > 0) {
+                data.pack_groups.forEach(id => {
+                    if (pg[id]) packGrpOptions += `<option value="${id}" selected>${pg[id]}</option>`;
+                });
+            }
+
             return `
-                <div class="pack-card border rounded-3 p-3 mb-3">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label small">UOM</label>
-                            <select name="packs[${index}][uom_id]" class="form-select form-select-sm" required>
-                                <option value="">Select UOM</option>
-                                @foreach($uoms as $uom)
-                                    <option value="{{ $uom->id }}">{{ $uom->name_en }}</option>
-                                @endforeach
-                            </select>
+                <div class="pack-card border rounded-3 p-3 mb-3 position-relative" data-pack-index="${index}">
+                    <span class="badge bg-secondary position-absolute top-0 start-0 m-2">Pack ${index + 1}</span>
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2 remove-pack" aria-label="Remove"></button>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-2">
+                            <label class="form-label small">Pack Type</label>
+                            <select name="packs[${index}][pack_type_id]" class="form-select form-select-sm" required>${packTypeOptions}</select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small">Quantity</label>
-                            <input type="number" step="any" name="packs[${index}][quantity]" class="form-control form-control-sm" required>
+                            <label class="form-label small">Pack Capacity</label>
+                            <select name="packs[${index}][pack_capacity_id]" class="form-select form-select-sm" required>${packCapOptions}</select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Quantity in Pack</label>
+                            <input type="number" step="any" name="packs[${index}][quantity_in_pack]" class="form-control form-select-sm" value="${data.quantity_in_pack || ''}" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small">Barcode</label>
-                            <input type="text" name="packs[${index}][barcode]" class="form-control form-control-sm">
+                            <input type="text" name="packs[${index}][barcode]" class="form-control form-control-sm" value="${data.barcode || ''}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small">Serial Separator</label>
-                            <input type="text" name="packs[${index}][serial_separator]" class="form-control form-control-sm">
+                            <input type="text" name="packs[${index}][serial_separator]" class="form-control form-control-sm" value="${data.serial_separator || ''}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small">Equivalency Factor</label>
-                            <input type="number" step="0.01" name="packs[${index}][equivalency_factor]" class="form-control form-control-sm">
+                            <input type="number" step="0.01" name="packs[${index}][equivalency_factor]" class="form-control form-control-sm" value="${data.equivalency_factor || ''}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small">Height</label>
-                            <input type="number" step="any" name="packs[${index}][height]" class="form-control form-control-sm">
+                            <input type="number" step="any" name="packs[${index}][height]" class="form-control form-control-sm" value="${data.height || ''}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small">Width</label>
-                            <input type="number" step="any" name="packs[${index}][width]" class="form-control form-control-sm">
+                            <input type="number" step="any" name="packs[${index}][width]" class="form-control form-control-sm" value="${data.width || ''}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small">Depth</label>
-                            <input type="number" step="any" name="packs[${index}][depth]" class="form-control form-control-sm">
+                            <input type="number" step="any" name="packs[${index}][depth]" class="form-control form-control-sm" value="${data.depth || ''}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small">Weight</label>
-                            <input type="number" step="any" name="packs[${index}][weight]" class="form-control form-control-sm">
+                            <input type="number" step="any" name="packs[${index}][weight]" class="form-control form-control-sm" value="${data.weight || ''}">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-check-inline">
-                                <input type="checkbox" name="packs[${index}][is_weight_priced]" value="1" class="form-check-input" id="weightPriced${index}">
+                                <input type="checkbox" name="packs[${index}][is_weight_priced]" value="1" class="form-check-input" id="weightPriced${index}" ${data.is_weight_priced ? 'checked' : ''}>
                                 <label class="form-check-label small" for="weightPriced${index}">Weight Priced</label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input type="checkbox" name="packs[${index}][allow_fraction_in_qty]" value="1" class="form-check-input" id="allowFraction${index}">
+                                <input type="checkbox" name="packs[${index}][allow_fraction_in_qty]" value="1" class="form-check-input" id="allowFraction${index}" ${data.allow_fraction_in_qty ? 'checked' : ''}>
                                 <label class="form-check-label small" for="allowFraction${index}">Allow Fraction Qty</label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input type="checkbox" name="packs[${index}][is_default_pack]" value="1" class="form-check-input" id="defaultPack${index}">
+                                <input type="checkbox" name="packs[${index}][is_default_pack]" value="1" class="form-check-input" id="defaultPack${index}" ${data.is_default_pack ? 'checked' : ''}>
                                 <label class="form-check-label small" for="defaultPack${index}">Default Pack</label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small">Pack Operations</label>
-                            <select name="packs[${index}][pack_operation_ids][]" class="form-select form-select-sm" multiple>
-                                @foreach($packOperations as $op)
-                                    <option value="{{ $op->id }}">{{ $op->name_en }}</option>
-                                @endforeach
-                            </select>
+                            <select name="packs[${index}][pack_operation_ids][]" class="form-select form-select-sm" multiple>${packOpOptions}</select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small">Pack Groups</label>
-                            <select name="packs[${index}][pack_group_ids][]" class="form-select form-select-sm" multiple>
-                                @foreach($packGroups as $group)
-                                    <option value="{{ $group->id }}">{{ $group->name_en }}</option>
-                                @endforeach
-                            </select>
+                            <select name="packs[${index}][pack_group_ids][]" class="form-select form-select-sm" multiple>${packGrpOptions}</select>
                         </div>
-                    </div>
-                    <div class="text-end mt-2">
-                        <button type="button" class="btn btn-sm btn-outline-danger remove-pack">Remove Pack</button>
                     </div>
                 </div>
             `;
         }
-
-        addPackBtn.addEventListener('click', function() {
-            const newPackHtml = getPackTemplate(packIndex++);
-            packsContainer.insertAdjacentHTML('beforeend', newPackHtml);
-            attachRemovePackEvent(packsContainer.lastElementChild);
-        });
 
         function attachRemovePackEvent(packDiv) {
             const removeBtn = packDiv.querySelector('.remove-pack');
@@ -457,27 +522,43 @@
             }
         }
 
-        // Attach remove events to existing packs
+        // === Add "Add Selected" Button Handler ===
+        const addSelectedBtn = document.getElementById('addSelectedPacksBtn');
+        if (addSelectedBtn) {
+            addSelectedBtn.addEventListener('click', function() {
+                const checked = document.querySelectorAll('.pack-definition-checkbox:checked');
+                if (checked.length === 0) {
+                    alert('Please select at least one pack definition first.');
+                    return;
+                }
+                checked.forEach(cb => {
+                    addPackDefinitionCard(cb.value);
+                });
+            });
+        }
+
+        addPackBtn.addEventListener('click', function() {
+            const newPackHtml = getPackTemplate(packIndex++, {});
+            packsContainer.insertAdjacentHTML('beforeend', newPackHtml);
+            attachRemovePackEvent(packsContainer.lastElementChild);
+        });
+
         document.querySelectorAll('.pack-card').forEach(pack => {
             attachRemovePackEvent(pack);
         });
 
-        // === Manage Additional Images: removal of existing images ===
+        // === Manage Additional Images ===
         const existingImagesContainer = document.getElementById('existingImagesContainer');
         const newImagesContainer = document.getElementById('newImagesContainer');
         const addImageBtn = document.getElementById('addImageBtn');
 
-        // When user clicks "×" on an existing image, disable it and send its id via deleted_images[]
         existingImagesContainer.querySelectorAll('.remove-existing-image').forEach(btn => {
             btn.addEventListener('click', function() {
                 const imageDiv = this.closest('.existing-image-item');
                 const hiddenInput = imageDiv.querySelector('input[name="deleted_images[]"]');
-                if (hiddenInput) {
-                    hiddenInput.disabled = false;  // enable to send value
-                }
+                if (hiddenInput) hiddenInput.disabled = false;
                 imageDiv.style.opacity = '0.5';
                 imageDiv.style.pointerEvents = 'none';
-                // Optionally add a "removed" text
                 const removedBadge = document.createElement('div');
                 removedBadge.className = 'badge bg-danger position-absolute bottom-0 start-0 m-1';
                 removedBadge.innerText = 'Removed';
@@ -485,9 +566,7 @@
             });
         });
 
-        // Add new image input field (multiple files allowed, but we'll allow multiple inputs for simplicity)
         addImageBtn.addEventListener('click', function() {
-            const inputId = 'new_image_' + Date.now();
             const newInputHtml = `
                 <div class="mb-2 new-image-item">
                     <input type="file" name="additional_images[]" class="form-control" accept="image/*">
@@ -501,35 +580,10 @@
             });
         });
 
-        // Optionally: Remove any empty new image item on submit? Not needed.
-
-        // Ensure that if no packs exist, we still have a container and the add button works.
-        if (packsContainer.children.length === 0 || (packsContainer.children.length === 1 && packsContainer.children[0].classList.contains('alert'))) {
-            // remove the alert if present
-            const alertDiv = packsContainer.querySelector('.alert');
-            if (alertDiv) alertDiv.remove();
-        }
-
-        // Also ensure that boolean checkboxes send proper value (Laravel expects 0/1). But the checkboxes with value="1" will send 1 only if checked; if unchecked they send nothing, which is fine. We'll add hidden inputs for all checkboxes to ensure 0 is sent.
-        // This is optional, but for consistency we can add a small script before submit.
+        // === Form Submit: Ensure Checkboxes Send 0 if Unchecked ===
         const form = document.getElementById('itemForm');
-        form.addEventListener('submit', function(e) {
-            // Ensure all boolean fields (checkboxes) send a value even if not checked.
-            // We'll find all checkboxes that are not inside a pack card? Actually all boolean fields are standalone.
-            const booleanCheckboxes = form.querySelectorAll('input[type="checkbox"][value="1"]:not(.pack-card input)');
-            booleanCheckboxes.forEach(cb => {
-                if (!cb.checked) {
-                    // Create hidden input with same name and value 0
-                    const hidden = document.createElement('input');
-                    hidden.type = 'hidden';
-                    hidden.name = cb.name;
-                    hidden.value = '0';
-                    cb.parentNode.appendChild(hidden);
-                }
-            });
-            // For pack checkboxes, we also need to ensure they send 0 if not checked. But they are inside pack-card.
-            const packCheckboxes = form.querySelectorAll('.pack-card input[type="checkbox"][value="1"]');
-            packCheckboxes.forEach(cb => {
+        form.addEventListener('submit', function() {
+            document.querySelectorAll('input[type="checkbox"][value="1"]').forEach(cb => {
                 if (!cb.checked) {
                     const hidden = document.createElement('input');
                     hidden.type = 'hidden';
@@ -539,6 +593,8 @@
                 }
             });
         });
+
+        updateSelectedSummary();
     });
 </script>
 @endpush

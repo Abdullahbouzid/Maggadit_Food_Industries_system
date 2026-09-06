@@ -183,6 +183,46 @@ class CustomerPagesController extends Controller
         return redirect()->back()->with('success', 'تم إرسال رسالتك بنجاح');
     }
 
+    public function contactInfo(Request $request)
+    {
+        $organizationId = $request->query('organization_id');
+
+        if (! $organizationId) {
+            $customer = $this->getCustomer($request);
+            if ($customer) {
+                $organizationId = $customer->active_organization_id;
+                if (! $organizationId) {
+                    $activeOrg = $customer->activeOrganizations()->first();
+                    if ($activeOrg) {
+                        $organizationId = $activeOrg->id;
+                    }
+                }
+            }
+        }
+
+        $organization = null;
+        if ($organizationId) {
+            $organization = \App\Models\Organization::find($organizationId);
+        }
+
+        if (! $organization) {
+            $organization = \App\Models\Organization::first();
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'phone' => $organization?->phone ?: '+966500000000',
+                'whatsapp' => $organization?->whatsapp ?: '+966500000000',
+                'email' => $organization?->email ?: 'info@maggadit.com',
+                'website' => $organization?->website ?: 'https://maggadit.com',
+                'address' => $organization?->address ?: 'المملكة العربية السعودية - الرياض',
+                'latitude' => (float) ($organization?->latitude ?: 24.7136),
+                'longitude' => (float) ($organization?->longitude ?: 46.6753),
+            ],
+        ]);
+    }
+
     private function parseJsonField($value)
     {
         if (empty($value)) {

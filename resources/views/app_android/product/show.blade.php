@@ -19,17 +19,78 @@
                 <p class="text-gray-400 line-through mb-2">{{ number_format($product->old_price) }} ر.س</p>
             @endif
             <p class="text-gray-600 mb-4">{{ $product->description ?? '' }}</p>
-            <button class="add-to-cart w-full bg-purple-600 text-white text-sm py-2 rounded-full hover:bg-purple-700 transition"
-                    data-id="{{ $product->id }}"
-                    data-name="{{ $product->name }}"
-                    data-price="{{ $product->price }}"
-                    data-image="{{ $product->image ?? '📦' }}">
-                <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
-            </button>
-            <button class="toggle-favorite-btn mt-3 w-full flex items-center justify-center py-2 rounded-full border border-gray-300 transition {{ in_array($product->id, $favoriteItemIds ?? []) ? 'text-red-500' : 'text-gray-400' }}"
+
+            @if(isset($product->packs) && count($product->packs) > 0)
+            <div class="mb-5">
+                <h4 class="font-bold text-gray-800 text-sm mb-3 flex items-center gap-1">
+                    <i class="fas fa-boxes text-purple-600"></i>
+                    <span>العبوات ووحدات القياس المتاحة:</span>
+                </h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse border border-gray-200 rounded-xl overflow-hidden">
+                        <thead>
+                            <tr class="bg-purple-600 text-white">
+                                <th class="border border-purple-500 px-3 py-2 text-right">العبوة</th>
+                                <th class="border border-purple-500 px-3 py-2 text-right">وحدة القياس</th>
+                                <th class="border border-purple-500 px-3 py-2 text-center">السعة</th>
+                                <th class="border border-purple-500 px-3 py-2 text-center">السعر</th>
+                                <th class="border border-purple-500 px-3 py-2 text-center">إضافة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($product->packs as $pack)
+                                <tr class="hover:bg-purple-50/50 transition">
+                                    <td class="border border-gray-200 px-3 py-2 font-medium text-gray-800">{{ $pack['name'] }}</td>
+                                    <td class="border border-gray-200 px-3 py-2">
+                                        @if(isset($pack['uom_name']) && $pack['uom_name'])
+                                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full font-medium">{{ $pack['uom_name'] }}</span>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="border border-gray-200 px-3 py-2 text-center">{{ (float)$pack['quantity'] }} قطعة</td>
+                                    <td class="border border-gray-200 px-3 py-2 text-center font-bold text-purple-700">{{ number_format($pack['price'], 2) }} ر.س</td>
+                                    <td class="border border-gray-200 px-3 py-2 text-center">
+                                        <button class="add-to-cart-pack bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm active:scale-95"
+                                                data-id="{{ $product->id }}"
+                                                data-pack-id="{{ $pack['id'] }}"
+                                                data-name="{{ $product->name }}"
+                                                data-pack-name="{{ $pack['name'] }}"
+                                                data-uom-name="{{ $pack['uom_name'] ?? '' }}"
+                                                data-price="{{ $pack['price'] }}"
+                                                data-image="{{ $product->image ?? '📦' }}">
+                                            <i class="fas fa-cart-plus"></i> أضف
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @else
+            <div class="mb-5 bg-purple-50/50 border border-purple-100 rounded-2xl p-3.5 flex items-center justify-between">
+                <div>
+                    <span class="font-bold text-gray-800 text-sm">الوحدة القياسية</span>
+                    <span class="text-purple-700 font-extrabold text-base block mt-0.5">{{ number_format($product->price, 2) }} ر.س</span>
+                </div>
+                <button class="add-to-cart-pack bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1 shadow-sm active:scale-95"
+                        data-id="{{ $product->id }}"
+                        data-pack-id=""
+                        data-name="{{ $product->name }}"
+                        data-pack-name="الوحدة القياسية"
+                        data-uom-name=""
+                        data-price="{{ $product->price }}"
+                        data-image="{{ $product->image ?? '📦' }}">
+                    <i class="fas fa-cart-plus"></i> أضف للسلة
+                </button>
+            </div>
+            @endif
+
+            <button class="toggle-favorite-btn mt-2 w-full flex items-center justify-center py-2.5 rounded-xl border border-gray-300 transition text-sm font-semibold {{ in_array($product->id, $favoriteItemIds ?? []) ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-600 hover:bg-gray-50' }}"
                     data-id="{{ $product->id }}">
                 <i class="{{ in_array($product->id, $favoriteItemIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
-                <span class="ml-2">{{ in_array($product->id, $favoriteItemIds ?? []) ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة' }}</span>
+                <span class="mr-2">{{ in_array($product->id, $favoriteItemIds ?? []) ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة' }}</span>
             </button>
         </div>
     </div>
@@ -51,23 +112,29 @@
             }, 2000);
         }
 
-        document.querySelectorAll('.add-to-cart').forEach(btn => {
+        document.querySelectorAll('.add-to-cart-pack').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 let id = this.getAttribute('data-id');
+                let packId = this.getAttribute('data-pack-id') || null;
                 let name = this.getAttribute('data-name');
-                let price = this.getAttribute('data-price');
+                let packName = this.getAttribute('data-pack-name') || '';
+                let uomName = this.getAttribute('data-uom-name') || '';
+                let price = parseFloat(this.getAttribute('data-price')) || 0;
                 let image = this.getAttribute('data-image');
                 
                 let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
-                let existingItemIndex = cartItems.findIndex(item => item.id == id);
+                let existingItemIndex = cartItems.findIndex(item => item.id == id && (item.pack_id == packId || (!item.pack_id && !packId)));
                 
                 if (existingItemIndex > -1) {
                     cartItems[existingItemIndex].quantity += 1;
                 } else {
                     cartItems.push({
                         id: id,
+                        pack_id: packId,
                         name: name,
+                        pack_name: packName,
+                        uom_name: uomName,
                         price: price,
                         quantity: 1,
                         image: image,
@@ -76,7 +143,7 @@
                 }
                 
                 localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
-                showToast(`✅ تم إضافة "${name}" إلى السلة`);
+                showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
             });
         });
 
@@ -93,7 +160,7 @@
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
-                    credentials: 'same-origin',
+                    credentials: 'include',
                     body: JSON.stringify({ item_id: productId })
                 })
                 .then(res => res.json())

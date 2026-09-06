@@ -105,7 +105,8 @@ class WarehouseController extends Controller
         $search = $request->input('search');
 
         $stocks = BatchItemStock::where('warehouse_id', $warehouse->id)
-            ->with(['batchItem.item', 'batchItem.pack', 'batchItem.batch'])
+            ->where('quantity', '>', 0)
+            ->with(['batchItem.item', 'batchItem.item.brand', 'batchItem.item.category', 'batchItem.pack', 'batchItem.pack.packType', 'batchItem.pack.packCapacity', 'batchItem.batch'])
             ->get();
 
         $validStocks = $stocks->filter(function ($stock) {
@@ -114,7 +115,6 @@ class WarehouseController extends Controller
                 && $stock->batchItem->batch !== null;
         });
 
-        // تطبيق البحث
         if ($search) {
             $searchLower = strtolower($search);
             $validStocks = $validStocks->filter(function ($stock) use ($searchLower) {
@@ -131,96 +131,139 @@ class WarehouseController extends Controller
             });
         }
 
-        // تجميع حسب (item_id, item_pack_id)
+        // تجميع حسب item_pack (العبوة) — كل عبوة تظهر مرة واحدة مع مجموع الكميات من كل الدفعات
         $grouped = $validStocks->groupBy(function ($stock) {
-            $itemId = $stock->batchItem->item_id;
-            $packId = $stock->batchItem->item_pack_id ?? 'null';
+            $itemPackId = $stock->batchItem->item_pack_id ?? 0;
 
-            return $itemId.'-'.$packId;
+            return $itemPackId;
         });
 
         $groupedProducts = $grouped->map(function ($stockGroup) {
             $first = $stockGroup->first();
-            if (! $first || ! $first->batchItem || ! $first->batchItem->item) {
+            if (! $first || ! $first->batchItem) {
                 return null;
             }
 
-            $item = $first->batchItem->item;
-            $pack = $first->batchItem->pack;
+            $batchItem = $first->batchItem;
+            $item = $batchItem->item;
+            $pack = $batchItem->pack;
 
-            $totalQuantity = $stockGroup->sum('quantity');
+            // كل صف الآن يمثل item_pack
+            $totalBatchesQuantity = $stockGroup->sum('quantity');
+
+            // الكمية الفعلية بالوحدات (boxes) — مجموع كمياتها
+            // مع الكمية الإجمالية بالقطع الفردية
+            $packsCount = $stockGroup->sum(function ($stock) {
+                return $stock->quantity;
+            });
+
+            // حساب القطع الفردية عبر ضرب في quantity_in_pack
+            $quantityInPack = $pack?->quantity_in_pack ?? 1;
+            $totalIndividualUnits = $packsCount * $quantityInPack;
 
             $activeBatches = $stockGroup->filter(function ($stock) {
                 return $stock->batchItem->batch->status === 'active';
-            })->map(function ($stock) {
+            })->map(function ($stock) use ($quantityInPack) {
+                $batch = $stock->batchItem->batch;
+                $itemPack = $stock->batchItem->pack;
+                $packQty = $itemPack?->quantity_in_pack ?? 1;
+                $packCount = $stock->quantity;
+                $individualUnits = $packCount * $packQty;
+
                 return [
-                    'batch_number' => $stock->batchItem->batch->batch_number,
-                    'batch_id' => $stock->batchItem->batch->id,
+                    'batch_id' => $batch->id,
+                    'batch_number' => $batch->batch_number,
                     'batch_item_id' => $stock->batch_item_id,
-                    'quantity' => $stock->quantity,
-                    'expiry_date' => $stock->batchItem->batch->expiry_date,
+                    'production_date' => $batch->production_date,
+                    'expiry_date' => $batch->expiry_date,
+                    'pack_count' => $packCount,
+                    'individual_units' => $individualUnits,
+                    'quantity_in_pack' => $packQty,
                 ];
             })->values();
 
-            // Collect batch item IDs for checkboxes
             $batchItemIds = $stockGroup->pluck('batch_item_id')->unique()->values()->all();
+
+            // معلومات الباكج
+            $packTypeName = $pack?->packType?->name_ar ?? $pack?->packType?->name_en ?? 'قطعة';
+            $packCapacity = $pack?->packCapacity;
+            $packCapacityValue = $packCapacity ? $packCapacity->value . ' ' . ($packCapacity->uom?->code ?? '') : '';
+            $packDisplayName = trim(($pack?->barcode ?? '') . ' ' . ($packTypeName !== 'قطعة' ? "({$packTypeName})" : '') . ' ' . $packCapacityValue);
 
             return [
                 'item' => $item,
                 'item_id' => $item->id,
-                'item_name' => $item->name_en ?? 'غير معروف',
+                'item_name' => $item->name_en ?? $item->name_ar ?? 'غير معروف',
+                'item_name_ar' => $item->name_ar ?? '',
                 'item_code' => $item->code ?? '',
                 'image_url' => $item->main_image_url,
                 'pack' => $pack,
-                'item_pack_id' => $item->item_pack_id ?? null,
-                'total_quantity' => $totalQuantity,
+                'item_pack_id' => $pack?->id ?? null,
+                'pack_barcode' => $pack?->barcode ?? 'بدون عبوة',
+                'pack_type' => $packTypeName,
+                'pack_capacity' => $packCapacityValue,
+                'pack_display_name' => $packDisplayName,
+                'quantity_in_pack' => $quantityInPack,
+                'total_pack_count' => $packsCount,
+                'total_individual_units' => $totalIndividualUnits,
                 'batches' => $activeBatches,
                 'batches_count' => $activeBatches->count(),
                 'batch_item_ids' => $batchItemIds,
             ];
         })->filter(function ($group) {
-            return $group !== null && isset($group['total_quantity']) && $group['total_quantity'] > 0;
+            return $group !== null && isset($group['total_pack_count']) && $group['total_pack_count'] > 0;
         })->sortBy('item_name')->values();
 
-        // إحصائيات العبوات مع النسب المئوية
+        // إحصائيات العبوات (item_packs) — كل نوع عبوة مع كمياتها
         $packStatsRaw = $validStocks->groupBy('batchItem.item_pack_id')->map(function ($group) {
             $first = $group->first();
-            if (! $first || ! $first->batchItem) {
+            if (! $first || ! $first->batchItem || ! $first->batchItem->pack) {
                 return null;
             }
 
+            $pack = $first->batchItem->pack;
+            $packType = $pack->packType?->name_ar ?? $pack->packType?->name_en ?? 'قطعة';
+            $packCapacity = $pack->packCapacity;
+            $packCapacityValue = $packCapacity ? $packCapacity->value . ' ' . ($packCapacity->uom?->code ?? '') : '';
+            $packName = trim(($pack->barcode ?? '') . ' (' . $packType . ') ' . $packCapacityValue);
+            $totalPacks = $group->sum('quantity');
+            $totalUnits = $totalPacks * ($pack->quantity_in_pack ?? 1);
+
             return [
-                'pack' => $first->batchItem->pack,
-                'total_quantity' => $group->sum('quantity'),
+                'pack' => $pack,
+                'pack_name' => $packName,
+                'total_pack_count' => $totalPacks,
+                'total_individual_units' => $totalUnits,
             ];
         })->filter(function ($item) {
-            return $item !== null && $item['total_quantity'] > 0;
+            return $item !== null && $item['total_pack_count'] > 0;
         })->values();
 
-        $totalQuantityAll = $packStatsRaw->sum('total_quantity');
+        $totalQuantityAll = $packStatsRaw->sum('total_pack_count');
 
         $packStats = $packStatsRaw->map(function ($item) use ($totalQuantityAll) {
-            $percentage = $totalQuantityAll > 0 ? ($item['total_quantity'] / $totalQuantityAll) * 100 : 0;
-            $packName = $item['pack'] ? $item['pack']->barcode : 'بدون عبوة';
+            $percentage = $totalQuantityAll > 0 ? ($item['total_pack_count'] / $totalQuantityAll) * 100 : 0;
 
             return [
                 'pack' => $item['pack'],
-                'pack_name' => $packName,
-                'total_quantity' => $item['total_quantity'],
+                'pack_name' => $item['pack_name'],
+                'total_pack_count' => $item['total_pack_count'],
+                'total_individual_units' => $item['total_individual_units'],
                 'percentage' => round($percentage, 1),
             ];
-        })->sortByDesc('total_quantity')->values();
+        })->sortByDesc('total_pack_count')->values();
 
         $totalPackTypes = $packStats->count();
-        $totalQuantityByPack = $packStats->sum('total_quantity');
+        $totalQuantityByPack = $packStats->sum('total_pack_count');
+        $totalIndividualUnits = $packStats->sum('total_individual_units');
 
         $totalProducts = $groupedProducts->count();
-        $totalQuantity = $groupedProducts->sum('total_quantity');
+        $totalQuantity = $groupedProducts->sum('total_pack_count');
         $totalBatches = $groupedProducts->sum('batches_count');
 
         return view('dashboard.data_definition.w&v.warehouse.show', compact(
             'warehouse', 'groupedProducts', 'totalProducts', 'totalQuantity', 'totalBatches',
-            'packStats', 'totalPackTypes', 'totalQuantityByPack', 'search'
+            'packStats', 'totalPackTypes', 'totalQuantityByPack', 'totalIndividualUnits', 'search'
         ));
     }
 
@@ -372,6 +415,10 @@ class WarehouseController extends Controller
         // تجميع البيانات لعرضها في الجدول (كل صف يمثل BatchItem مع كميته)
         // نضيف خاصية available_quantity وهي الكمية الموجودة حالياً
         $batchItems = $stocks->map(function ($stock) {
+            if (! $stock->batchItem || ! $stock->batchItem->item) {
+                return null;
+            }
+
             $item = $stock->batchItem->item;
 
             return (object) [
@@ -380,11 +427,12 @@ class WarehouseController extends Controller
                 'item_code' => $item->code,
                 'category' => $item->category->name ?? '-',
                 'brand' => $item->brand->name ?? '-',
-                'batch_number' => $stock->batchItem->batch->batch_number,
+                'batch_number' => $stock->batchItem->batch?->batch_number ?? 'بدون دفعة',
+                'batch_id' => $stock->batchItem->batch_id,
                 'available_qty' => $stock->quantity,
-                'pack_info' => $stock->batchItem->pack ? $stock->batchItem->pack->barcode.' (Qty: '.$stock->batchItem->pack->quantity.')' : 'بدون عبوة',
+                'pack_info' => $stock->batchItem->pack ? $stock->batchItem->pack->barcode.' (Qty: '.$stock->batchItem->pack->quantity_in_pack.')' : 'بدون عبوة',
             ];
-        });
+        })->filter()->values();
 
         // قوائم الفلاتر
         $categories = Category::orderBy('name')->get();
@@ -438,13 +486,13 @@ class WarehouseController extends Controller
             return back()->with('error', 'يرجى اختيار منتجات واحدة على الأقل.');
         }
 
+        // Ensure we have an array
         if (is_string($selected)) {
             // Convert comma-separated string to array
             $selected = array_map('trim', explode(',', $selected));
             $selected = array_filter($selected);
         }
 
-        // Ensure it's an array
         if (! is_array($selected)) {
             $selected = [$selected];
         }
@@ -499,8 +547,11 @@ class WarehouseController extends Controller
 
         // جلب بيانات المنتجات المختارة مع كمياتها في المصدر
         $batchItems = BatchItem::whereIn('id', $transferData['selected_batch_item_ids'])
-            ->with(['item', 'pack', 'batch'])
-            ->get();
+            ->with(['item', 'pack', 'pack.packType', 'pack.packCapacity', 'batch'])
+            ->get()
+            ->filter(function ($item) {
+                return $item->item !== null;
+            });
 
         // إضافة الكمية المتوفرة من المصدر لكل عنصر
         $batchItems->each(function ($item) use ($warehouse) {
@@ -526,12 +577,20 @@ class WarehouseController extends Controller
                 ->with('error', 'يرجى اختيار المنتجات أولاً.');
         }
 
+        if (empty($transferData['target_warehouse_id'])) {
+            return redirect()->route('warehouses.transfer.confirm-from-warehouse', $warehouse)
+                ->with('info', 'يرجى تحديد المخزن الهدف في الخطوة التالية.');
+        }
+
         $targetWarehouse = Warehouse::findOrFail($transferData['target_warehouse_id']);
 
         // جلب بيانات المنتجات المختارة مع كمياتها في المصدر
         $batchItems = BatchItem::whereIn('id', $transferData['selected_batch_item_ids'])
             ->with(['item', 'pack', 'batch'])
-            ->get();
+            ->get()
+            ->filter(function ($item) {
+                return $item->item !== null;
+            });
 
         // إضافة الكمية المتوفرة في المصدر
         $batchItems->each(function ($item) use ($warehouse) {
@@ -558,16 +617,21 @@ class WarehouseController extends Controller
         }
 
         $validated = $request->validate([
+            'target_warehouse_id' => 'required|exists:warehouses,id',
             'quantities' => 'required|array',
             'quantities.*' => 'numeric|min:0.001',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|array',
+            'notes.*' => 'nullable|string',
+            'general_notes' => 'nullable|string',
             'transfer_date' => 'nullable|date',
         ]);
 
-        $targetWarehouseId = $transferData['target_warehouse_id'];
+        $targetWarehouseId = $validated['target_warehouse_id'];
         $selectedIds = $transferData['selected_batch_item_ids'];
+        $notesArray = $validated['notes'] ?? [];
+        $generalNotes = $validated['general_notes'] ?? null;
 
-        DB::transaction(function () use ($warehouse, $targetWarehouseId, $selectedIds, $validated) {
+        DB::transaction(function () use ($warehouse, $targetWarehouseId, $selectedIds, $validated, $notesArray, $generalNotes) {
             foreach ($selectedIds as $batchItemId) {
                 $qty = $validated['quantities'][$batchItemId] ?? 0;
                 if ($qty <= 0) {
@@ -595,6 +659,9 @@ class WarehouseController extends Controller
                 $toStock->save();
 
                 // تسجيل حركة النقل
+                $perItemNote = $notesArray[$batchItemId] ?? null;
+                $movementNotes = $generalNotes ?: $perItemNote ?: 'نقل بين المخازن';
+
                 BatchMovement::create([
                     'batch_item_id' => $batchItemId,
                     'from_warehouse_id' => $warehouse->id,
@@ -602,7 +669,7 @@ class WarehouseController extends Controller
                     'movement_type' => 'transfer',
                     'quantity' => $qty,
                     'movement_date' => $validated['transfer_date'] ?? now(),
-                    'notes' => $validated['notes'] ?? 'نقل بين المخازن',
+                    'notes' => $movementNotes,
                 ]);
             }
         });

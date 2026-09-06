@@ -40,7 +40,57 @@
             <li class="sidebar-item {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('invoices.index') }}">
                     <i class="align-middle" data-feather="file-text"></i>
-                    <span class="align-middle">Invoices</span>
+                    <span class="align-middle">الفواتير</span>
+                </a>
+            </li>
+
+            <li class="sidebar-header">المخزون و المنتجات</li>
+            <li class="sidebar-item {{ request()->routeIs('warehouses.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('warehouses.index') }}">
+                    <i class="align-middle" data-feather="warehouse"></i>
+                    <span class="align-middle">المخزون</span>
+                </a>
+            </li>
+            <li class="sidebar-item {{ request()->routeIs('items.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('items.index') }}">
+                    <i class="align-middle" data-feather="box"></i>
+                    <span class="align-middle">المنتجات</span>
+                </a>
+            </li>
+            <li class="sidebar-item {{ request()->routeIs('item-packs.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('item-packs.index') }}">
+                    <i class="align-middle" data-feather="package"></i>
+                    <span class="align-middle">باكجات المنتج</span>
+                </a>
+            </li>
+            <li class="sidebar-item {{ request()->routeIs('uoms.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('uoms.index') }}">
+                    <i class="align-middle" data-feather="shuffle"></i>
+                    <span class="align-middle">وحدة القياس</span>
+                </a>
+            </li>
+            <li class="sidebar-item {{ request()->routeIs('pack-types.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('pack-types.index') }}">
+                    <i class="align-middle" data-feather="layers"></i>
+                    <span class="align-middle">أنواع الباكش</span>
+                </a>
+            </li>
+            <li class="sidebar-item {{ request()->routeIs('pack-capacities.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('pack-capacities.index') }}">
+                    <i class="align-middle" data-feather="box"></i>
+                    <span class="align-middle">Pack Capacities</span>
+                </a>
+            </li>
+            <li class="sidebar-item {{ request()->routeIs('pack-definitions.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('pack-definitions.index') }}">
+                    <i class="align-middle" data-feather="package"></i>
+                    <span class="align-middle">Pack Definitions</span>
+                </a>
+            </li>
+            <li class="sidebar-item {{ request()->routeIs('price-lists.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('price-lists.index') }}">
+                    <i class="align-middle" data-feather="dollar-sign"></i>
+                    <span class="align-middle">قوائم الأسعار</span>
                 </a>
             </li>
             
@@ -122,6 +172,9 @@
                 ['label' => 'Units of Measure (UOMs)', 'icon' => 'arrows-alt', 'route' => route('uoms.index'), 'disabled' => false],
                 ['label' => 'Pack Operations', 'icon' => 'shift', 'route' => route('pack-operations.index'), 'disabled' => false],
                 ['label' => 'Pack Groups', 'icon' => 'layers', 'route' => route('pack-groups.index'), 'disabled' => false],
+                ['label' => 'Pack Types', 'icon' => 'layers', 'route' => route('pack-types.index'), 'disabled' => false],
+                ['label' => 'Pack Capacities', 'icon' => 'box', 'route' => route('pack-capacities.index'), 'disabled' => false],
+                ['label' => 'Pack Definitions', 'icon' => 'package', 'route' => route('pack-definitions.index'), 'disabled' => false],
                 ['label' => 'Items', 'icon' => 'box', 'route' => route('items.index'), 'disabled' => false],
                 ['label' => 'Item Packs', 'icon' => 'package', 'route' => route('item-packs.index'), 'disabled' => false],
                 ['label' => 'Item Images', 'icon' => 'image', 'route' => route('item-images.index'), 'disabled' => false],
@@ -256,12 +309,19 @@
                          </div>
                      </a>
                      <!-- 7. Organization About (جديد) -->
-                    <a href="{{ route('organization-about.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
-                        <div class="card-body d-flex flex-column align-items-center py-4">
-                            <i data-feather="info" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
-                            <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">نبذة المنظمات</small>
-                        </div>
-                    </a>
+                     <a href="{{ route('organization-about.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
+                         <div class="card-body d-flex flex-column align-items-center py-4">
+                             <i data-feather="info" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
+                             <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">نبذة المنظمات</small>
+                         </div>
+                     </a>
+                     <!-- 8. Price Lists -->
+                     <a href="{{ route('price-lists.index') }}" class="card h-100 text-center subcard-link" style="min-height: 160px; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; transition: all 0.25s ease; cursor: pointer; text-decoration: none;">
+                         <div class="card-body d-flex flex-column align-items-center py-4">
+                             <i data-feather="dollar-sign" class="mb-3 sub-icon" style="font-size: 4rem; width: auto; height: 100%; color: #a5b4fc;"></i>
+                             <small style="font-size: 1rem; font-weight: 600; color: #e2e8f0;">قوائم الأسعار</small>
+                         </div>
+                     </a>
 
                 </div>
             </div>

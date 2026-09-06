@@ -28,14 +28,6 @@
             <div class="bg-white rounded-2xl shadow-md p-5 mt-6 border border-gray-100">
                 <h3 id="summary-title" class="font-bold text-gray-800 text-lg mb-3">ملخص الطلب</h3>
                 <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span id="subtotal-label" class="text-gray-500">المجموع الفرعي</span>
-                        <span id="subtotal-value" class="font-semibold text-gray-700">0.00 ر.س</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span id="delivery-label" class="text-gray-500">رسوم التوصيل</span>
-                        <span id="delivery-value" class="font-semibold text-gray-700">0.00 ر.س</span>
-                    </div>
                     <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
                         <span id="total-label" class="text-lg font-bold text-gray-800">الإجمالي</span>
                         <span id="total-value" class="text-lg font-bold text-purple-600">0.00 ر.س</span>
@@ -58,7 +50,7 @@
     <script>
         // استرجاع السلة من التخزين المحلي
         let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
-        let deliveryFee = 15; // رسوم توصيل ثابتة
+        let deliveryFee = 0; // تم إلغاء رسوم التوصيل بناء على طلب العميل
 
         function saveCart() {
             localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
@@ -72,7 +64,6 @@
                 empty_btn: "Browse Offers",
                 summary_title: "Order Summary",
                 subtotal_label: "Subtotal",
-                delivery_label: "Delivery Fee",
                 total_label: "Total",
                 checkout_btn: "Proceed to Checkout",
                 currency: "SAR",
@@ -85,7 +76,6 @@
                 empty_btn: "استعرض العروض",
                 summary_title: "ملخص الطلب",
                 subtotal_label: "المجموع الفرعي",
-                delivery_label: "رسوم التوصيل",
                 total_label: "الإجمالي",
                 checkout_btn: "متابعة إلى الدفع",
                 currency: "ر.س",
@@ -102,8 +92,6 @@
             document.getElementById('empty-message').innerText = t.empty_message;
             document.getElementById('empty-shop-btn').innerText = t.empty_btn;
             document.getElementById('summary-title').innerText = t.summary_title;
-            document.getElementById('subtotal-label').innerText = t.subtotal_label;
-            document.getElementById('delivery-label').innerText = t.delivery_label;
             document.getElementById('total-label').innerText = t.total_label;
             document.getElementById('checkout-btn').innerText = t.checkout_btn;
             // تحديث العملة على الشاشة
@@ -119,8 +107,7 @@
         // حساب المجموع الفرعي والإجمالي
         function calculateTotals() {
             let subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * parseInt(item.quantity)), 0);
-            let total = subtotal > 0 ? subtotal + deliveryFee : 0;
-            return { subtotal, total };
+            return { subtotal, total: subtotal };
         }
 
         // دالة التوست
@@ -155,35 +142,39 @@
             container.innerHTML = '';
             cartItems.forEach((item, index) => {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg';
+                itemDiv.className = 'bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg p-3';
                 
                 let imageContent = item.image && item.image.startsWith('http') 
-                    ? `<img src="${item.image}" class="w-full h-full object-cover">`
-                    : `<span>${item.image || '📦'}</span>`;
+                    ? `<img src="${item.image}" class="w-full h-full object-cover rounded-xl">`
+                    : `<span class="text-3xl">${item.image || '📦'}</span>`;
+
+                let packBadge = (item.pack_name || item.uom_name) 
+                    ? `<div class="mt-1"><span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 text-xs px-2.5 py-0.5 rounded-full font-bold"><i class="fas fa-box"></i> ${item.pack_name || item.uom_name}</span></div>` 
+                    : '';
 
                 itemDiv.innerHTML = `
-                    <div class="flex flex-row">
-                        <div class="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-4xl overflow-hidden">
+                    <div class="flex flex-row items-center gap-3">
+                        <div class="w-20 h-20 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 border border-purple-100">
                             ${imageContent}
                         </div>
-                        <div class="flex-1 p-3 text-right">
+                        <div class="flex-1 text-right">
                             <div class="flex justify-between items-start">
-                                <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">${item.discount > 0 ? `-${item.discount}%` : 'جديد'}</span>
-                                <h3 class="font-bold text-gray-800">${currentLang === 'ar' ? (item.name_ar || item.name) : (item.name_en || item.name)}</h3>
+                                <h3 class="font-bold text-gray-800 text-sm leading-snug">${currentLang === 'ar' ? (item.name_ar || item.name) : (item.name_en || item.name)}</h3>
                             </div>
-                            <div class="flex justify-between items-center mt-2">
-                                <div class="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1">
-                                    <button class="decrement-qty w-6 h-6 rounded-full bg-white text-gray-600 font-bold text-center leading-6 shadow-sm hover:bg-gray-200" data-index="${index}">-</button>
-                                    <span class="item-qty w-8 text-center font-semibold" data-index="${index}">${item.quantity}</span>
-                                    <button class="increment-qty w-6 h-6 rounded-full bg-white text-gray-600 font-bold text-center leading-6 shadow-sm hover:bg-gray-200" data-index="${index}">+</button>
+                            ${packBadge}
+                            <div class="flex justify-between items-center mt-2.5">
+                                <div class="flex items-center gap-2 bg-gray-100 rounded-full px-2.5 py-1">
+                                    <button class="decrement-qty w-6 h-6 rounded-full bg-white text-gray-600 font-bold text-center leading-6 shadow-sm hover:bg-gray-200 active:scale-95" data-index="${index}">-</button>
+                                    <span class="item-qty w-6 text-center font-bold text-xs text-gray-800" data-index="${index}">${item.quantity}</span>
+                                    <button class="increment-qty w-6 h-6 rounded-full bg-white text-gray-600 font-bold text-center leading-6 shadow-sm hover:bg-gray-200 active:scale-95" data-index="${index}">+</button>
                                 </div>
                                 <div class="text-left">
-                                    <span class="font-bold text-purple-700">${formatPrice(item.price)}</span>
-                                    ${item.quantity > 1 ? `<span class="text-xs text-gray-400 block">${formatPrice(item.price * item.quantity)}</span>` : ''}
+                                    <span class="font-extrabold text-purple-700 text-sm">${formatPrice(item.price)}</span>
+                                    ${item.quantity > 1 ? `<span class="text-xs text-gray-400 block font-semibold">${formatPrice(item.price * item.quantity)}</span>` : ''}
                                 </div>
                             </div>
                             <div class="mt-2 text-left">
-                                <button class="remove-item text-red-500 text-xs font-semibold" data-index="${index}"><i class="fas fa-trash-alt ml-1"></i> ${t.delete_btn}</button>
+                                <button class="remove-item text-red-500 text-xs font-semibold hover:text-red-700" data-index="${index}"><i class="fas fa-trash-alt ml-1"></i> ${t.delete_btn}</button>
                             </div>
                         </div>
                     </div>
@@ -192,9 +183,7 @@
             });
 
             // تحديث الملخص
-            const { subtotal, total } = calculateTotals();
-            document.getElementById('subtotal-value').innerHTML = formatPrice(subtotal);
-            document.getElementById('delivery-value').innerHTML = formatPrice(deliveryFee);
+            const { total } = calculateTotals();
             document.getElementById('total-value').innerHTML = formatPrice(total);
 
             // إعادة ربط الأحداث
@@ -295,7 +284,7 @@
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                 },
-                credentials: 'same-origin',
+                credentials: 'include',
                 body: JSON.stringify({ items: validItems })
             })
             .then(response => {

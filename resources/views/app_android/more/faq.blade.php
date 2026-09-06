@@ -202,16 +202,25 @@
             fetch('/customer/proxy/faqs')
                 .then(r => r.json())
                 .then(res => {
-                    if (res && res.data) {
-                        const faqs = res.data;
+                    if (res && res.success && res.faq) {
+                        const faqs = res.faq;
                         const container = document.getElementById('faq-container');
                         container.innerHTML = '';
-                        
-                        Object.entries(faqs).forEach(([category, items]) => {
+
+                        const grouped = {};
+                        faqs.forEach(faq => {
+                            const category = faq.category || 'عام';
+                            if (!grouped[category]) {
+                                grouped[category] = [];
+                            }
+                            grouped[category].push(faq);
+                        });
+
+                        Object.entries(grouped).forEach(([category, items]) => {
                             items.forEach(faq => {
                                 const div = document.createElement('div');
                                 div.className = 'faq-item bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300';
-                                div.setAttribute('data-category', category || 'عام');
+                                div.setAttribute('data-category', category);
                                 div.setAttribute('data-question', faq.question);
                                 div.setAttribute('data-answer', faq.answer);
                                 div.innerHTML = `
@@ -226,9 +235,9 @@
                                 container.appendChild(div);
                             });
                         });
-                        
+
                         document.getElementById('no-faqs').classList.add('hidden');
-                        
+
                         document.querySelectorAll('.faq-question').forEach(question => {
                             question.addEventListener('click', function(e) {
                                 const parent = this.closest('.faq-item');

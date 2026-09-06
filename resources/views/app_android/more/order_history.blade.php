@@ -59,19 +59,22 @@
                             {{ $order['status_text'] }}
                         </span>
                     </div>
-                    <button class="order-details-btn w-full mt-3 text-purple-600 text-xs font-semibold text-center flex items-center justify-center gap-1"
-                            data-id="{{ $order['id'] }}"
-                            data-date="{{ $order['date'] }}"
-                            data-total="{{ $order['total'] }}"
-                            data-status="{{ $order['status_text'] }}"
-                            data-items='@json($order['items'])'
-                            data-address="{{ $order['address'] }}"
-                            data-phone="{{ $order['phone'] }}"
-                            data-payment="{{ $order['payment_method'] }}"
-                            data-delivery="{{ $order['delivery_fee'] }}"
-                            data-coupon="{{ $order['coupon_discount'] }}">
-                        عرض التفاصيل <i class="fas fa-chevron-left text-xs"></i>
-                    </button>
+                    <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                        <button class="order-details-btn flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded-xl text-center flex items-center justify-center gap-1 transition"
+                                data-id="{{ $order['id'] }}"
+                                data-date="{{ $order['date'] }}"
+                                data-total="{{ $order['total'] }}"
+                                data-status="{{ $order['status_text'] }}"
+                                data-items='@json($order['items'])'
+                                data-phone="{{ $order['phone'] }}"
+                                data-payment="{{ $order['payment_method'] }}"
+                                data-coupon="{{ $order['coupon_discount'] }}">
+                            عرض التفاصيل <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+                        <a href="{{ route('customer.order_pdf', $order['id']) }}" target="_blank" class="flex-1 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold py-2 rounded-xl text-xs text-center flex items-center justify-center gap-1.5 transition border border-purple-200">
+                            <i class="fas fa-print"></i> طباعة الفاتورة
+                        </a>
+                    </div>
                 </div>
             @endforeach
         </div>
@@ -94,7 +97,7 @@
         <div class="bg-white rounded-2xl w-11/12 max-w-md p-5 transform scale-95 transition-all duration-300 shadow-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
             <div class="text-center mb-3">
                 <div class="w-14 h-14 mx-auto rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-2xl">
-                    <i class="fas fa-box"></i>
+                    <i class="fas fa-receipt"></i>
                 </div>
             </div>
             <h3 class="text-lg font-bold text-gray-800 text-center" id="modal-order-id">طلب #0000</h3>
@@ -108,16 +111,12 @@
                 
                 <div class="border-t border-gray-100 pt-2">
                     <p class="font-semibold text-gray-700 mb-2">المنتجات:</p>
-                    <div id="modal-order-items" class="space-y-1 text-sm"></div>
+                    <div id="modal-order-items" class="space-y-1.5 text-sm"></div>
                 </div>
                 
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">طريقة الدفع:</span>
                     <span id="modal-payment" class="text-gray-700"></span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">عنوان التوصيل:</span>
-                    <span id="modal-address" class="text-gray-700 text-xs"></span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">رقم الجوال:</span>
@@ -127,14 +126,6 @@
                 <div class="border-t border-gray-100 pt-2">
                     <p class="font-semibold text-gray-700 mb-1">تفاصيل الدفع:</p>
                     <div class="space-y-1 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">المجموع الفرعي:</span>
-                            <span id="modal-subtotal"></span>
-                        </div>
-                        <div class="flex justify-between" id="delivery-fee-row" style="display: none;">
-                            <span class="text-gray-500">رسوم التوصيل:</span>
-                            <span id="modal-delivery"></span>
-                        </div>
                         <div class="flex justify-between" id="coupon-row" style="display: none;">
                             <span class="text-gray-500">خصم القسيمة:</span>
                             <span id="modal-coupon" class="text-green-600"></span>
@@ -147,7 +138,10 @@
                 </div>
             </div>
             
-            <button id="close-order-modal" class="w-full mt-5 bg-purple-600 text-white py-2 rounded-xl">إغلاق</button>
+            <a id="modal-print-pdf" href="#" target="_blank" class="w-full mt-4 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-2.5 rounded-xl text-center flex items-center justify-center gap-2 shadow-md transition">
+                <i class="fas fa-print"></i> طباعة الفاتورة PDF
+            </a>
+            <button id="close-order-modal" class="w-full mt-2 bg-gray-100 text-gray-700 font-semibold py-2 rounded-xl">إغلاق</button>
         </div>
     </div>
 
@@ -203,33 +197,17 @@
             
             // عرض المنتجات
             let itemsHtml = '';
-             data.items.forEach(item => {
-                itemsHtml += `<div class="flex justify-between text-xs">
-                                <span>${item.name} × ${item.qty}</span>
-                                <span class="text-gray-500">${item.price * item.qty} ر.س</span>
+            data.items.forEach(item => {
+                itemsHtml += `<div class="flex justify-between text-xs py-1 border-b border-gray-50">
+                                <span class="font-medium text-gray-800">${item.name} × ${item.qty}</span>
+                                <span class="text-purple-700 font-bold">${item.price * item.qty} ر.س</span>
                             </div>`;
-                if (item.warehouse) {
-                    itemsHtml += `<div class="text-xs text-gray-400 mr-4">المخزن: ${item.warehouse}</div>`;
-                }
             });
             document.getElementById('modal-order-items').innerHTML = itemsHtml;
             
             // معلومات إضافية
             document.getElementById('modal-payment').innerText = data.payment_method;
-            document.getElementById('modal-address').innerText = data.address;
             document.getElementById('modal-phone').innerText = data.phone;
-            
-            // حساب المجموع الفرعي
-            let subtotal = data.total - (data.delivery_fee || 0) + (data.coupon_discount || 0);
-            document.getElementById('modal-subtotal').innerText = subtotal + ' ر.س';
-            
-            // رسوم التوصيل
-            if (data.delivery_fee > 0) {
-                document.getElementById('delivery-fee-row').style.display = 'flex';
-                document.getElementById('modal-delivery').innerText = data.delivery_fee + ' ر.س';
-            } else {
-                document.getElementById('delivery-fee-row').style.display = 'none';
-            }
             
             // خصم القسيمة
             if (data.coupon_discount > 0) {
@@ -240,6 +218,10 @@
             }
             
             document.getElementById('modal-total').innerText = data.total + ' ر.س';
+
+            // رابط طباعة PDF
+            const cleanOrderId = data.id.replace('#', '');
+            document.getElementById('modal-print-pdf').href = `/customer/orders/${cleanOrderId}/pdf`;
             
             // إظهار المودال
             modal.classList.remove('opacity-0', 'pointer-events-none');
@@ -257,10 +239,8 @@
                     total: parseFloat(btn.getAttribute('data-total')),
                     status: btn.getAttribute('data-status'),
                     items: JSON.parse(btn.getAttribute('data-items')),
-                    address: btn.getAttribute('data-address'),
                     phone: btn.getAttribute('data-phone'),
                     payment_method: btn.getAttribute('data-payment'),
-                    delivery_fee: parseFloat(btn.getAttribute('data-delivery') || 0),
                     coupon_discount: parseFloat(btn.getAttribute('data-coupon') || 0)
                 };
                 showOrderDetails(data);

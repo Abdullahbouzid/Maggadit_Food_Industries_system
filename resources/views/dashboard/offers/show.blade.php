@@ -49,11 +49,11 @@
                                         <th class="w-25">المنتج</th>
                                         <td>
                                             {{ $offer->item?->name_ar ?: $offer->item?->name_en }}
-                                            @if($offer->item && $offer->item->packs->first() && $offer->item->packs->first()->uom)
-                                                <span class="badge bg-info ms-1">{{ $offer->item->packs->first()->uom->name_ar ?? $offer->item->packs->first()->uom->name_en }}</span>
+                                            @if($offer->item && $offer->item->packs->first() && $offer->item->packs->first()->packCapacity?->uom)
+                                                <span class="badge bg-info ms-1">{{ $offer->item->packs->first()->packCapacity?->uom->name_ar ?? $offer->item->packs->first()->packCapacity?->uom->name_en }}</span>
                                             @endif
                                             @if($offer->itemPack)
-                                                <br><small class="text-muted">العبوة: {{ $offer->itemPack->uom->name_ar ?? $offer->itemPack->uom->name_en ?? '' }}</small>
+                                                <br><small class="text-muted">العبوة: {{ $offer->itemPack->packCapacity?->uom->name_ar ?? $offer->itemPack->packCapacity?->uom->name_en ?? '' }}</small>
                                             @endif
                                         </td>
                                     </tr>

@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Offer;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\Offer;
+use App\Models\PriceList;
+use App\Models\PriceListVersion;
+use App\Models\PriceListVersionItem;
 use Illuminate\Http\Request;
 
 class OfferController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Offer::with(['item', 'itemPack.uom'])->latest();
+        $query = Offer::with(['item', 'itemPack.packType', 'itemPack.packCapacity.uom', 'priceList'])->latest();
 
         if ($request->filled('status')) {
             if ($request->status == 'active') {
@@ -41,9 +44,11 @@ class OfferController extends Controller
 
     public function create()
     {
+        $priceLists = PriceList::all();
         $items = Item::where('is_inactive', false)->get()->map(function ($item) {
             $defaultPack = $item->packs->first();
-            $packType = $defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : '';
+            $defaultUom = $defaultPack?->packCapacity?->uom;
+            $packType = $defaultUom ? ($defaultUom->name_ar ?? $defaultUom->name_en ?? '') : ($defaultPack?->packType?->name ?? '');
 
             $nameDisplay = $item->name_ar && $item->name_en
                 ? $item->name_ar.' / '.$item->name_en
@@ -58,23 +63,27 @@ class OfferController extends Controller
                 'pack_type' => $packType,
                 'full_name' => $nameDisplay.($packType ? ' ('.$packType.')' : ''),
                 'packs' => $item->packs->map(function ($pack) {
+                    $uom = $pack->packCapacity?->uom;
+                    $name = $uom ? ($uom->name_ar ?? $uom->name_en ?? 'بدون اسم') : ($pack->packType?->name ?? 'بدون اسم');
                     return [
                         'id' => $pack->id,
-                        'name' => $pack->uom ? ($pack->uom->name_ar ?? $pack->uom->name_en ?? 'بدون اسم') : 'بدون اسم',
+                        'name' => $name,
                         'price' => (float) ($pack->price ?? 0),
-                        'quantity' => (float) ($pack->quantity ?? 0),
+                        'quantity' => (float) ($pack->quantity_in_pack ?? 0),
                     ];
                 })->toArray(),
             ];
         });
 
-        return view('dashboard.offers.create', compact('items'));
+        return view('dashboard.offers.create', compact('items', 'priceLists'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'item_id' => 'required|exists:items,id',
+            'item_pack_id' => 'nullable|exists:item_packs,id',
+            'price_list_id' => 'nullable|exists:price_lists,id',
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'old_price' => 'required|numeric|min:0',
@@ -101,16 +110,18 @@ class OfferController extends Controller
 
     public function show(Offer $offer)
     {
-        $offer->load('item', 'itemPack.uom');
+        $offer->load('item', 'itemPack.packType', 'itemPack.packCapacity.uom', 'priceList');
 
         return view('dashboard.offers.show', compact('offer'));
     }
 
     public function edit(Offer $offer)
     {
+        $priceLists = PriceList::all();
         $items = Item::where('is_inactive', false)->get()->map(function ($item) {
             $defaultPack = $item->packs->first();
-            $packType = $defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : '';
+            $defaultUom = $defaultPack?->packCapacity?->uom;
+            $packType = $defaultUom ? ($defaultUom->name_ar ?? $defaultUom->name_en ?? '') : ($defaultPack?->packType?->name ?? '');
 
             $nameDisplay = $item->name_ar && $item->name_en
                 ? $item->name_ar.' / '.$item->name_en
@@ -125,23 +136,27 @@ class OfferController extends Controller
                 'pack_type' => $packType,
                 'full_name' => $nameDisplay.($packType ? ' ('.$packType.')' : ''),
                 'packs' => $item->packs->map(function ($pack) {
+                    $uom = $pack->packCapacity?->uom;
+                    $name = $uom ? ($uom->name_ar ?? $uom->name_en ?? 'بدون اسم') : ($pack->packType?->name ?? 'بدون اسم');
                     return [
                         'id' => $pack->id,
-                        'name' => $pack->uom ? ($pack->uom->name_ar ?? $pack->uom->name_en ?? 'بدون اسم') : 'بدون اسم',
+                        'name' => $name,
                         'price' => (float) ($pack->price ?? 0),
-                        'quantity' => (float) ($pack->quantity ?? 0),
+                        'quantity' => (float) ($pack->quantity_in_pack ?? 0),
                     ];
                 })->toArray(),
             ];
         });
 
-        return view('dashboard.offers.edit', compact('offer', 'items'));
+        return view('dashboard.offers.edit', compact('offer', 'items', 'priceLists'));
     }
 
     public function update(Request $request, Offer $offer)
     {
         $validated = $request->validate([
             'item_id' => 'required|exists:items,id',
+            'item_pack_id' => 'nullable|exists:item_packs,id',
+            'price_list_id' => 'nullable|exists:price_lists,id',
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'old_price' => 'required|numeric|min:0',
@@ -171,5 +186,65 @@ class OfferController extends Controller
         $offer->delete();
 
         return redirect()->route('offers.index')->with('success', 'تم حذف العرض بنجاح');
+    }
+
+    public function getItemPrice(Request $request)
+    {
+        $itemId = $request->query('item_id');
+        $packId = $request->query('item_pack_id');
+        $priceListId = $request->query('price_list_id');
+
+        if (!$itemId) {
+            return response()->json(['success' => false, 'message' => 'منتج غير محدد'], 422);
+        }
+
+        $item = Item::find($itemId);
+        if (!$item) {
+            return response()->json(['success' => false, 'message' => 'المنتج غير موجود'], 404);
+        }
+
+        $price = 0;
+        $source = 'افتراضي';
+
+        if ($priceListId) {
+            $latestVersion = PriceListVersion::where('price_list_id', $priceListId)
+                ->where('effective_date', '<=', now())
+                ->orderByDesc('effective_date')
+                ->first();
+
+            if ($latestVersion) {
+                $priceItemRecord = PriceListVersionItem::where('price_list_version_id', $latestVersion->id)
+                    ->where('item_id', $itemId)
+                    ->when($packId, function ($q) use ($packId) {
+                        $q->where('item_pack_id', $packId);
+                    })
+                    ->orderByDesc('item_pack_id')
+                    ->first();
+
+                if ($priceItemRecord) {
+                    $price = (float) $priceItemRecord->price;
+                    $source = 'قائمة الأسعار المختارة';
+                }
+            }
+        }
+
+        if ($price == 0 && $packId) {
+            $pack = $item->packs->firstWhere('id', $packId);
+            if ($pack) {
+                $price = (float) ($pack->price ?? 0);
+                $source = 'سعر العبوة الافتراضي';
+            }
+        }
+
+        if ($price == 0) {
+            $defaultPack = $item->packs->first();
+            $price = $defaultPack ? (float) ($defaultPack->price ?? 0) : 0;
+        }
+
+        return response()->json([
+            'success' => true,
+            'price' => $price,
+            'source' => $source,
+        ]);
     }
 }

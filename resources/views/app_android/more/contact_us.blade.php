@@ -115,14 +115,14 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const orgId = localStorage.getItem('active_organization_id');
-            const url = orgId ? `/api/customer/contact-info?organization_id=${orgId}` : '/api/customer/contact-info';
+            const url = orgId ? `/customer/contact-info?organization_id=${orgId}` : '/customer/contact-info';
             
             fetch(url, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
                 },
-                credentials: 'same-origin',
+                credentials: 'include',
             })
                 .then(r => r.json())
                 .then(res => {
@@ -187,7 +187,7 @@
             btnText.innerText = 'جاري الإرسال...';
 
             const orgId = localStorage.getItem('active_organization_id');
-            const contactUrl = orgId ? `/api/customer/contact-us?organization_id=${orgId}` : '/api/customer/contact-us';
+            const contactUrl = orgId ? `/customer/contact-us?organization_id=${orgId}` : '/customer/contact-us';
 
             fetch(contactUrl, {
                 method: 'POST',
@@ -196,7 +196,7 @@
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': token,
                 },
-                credentials: 'same-origin',
+                credentials: 'include',
                 body: JSON.stringify({ name, email, phone, subject, message }),
             })
             .then(r => r.json())

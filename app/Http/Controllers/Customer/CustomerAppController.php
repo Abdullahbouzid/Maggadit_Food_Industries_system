@@ -121,13 +121,24 @@ class CustomerAppController extends Controller
 
         $offers = collect();
         try {
-            $offers = Offer::with(['item', 'itemPack.uom'])
+            $offers = Offer::with(['item', 'itemPack.packType', 'itemPack.packCapacity.uom'])
                 ->active()
                 ->get()
                 ->map(function ($offer) {
                     $item = $offer->item;
                     $defaultPack = $item ? $item->packs->first() : null;
                     $offerPack = $offer->itemPack;
+
+                    $packUomName = function ($pack) {
+                        if (!$pack) {
+                            return '';
+                        }
+                        $uom = $pack->packCapacity?->uom;
+                        if ($uom) {
+                            return $uom->name_ar ?? $uom->name_en ?? '';
+                        }
+                        return $pack->packType?->name ?? '';
+                    };
 
                     return (object) [
                         'id' => $offer->id,
@@ -136,7 +147,7 @@ class CustomerAppController extends Controller
                         'item_id' => $offer->item_id,
                         'item_pack_id' => $offer->item_pack_id,
                         'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                        'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
+                        'pack_type' => $packUomName($offerPack) ?: $packUomName($defaultPack),
                         'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
                         'old_price' => (float) $offer->old_price,
                         'new_price' => (float) $offer->new_price,
@@ -383,10 +394,21 @@ class CustomerAppController extends Controller
         // Fallback: use local offers from DB if model exists, otherwise empty collection
         try {
             if (class_exists(\App\Models\Offer::class)) {
-                $offers = \App\Models\Offer::with(['item', 'itemPack.uom'])->active()->get()->map(function ($offer) {
+                $offers = \App\Models\Offer::with(['item', 'itemPack.packType', 'itemPack.packCapacity.uom'])->active()->get()->map(function ($offer) {
                     $item = $offer->item;
                     $defaultPack = $item ? $item->packs->first() : null;
                     $offerPack = $offer->itemPack;
+
+                    $packUomName = function ($pack) {
+                        if (!$pack) {
+                            return '';
+                        }
+                        $uom = $pack->packCapacity?->uom;
+                        if ($uom) {
+                            return $uom->name_ar ?? $uom->name_en ?? '';
+                        }
+                        return $pack->packType?->name ?? '';
+                    };
 
                     return (object) [
                         'id' => $offer->id,
@@ -395,7 +417,7 @@ class CustomerAppController extends Controller
                         'item_id' => $offer->item_id,
                         'item_pack_id' => $offer->item_pack_id,
                         'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                        'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
+                        'pack_type' => $packUomName($offerPack) ?: $packUomName($defaultPack),
                         'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
                         'old_price' => (float) $offer->old_price,
                         'new_price' => (float) $offer->new_price,

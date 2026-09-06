@@ -7,6 +7,8 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\Offer;
+use App\Models\PriceListVersion;
+use App\Models\PriceListVersionItem;
 use App\Services\Customer\ImagePathService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,7 +53,7 @@ class CustomerCatalogController extends Controller
     {
         $category = Category::where('show_in_customer_app', true)
             ->with(['items' => function ($q) {
-                $q->where('is_inactive', false);
+                $q->where('is_inactive', false)->with(['packs.packType', 'packs.packCapacity.uom']);
             }])
             ->find($id);
 
@@ -80,13 +82,53 @@ class CustomerCatalogController extends Controller
         $category = $this->applyImagePath($category, 'image');
         $category->products_count = $category->items->count();
 
-        $items = $category->items->map(function ($item) {
-            $item = $this->applyImagePath($item, 'image');
-            return $this->normalizeItem($item);
-        });
-
         $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        $items = $category->items->map(function ($item) use ($customer, $favoriteItemIds) {
+            $item = $this->applyImagePath($item, 'image');
+
+            $packs = $item->packs->map(function ($pack) use ($item, $customer) {
+                $capacity = $pack->packCapacity;
+                $uom = $capacity?->uom;
+                $uomName = $uom ? ($uom->name_ar ?? $uom->name_en) : '';
+                $packName = $pack->display_name ?? ($uomName ?: ('عبوة ' . (float) $pack->quantity_in_pack));
+
+                return [
+                    'id' => $pack->id,
+                    'name' => $packName,
+                    'uom_name' => $uomName,
+                    'quantity' => (float) $pack->quantity_in_pack,
+                    'uom_id' => $capacity?->uom_id,
+                    'price' => $this->getItemPrice($item, $customer, $pack->id),
+                    'barcode' => $pack->barcode,
+                ];
+            })->toArray();
+
+            if (empty($packs)) {
+                $packs = [[
+                    'id' => null,
+                    'name' => 'الحبة',
+                    'uom_name' => '',
+                    'quantity' => 1,
+                    'uom_id' => null,
+                    'price' => $this->getItemPrice($item, $customer),
+                    'barcode' => null,
+                ]];
+            }
+
+            return [
+                'id' => $item->id,
+                'name' => $item->name_ar ?? $item->name_en ?? 'منتج',
+                'name_ar' => $item->name_ar,
+                'name_en' => $item->name_en,
+                'image' => $item->image ?? $item->main_image_url,
+                'category_id' => $item->category_id,
+                'brand_id' => $item->brand_id,
+                'packs' => $packs,
+                'favorite' => in_array($item->id, $favoriteItemIds),
+            ];
+        });
 
         return view('app_android.categories.show', compact('category', 'items', 'favoriteItemIds'));
     }
@@ -120,7 +162,7 @@ class CustomerCatalogController extends Controller
     public function brandsShow($id)
     {
         $brand = Brand::with(['items' => function ($q) {
-            $q->where('is_inactive', false);
+            $q->where('is_inactive', false)->with(['packs.packType', 'packs.packCapacity.uom']);
         }])->find($id);
 
         if (!$brand) {
@@ -138,7 +180,7 @@ class CustomerCatalogController extends Controller
                     $itemObj->image = isset($itemObj->image) ? $this->imagePathService->normalize($itemObj->image) : null;
                     return $this->normalizeItem($itemObj);
                 });
-                $customer = Auth::guard('customer')->user();
+                $customer = $this->getCustomer(request());
                 $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
                 return view('app_android.brands.show', compact('brand', 'items', 'favoriteItemIds'));
             }
@@ -148,13 +190,53 @@ class CustomerCatalogController extends Controller
         $brand = $this->applyImagePath($brand, 'logo');
         $brand->products_count = $brand->items->count();
 
-        $items = $brand->items->map(function ($item) {
-            $item = $this->applyImagePath($item, 'image');
-            return $this->normalizeItem($item);
-        });
-
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        $items = $brand->items->map(function ($item) use ($customer, $favoriteItemIds) {
+            $item = $this->applyImagePath($item, 'image');
+
+            $packs = $item->packs->map(function ($pack) use ($item, $customer) {
+                $capacity = $pack->packCapacity;
+                $uom = $capacity?->uom;
+                $uomName = $uom ? ($uom->name_ar ?? $uom->name_en) : '';
+                $packName = $pack->display_name ?? ($uomName ?: ('عبوة ' . (float) $pack->quantity_in_pack));
+
+                return [
+                    'id' => $pack->id,
+                    'name' => $packName,
+                    'uom_name' => $uomName,
+                    'quantity' => (float) $pack->quantity_in_pack,
+                    'uom_id' => $capacity?->uom_id,
+                    'price' => $this->getItemPrice($item, $customer, $pack->id),
+                    'barcode' => $pack->barcode,
+                ];
+            })->toArray();
+
+            if (empty($packs)) {
+                $packs = [[
+                    'id' => null,
+                    'name' => 'الحبة',
+                    'uom_name' => '',
+                    'quantity' => 1,
+                    'uom_id' => null,
+                    'price' => $this->getItemPrice($item, $customer),
+                    'barcode' => null,
+                ]];
+            }
+
+            return [
+                'id' => $item->id,
+                'name' => $item->name_ar ?? $item->name_en ?? 'منتج',
+                'name_ar' => $item->name_ar,
+                'name_en' => $item->name_en,
+                'image' => $item->image ?? $item->main_image_url,
+                'category_id' => $item->category_id,
+                'brand_id' => $item->brand_id,
+                'packs' => $packs,
+                'favorite' => in_array($item->id, $favoriteItemIds),
+            ];
+        });
 
         return view('app_android.brands.show', compact('brand', 'items', 'favoriteItemIds'));
     }
@@ -166,7 +248,7 @@ class CustomerCatalogController extends Controller
         $brandId = $request->query('brand_id');
 
         $query = Item::where('is_inactive', false)
-            ->with(['category', 'brand', 'packs']);
+            ->with(['category', 'brand', 'packs.packType', 'packs.packCapacity.uom']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -183,9 +265,55 @@ class CustomerCatalogController extends Controller
             $query->where('brand_id', $brandId);
         }
 
-        $items = $query->get()->map(function ($item) {
+        $customer = $this->getCustomer($request);
+        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        $items = $query->get()->map(function ($item) use ($customer, $favoriteItemIds) {
             $item = $this->applyImagePath($item, 'image');
-            return $this->normalizeItem($item);
+
+            $packs = $item->packs->map(function ($pack) use ($item, $customer) {
+                $packType = $pack->packType?->name ?? 'قطعة';
+                $capacity = $pack->packCapacity;
+                $capacityText = $capacity ? "{$capacity->value} " . ($capacity->uom?->uom_symbol ?? '') : '';
+                
+                $packName = "{$packType}" . ($capacityText ? " - سعة {$capacityText}" : '');
+
+                return [
+                    'id' => $pack->id,
+                    'name' => $packName,
+                    'uom_name' => $capacityText,
+                    'quantity' => (float) $pack->quantity_in_pack,
+                    'uom_id' => $capacity?->uom_id,
+                    'price' => $this->getItemPrice($item, $customer, $pack->id),
+                    'barcode' => $pack->barcode,
+                    'pack_type' => $packType,
+                    'capacity' => $capacityText,
+                ];
+            })->toArray();
+
+            if (empty($packs)) {
+                $packs = [[
+                    'id' => null,
+                    'name' => 'الحبة',
+                    'uom_name' => '',
+                    'quantity' => 1,
+                    'uom_id' => null,
+                    'price' => $this->getItemPrice($item, $customer),
+                    'barcode' => null,
+                ]];
+            }
+
+            return [
+                'id' => $item->id,
+                'name' => $item->name_ar ?? $item->name_en ?? 'منتج',
+                'name_ar' => $item->name_ar,
+                'name_en' => $item->name_en,
+                'image' => $item->image ?? $item->main_image_url,
+                'category_id' => $item->category_id,
+                'brand_id' => $item->brand_id,
+                'packs' => $packs,
+                'favorite' => in_array($item->id, $favoriteItemIds),
+            ];
         });
 
         if ($items->isEmpty()) {
@@ -193,7 +321,7 @@ class CustomerCatalogController extends Controller
             $remoteData = $this->fetchRemoteData('customer/products', null, $params);
             if ($remoteData && isset($remoteData['products'])) {
                 $rawList = isset($remoteData['products']['data']) ? $remoteData['products']['data'] : $remoteData['products'];
-                $items = collect($rawList)->map(function ($item) {
+                $items = collect($rawList)->map(function ($item) use ($customer) {
                     $itemObj = (object) $item;
                     $itemObj->name = $itemObj->name ?? ($itemObj->name_ar ?? 'منتج');
                     $itemObj->image = isset($itemObj->image) ? $this->imagePathService->normalize($itemObj->image) : null;
@@ -220,16 +348,13 @@ class CustomerCatalogController extends Controller
             }
         }
 
-        $customer = Auth::guard('customer')->user();
-        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
-
         return view('app_android.products.index', compact('items', 'favoriteItemIds', 'categories', 'brands'));
     }
 
     public function productShow(Request $request, $id)
     {
         $item = Item::where('is_inactive', false)
-            ->with(['category', 'brand', 'packs', 'images'])
+            ->with(['category', 'brand', 'packs.packType', 'packs.packCapacity.uom', 'images'])
             ->find($id);
 
         if (!$item) {
@@ -256,15 +381,24 @@ class CustomerCatalogController extends Controller
         $product = $this->normalizeItem($item);
         $product->image = $item->main_image_url;
         $product->description = $item->definition;
-        $product->price = $item->price;
+        
+        $customer = $this->getCustomer($request);
+        $product->price = $this->getItemPrice($item, $customer);
         $product->old_price = null;
 
-        $packs = $item->packs->map(function ($pack) {
+        $packs = $item->packs->map(function ($pack) use ($item, $customer) {
+            $packPrice = $this->getItemPrice($item, $customer, $pack->id);
+            $capacity = $pack->packCapacity;
+            $uom = $capacity?->uom;
+            $uomName = $uom ? ($uom->name_ar ?? $uom->name_en) : '';
+            $packName = $pack->display_name ?? ($uomName ?: ('عبوة ' . (float) $pack->quantity_in_pack));
+
             return [
                 'id' => $pack->id,
-                'name' => $pack->name,
-                'price' => $pack->price,
-                'quantity' => $pack->quantity,
+                'name' => $packName,
+                'uom_name' => $uomName,
+                'price' => $packPrice,
+                'quantity' => (float) $pack->quantity_in_pack,
                 'is_default' => $pack->is_default_pack,
             ];
         });
@@ -282,19 +416,24 @@ class CustomerCatalogController extends Controller
 
     public function offersIndex()
     {
-        $offers = Offer::with(['item', 'itemPack.uom'])
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
-            })
-            ->where(function ($q) {
-                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-            })
+        $offers = Offer::with(['item', 'itemPack.packType', 'itemPack.packCapacity.uom'])
+            ->active()
             ->get()
             ->map(function ($offer) {
                 $item = $offer->item;
                 $defaultPack = $item ? $item->packs->first() : null;
                 $offerPack = $offer->itemPack;
+
+                $packUomName = function ($pack) {
+                    if (!$pack) {
+                        return '';
+                    }
+                    $uom = $pack->packCapacity?->uom;
+                    if ($uom) {
+                        return $uom->name_ar ?? $uom->name_en ?? '';
+                    }
+                    return $pack->packType?->name ?? '';
+                };
 
                 return (object) [
                     'id' => $offer->id,
@@ -303,7 +442,7 @@ class CustomerCatalogController extends Controller
                     'item_id' => $offer->item_id,
                     'item_pack_id' => $offer->item_pack_id,
                     'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                    'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
+                    'pack_type' => $packUomName($offerPack) ?: $packUomName($defaultPack),
                     'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
                     'old_price' => (float) $offer->old_price,
                     'new_price' => (float) $offer->new_price,

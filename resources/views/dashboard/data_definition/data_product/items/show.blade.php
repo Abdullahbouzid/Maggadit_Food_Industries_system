@@ -73,8 +73,8 @@
                                 <tbody>
                                     @foreach($item->packs as $pack)
                                     <tr>
-                                        <td>{{ $pack->uom->name_en ?? '-' }} / {{ $pack->uom->name_ar ?? '-' }}</td>
-                                        <td>{{ $pack->quantity }}</td>
+                                        <td>{{ $pack->packCapacity?->uom->name_en ?? '-' }} / {{ $pack->packCapacity?->uom->name_ar ?? '-' }}</td>
+                                        <td>{{ $pack->quantity_in_pack }}</td>
                                         <td>{{ $pack->barcode }}</td>
                                         <td>{{ $pack->packOperations->map(fn($op) => ($op->name_en ?? '') . ' / ' . ($op->name_ar ?? ''))->implode(', ') ?: '-' }}</td>
                                         <td>{{ $pack->packGroups->map(fn($group) => ($group->name_en ?? '') . ' / ' . ($group->name_ar ?? ''))->implode(', ') ?: '-' }}</td>

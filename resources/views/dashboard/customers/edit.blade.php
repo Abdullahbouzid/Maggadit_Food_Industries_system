@@ -126,6 +126,22 @@
                                     @enderror
                                 </div>
 
+                                <!-- Price List -->
+                                <div class="col-md-6">
+                                    <label for="price_list_id" class="form-label fw-semibold">قائمة الأسعار</label>
+                                    <select class="form-select @error('price_list_id') is-invalid @enderror" id="price_list_id" name="price_list_id">
+                                        <option value="">— بدون قائمة —</option>
+                                        @foreach($priceLists as $list)
+                                            <option value="{{ $list->id }}" {{ old('price_list_id', $customer->price_list_id) == $list->id ? 'selected' : '' }}>
+                                                {{ $list->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('price_list_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
                                 <!-- Buttons -->
                                 <div class="col-12">
                                     <hr>

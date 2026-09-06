@@ -14,6 +14,7 @@ class BatchItem extends Model
         'batch_id',
         'item_id',
         'item_pack_id',
+        'warehouse_id',
         'quantity',
         'dispatched_quantity',
         'transferred_quantity',

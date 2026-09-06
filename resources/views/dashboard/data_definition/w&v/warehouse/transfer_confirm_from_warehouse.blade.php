@@ -46,18 +46,19 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>المنتج</th>
-                                            <th>الرمز</th>
-                                            <th>الكمية المتوفرة في المصدر</th>
-                                            <th>الكمية للنقل</th>
-                                            <th>النسبة المئوية</th>
-                                            <th>ملاحظات</th>
-                                        </tr>
-                                    </thead>
+                                    <table class="table table-hover align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>المنتج</th>
+                                                <th>الرمز</th>
+                                                <th>العبوة (Pack)</th>
+                                                <th>الكمية المتوفرة في المصدر</th>
+                                                <th>الكمية للنقل</th>
+                                                <th>النسبة المئوية</th>
+                                                <th>ملاحظات</th>
+                                            </tr>
+                                        </thead>
                                     <tbody>
                                         @php $totalAvailable = 0; $totalToTransfer = 0; @endphp
                                         @foreach($batchItems as $index => $item)
@@ -69,6 +70,55 @@
                                                 <td>{{ $loop->iteration }}</td>
                                                 <td>{{ $item->item->name_en }}</td>
                                                 <td>{{ $item->item->code }}</td>
+                                                <td>
+                                                    @php
+                                                        $pack = $item->pack;
+                                                        $packType = $pack?->packType;
+                                                        $packCapacity = $pack?->packCapacity;
+                                                        $packTypeName = $packType?->name_ar ?? $packType?->name_en;
+                                                        $packTypeCode = $packType?->code;
+                                                        $packCapacityValue = $packCapacity?->value;
+                                                        $packCapacityUom = $packCapacity?->uom?->code;
+                                                        $packTypeBadge = match(true) {
+                                                            $packTypeCode === 'BOX_3X3' || str_contains((string) $packTypeName, 'صندوق 3') => 'warning',
+                                                            $packTypeCode === 'BOX_4X4' || str_contains((string) $packTypeName, 'صندوق 4') => 'info',
+                                                            $packTypeCode === 'BOX_6X6' || str_contains((string) $packTypeName, 'صندوق 6') => 'primary',
+                                                            $packTypeCode === 'PIECE' || str_contains((string) $packTypeName, 'قطعة') => 'secondary',
+                                                            default => 'dark',
+                                                        };
+                                                        $packIcon = match(true) {
+                                                            str_contains((string) $packTypeName, 'صندوق') || str_contains((string) $packTypeName, 'BOX') => 'box',
+                                                            str_contains((string) $packTypeName, 'قطعة') => 'circle',
+                                                            default => 'package',
+                                                        };
+                                                    @endphp
+                                                    <div>
+                                                        <span class="badge bg-{{ $packTypeBadge }} mb-1" style="font-size: 0.85rem;">
+                                                            <i data-feather="{{ $packIcon }}" style="width: 12px; height: 12px;"></i>
+                                                            {{ $packTypeName ?? 'قطعة' }}
+                                                        </span>
+                                                        @if($pack)
+                                                            <br><small class="text-muted d-block mt-1">
+                                                                <i data-feather="hash" style="width: 11px;"></i>
+                                                                <code>{{ $pack->barcode }}</code>
+                                                                @if($packCapacityValue)
+                                                                    <span class="ms-1">
+                                                                        <i data-feather="droplet" style="width: 11px;"></i>
+                                                                        {{ $packCapacityValue }} {{ $packCapacityUom }}
+                                                                    </span>
+                                                                @endif
+                                                            </small>
+                                                            @if($pack->quantity_in_pack > 0)
+                                                                <small class="text-info d-block">
+                                                                    <i data-feather="layers" style="width: 11px;"></i>
+                                                                    {{ $pack->quantity_in_pack }} وحدة في العبوة
+                                                                </small>
+                                                            @endif
+                                                        @else
+                                                            <br><small class="text-muted">بدون عبوة</small>
+                                                        @endif
+                                                    </div>
+                                                </td>
                                                 <td class="text-end">{{ number_format($available, 3) }}</td>
                                                 <td>
                                                     <input type="number" name="quantities[{{ $item->id }}]" class="form-control form-control-sm quantity-input" min="0" max="{{ $available }}" step="0.001" value="{{ $available }}" required>

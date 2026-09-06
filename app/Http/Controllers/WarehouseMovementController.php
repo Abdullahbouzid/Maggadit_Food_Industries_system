@@ -162,7 +162,7 @@ class WarehouseMovementController extends Controller
         ));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $warehouses = Warehouse::where('is_active', true)->orderBy('name_en')->get();
         $movementTypes = [
@@ -172,7 +172,63 @@ class WarehouseMovementController extends Controller
         ];
         $batchItems = BatchItem::with(['item', 'batch', 'pack'])->get();
 
-        return view('dashboard.data_definition.w&v.warehouse_movement.create', compact('warehouses', 'movementTypes', 'batchItems'));
+        // إذا تم تحديد مخزن مصدر، احضر المنتجات المتوفرة فيه
+        $sourceWarehouseId = $request->input('from_warehouse_id');
+        $availableItems = collect();
+        if ($sourceWarehouseId) {
+            $availableItems = \App\Models\BatchItemStock::where('warehouse_id', $sourceWarehouseId)
+                ->where('quantity', '>', 0)
+                ->with(['batchItem.item', 'batchItem.pack', 'batchItem.pack.packType', 'batchItem.pack.packCapacity', 'batchItem.batch'])
+                ->get()
+                ->filter(function ($stock) {
+                    return $stock->batchItem && $stock->batchItem->item;
+                });
+        }
+
+        return view('dashboard.data_definition.w&v.warehouse_movement.create', compact('warehouses', 'movementTypes', 'batchItems', 'sourceWarehouseId', 'availableItems'));
+    }
+
+    /**
+     * AJAX: جلب item_packs المتوفرة في مخزن معين
+     */
+    public function getAvailableItems($warehouseId)
+    {
+        $stocks = \App\Models\BatchItemStock::where('warehouse_id', $warehouseId)
+            ->where('quantity', '>', 0)
+            ->with(['batchItem.item', 'batchItem.pack', 'batchItem.pack.packType', 'batchItem.pack.packCapacity', 'batchItem.pack.packCapacity.uom', 'batchItem.batch'])
+            ->get()
+            ->filter(function ($stock) {
+                return $stock->batchItem && $stock->batchItem->item;
+            })
+            ->map(function ($stock) {
+                $pack = $stock->batchItem->pack;
+                $packTypeName = $pack?->packType?->name_ar ?? $pack?->packType?->name_en ?? 'قطعة';
+                $packTypeCode = $pack?->packType?->code;
+                $packCapacityValue = $pack?->packCapacity?->value;
+                $packCapacityUom = $pack?->packCapacity?->uom?->code;
+
+                return [
+                    'stock_id' => $stock->id,
+                    'batch_item_id' => $stock->batch_item_id,
+                    'item_id' => $stock->batchItem->item_id,
+                    'item_name' => $stock->batchItem->item->name_en ?? '',
+                    'item_name_ar' => $stock->batchItem->item->name_ar ?? '',
+                    'item_code' => $stock->batchItem->item->code ?? '',
+                    'batch_id' => $stock->batchItem->batch_id,
+                    'batch_number' => $stock->batchItem->batch?->batch_number ?? '',
+                    'pack_id' => $pack?->id,
+                    'pack_barcode' => $pack?->barcode ?? '',
+                    'pack_type_name' => $packTypeName,
+                    'pack_type_code' => $packTypeCode,
+                    'pack_capacity_value' => $packCapacityValue,
+                    'pack_capacity_uom' => $packCapacityUom,
+                    'quantity_in_pack' => $pack?->quantity_in_pack ?? 1,
+                    'available_quantity' => (float) $stock->quantity,
+                ];
+            })
+            ->values();
+
+        return response()->json($stocks);
     }
 
     public function store(Request $request)
@@ -186,6 +242,18 @@ class WarehouseMovementController extends Controller
             'movement_date' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
+
+        // التحقق من الكمية المتوفرة في المخزن المصدر (للنقل والاسترجاع)
+        if (in_array($validated['movement_type'], ['transfer', 'expiry_return']) && $validated['from_warehouse_id']) {
+            $stock = \App\Models\BatchItemStock::where('warehouse_id', $validated['from_warehouse_id'])
+                ->where('batch_item_id', $validated['batch_item_id'])
+                ->first();
+            if (! $stock || $stock->quantity < $validated['quantity']) {
+                $available = $stock ? $stock->quantity : 0;
+                return back()->withInput()->with('error', "الكمية غير متوفرة في المخزن المصدر. المتاح: {$available}");
+            }
+        }
+
         BatchMovement::create($validated);
 
         return redirect()->route('warehouse-movements.index')->with('success', 'تم إنشاء الحركة بنجاح.');

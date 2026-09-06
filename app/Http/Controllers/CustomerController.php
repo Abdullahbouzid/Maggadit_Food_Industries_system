@@ -6,6 +6,7 @@ use App\Exports\CustomersExport;
 use App\Imports\CustomersImport;
 use App\Models\Customer;
 use App\Models\Organization;
+use App\Models\PriceList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -62,8 +63,9 @@ class CustomerController extends Controller
     public function create()
     {
         $organizations = Organization::pluck('name', 'id');
+        $priceLists = PriceList::active()->get();
 
-        return view('dashboard.customers.create', compact('organizations'));
+        return view('dashboard.customers.create', compact('organizations', 'priceLists'));
     }
 
     /**
@@ -78,6 +80,7 @@ class CustomerController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'active_organization_id' => 'nullable|exists:organizations,id',
+            'price_list_id' => 'nullable|exists:price_lists,id',
         ]);
 
         if ($validator->fails()) {
@@ -125,8 +128,9 @@ class CustomerController extends Controller
     public function edit(Customer $customer)
     {
         $organizations = Organization::pluck('name', 'id');
+        $priceLists = PriceList::active()->get();
 
-        return view('dashboard.customers.edit', compact('customer', 'organizations'));
+        return view('dashboard.customers.edit', compact('customer', 'organizations', 'priceLists'));
     }
 
     /**
@@ -141,6 +145,7 @@ class CustomerController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'active_organization_id' => 'nullable|exists:organizations,id',
+            'price_list_id' => 'nullable|exists:price_lists,id',
         ]);
 
         if ($validator->fails()) {

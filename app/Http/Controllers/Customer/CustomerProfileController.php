@@ -117,20 +117,44 @@ class CustomerProfileController extends Controller
 
         $favoriteItems = [];
         if (! empty($favoriteItemIds)) {
-            $favoriteItems = \App\Models\Item::whereIn('id', $favoriteItemIds)->with('packs')->get()->map(function ($item) {
-                $defaultPack = $item->packs->first();
-                $price = (float) ($defaultPack ? $defaultPack->price : ($item->price ?? 0));
+            $favoriteItems = \App\Models\Item::whereIn('id', $favoriteItemIds)
+                ->with(['packs.packType', 'packs.packCapacity.uom', 'category', 'brand'])
+                ->get()
+                ->map(function ($item) use ($customer) {
+                    $itemPrice = $this->getItemPrice($item, $customer);
 
-                return [
-                    'id' => $item->id,
-                    'name_ar' => $item->name_ar ?: ($item->name_en ?: 'منتج بدون اسم'),
-                    'name_en' => $item->name_en ?: ($item->name_ar ?: 'Product'),
-                    'price' => $price,
-                    'image' => $item->main_image_url,
-                    'discount' => 0,
-                    'inStock' => true,
-                ];
-            })->values()->all();
+                    $packs = $item->packs->map(function ($pack) use ($item, $customer) {
+                        $packPrice = $this->getItemPrice($item, $customer, $pack->id);
+                        $capacity = $pack->packCapacity;
+                        $uom = $capacity?->uom;
+                        $uomName = $uom ? ($uom->name_ar ?? $uom->name_en) : '';
+                        $packName = $pack->display_name ?? ($uomName ?: ('عبوة ' . (float) $pack->quantity_in_pack));
+
+                        return [
+                            'id' => $pack->id,
+                            'name' => $packName,
+                            'uom_name' => $uomName,
+                            'price' => $packPrice,
+                            'quantity' => (float) $pack->quantity_in_pack,
+                        ];
+                    })->values()->all();
+
+                    $defaultPack = $item->packs->first();
+                    $defaultUom = $defaultPack?->packCapacity?->uom;
+                    $uomName = $defaultUom ? ($defaultUom->name_ar ?? $defaultUom->name_en) : '';
+
+                    return [
+                        'id' => $item->id,
+                        'name_ar' => $item->name_ar ?: ($item->name_en ?: 'منتج بدون اسم'),
+                        'name_en' => $item->name_en ?: ($item->name_ar ?: 'Product'),
+                        'price' => $itemPrice,
+                        'image' => $item->main_image_url,
+                        'discount' => 0,
+                        'inStock' => true,
+                        'uom_name' => $uomName,
+                        'packs' => $packs,
+                    ];
+                })->values()->all();
         }
 
         if (empty($favoriteItems)) {
@@ -148,6 +172,8 @@ class CustomerProfileController extends Controller
                             'image' => isset($i->image) ? $this->imagePathService->normalize($i->image) : null,
                             'discount' => 0,
                             'inStock' => true,
+                            'uom_name' => '',
+                            'packs' => [],
                         ];
                     })->all();
                 }

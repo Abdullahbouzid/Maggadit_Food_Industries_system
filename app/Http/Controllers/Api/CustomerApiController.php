@@ -120,15 +120,15 @@ class CustomerApiController extends Controller
     public function productsShow($id)
     {
         $item = Item::where('is_inactive', false)
-            ->with(['category', 'brand', 'packs', 'images'])
+            ->with(['category', 'brand', 'packs.packType', 'packs.packCapacity.uom', 'images'])
             ->findOrFail($id);
 
         $packs = $item->packs->map(function ($pack) {
             return [
                 'id' => $pack->id,
-                'name' => $pack->name,
+                'name' => $pack->display_name,
                 'price' => $pack->price,
-                'quantity' => $pack->quantity,
+                'quantity' => $pack->quantity_in_pack,
                 'is_default' => $pack->is_default_pack,
             ];
         });
@@ -151,13 +151,24 @@ class CustomerApiController extends Controller
 
     public function offersIndex()
     {
-        $offers = Offer::with(['item', 'itemPack.uom'])
+        $offers = Offer::with(['item', 'itemPack.packType', 'itemPack.packCapacity.uom'])
             ->active()
             ->get()
             ->map(function ($offer) {
                 $item = $offer->item;
                 $defaultPack = $item ? $item->packs->first() : null;
                 $offerPack = $offer->itemPack;
+
+                $packUomName = function ($pack) {
+                    if (!$pack) {
+                        return '';
+                    }
+                    $uom = $pack->packCapacity?->uom;
+                    if ($uom) {
+                        return $uom->name_ar ?? $uom->name_en ?? '';
+                    }
+                    return $pack->packType?->name ?? '';
+                };
 
                 return [
                     'id' => $offer->id,
@@ -166,7 +177,7 @@ class CustomerApiController extends Controller
                     'item_id' => $offer->item_id,
                     'item_pack_id' => $offer->item_pack_id,
                     'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                    'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
+                    'pack_type' => $packUomName($offerPack) ?: $packUomName($defaultPack),
                     'image' => $offer->display_image,
                     'old_price' => (float) $offer->old_price,
                     'new_price' => (float) $offer->new_price,

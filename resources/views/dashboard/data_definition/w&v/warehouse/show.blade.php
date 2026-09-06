@@ -38,7 +38,7 @@
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="text-uppercase text-muted mb-1">Total Products</h6>
+                                    <h6 class="text-uppercase text-muted mb-1">عدد العبوات (Item Packs)</h6>
                                     <h2 class="mb-0 fw-bold">{{ $totalProducts }}</h2>
                                 </div>
                             </div>
@@ -53,8 +53,8 @@
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="text-uppercase text-muted mb-1">Total Quantity</h6>
-                                    <h2 class="mb-0 fw-bold">{{ number_format($totalQuantity, 0) }}</h2>
+                                    <h6 class="text-uppercase text-muted mb-1">إجمالي الكميات (العبوات)</h6>
+                                    <h2 class="mb-0 fw-bold">{{ number_format($totalQuantity, 3) }}</h2>
                                 </div>
                             </div>
                         </div>
@@ -83,9 +83,9 @@
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="text-uppercase text-muted mb-1">Pack Types</h6>
+                                    <h6 class="text-uppercase text-muted mb-1">أنواع العبوات</h6>
                                     <h2 class="mb-0 fw-bold">{{ $totalPackTypes }}</h2>
-                                    <small class="text-muted">Total Qty: {{ number_format($totalQuantityByPack, 0) }}</small>
+                                    <small class="text-muted">إجمالي العبوات: {{ number_format($totalQuantityByPack, 3) }}</small>
                                 </div>
                             </div>
                         </div>
@@ -119,7 +119,7 @@
                                                         <i data-feather="tag" class="text-info me-2" style="width: 16px;"></i>
                                                         {{ $packStat['pack_name'] }}
                                                     </span>
-                                                    <span class="badge bg-primary rounded-pill">{{ number_format($packStat['total_quantity'], 3) }} ({{ $packStat['percentage'] }}%)</span>
+                                                    <span class="badge bg-primary rounded-pill">{{ number_format($packStat['total_pack_count'], 3) }} عبوة ({{ $packStat['percentage'] }}%)</span>
                                                 </li>
                                             @endforeach
                                         </ul>
@@ -153,16 +153,16 @@
                     </div>
                 </div>
                    <div class="row mb-4">
-                    <div class="col-12">
-                        <a href="{{ route('warehouses.transfer.store-selection-from-warehouse', $warehouse->id) }}" class="btn btn-primary btn-lg shadow-sm" onclick="event.preventDefault(); document.getElementById('transferForm-{{ $warehouse->id }}').submit();">
-                            <i data-feather="send" class="align-middle me-1"></i> نقل كميات من هذا المخزن
-                        </a>
-                        <form id="transferForm-{{ $warehouse->id }}" action="{{ route('warehouses.transfer.store-selection-from-warehouse', $warehouse->id) }}" method="POST" style="display: none;">
-                            @csrf
-                            <input type="hidden" name="selected_items[]" value="">
-                        </form>
-                    </div>
-                </div>
+                     <div class="col-12">
+                         <a href="{{ route('warehouses.transfer.store-selection-from-warehouse', $warehouse->id) }}" class="btn btn-primary btn-lg shadow-sm" onclick="event.preventDefault(); document.getElementById('transferForm-{{ $warehouse->id }}').submit();">
+                             <i data-feather="send" class="align-middle me-1"></i> نقل كميات من هذا المخزن
+                         </a>
+                         <form id="transferForm-{{ $warehouse->id }}" action="{{ route('warehouses.transfer.store-selection-from-warehouse', $warehouse->id) }}" method="POST" style="display: none;">
+                             @csrf
+                             <div id="selectedItemsContainer"></div>
+                         </form>
+                     </div>
+                 </div>
 
                 <!-- PRODUCTS -->
                 <div class="card border-0 shadow-sm rounded-4">
@@ -195,11 +195,34 @@
                                                             </div>
                                                         @endif
                                                     </div>
-                                                    <h6 class="fw-bold text-center">{{ $group['item_name'] }}</h6>
-                                                    <p class="text-muted small text-center">{{ $group['item_code'] }}</p>
-                                                    <p><strong>العبوة:</strong> {{ $group['pack'] ? $group['pack']->barcode . ' (Qty: ' . $group['pack']->quantity . ')' : 'بدون عبوة' }}</p>
-                                                    <p><strong>إجمالي الكمية:</strong> {{ number_format($group['total_quantity'], 3) }}</p>
-                                                    <p><strong>عدد الدفعات النشطة:</strong> {{ $group['batches_count'] }}</p>
+                                                    <h6 class="fw-bold text-center mb-1">{{ $group['item_name'] }}</h6>
+                                                    @if($group['item_name_ar'])
+                                                        <p class="text-muted small text-center mb-2">{{ $group['item_name_ar'] }}</p>
+                                                    @endif
+
+                                                    <div class="bg-light rounded p-2 mb-2">
+                                                        <div class="d-flex align-items-center mb-1">
+                                                            <i data-feather="package" class="text-primary me-2" style="width: 16px;"></i>
+                                                            <strong class="small">العبوة:</strong>
+                                                        </div>
+                                                        <div class="text-center">
+                                                            <span class="badge bg-info">{{ $group['pack_barcode'] }}</span>
+                                                            <div class="small mt-1 text-muted">
+                                                                @if($group['pack_type'])
+                                                                    {{ $group['pack_type'] }}
+                                                                @endif
+                                                                @if($group['pack_capacity'])
+                                                                    | {{ $group['pack_capacity'] }}
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <p class="mb-1"><strong>عدد العبوات:</strong> <span class="text-primary fw-bold">{{ number_format($group['total_pack_count'], 3) }}</span></p>
+                                                    <p class="mb-1"><strong>القطع الفردية:</strong> <span class="text-success">{{ number_format($group['total_individual_units'], 0) }}</span></p>
+                                                    <p class="mb-1"><strong>وحدة/العبوة:</strong> {{ number_format($group['quantity_in_pack'], 2) }}</p>
+                                                    <p class="mb-2"><strong>عدد الدفعات النشطة:</strong> {{ $group['batches_count'] }}</p>
+
                                                     @if($group['batches_count'] > 0)
                                                         <button class="btn btn-sm btn-outline-info w-100" type="button" data-bs-toggle="collapse" data-bs-target="#batchList{{ $loop->index }}" aria-expanded="false">
                                                             عرض الدفعات النشطة
@@ -207,11 +230,12 @@
                                                         <div class="collapse mt-2" id="batchList{{ $loop->index }}">
                                                             <ul class="list-unstyled small">
                                                                 @foreach($group['batches'] as $batch)
-                                                                    <li>
+                                                                    <li class="mb-1">
                                                                         <a href="{{ route('production-batches.show', $batch['batch_id']) }}" target="_blank">
                                                                             {{ $batch['batch_number'] }}
                                                                         </a>
-                                                                        : {{ number_format($batch['quantity'], 3) }}
+                                                                        : <strong>{{ number_format($batch['pack_count'], 3) }}</strong> عبوة
+                                                                        ({{ number_format($batch['individual_units'], 0) }} قطعة)
                                                                         @if($batch['expiry_date'])
                                                                             <span class="text-muted">(تنتهي {{ \Carbon\Carbon::parse($batch['expiry_date'])->format('d/m/Y') }})</span>
                                                                         @endif
@@ -223,7 +247,7 @@
                                                         <p class="text-muted small">لا توجد دفعات نشطة.</p>
                                                     @endif
                                                     <div class="form-check mt-3">
-                                                        <input type="checkbox" class="form-check-input product-checkbox" value="{{ $group['item_id'] }}-{{ $group['item_pack_id'] ?? 'null' }}" data-batch-ids='@json($group['batch_item_ids'])'>
+                                                        <input type="checkbox" class="form-check-input product-checkbox" value="{{ $group['item_pack_id'] ?? 'null' }}" data-batch-ids='@json($group['batch_item_ids'])'>
                                                         <label class="form-check-label">اختيار هذا المنتج للنقل</label>
                                                     </div>
                                                 </div>
@@ -247,18 +271,19 @@
                                                 <th>#</th>
                                                 <th>الصورة</th>
                                                 <th>المنتج</th>
-                                                <th>الرمز</th>
-                                                <th>العبوة</th>
-                                                <th>إجمالي الكمية</th>
-                                                <th>عدد الدفعات النشطة</th>
-                                                <th>الدفعات</th>
+                                                <th>العبوة (Item Pack)</th>
+                                                <th>عدد العبوات</th>
+                                                <th>القطع الفردية</th>
+                                                <th>وحدة/العبوة</th>
+                                                <th>عدد الدفعات</th>
+                                                <th>تفاصيل الدفعات</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach($groupedProducts as $index => $group)
                                                 <tr>
                                                     <td class="text-center">
-                                                        <input type="checkbox" class="form-check-input product-checkbox" value="{{ $group['item_id'] }}-{{ $group['item_pack_id'] ?? 'null' }}" data-batch-ids='@json($group['batch_item_ids'])'>
+                                                        <input type="checkbox" class="form-check-input product-checkbox" value="{{ $group['item_pack_id'] ?? 'null' }}" data-batch-ids='@json($group['batch_item_ids'])'>
                                                     </td>
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td>
@@ -268,10 +293,21 @@
                                                             <i data-feather="image" class="text-muted"></i>
                                                         @endif
                                                     </td>
-                                                    <td><strong>{{ $group['item_name'] }}</strong></td>
-                                                    <td>{{ $group['item_code'] }}</td>
-                                                    <td>{{ $group['pack'] ? $group['pack']->barcode . ' (Qty: ' . $group['pack']->quantity . ')' : 'بدون عبوة' }}</td>
-                                                    <td>{{ number_format($group['total_quantity'], 3) }}</td>
+                                                    <td>
+                                                        <strong>{{ $group['item_name'] }}</strong>
+                                                        @if($group['item_name_ar'])
+                                                            <br><small class="text-muted">{{ $group['item_name_ar'] }}</small>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-info mb-1">{{ $group['pack_barcode'] }}</span>
+                                                        @if($group['pack_type'] || $group['pack_capacity'])
+                                                            <br><small class="text-muted">{{ $group['pack_type'] }} @if($group['pack_capacity'])| {{ $group['pack_capacity'] }}@endif</small>
+                                                        @endif
+                                                    </td>
+                                                    <td><strong class="text-primary">{{ number_format($group['total_pack_count'], 3) }}</strong></td>
+                                                    <td><span class="text-success">{{ number_format($group['total_individual_units'], 0) }}</span></td>
+                                                    <td>{{ number_format($group['quantity_in_pack'], 2) }}</td>
                                                     <td>{{ $group['batches_count'] }}</td>
                                                     <td>
                                                         @if($group['batches_count'] > 0)
@@ -281,11 +317,12 @@
                                                             <div class="collapse mt-1" id="tableBatchList{{ $loop->index }}">
                                                                 <ul class="list-unstyled small">
                                                                     @foreach($group['batches'] as $batch)
-                                                                        <li>
+                                                                        <li class="mb-1">
                                                                             <a href="{{ route('production-batches.show', $batch['batch_id']) }}" target="_blank">
                                                                                 {{ $batch['batch_number'] }}
                                                                             </a>
-                                                                            : {{ number_format($batch['quantity'], 3) }}
+                                                                            : <strong>{{ number_format($batch['pack_count'], 3) }}</strong> عبوة
+                                                                            ({{ number_format($batch['individual_units'], 0) }} قطعة)
                                                                             @if($batch['expiry_date'])
                                                                                 <span class="text-muted">(تنتهي {{ \Carbon\Carbon::parse($batch['expiry_date'])->format('d/m/Y') }})</span>
                                                                             @endif
@@ -376,7 +413,7 @@
 
         // ===== Chart.js =====
         const packLabels = @json($packStats->pluck('pack_name'));
-        const packQuantities = @json($packStats->pluck('total_quantity')->map(function($q) { return (float) $q; }));
+        const packQuantities = @json($packStats->pluck('total_pack_count')->map(function($q) { return (float) $q; }));
 
         const colors = [
             '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
@@ -426,7 +463,7 @@
 
         // Handle product selection for warehouse transfer
         const transferForm = document.getElementById('transferForm-{{ $warehouse->id }}');
-        const selectedItemsInput = transferForm ? transferForm.querySelector('input[name="selected_items[]"]') : null;
+        const selectedItemsContainer = transferForm ? transferForm.querySelector('#selectedItemsContainer') : null;
         const selectAllCheckbox = document.getElementById('selectAllProducts');
         const productCheckboxes = document.querySelectorAll('.product-checkbox');
 
@@ -442,8 +479,15 @@
                     });
                 }
             });
-            if (selectedItemsInput) {
-                selectedItemsInput.value = selectedBatchIds.join(',');
+            if (selectedItemsContainer) {
+                selectedItemsContainer.innerHTML = '';
+                selectedBatchIds.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'selected_items[]';
+                    input.value = id;
+                    selectedItemsContainer.appendChild(input);
+                });
             }
         }
 
