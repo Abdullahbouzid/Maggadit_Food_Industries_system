@@ -3,53 +3,234 @@
 @section('title', 'Item Models')
 
 @section('content')
-<div class="wrapper"><div class="main"><main class="content">
-<div class="container-fluid p-0">
-    <div class="row mb-4">
-        <div class="col-12 col-lg-8"><h1 class="display-5 fw-bold"><i data-feather="cpu"></i> Item Models</h1><p class="text-muted">Manage product models</p></div>
-        <div class="col-12 col-lg-4 text-lg-end"><a href="{{ route('item-models.create') }}" class="btn btn-primary btn-lg"><i data-feather="plus-circle"></i> Add New</a><a href="{{ route('item-models.export', request()->query()) }}" class="btn btn-secondary btn-lg ms-2"><i data-feather="download"></i> Export</a></div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-microchip" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Item Models
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage product models</p>
     </div>
-    @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-    @if(session('import_errors'))<div class="alert alert-danger"><ul>@foreach(session('import_errors') as $err)<li>{{ $err }}</li>@endforeach</ul></div>@endif
-
-    <div class="row g-4 mb-4">
-        <div class="col-sm-6 col-xl-4"><div class="card border-0 shadow-sm"><div class="card-body"><h6 class="text-muted">Total</h6><h2>{{ $total }}</h2></div></div></div>
-        <div class="col-sm-6 col-xl-4"><div class="card border-0 shadow-sm"><div class="card-body"><h6 class="text-muted">Active</h6><h2>{{ $active }}</h2></div></div></div>
-        <div class="col-sm-6 col-xl-4"><div class="card border-0 shadow-sm"><div class="card-body"><h6 class="text-muted">Inactive</h6><h2>{{ $inactive }}</h2></div></div></div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('item-models.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus"></i> Add New
+        </a>
+        <a href="{{ route('item-models.export', request()->query()) }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-download"></i> Export
+        </a>
     </div>
+</div>
 
-    <div class="card border-0 shadow-sm rounded-4 mb-4"><div class="card-body">
-        <form action="{{ route('item-models.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i> {{ session('success') }}
+    </div>
+@endif
+@if(session('import_errors'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        <ul style="margin: 0; padding-left: 1.25rem;">
+            @foreach(session('import_errors') as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="nova-row cols-3">
+    <div class="nova-stat">
+        <div class="nova-stat-icon primary">
+            <i class="fas fa-microchip"></i>
+        </div>
+        <p class="nova-stat-label">Total</p>
+        <p class="nova-stat-value">{{ $total }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon primary">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <p class="nova-stat-label">Active</p>
+        <p class="nova-stat-value">{{ $active }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon accent">
+            <i class="fas fa-circle-pause"></i>
+        </div>
+        <p class="nova-stat-label">Inactive</p>
+        <p class="nova-stat-value">{{ $inactive }}</p>
+    </div>
+</div>
+
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h2 class="nova-card-title">
+            <i class="fas fa-upload"></i> Import Item Models
+        </h2>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('item-models.import') }}" method="POST" enctype="multipart/form-data" class="nova-flex nova-flex-wrap nova-gap-3" style="align-items: end;">
             @csrf
-            <div class="col-md-6"><input type="file" name="import_file" class="form-control" required></div>
-            <div class="col-md-3"><button type="submit" class="btn btn-success">Import</button></div>
-            <div class="col-md-3"><a href="{{ route('item-models.template') }}" class="btn btn-outline-secondary">Template</a></div>
+            <div class="nova-form-group" style="flex: 1 1 20rem; margin-bottom: 0;">
+                <label class="nova-label">Import File</label>
+                <input type="file" name="import_file" class="nova-input" required>
+            </div>
+            <div class="nova-form-group" style="flex: 1 1 9rem; margin-bottom: 0;">
+                <button type="submit" class="nova-btn nova-btn-primary nova-w-100">Import</button>
+            </div>
+            <div class="nova-form-group" style="flex: 1 1 10rem; margin-bottom: 0;">
+                <a href="{{ route('item-models.template') }}" class="nova-btn nova-btn-outline nova-w-100" style="margin-top: 0.35rem;">Template</a>
+            </div>
         </form>
-    </div></div>
+    </div>
+</div>
 
-    <div class="card border-0 shadow-sm rounded-4 mb-4"><div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-5"><input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request('search') }}"></div>
-            <div class="col-md-3"><select name="status" class="form-select"><option value="">All</option><option value="active" {{ request('status')=='active' ? 'selected' : '' }}>Active</option><option value="inactive" {{ request('status')=='inactive' ? 'selected' : '' }}>Inactive</option></select></div>
-            <div class="col-md-2"><select name="per_page" class="form-select" onchange="this.form.submit()"><option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="all">All</option></select></div>
-            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Filter</button></div>
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-body">
+        <form method="GET" action="{{ route('item-models.index') }}" class="nova-flex nova-flex-wrap nova-gap-3" style="align-items: end;">
+            <div class="nova-form-group" style="flex: 1 1 17rem; margin-bottom: 0;">
+                <label class="nova-label">Search</label>
+                <input type="text" name="search" class="nova-input" placeholder="Search..." value="{{ request('search') }}">
+            </div>
+            <div class="nova-form-group" style="flex: 1 1 11rem; margin-bottom: 0;">
+                <label class="nova-label">Status</label>
+                <select name="status" class="nova-select">
+                    <option value="">All</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                </select>
+            </div>
+            <div class="nova-form-group" style="flex: 1 1 10rem; margin-bottom: 0;">
+                <label class="nova-label">Per Page</label>
+                <select name="per_page" class="nova-select" onchange="this.form.submit()">
+                    <option value="10">10</option>
+                    <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
+                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                </select>
+            </div>
+            <div class="nova-form-group" style="flex: 1 1 9rem; margin-bottom: 0;">
+                <button type="submit" class="nova-btn nova-btn-primary nova-w-100">Filter</button>
+            </div>
         </form>
-    </div></div>
+    </div>
+</div>
 
-    <div class="card border-0 shadow-sm rounded-4"><div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light"><tr><th class="ps-4">#</th><th>Code</th><th>Name (EN)</th><th>Name (AR)</th><th>Status</th><th>Sort</th><th class="pe-4 text-end">Actions</th></tr></thead>
+<div class="nova-table-wrapper">
+    <div class="nova-toolbar">
+        <div class="nova-toolbar-filters">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-microchip"></i> Item Models List
+            </h3>
+        </div>
+        <div class="nova-toolbar-actions">
+            <a href="{{ route('item-models.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+                <i class="fas fa-plus"></i> Add Model
+            </a>
+        </div>
+    </div>
+    <div class="nova-table-scroll">
+        <table class="nova-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Code</th>
+                    <th>Name (EN)</th>
+                    <th>Name (AR)</th>
+                    <th>Status</th>
+                    <th>Sort</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
             <tbody>
                 @forelse($models as $m)
-                <tr><td class="ps-4">{{ $loop->iteration + ($models->currentPage()-1)*$models->perPage() }}</td><td><code>{{ $m->code }}</code></td><td>{{ $m->name_en }}</td><td>{{ $m->name_ar }}</td><td>@if($m->is_active)<span class="badge bg-success">Active</span>@else<span class="badge bg-secondary">Inactive</span>@endif</td><td>{{ $m->sort_order ?? '-' }}</td>
-                <td class="pe-4 text-end"><div class="btn-group btn-group-sm"><a href="{{ route('item-models.show', $m) }}" class="btn btn-outline-info"><i data-feather="eye"></i></a><a href="{{ route('item-models.edit', $m) }}" class="btn btn-outline-warning"><i data-feather="edit"></i></a><button class="btn btn-outline-danger" onclick="confirmDelete({{ $m->id }}, '{{ $m->name_en }}')"><i data-feather="trash-2"></i></button></div></td></tr>
-                @empty <tr><td colspan="7" class="text-center">No records</td></tr> @endforelse
+                <tr>
+                    <td>{{ $loop->iteration + ($models->currentPage() - 1) * $models->perPage() }}</td>
+                    <td><code>{{ $m->code }}</code></td>
+                    <td>{{ $m->name_en }}</td>
+                    <td>{{ $m->name_ar }}</td>
+                    <td>
+                        @if($m->is_active)
+                            <span class="nova-badge success">Active</span>
+                        @else
+                            <span class="nova-badge secondary">Inactive</span>
+                        @endif
+                    </td>
+                    <td>{{ $m->sort_order ?? '-' }}</td>
+                    <td class="nova-text-end">
+                        <div class="nova-table-actions">
+                <a href="{{ route('item-models.show', $m) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                    <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ route('item-models.edit', $m) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete({{ $m->id }}, '{{ addslashes($m->name_en) }}')">
+                    <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7">
+                        <div class="nova-empty">
+                            <div class="nova-empty-icon">
+                                <i class="fas fa-microchip" style="width: 48px; height: 48px;"></i>
+                            </div>
+                            <h3 class="nova-empty-title">No records</h3>
+                            <p class="nova-empty-text">Add an item model to get started.</p>
+                <a href="{{ route('item-models.create') }}" class="nova-btn nova-btn-primary">
+                    <i class="fas fa-plus"></i> Add Model
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
-    </div><div class="card-footer">{{ $models->appends(request()->query())->links('pagination::bootstrap-5') }}</div></div>
+    </div>
+    <div class="nova-card-footer">
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                عرض {{ $models->firstItem() ?? 0 }} إلى {{ $models->lastItem() ?? 0 }} من أصل {{ $models->total() }} سجلاً
+            </div>
+            <div class="nova-pagination">
+                {{ $models->appends(request()->query())->links() }}
+            </div>
+        </div>
+    </div>
 </div>
-</main></div></div>
 
-<script>function confirmDelete(id,name){ document.getElementById('deleteName')?.setAttribute('value',name); let form = document.getElementById('deleteForm'); if(form) form.action='/item-models/'+id; new bootstrap.Modal(document.getElementById('deleteModal')).show(); }</script>
-<div class="modal fade" id="deleteModal">...</div>
+{{-- Delete Confirmation Modal (Nova) --}}
+<div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">هل أنت متأكد أنك تريد حذف نوع المنتج <strong id="deleteName" class="nova-text-danger"></strong>؟<br>هذا الإجراء لا يمكن التراجع عنه.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">إلغاء</button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف نهائي</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    window.confirmDelete = function(id, name) {
+        document.getElementById('deleteName').innerText = name;
+        document.getElementById('deleteForm').action = '/item-models/' + id;
+        document.getElementById('deleteModal').classList.add('show');
+    };
+});
+</script>
+@endpush

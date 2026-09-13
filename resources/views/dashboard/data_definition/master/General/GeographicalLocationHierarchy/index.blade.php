@@ -1,143 +1,256 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Geographical Locations')
+@section('title', 'المواقع الجغرافية')
 
 @section('content')
-<div class="container-fluid p-0">
-    <div class="row mb-4">
-        <div class="col-12 col-lg-8">
-            <h1><i data-feather="map-pin"></i> Geographical Locations</h1>
-            <p class="text-muted">Countries and cities on map – manage hierarchy</p>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-map-pin" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            المواقع الجغرافية
+        </h2>
+        <p class="nova-page-subtitle">البلدان والمدن على الخريطة - إدارة الهرمكية</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('countries.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-flag"></i> إضافة بلد
+        </a>
+        <a href="{{ route('cities.create') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-map-marker-alt"></i> إضافة مدينة
+        </a>
+    </div>
+</div>
+
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+
+{{-- Map Card --}}
+<div class="nova-card mb-4">
+    <div class="nova-card-header">
+        <h3 class="nova-card-title" style="margin: 0;">
+            <i class="fas fa-map"></i> خريطة المواقع (البلدان والمدن)
+        </h3>
+    </div>
+    <div class="nova-card-body" style="padding: 0;">
+        <div id="map" style="height: 500px; width: 100%;"></div>
+    </div>
+</div>
+
+{{-- Side-by-side tables --}}
+<div class="nova-row cols-1 cols-lg-2">
+    {{-- Countries --}}
+    <div class="nova-card">
+        <div class="nova-card-header">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-flag"></i> البلدان
+            </h3>
         </div>
-        <div class="col-12 col-lg-4 text-lg-end">
-            <a href="{{ route('countries.create') }}" class="btn btn-primary"><i data-feather="flag"></i> Add Country</a>
-            <a href="{{ route('cities.create') }}" class="btn btn-success"><i data-feather="map"></i> Add City</a>
+        <div class="nova-table-scroll">
+            <table class="nova-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم</th>
+                        <th>الشيفرة</th>
+                        <th>الإحداثيات</th>
+                        <th class="nova-text-end">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($countries as $c)
+                    <tr>
+                        <td class="nova-fw-semibold">{{ $loop->iteration }}</td>
+                        <td>{{ $c->name }}</td>
+                        <td><span class="nova-badge secondary">{{ $c->code }}</span></td>
+                        <td>@if($c->latitude) {{ $c->latitude }}, {{ $c->longitude }} @else <span class="nova-text-muted">—</span> @endif</td>
+                        <td class="nova-text-end">
+                            <div class="nova-table-actions">
+                                <a href="{{ route('countries.show', $c) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ route('countries.edit', $c) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDeleteCountry({{ $c->id }}, '{{ addslashes($c->name) }}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5">
+                            <div class="nova-empty">
+                                <div class="nova-empty-icon">
+                                    <i class="fas fa-flag"></i>
+                                </div>
+                                <h3 class="nova-empty-title">لا توجد بلدان بعد</h3>
+                                <a href="{{ route('countries.create') }}" class="nova-btn nova-btn-primary">
+                                    <i class="fas fa-flag"></i> إنشاء بلد
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    @endif
-
-    <!-- خريطة Leaflet -->
-    <div class="card shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-light"><i data-feather="map"></i> Locations Map (Countries & Cities)</div>
-        <div class="card-body p-1">
-            <div id="map" style="height: 500px; width: 100%; border-radius: 0.75rem;"></div>
+    {{-- Cities --}}
+    <div class="nova-card">
+        <div class="nova-card-header">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-map-marker-alt"></i> المدن
+            </h3>
+        </div>
+        <div class="nova-table-scroll">
+            <table class="nova-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم</th>
+                        <th>البلد</th>
+                        <th>الإحداثيات</th>
+                        <th>الولاية</th>
+                        <th class="nova-text-end">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($cities as $city)
+                    <tr>
+                        <td class="nova-fw-semibold">{{ $loop->iteration }}</td>
+                        <td>{{ $city->name }} @if($city->code)<small class="nova-text-muted">({{ $city->code }})</small>@endif</td>
+                        <td>{{ $city->country->name ?? '—' }}</td>
+                        <td>@if($city->latitude && $city->longitude) {{ $city->latitude }}, {{ $city->longitude }} @else <span class="nova-text-muted">—</span> @endif</td>
+                        <td>{{ $city->state->name_en ?? '—' }}</td>
+                        <td class="nova-text-end">
+                            <div class="nova-table-actions">
+                                <a href="{{ route('cities.show', $city) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ route('cities.edit', $city) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDeleteCity({{ $city->id }}, '{{ addslashes($city->name) }}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6">
+                            <div class="nova-empty">
+                                <div class="nova-empty-icon">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <h3 class="nova-empty-title">لا توجد مدن بعد</h3>
+                                <a href="{{ route('cities.create') }}" class="nova-btn nova-btn-primary">
+                                    <i class="fas fa-map-marker-alt"></i> إنشاء مدينة
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
         </div>
     </div>
+</div>
 
-    <!-- جدولان جنباً إلى جنب -->
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm rounded-4">
-                <div class="card-header"><i data-feather="flag"></i> Countries</div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light"><tr><th>#</th><th>Name</th><th>Code</th><th>Coordinates</th><th class="text-end">Actions</th></tr></thead>
-                        <tbody>
-                            @forelse($countries as $c)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $c->name }}</td>
-                                <td><span class="badge bg-secondary">{{ $c->code }}</span></td>
-                                <td>@if($c->latitude) {{ $c->latitude }}, {{ $c->longitude }} @else — @endif</td>
-                                <td class="text-end">
-                                    <a href="{{ route('countries.show', $c) }}" class="btn btn-sm btn-outline-info"><i data-feather="eye"></i></a>
-                                    <a href="{{ route('countries.edit', $c) }}" class="btn btn-sm btn-outline-warning"><i data-feather="edit"></i></a>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteCountry({{ $c->id }}, '{{ addslashes($c->name) }}')"><i data-feather="trash-2"></i></button>
-                                </td>
-                            </tr>
-                            @empty <tr><td colspan="5" class="text-center">No countries yet. <a href="{{ route('countries.create') }}">Create one</a></td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+{{-- Delete Country Modal --}}
+<div class="nova-modal-backdrop" id="deleteCountryModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
             </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card shadow-sm rounded-4">
-                <div class="card-header"><i data-feather="map"></i> Cities</div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light"><tr><th>#</th><th>Name</th><th>Country</th><th>Coordinates</th><th>State</th><th class="text-end">Actions</th></tr></thead>
-                        <tbody>
-                            @forelse($cities as $city)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $city->name }} @if($city->code)<small>({{ $city->code }})</small>@endif</td>
-                                <td>{{ $city->country->name ?? 'N/A' }}</td>
-                                <td>@if($city->latitude) {{ $city->latitude }}, {{ $city->longitude }} @else — @endif</td>
-                                <td>{{ $city->state->name_en ?? 'N/A' }}</td>
-                                <td class="text-end">
-                                    <a href="{{ route('cities.show', $city) }}" class="btn btn-sm btn-outline-info"><i data-feather="eye"></i></a>
-                                    <a href="{{ route('cities.edit', $city) }}" class="btn btn-sm btn-outline-warning"><i data-feather="edit"></i></a>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteCity({{ $city->id }}, '{{ addslashes($city->name) }}')"><i data-feather="trash-2"></i></button>
-                                </td>
-                            </tr>
-                            @empty <td><td colspan="5" class="text-center">No cities yet. <a href="{{ route('cities.create') }}">Create one</a></td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">هل أنت متأكد أنك تريد حذف <strong id="deleteCountryName" class="nova-text-danger"></strong> وجميع مدنها؟<br>لا يمكن التراجع عن هذا الإجراء.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteCountryModal').classList.remove('show')">إلغاء</button>
+                <form id="deleteCountryForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف نهائي</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- مودالات الحذف -->
-<div class="modal fade" id="deleteCountryModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-body text-center"><i data-feather="alert-triangle"></i> <h4>Confirm Deletion</h4><p>Delete <strong id="deleteCountryName"></strong> and all its cities? This cannot be undone.</p><button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><form id="deleteCountryForm" method="POST" style="display:inline-block">@csrf @method('DELETE')<button type="submit" class="btn btn-danger">Delete</button></form></div></div></div></div>
-<div class="modal fade" id="deleteCityModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-body text-center"><i data-feather="alert-triangle"></i> <h4>Confirm Deletion</h4><p>Delete city <strong id="deleteCityName"></strong>? This cannot be undone.</p><button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><form id="deleteCityForm" method="POST" style="display:inline-block">@csrf @method('DELETE')<button type="submit" class="btn btn-danger">Delete</button></form></div></div></div></div>
+{{-- Delete City Modal --}}
+<div class="nova-modal-backdrop" id="deleteCityModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">هل أنت متأكد أنك تريد حذف المدينة <strong id="deleteCityName" class="nova-text-danger"></strong>؟<br>لا يمكن التراجع عن هذا الإجراء.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteCityModal').classList.remove('show')">إلغاء</button>
+                <form id="deleteCityForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف نهائي</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>
-    #map { z-index: 1; }
-    .rounded-4 { border-radius: 1rem !important; }
-</style>
 @endpush
 
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const markers = @json($markers);
     let map;
-    let markers = @json($markers);
 
-    function initMap() {
-        // إحداثيات المركز الافتراضية (منتصف العالم)
+    if (typeof L !== 'undefined') {
         const center = { lat: 20, lng: 0 };
         map = L.map('map').setView([center.lat, center.lng], 2);
-        
-        // إضافة طبقة الخريطة الأساسية (OpenStreetMap)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-
-        // إضافة العلامات (markers) بناءً على البيانات المستلمة من الـ Controller
         markers.forEach(m => {
-            const marker = L.marker([m.lat, m.lng]).addTo(map);
-            marker.bindPopup(`<strong>${m.name}</strong><br>${m.type}`);
+            L.marker([m.lat, m.lng]).addTo(map)
+                .bindPopup(`<strong>${m.name}</strong><br>${m.type}`);
         });
     }
 
-    // تأكد من تحميل الخريطة بعد اكتمال تحميل الصفحة
-    document.addEventListener('DOMContentLoaded', function() {
-        initMap();
-        if (typeof feather !== 'undefined') feather.replace();
-    });
-
-    // دوال تأكيد الحذف (كما هي)
-    window.confirmDeleteCountry = (id, name) => {
+    window.confirmDeleteCountry = function(id, name) {
         document.getElementById('deleteCountryName').innerText = name;
         document.getElementById('deleteCountryForm').action = '/countries/' + id;
-        new bootstrap.Modal(document.getElementById('deleteCountryModal')).show();
+        document.getElementById('deleteCountryModal').classList.add('show');
     };
-    window.confirmDeleteCity = (id, name) => {
+
+    window.confirmDeleteCity = function(id, name) {
         document.getElementById('deleteCityName').innerText = name;
         document.getElementById('deleteCityForm').action = '/cities/' + id;
-        new bootstrap.Modal(document.getElementById('deleteCityModal')).show();
+        document.getElementById('deleteCityModal').classList.add('show');
     };
+
+    setTimeout(function() {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s, transform 0.3s';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
 </script>
 @endpush

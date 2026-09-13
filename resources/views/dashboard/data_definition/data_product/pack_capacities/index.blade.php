@@ -3,105 +3,129 @@
 @section('title', 'Pack Capacities')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="box" class="align-middle me-2"></i>
-                            Pack Capacities
-                        </h1>
-                        <p class="text-muted">إدارة سعات الباكجات (مثال: 500g، 1kg، 250ml)</p>
-                    </div>
-                </div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-box" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Pack Capacities
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة سعات الباكجات (مثال: 500g، 1kg، 250ml)</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('pack-capacities.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus-circle"></i> إضافة سعة باكج جديدة
+        </a>
+    </div>
+</div>
 
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <a href="{{ route('pack-capacities.create') }}" class="btn btn-primary btn-lg shadow-sm">
-                            <i data-feather="plus-circle"></i> إضافة سعة باكج جديدة
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-header bg-white border-0 pt-4">
-                        <div class="row g-3 align-items-center">
-                            <div class="col-md-6">
-                                <h5 class="fw-bold mb-0">قائمة سعات الباكجات ({{ $total }})</h5>
-                            </div>
-                            <div class="col-md-6">
-                                <form method="GET" action="{{ route('pack-capacities.index') }}" class="d-flex">
-                                    <input type="text" name="search" class="form-control form-control-sm me-2" placeholder="بحث بالقيمة، الاسم..." value="{{ request('search') }}">
-                                    <select name="uom_id" class="form-select form-select-sm me-2" style="width: auto;">
-                                        <option value="">كل الوحدات</option>
-                                        @foreach($uoms as $uom)
-                                            <option value="{{ $uom->id }}" {{ request('uom_id') == $uom->id ? 'selected' : '' }}>{{ $uom->name_en ?? $uom->name_ar }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit" class="btn btn-sm btn-primary">بحث</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>القيمة</th>
-                                        <th>وحدة القياس</th>
-                                        <th>الاسم (إنجليزي)</th>
-                                        <th>الاسم (عربي)</th>
-                                        <th>الوصف</th>
-                                        <th>إجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($packCapacities as $capacity)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td><strong>{{ $capacity->value }}</strong></td>
-                                            <td>
-                                                <span class="badge bg-info">{{ $capacity->uom->name_en ?? $capacity->uom->name_ar ?? '-' }}</span>
-                                                <small class="text-muted d-block">{{ $capacity->uom->uom_symbol ?? '' }}</small>
-                                            </td>
-                                            <td>{{ $capacity->name_en ?? '-' }}</td>
-                                            <td>{{ $capacity->name_ar ?? '-' }}</td>
-                                            <td>{{ $capacity->description ?? '-' }}</td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <a href="{{ route('pack-capacities.edit', $capacity) }}" class="btn btn-sm btn-outline-primary">
-                                                        <i data-feather="edit"></i>
-                                                    </a>
-                                                    <form action="{{ route('pack-capacities.destroy', $capacity) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                            <i data-feather="trash-2"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center text-muted py-4">
-                                                <i data-feather="inbox" class="mb-2" style="width: 40px;"></i>
-                                                <p class="mb-0">لا توجد سعات باكجات. قم بإنشاء أول سعة.</p>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                        {{ $packCapacities->links() }}
-                    </div>
-                </div>
-            </div>
-        </main>
+<div class="nova-card">
+    <div class="nova-card-header">
+        <div class="nova-flex nova-items-center nova-justify-between">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-list"></i>
+                قائمة سعات الباكجات ({{ $total }})
+            </h3>
+            <form method="GET" action="{{ route('pack-capacities.index') }}" class="nova-flex nova-gap-2">
+                <input type="text" name="search" class="nova-input" placeholder="بحث بالقيمة، الاسم..." value="{{ request('search') }}" style="width: 200px;">
+                <select name="uom_id" class="nova-select" style="width: auto;">
+                    <option value="">كل الوحدات</option>
+                    @foreach($uoms as $uom)
+                        <option value="{{ $uom->id }}" {{ request('uom_id') == $uom->id ? 'selected' : '' }}>{{ $uom->name_en ?? $uom->name_ar }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="nova-btn nova-btn-primary nova-btn-sm">بحث</button>
+            </form>
+        </div>
+    </div>
+    <div class="nova-card-body nova-p-0">
+        <div class="nova-table-scroll">
+            <table class="nova-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>القيمة</th>
+                        <th>وحدة القياس</th>
+                        <th>الاسم (إنجليزي)</th>
+                        <th>الاسم (عربي)</th>
+                        <th>الوصف</th>
+                        <th class="nova-text-end">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($packCapacities as $capacity)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td><span class="nova-fw-bold">{{ $capacity->value }}</span></td>
+                            <td>
+                                <span class="nova-badge info">{{ $capacity->uom->name_en ?? $capacity->uom->name_ar ?? '-' }}</span>
+                                <small class="nova-text-muted nova-block">{{ $capacity->uom->uom_symbol ?? '' }}</small>
+                            </td>
+                            <td>{{ $capacity->name_en ?? '-' }}</td>
+                            <td>{{ $capacity->name_ar ?? '-' }}</td>
+                            <td>{{ $capacity->description ?? '-' }}</td>
+                            <td class="nova-text-end">
+                                <div class="nova-table-actions">
+                                    <a href="{{ route('pack-capacities.edit', $capacity) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDeleteCapacity({{ $capacity->id }}, '{{ addslashes($capacity->name_en ?? $capacity->name_ar ?? $capacity->value) }}')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="nova-text-center" style="padding: 2rem;">
+                                <div>
+                                    <div class="nova-stat-icon secondary" style="margin: 0 auto 1rem; width: 48px; height: 48px; font-size: 1.5rem;">
+                                        <i class="fas fa-inbox"></i>
+                                    </div>
+                                    <h5 class="nova-text-muted">لا توجد سعات باكجات. قم بإنشاء أول سعة.</h5>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="nova-text-center nova-py-3">
+            {{ $packCapacities->links() }}
+        </div>
     </div>
 </div>
 @endsection
+
+{{-- Delete Confirmation Modal (Nova) --}}
+<div class="nova-modal-backdrop" id="deleteCapacityModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete pack capacity <strong id="deleteCapacityName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteCapacityModal').classList.remove('show')">Cancel</button>
+                <form id="deleteCapacityForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+});
+
+window.confirmDeleteCapacity = function(id, name) {
+    document.getElementById('deleteCapacityName').innerText = name;
+    document.getElementById('deleteCapacityForm').action = '/pack-capacities/' + id;
+    document.getElementById('deleteCapacityModal').classList.add('show');
+};
+</script>
+@endpush

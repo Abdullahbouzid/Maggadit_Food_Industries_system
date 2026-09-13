@@ -234,27 +234,39 @@ class WarehouseMovementController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'batch_item_id' => 'required|exists:batch_items,id',
+            'movement_type' => 'required|in:in,transfer,expiry_return',
             'from_warehouse_id' => 'nullable|exists:warehouses,id',
             'to_warehouse_id' => 'required|exists:warehouses,id',
-            'movement_type' => 'required|in:in,transfer,expiry_return',
-            'quantity' => 'required|numeric|min:0.001',
             'movement_date' => 'nullable|date',
             'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.batch_item_id' => 'required|exists:batch_items,id',
+            'items.*.quantity' => 'required|numeric|min:0.001',
         ]);
 
-        // التحقق من الكمية المتوفرة في المخزن المصدر (للنقل والاسترجاع)
-        if (in_array($validated['movement_type'], ['transfer', 'expiry_return']) && $validated['from_warehouse_id']) {
-            $stock = \App\Models\BatchItemStock::where('warehouse_id', $validated['from_warehouse_id'])
-                ->where('batch_item_id', $validated['batch_item_id'])
-                ->first();
-            if (! $stock || $stock->quantity < $validated['quantity']) {
-                $available = $stock ? $stock->quantity : 0;
-                return back()->withInput()->with('error', "الكمية غير متوفرة في المخزن المصدر. المتاح: {$available}");
-            }
-        }
+        $common = [
+            'movement_type' => $validated['movement_type'],
+            'from_warehouse_id' => $validated['from_warehouse_id'],
+            'to_warehouse_id' => $validated['to_warehouse_id'],
+            'movement_date' => $validated['movement_date'],
+            'notes' => $validated['notes'],
+        ];
 
-        BatchMovement::create($validated);
+        foreach ($validated['items'] as $item) {
+            if (in_array($common['movement_type'], ['transfer', 'expiry_return']) && $common['from_warehouse_id']) {
+                $stock = \App\Models\BatchItemStock::where('warehouse_id', $common['from_warehouse_id'])
+                    ->where('batch_item_id', $item['batch_item_id'])
+                    ->first();
+                if (! $stock || $stock->quantity < $item['quantity']) {
+                    $available = $stock ? $stock->quantity : 0;
+                    return back()->withInput()->with('error', "الكمية غير متوفرة للمنتج #{$item['batch_item_id']} في المخزن المصدر. المتاح: {$available}");
+                }
+            }
+            BatchMovement::create(array_merge($common, [
+                'batch_item_id' => $item['batch_item_id'],
+                'quantity' => $item['quantity'],
+            ]));
+        }
 
         return redirect()->route('warehouse-movements.index')->with('success', 'تم إنشاء الحركة بنجاح.');
     }

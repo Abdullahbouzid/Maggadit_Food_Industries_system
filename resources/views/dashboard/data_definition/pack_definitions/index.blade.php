@@ -3,129 +3,184 @@
 @section('title', 'تعريفات الباكجات')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="package" class="align-middle me-2"></i>
-                            تعريفات الباكجات (Pack Definitions)
-                        </h1>
-                        <p class="text-muted">إدارة وتعريف أنواع الباكجات القابلة لإعادة الاستخدام للمنتجات</p>
-                    </div>
-                </div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-box" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            تعريفات الباكجات (Pack Definitions)
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة وتعريف أنواع الباكجات القابلة لإعادة الاستخدام للمنتجات</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('pack-operations.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-cog"></i> إدارة أنواع الباكجات
+        </a>
+        <a href="{{ route('pack-definitions.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus-circle"></i> إضافة تعريف باكج جديد
+        </a>
+    </div>
+</div>
 
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <a href="{{ route('pack-definitions.create') }}" class="btn btn-primary btn-lg shadow-sm">
-                            <i data-feather="plus-circle"></i> إضافة تعريف باكج جديد
-                        </a>
-                        <a href="{{ route('pack-operations.index') }}" class="btn btn-outline-secondary btn-lg shadow-sm ms-2">
-                            <i data-feather="settings"></i> إدارة أنواع الباكجات
-                        </a>
-                    </div>
-                </div>
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ session('error') }}
+    </div>
+@endif
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-header bg-white border-0 pt-4">
-                        <div class="row g-3 align-items-center">
-                            <div class="col-md-6">
-                                <h5 class="fw-bold mb-0">قائمة تعريفات الباكجات ({{ $total }})</h5>
-                            </div>
-                            <div class="col-md-6">
-                                <form method="GET" action="{{ route('pack-definitions.index') }}" class="d-flex">
-                                    <input type="text" name="search" class="form-control form-control-sm me-2" placeholder="بحث بالاسم، الكود، الباركود..." value="{{ request('search') }}">
-                                    <select name="pack_type_id" class="form-select form-select-sm me-2" style="width: auto;">
-                                        <option value="">كل الأنواع</option>
-                                        @foreach($packTypes as $type)
-                                            <option value="{{ $type->id }}" {{ request('pack_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name_en ?? $type->name_ar }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit" class="btn btn-sm btn-primary">بحث</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>الاسم</th>
-                                        <th>الكود</th>
-                                        <th>نوع الباكج</th>
-                                        <th>السعة</th>
-                                        <th>الكمية/عبوة</th>
-                                        <th>الباركود</th>
-                                        <th>الأبعاد (H×W×D)</th>
-                                        <th>الوزن</th>
-                                        <th>إجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($packDefinitions as $packDef)
-                                        @php
-                                            $packType = $packDef->packType;
-                                            $packCapacity = $packDef->packCapacity;
-                                            $packTypeName = $packType?->name_ar ?? $packType?->name_en ?? '-';
-                                            $packCapacityValue = $packCapacity?->value ?? '-';
-                                            $packCapacityUom = $packCapacity?->uom?->code ?? '';
-                                        @endphp
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>
-                                                <strong>{{ $packDef->name_ar ?? $packDef->name_en ?? $packDef->name ?? 'بدون اسم' }}</strong>
-                                                @if($packDef->description)
-                                                    <br><small class="text-muted">{{ Str::limit($packDef->description, 50) }}</small>
-                                                @endif
-                                            </td>
-                                            <td><code>{{ $packDef->code ?? '-' }}</code></td>
-                                            <td><span class="badge bg-info">{{ $packTypeName }}</span></td>
-                                            <td>{{ $packCapacityValue }} {{ $packCapacityUom }}</td>
-                                            <td><span class="badge bg-primary">{{ $packDef->quantity_in_pack }}</span></td>
-                                            <td><code>{{ $packDef->barcode ?? '-' }}</code></td>
-                                            <td>
-                                                @if($packDef->height || $packDef->width || $packDef->depth)
-                                                    {{ $packDef->height }}×{{ $packDef->width }}×{{ $packDef->depth }}
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                            <td>{{ $packDef->weight ?? '-' }}</td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <a href="{{ route('pack-definitions.edit', $packDef) }}" class="btn btn-sm btn-outline-primary">
-                                                        <i data-feather="edit"></i>
-                                                    </a>
-                                                    <form action="{{ route('pack-definitions.destroy', $packDef) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                            <i data-feather="trash-2"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="10" class="text-center text-muted py-4">
-                                                <i data-feather="inbox" class="mb-2" style="width: 40px;"></i>
-                                                <p class="mb-0">لا توجد تعريفات باكجات. قم بإنشاء أول تعريف.</p>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                        {{ $packDefinitions->links() }}
-                    </div>
+<div class="nova-card">
+    <div class="nova-card-header">
+        <div class="nova-flex nova-items-center nova-justify-between">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-list"></i>
+                قائمة تعريفات الباكجات ({{ $total }})
+            </h3>
+            <form method="GET" action="{{ route('pack-definitions.index') }}" class="nova-flex nova-gap-2" style="align-items: end;">
+                <div class="nova-form-group" style="margin-bottom: 0;">
+                    <input type="text" name="search" class="nova-input" placeholder="بحث بالاسم، الكود، الباركود..." value="{{ request('search') }}" style="width: 240px;">
                 </div>
-            </div>
-        </main>
+                <div class="nova-form-group" style="margin-bottom: 0;">
+                    <select name="pack_type_id" class="nova-select" style="width: auto;">
+                        <option value="">كل الأنواع</option>
+                        @foreach($packTypes as $type)
+                            <option value="{{ $type->id }}" {{ request('pack_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name_en ?? $type->name_ar }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="height: fit-content;">
+                    <button type="submit" class="nova-btn nova-btn-primary nova-btn-sm">بحث</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="nova-card-body p-0">
+        <div class="nova-table-scroll">
+            <table class="nova-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم</th>
+                        <th>الكود</th>
+                        <th>نوع الباكج</th>
+                        <th>السعة</th>
+                        <th>الكمية/عبوة</th>
+                        <th>الباركود</th>
+                        <th>الأبعاد (H×W×D)</th>
+                        <th>الوزن</th>
+                        <th class="nova-text-end">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($packDefinitions as $packDef)
+                    @php
+                        $packType = $packDef->packType;
+                        $packCapacity = $packDef->packCapacity;
+                        $packTypeName = $packType?->name_ar ?? $packType?->name_en ?? '-';
+                        $packCapacityValue = $packCapacity?->value ?? '-';
+                        $packCapacityUom = $packCapacity?->uom?->code ?? '';
+                    @endphp
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>
+                            <span class="nova-fw-semibold">{{ $packDef->name_ar ?? $packDef->name_en ?? $packDef->name ?? 'بدون اسم' }}</span>
+                            @if($packDef->description)
+                                <br><small class="nova-text-muted">{{ Str::limit($packDef->description, 50) }}</small>
+                            @endif
+                        </td>
+                        <td><code>{{ $packDef->code ?? '-' }}</code></td>
+                        <td><span class="nova-badge secondary">{{ $packTypeName }}</span></td>
+                        <td>{{ $packCapacityValue }} {{ $packCapacityUom }}</td>
+                        <td><span class="nova-badge primary">{{ $packDef->quantity_in_pack }}</span></td>
+                        <td><code>{{ $packDef->barcode ?? '-' }}</code></td>
+                        <td>
+                            @if($packDef->height || $packDef->width || $packDef->depth)
+                                {{ $packDef->height }}×{{ $packDef->width }}×{{ $packDef->depth }}
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>{{ $packDef->weight ?? '-' }}</td>
+                        <td class="nova-text-end">
+                            <div class="nova-table-actions">
+                                <a href="{{ route('pack-definitions.edit', $packDef) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDeletePackDef({{ $packDef->id }}, '{{ addslashes($packDef->name_ar ?? $packDef->name_en ?? $packDef->name ?? 'بدون اسم') }}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="10">
+                            <div class="nova-empty">
+                                <div class="nova-empty-icon">
+                                    <i class="fas fa-inbox"></i>
+                                </div>
+                                <h3 class="nova-empty-title">No pack definitions</h3>
+                                <p class="nova-empty-text">لا توجد تعريفات باكجات. قم بإنشاء أول تعريف.</p>
+                                <a href="{{ route('pack-definitions.create') }}" class="nova-btn nova-btn-primary">
+                                    <i class="fas fa-plus"></i> Create Pack Definition
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="nova-text-center nova-py-3">
+            {{ $packDefinitions->links() }}
+        </div>
     </div>
 </div>
 @endsection
+
+{{-- Delete Confirmation Modal (Nova) --}}
+<div class="nova-modal-backdrop" id="deletePackDefModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete pack definition <strong id="deletePackDefName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePackDefModal').classList.remove('show')">Cancel</button>
+                <form id="deletePackDefForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    window.confirmDeletePackDef = function(id, name) {
+        document.getElementById('deletePackDefName').innerText = name;
+        document.getElementById('deletePackDefForm').action = '/pack-definitions/' + id;
+        document.getElementById('deletePackDefModal').classList.add('show');
+    };
+
+    setTimeout(function() {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s, transform 0.3s';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
+</script>
+@endpush

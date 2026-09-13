@@ -3,298 +3,323 @@
 @section('title', 'Sales Order Types Management')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <!-- Header with stats and buttons -->
-                <div class="row mb-4">
-                    <div class="col-12 col-lg-8">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="shopping-cart" class="align-middle me-2"></i>
-                            Sales Order Types
-                        </h1>
-                        <p class="text-muted">Manage sales order types, codes, and default settings</p>
-                    </div>
-                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="{{ route('sales-order-types.create') }}" class="btn btn-primary btn-lg shadow-sm">
-                            <i data-feather="plus-circle"></i> Create
-                        </a>
-                        <a href="{{ route('sales-order-types.export', request()->query()) }}" class="btn btn-secondary btn-lg shadow-sm ms-2">
-                            <i data-feather="download"></i> Export Table
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Alerts Section -->
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i data-feather="check-circle" class="me-2"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i data-feather="alert-circle" class="me-2"></i> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-                @if(session('warning'))
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <i data-feather="alert-triangle" class="me-2"></i> {{ session('warning') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-                @if(session('import_errors'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <h6><i data-feather="alert-circle"></i> Import Errors:</h6>
-                        <ul>@foreach(session('import_errors') as $error) <li>{{ $error }}</li> @endforeach</ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                <!-- Statistics Cards -->
-                <div class="row g-4 mb-4">
-                    <div class="col-sm-6 col-xl-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <h6 class="text-uppercase text-muted mb-2">Total Types</h6>
-                                        <h2 class="mb-0">{{ $total ?? $salesOrderTypes->total() }}</h2>
-                                    </div>
-                                    <div class="col-auto"><div class="bg-primary bg-opacity-10 rounded-circle p-3"><i data-feather="grid" class="text-primary"></i></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-xl-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <h6 class="text-uppercase text-muted mb-2">Active Types</h6>
-                                        <h2 class="mb-0">{{ $activeCount ?? 0 }}</h2>
-                                    </div>
-                                    <div class="col-auto"><div class="bg-success bg-opacity-10 rounded-circle p-3"><i data-feather="check-circle" class="text-success"></i></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-xl-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <h6 class="text-uppercase text-muted mb-2">Inactive Types</h6>
-                                        <h2 class="mb-0">{{ $inactiveCount ?? 0 }}</h2>
-                                    </div>
-                                    <div class="col-auto"><div class="bg-danger bg-opacity-10 rounded-circle p-3"><i data-feather="x-circle" class="text-danger"></i></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-xl-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <h6 class="text-uppercase text-muted mb-2">Default Type</h6>
-                                        <h2 class="mb-0">{{ $defaultCount ?? 0 }}</h2>
-                                    </div>
-                                    <div class="col-auto"><div class="bg-warning bg-opacity-10 rounded-circle p-3"><i data-feather="star" class="text-warning"></i></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Import Section -->
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-header bg-light border-0 py-3">
-                        <h6 class="fw-bold mb-0"><i data-feather="upload"></i> Import Sales Order Types</h6>
-                    </div>
-                    <div class="card-body">
-                        <form action="{{ route('sales-order-types.import') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
-                            @csrf
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Excel File (.xlsx, .xls, .csv)</label>
-                                <input type="file" name="import_file" class="form-control" required>
-                                <div class="form-text">Required columns: <strong>name, code, active, default</strong>. Active/Default: Yes/No or 1/0 or true/false.</div>
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-success w-100"><i data-feather="upload"></i> Import Data</button>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('sales-order-types.template') }}" class="btn btn-outline-secondary w-100"><i data-feather="file-text"></i> Download Template</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Export Options (Custom Filters) -->
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-header bg-light border-0 py-3">
-                        <h6 class="fw-bold mb-0"><i data-feather="download"></i> Export Options (Custom Filters)</h6>
-                    </div>
-                    <div class="card-body">
-                        <form action="{{ route('sales-order-types.export') }}" method="GET" class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Search (name/code)</label>
-                                <input type="text" name="search" class="form-control" placeholder="Enter keyword...">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold">Status</label>
-                                <select name="active_status" class="form-select">
-                                    <option value="">All</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100"><i data-feather="file-text"></i> Export Filtered</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Main Filter (for table) -->
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body">
-                        <form id="filterForm" method="GET" action="{{ route('sales-order-types.index') }}" class="row g-3 align-items-end">
-                            <div class="col-md-5">
-                                <label class="form-label small fw-semibold">Search (name/code)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0"><i data-feather="search"></i></span>
-                                    <input type="text" name="search" class="form-control border-start-0" placeholder="Name or code..." value="{{ request('search') }}">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold">Status</label>
-                                <select name="active_status" class="form-select">
-                                    <option value="">All</option>
-                                    <option value="active" {{ request('active_status') == 'active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ request('active_status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Rows per page</label>
-                                <select name="per_page" class="form-select">
-                                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                                    <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
-                                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">Filter</button>
-                                @if(request('search') || request('active_status') || request('per_page'))
-                                    <a href="{{ route('sales-order-types.index') }}" class="btn btn-outline-secondary w-100 mt-2">Reset</a>
-                                @endif
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Data Table -->
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-                        <h5 class="fw-bold mb-0"><i data-feather="list"></i> Sales Order Types List</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr><th class="ps-4">#</th><th>Name</th><th>Code</th><th>Status</th><th>Default</th><th class="pe-4 text-end">Actions</th></tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($salesOrderTypes as $type)
-                                    <tr>
-                                        <td class="ps-4 fw-semibold">{{ $loop->iteration + ($salesOrderTypes->currentPage() - 1) * $salesOrderTypes->perPage() }}</td>
-                                        <td>{{ $type->name }}</td>
-                                        <td><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-2">{{ $type->code }}</span></td>
-                                        <td>
-                                            @if($type->active)
-                                                <span class="badge bg-success">Active</span>
-                                            @else
-                                                <span class="badge bg-danger">Inactive</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($type->default)
-                                                <span class="badge bg-warning text-dark"><i data-feather="star"></i> Default</span>
-                                            @else
-                                                —
-                                            @endif
-                                        </td>
-                                        <td class="pe-4 text-end">
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ route('sales-order-types.show', $type) }}" class="btn btn-outline-info"><i data-feather="eye"></i></a>
-                                                <a href="{{ route('sales-order-types.edit', $type) }}" class="btn btn-outline-warning"><i data-feather="edit"></i></a>
-                                                <button type="button" class="btn btn-outline-danger" onclick="confirmDelete({{ $type->id }}, '{{ addslashes($type->name) }}')"><i data-feather="trash-2"></i></button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr><td colspan="6" class="text-center py-5"><i data-feather="database"></i><h5 class="text-muted">No sales order types found</h5><a href="{{ route('sales-order-types.create') }}" class="btn btn-primary">Create one</a></td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 py-3 px-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="small text-muted">Showing {{ $salesOrderTypes->firstItem() ?? 0 }} to {{ $salesOrderTypes->lastItem() ?? 0 }} of {{ $salesOrderTypes->total() }} entries</div>
-                            <div>{{ $salesOrderTypes->appends(request()->query())->links('pagination::bootstrap-5') }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+             <i class="fas fa-shopping-cart" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Sales Order Types
+        </h2>
+        <p class="nova-page-subtitle">Manage sales order types, codes, and default settings</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('sales-order-types.export', request()->query()) }}" class="nova-btn nova-btn-secondary nova-btn-sm">
+            <i class="fas fa-download"></i> Export Table
+        </a>
+        <a href="{{ route('sales-order-types.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus"></i> Create
+        </a>
     </div>
 </div>
 
-<!-- Delete Modal -->
-<div class="modal fade" id="globalDeleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <div class="modal-header border-0 pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body text-center pt-0">
-                <div class="bg-danger bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3"><i data-feather="alert-triangle" class="text-danger"></i></div>
-                <h4 class="fw-bold">Confirm Deletion</h4>
-                <p>Delete <strong id="deleteItemName" class="text-danger"></strong>?<br>This action cannot be undone.</p>
+{{-- Alert Messages --}}
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ session('error') }}
+    </div>
+@endif
+@if(session('warning'))
+    <div class="nova-alert warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ session('warning') }}
+    </div>
+@endif
+@if(session('import_errors'))
+    <div class="nova-alert danger">
+        <h6 class="nova-fw-bold" style="margin: 0 0 0.25rem;"><i class="fas fa-exclamation-circle"></i> Import Errors:</h6>
+        <ul style="margin: 0.25rem 0 0; padding-left: 1.25rem;">
+            @foreach(session('import_errors') as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+{{-- Statistics Cards --}}
+<div class="nova-row cols-4">
+    <div class="nova-stat">
+        <div class="nova-stat-icon primary">
+            <i class="fas fa-grid-2"></i>
+        </div>
+        <p class="nova-stat-label">Total Types</p>
+        <p class="nova-stat-value">{{ $total ?? $salesOrderTypes->total() }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon secondary">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <p class="nova-stat-label">Active Types</p>
+        <p class="nova-stat-value">{{ $activeCount ?? 0 }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon danger">
+            <i class="fas fa-x-circle"></i>
+        </div>
+        <p class="nova-stat-label">Inactive Types</p>
+        <p class="nova-stat-value">{{ $inactiveCount ?? 0 }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon accent">
+            <i class="fas fa-star"></i>
+        </div>
+        <p class="nova-stat-label">Default Type</p>
+        <p class="nova-stat-value">{{ $defaultCount ?? 0 }}</p>
+    </div>
+</div>
+
+{{-- Import Section --}}
+<div class="nova-card mb-4">
+    <div class="nova-card-header">
+        <h2 class="nova-card-title" style="margin: 0;">
+            <i class="fas fa-upload"></i>
+            Import Sales Order Types
+        </h2>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('sales-order-types.import') }}" method="POST" enctype="multipart/form-data" class="nova-row cols-3" style="align-items: end;">
+            @csrf
+            <div class="nova-form-group" style="margin-bottom: 0;">
+                <label class="nova-label">Excel File (.xlsx, .xls, .csv)</label>
+                <input type="file" name="import_file" class="nova-input" required>
+                <div class="nova-help-text">Required columns: <strong>name, code, active, default</strong>. Active/Default: Yes/No or 1/0 or true/false.</div>
             </div>
-            <div class="modal-footer border-0 pt-0 justify-content-center gap-2">
-                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST">@csrf @method('DELETE')<button type="submit" class="btn btn-danger px-4">Delete Permanently</button></form>
+            <div style="height: fit-content;">
+                <button type="submit" class="nova-btn nova-btn-primary nova-btn-block">
+                    <i class="fas fa-upload"></i> Import Data
+                </button>
+            </div>
+            <div style="height: fit-content;">
+                <a href="{{ route('sales-order-types.template') }}" class="nova-btn nova-btn-outline nova-btn-block">
+                    <i class="fas fa-file-alt"></i> Download Template
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Export Options (Custom Filters) --}}
+<div class="nova-card mb-4">
+    <div class="nova-card-header">
+        <h2 class="nova-card-title" style="margin: 0;">
+            <i class="fas fa-download"></i>
+            Export Options (Custom Filters)
+        </h2>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('sales-order-types.export') }}" method="GET" class="nova-row cols-3" style="align-items: end;">
+            <div class="nova-form-group" style="margin-bottom: 0;">
+                <label class="nova-label">Search (name/code)</label>
+                <input type="text" name="search" class="nova-input" placeholder="Enter keyword...">
+            </div>
+            <div class="nova-form-group" style="margin-bottom: 0;">
+                <label class="nova-label">Status</label>
+                <select name="active_status" class="nova-select">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div style="height: fit-content;">
+                <button type="submit" class="nova-btn nova-btn-primary nova-btn-block">
+                    <i class="fas fa-file-excel"></i> Export Filtered
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Main Filter (for table) --}}
+<div class="nova-card mb-4">
+    <div class="nova-card-body" style="padding: 1rem 1.5rem;">
+        <form id="filterForm" method="GET" action="{{ route('sales-order-types.index') }}" class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
+            <div class="nova-form-group" style="margin-bottom: 0;">
+                <label class="nova-label">Search (name/code)</label>
+                <div class="nova-input-group" style="display: flex; gap: 0;">
+                     <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-right: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" name="search" class="nova-input" placeholder="Name or code..." value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-left: none;">
+                </div>
+            </div>
+            <div class="nova-form-group" style="margin-bottom: 0;">
+                <label class="nova-label">Status</label>
+                <select name="active_status" class="nova-select">
+                    <option value="">All</option>
+                    <option value="active" {{ request('active_status') == 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="inactive" {{ request('active_status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                </select>
+            </div>
+            <div class="nova-form-group" style="margin-bottom: 0;">
+                <label class="nova-label">Rows per page</label>
+                <select name="per_page" class="nova-select">
+                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                    <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
+                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                </select>
+            </div>
+            <div class="nova-flex nova-gap-2" style="height: fit-content;">
+                <button type="submit" class="nova-btn nova-btn-primary">Filter</button>
+                @if(request('search') || request('active_status') || request('per_page'))
+                    <a href="{{ route('sales-order-types.index') }}" class="nova-btn nova-btn-outline">Reset</a>
+                @endif
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Data Table --}}
+<div class="nova-table-wrapper">
+    <div class="nova-toolbar">
+        <div class="nova-toolbar-filters">
+                <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-list"></i>
+                Sales Order Types List
+            </h3>
+        </div>
+        <div class="nova-toolbar-actions">
+            <a href="{{ route('sales-order-types.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+                <i class="fas fa-plus"></i> Create Type
+            </a>
+        </div>
+    </div>
+    <div class="nova-table-scroll">
+        <table class="nova-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">#</th>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Status</th>
+                    <th>Default</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($salesOrderTypes as $type)
+                <tr>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($salesOrderTypes->currentPage() - 1) * $salesOrderTypes->perPage() }}</td>
+                    <td>{{ $type->name }}</td>
+                    <td><span class="nova-badge secondary">{{ $type->code }}</span></td>
+                    <td>
+                        @if($type->active)
+                            <span class="nova-badge success">Active</span>
+                        @else
+                            <span class="nova-badge danger">Inactive</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($type->default)
+                            <span class="nova-badge accent"><i class="fas fa-star"></i> Default</span>
+                        @else
+                            —
+                        @endif
+                    </td>
+                    <td class="nova-text-end">
+                        <div class="nova-table-actions">
+                <a href="{{ route('sales-order-types.show', $type) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                    <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ route('sales-order-types.edit', $type) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete({{ $type->id }}, '{{ addslashes($type->name) }}')">
+                    <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6">
+                        <div class="nova-empty">
+                            <div class="nova-empty-icon">
+                                <i class="fas fa-database" style="width: 40px; height: 40px;"></i>
+                            </div>
+                            <h5 class="nova-text-muted">No sales order types found</h5>
+                            <a href="{{ route('sales-order-types.create') }}" class="nova-btn nova-btn-primary">Create one</a>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+        <div class="nova-card-footer">
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                عرض {{ $salesOrderTypes->firstItem() ?? 0 }} إلى {{ $salesOrderTypes->lastItem() ?? 0 }} من أصل {{ $salesOrderTypes->total() }} سجلاً
+            </div>
+            <div class="nova-pagination">
+                {{ $salesOrderTypes->appends(request()->query())->links() }}
             </div>
         </div>
     </div>
 </div>
 @endsection
 
-@push('styles')
-<style>
-    .rounded-4 { border-radius: 1rem !important; }
-    .table thead th { border-bottom-width: 1px; font-weight: 600; }
-    .btn-group .btn { transition: all 0.2s ease; }
-    .btn-group .btn:hover { transform: translateY(-2px); }
-</style>
-@endpush
+{{-- Delete Confirmation Modal (Nova) --}}
+<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">هل أنت متأكد أنك تريد حذف <strong id="deleteItemName" class="nova-text-danger"></strong>؟<br>هذا الإجراء لا يمكن التراجع عنه.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('globalDeleteModal').classList.remove('show')">إلغاء</button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف نهائي</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof feather !== 'undefined') feather.replace();
-        const perPageSelect = document.querySelector('select[name="per_page"]');
-        if (perPageSelect) perPageSelect.addEventListener('change', () => document.getElementById('filterForm').submit());
-        window.confirmDelete = (id, name) => {
-            document.getElementById('deleteItemName').innerText = name;
-            document.getElementById('deleteForm').action = '/sales-order-types/' + id;
-            new bootstrap.Modal(document.getElementById('globalDeleteModal')).show();
-        };
-        setTimeout(() => document.querySelectorAll('.alert').forEach(a => new bootstrap.Alert(a).close()), 5000);
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    const perPageSelect = document.querySelector('select[name="per_page"]');
+    if (perPageSelect) {
+        perPageSelect.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    }
+
+    window.confirmDelete = (id, name) => {
+        document.getElementById('deleteItemName').innerText = name;
+        document.getElementById('deleteForm').action = '/sales-order-types/' + id;
+        document.getElementById('globalDeleteModal').classList.add('show');
+    };
+
+    setTimeout(function() {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s, transform 0.3s';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
 </script>
 @endpush

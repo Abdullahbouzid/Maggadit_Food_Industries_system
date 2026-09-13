@@ -3,70 +3,72 @@
 @section('title', 'إضافة نوع باكج جديد')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="plus-circle"></i> إضافة نوع باكج جديد
-                        </h1>
-                        <p class="text-muted">قم بتعريف نوع باكج جديد (مثال: صندوق 3×3، صندوق 4×4، قطعة)</p>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            إضافة نوع باكج جديد
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">قم بتعريف نوع باكج جديد (مثال: صندوق 3×3، صندوق 4×4، قطعة)</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('pack-types.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="nova-card">
+    <div class="nova-card-body">
+        <form action="{{ route('pack-types.store') }}" method="POST">
+            @csrf
+            <div class="nova-row nova-gap-3">
+                <div class="nova-col">
+                    <div class="nova-form-group">
+                        <label class="nova-label">الاسم <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="name" class="nova-input" value="{{ old('name') }}" placeholder="مثال: صندوق 3×3" required>
                     </div>
                 </div>
-
-                <form action="{{ route('pack-types.store') }}" method="POST">
-                    @csrf
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                <div class="card-header bg-light border-0 py-3">
-                                    <h6 class="fw-bold mb-0"><i data-feather="info"></i> المعلومات الأساسية</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">الاسم <span class="text-danger">*</span></label>
-                                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="مثال: صندوق 3×3" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">الاسم (إنجليزي)</label>
-                                            <input type="text" name="name_en" class="form-control" value="{{ old('name_en') }}" placeholder="Box 3x3">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">الاسم (عربي)</label>
-                                            <input type="text" name="name_ar" class="form-control" value="{{ old('name_ar') }}" placeholder="صندوق 3×3">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">الكود</label>
-                                            <input type="text" name="code" class="form-control" value="{{ old('code') }}" placeholder="BOX_3X3">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">عدد القطع في العبوة</label>
-                                            <input type="number" name="pieces_per_pack" class="form-control" value="{{ old('pieces_per_pack') }}" min="1" placeholder="9">
-                                        </div>
-                                        <div class="col-md-12">
-                                            <label class="form-label">الوصف</label>
-                                            <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="nova-col">
+                    <div class="nova-form-group">
+                        <label class="nova-label">الاسم (إنجليزي)</label>
+                        <input type="text" name="name_en" class="nova-input" value="{{ old('name_en') }}" placeholder="Box 3x3">
                     </div>
-
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-success btn-lg shadow-sm">
-                                <i data-feather="save"></i> حفظ نوع الباكج
-                            </button>
-                            <a href="{{ route('pack-types.index') }}" class="btn btn-secondary btn-lg shadow-sm ms-2">إلغاء</a>
-                        </div>
+                </div>
+                <div class="nova-col">
+                    <div class="nova-form-group">
+                        <label class="nova-label">الاسم (عربي)</label>
+                        <input type="text" name="name_ar" class="nova-input" value="{{ old('name_ar') }}" placeholder="صندوق 3×3">
                     </div>
-                </form>
+                </div>
+                <div class="nova-col">
+                    <div class="nova-form-group">
+                        <label class="nova-label">الكود</label>
+                        <input type="text" name="code" class="nova-input" value="{{ old('code') }}" placeholder="BOX_3X3">
+                    </div>
+                </div>
+                <div class="nova-col">
+                    <div class="nova-form-group">
+                        <label class="nova-label">عدد القطع في العبوة</label>
+                        <input type="number" name="pieces_per_pack" class="nova-input" value="{{ old('pieces_per_pack') }}" min="1" placeholder="9">
+                    </div>
+                </div>
+                <div class="nova-col" style="grid-column: 1 / -1;">
+                    <div class="nova-form-group">
+                        <label class="nova-label">الوصف</label>
+                        <textarea name="description" class="nova-input" rows="3">{{ old('description') }}</textarea>
+                    </div>
+                </div>
+                <div class="nova-col" style="grid-column: 1 / -1;">
+                    <div class="nova-flex nova-items-center nova-gap-2">
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-save"></i> حفظ نوع الباكج
+                        </button>
+                        <a href="{{ route('pack-types.index') }}" class="nova-btn nova-btn-outline">إلغاء</a>
+                    </div>
+                </div>
             </div>
-        </main>
+        </form>
     </div>
 </div>
 @endsection

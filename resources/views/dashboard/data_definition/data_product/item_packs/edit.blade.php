@@ -3,189 +3,545 @@
 @section('title', 'Edit Item Pack')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold"><i data-feather="edit-2"></i> Edit Item Pack</h1>
-                        <p class="text-muted">Update packaging details for <strong>{{ $itemPack->barcode }}</strong>.</p>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <form action="{{ route('item-packs.update', $itemPack) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="row g-4">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Item <span class="text-danger">*</span></label>
-                                    <select name="item_id" class="form-select @error('item_id') is-invalid @enderror" required>
-                                        <option value="">Select item</option>
-                                        @foreach($items as $item)
-                                            <option value="{{ $item->id }}" {{ old('item_id', $itemPack->item_id) == $item->id ? 'selected' : '' }}>{{ $item->name_en ?? $item->name_ar }} ({{ $item->code }})</option>
-                                        @endforeach
-                                    </select>
-                                    @error('item_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Pack Definition</label>
-                                    <select name="pack_definition_id" class="form-select @error('pack_definition_id') is-invalid @enderror" id="packDefinitionSelect">
-                                        <option value="">Select pack definition</option>
-                                        @foreach($packDefinitions as $def)
-                                            <option value="{{ $def->id }}" {{ old('pack_definition_id', $itemPack->pack_definition_id) == $def->id ? 'selected' : '' }}>{{ $def->name_en ?? $def->name_ar }} ({{ $def->code }})</option>
-                                        @endforeach
-                                    </select>
-                                    @error('pack_definition_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Pack Type <span class="text-danger">*</span></label>
-                                    <select name="pack_type_id" class="form-select @error('pack_type_id') is-invalid @enderror" required>
-                                        <option value="">Select pack type</option>
-                                        @foreach($packTypes as $packType)
-                                            <option value="{{ $packType->id }}" {{ old('pack_type_id', $itemPack->pack_type_id) == $packType->id ? 'selected' : '' }}>{{ $packType->name_en ?? $packType->name_ar }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('pack_type_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Pack Capacity <span class="text-danger">*</span></label>
-                                    <select name="pack_capacity_id" class="form-select @error('pack_capacity_id') is-invalid @enderror" required>
-                                        <option value="">Select capacity</option>
-                                        @foreach($packCapacities as $capacity)
-                                            <option value="{{ $capacity->id }}" {{ old('pack_capacity_id', $itemPack->pack_capacity_id) == $capacity->id ? 'selected' : '' }}>{{ $capacity->name_en ?? $capacity->name_ar }} ({{ $capacity->uom->uom_symbol ?? '' }})</option>
-                                        @endforeach
-                                    </select>
-                                    @error('pack_capacity_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Quantity in Pack <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.001" min="0.001" name="quantity_in_pack" class="form-control @error('quantity_in_pack') is-invalid @enderror" value="{{ old('quantity_in_pack', $itemPack->quantity_in_pack) }}" required>
-                                    @error('quantity_in_pack') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Barcode <span class="text-danger">*</span></label>
-                                    <input type="text" name="barcode" class="form-control @error('barcode') is-invalid @enderror" value="{{ old('barcode', $itemPack->barcode) }}" required>
-                                    @error('barcode') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Serial Separator</label>
-                                    <input type="text" name="serial_separator" class="form-control @error('serial_separator') is-invalid @enderror" value="{{ old('serial_separator', $itemPack->serial_separator) }}">
-                                    @error('serial_separator') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Equivalency Factor</label>
-                                    <input type="number" step="0.0001" min="0" name="equivalency_factor" class="form-control @error('equivalency_factor') is-invalid @enderror" value="{{ old('equivalency_factor', $itemPack->equivalency_factor) }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Height</label>
-                                    <input type="number" step="0.01" min="0" name="height" class="form-control @error('height') is-invalid @enderror" value="{{ old('height', $itemPack->height) }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Width</label>
-                                    <input type="number" step="0.01" min="0" name="width" class="form-control @error('width') is-invalid @enderror" value="{{ old('width', $itemPack->width) }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Depth</label>
-                                    <input type="number" step="0.01" min="0" name="depth" class="form-control @error('depth') is-invalid @enderror" value="{{ old('depth', $itemPack->depth) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Weight</label>
-                                    <input type="number" step="0.01" min="0" name="weight" class="form-control @error('weight') is-invalid @enderror" value="{{ old('weight', $itemPack->weight) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Sort Order</label>
-                                    <input type="number" name="sort_order" class="form-control @error('sort_order') is-invalid @enderror" value="{{ old('sort_order', $itemPack->sort_order) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-check mt-4">
-                                        <input type="hidden" name="is_default_pack" value="0">
-                                        <input type="checkbox" name="is_default_pack" class="form-check-input" value="1" {{ old('is_default_pack', $itemPack->is_default_pack) ? 'checked' : '' }}>
-                                        <label class="form-check-label">Default Pack</label>
-                                    </div>
-                                    <div class="form-check mt-2">
-                                        <input type="hidden" name="is_weight_priced" value="0">
-                                        <input type="checkbox" name="is_weight_priced" class="form-check-input" value="1" {{ old('is_weight_priced', $itemPack->is_weight_priced) ? 'checked' : '' }}>
-                                        <label class="form-check-label">Weight Priced</label>
-                                    </div>
-                                    <div class="form-check mt-2">
-                                        <input type="hidden" name="allow_fraction_in_qty" value="0">
-                                        <input type="checkbox" name="allow_fraction_in_qty" class="form-check-input" value="1" {{ old('allow_fraction_in_qty', $itemPack->allow_fraction_in_qty) ? 'checked' : '' }}>
-                                        <label class="form-check-label">Allow Fraction Qty</label>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold">Pack Operations</label>
-                                    <select name="pack_operation_ids[]" class="form-select @error('pack_operation_ids') is-invalid @enderror" multiple>
-                                        @foreach($packOperations as $operation)
-                                            <option value="{{ $operation->id }}" {{ in_array($operation->id, old('pack_operation_ids', $itemPack->packOperations->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $operation->name_en }} ({{ $operation->code }})</option>
-                                        @endforeach
-                                    </select>
-                                    @error('pack_operation_ids') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold">Pack Groups</label>
-                                    <select name="pack_group_ids[]" class="form-select @error('pack_group_ids') is-invalid @enderror" multiple>
-                                        @foreach($packGroups as $group)
-                                            <option value="{{ $group->id }}" {{ in_array($group->id, old('pack_group_ids', $itemPack->packGroups->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $group->name_en }} ({{ $group->code }})</option>
-                                        @endforeach
-                                    </select>
-                                    @error('pack_group_ids') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-12">
-                                    <hr>
-                                    <button type="submit" class="btn btn-primary px-5">Update Item Pack</button>
-                                    <a href="{{ route('item-packs.index') }}" class="btn btn-secondary px-5">Cancel</a>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </main>
+{{-- ===== Action Bar ===== --}}
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Item Pack
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
+            Update packaging details for
+            <strong>{{ $itemPack->barcode ?? 'Item Pack #' . $itemPack->id }}</strong>
+        </p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('item-packs.show', $itemPack) }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-eye"></i> View
+        </a>
+        <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
     </div>
 </div>
+
+{{-- ===== Validation Errors ===== --}}
+@if($errors->any())
+    <div class="nova-alert danger">
+        <h6 class="nova-fw-bold">
+            <i class="fas fa-exclamation-circle nova-me-1"></i>
+            يرجى تصحيح الأخطاء التالية:
+        </h6>
+        <ul class="nova-mb-0">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+{{-- ===== Meta Info ===== --}}
+@if($itemPack->updated_at)
+    <div class="nova-alert info" style="display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-clock"></i>
+        آخر تحديث: {{ $itemPack->updated_at->diffForHumans() }}
+        <span class="nova-text-muted">({{ $itemPack->updated_at->format('Y-m-d H:i') }})</span>
+    </div>
+@endif
+
+<form action="{{ route('item-packs.update', $itemPack) }}" method="POST" id="itemPackForm">
+    @csrf
+    @method('PUT')
+
+    {{-- ===== Basic Info ===== --}}
+    <div class="nova-card nova-mb-4">
+        <div class="nova-card-header">
+            <h5 class="nova-card-title"><i class="fas fa-info-circle me-2"></i> Basic Information</h5>
+        </div>
+        <div class="nova-card-body">
+            <div class="form-grid form-grid-2">
+                <div class="nova-form-group">
+                    <label class="nova-label">Item <span class="nova-text-danger">*</span></label>
+                    <select name="item_id" class="nova-select @error('item_id') nova-invalid @enderror" required>
+                        <option value="">Select item</option>
+                        @foreach($items as $item)
+                            <option value="{{ $item->id }}"
+                                    {{ old('item_id', $itemPack->item_id) == $item->id ? 'selected' : '' }}>
+                                {{ $item->name_en ?? $item->name_ar }} ({{ $item->code }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('item_id') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">
+                        Pack Definition
+                        <small class="nova-text-muted">(اختياري - لتعبئة تلقائية)</small>
+                    </label>
+                    <select name="pack_definition_id" class="nova-select" id="packDefinitionSelect">
+                        <option value="">Select pack definition</option>
+                        @foreach($packDefinitions as $def)
+                            <option value="{{ $def->id }}"
+                                    data-pack-type="{{ $def->pack_type_id }}"
+                                    data-pack-capacity="{{ $def->pack_capacity_id }}"
+                                    data-quantity="{{ $def->quantity_in_pack }}"
+                                    data-barcode="{{ $def->barcode }}"
+                                    data-serial="{{ $def->serial_separator }}"
+                                    data-equivalency="{{ $def->equivalency_factor }}"
+                                    data-height="{{ $def->height }}"
+                                    data-width="{{ $def->width }}"
+                                    data-depth="{{ $def->depth }}"
+                                    data-weight="{{ $def->weight }}"
+                                    data-weight-priced="{{ $def->is_weight_priced ? 1 : 0 }}"
+                                    data-allow-fraction="{{ $def->allow_fraction_in_qty ? 1 : 0 }}"
+                                    data-default-pack="{{ $def->is_default_pack ? 1 : 0 }}"
+                                    {{ old('pack_definition_id', $itemPack->pack_definition_id) == $def->id ? 'selected' : '' }}>
+                                {{ $def->name_en ?? $def->name_ar }} ({{ $def->code }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('pack_definition_id') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Pack Info ===== --}}
+    <div class="nova-card nova-mb-4">
+        <div class="nova-card-header">
+            <h5 class="nova-card-title"><i class="fas fa-box me-2"></i> Pack Information</h5>
+        </div>
+        <div class="nova-card-body">
+            <div class="form-grid form-grid-3">
+                <div class="nova-form-group">
+                    <label class="nova-label">Pack Type <span class="nova-text-danger">*</span></label>
+                    <select name="pack_type_id"
+                            class="nova-select @error('pack_type_id') nova-invalid @enderror" required>
+                        <option value="">Select pack type</option>
+                        @foreach($packTypes as $packType)
+                            <option value="{{ $packType->id }}"
+                                    {{ old('pack_type_id', $itemPack->pack_type_id) == $packType->id ? 'selected' : '' }}>
+                                {{ $packType->name_en ?? $packType->name_ar }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('pack_type_id') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Pack Capacity <span class="nova-text-danger">*</span></label>
+                    <select name="pack_capacity_id"
+                            class="nova-select @error('pack_capacity_id') nova-invalid @enderror" required>
+                        <option value="">Select capacity</option>
+                        @foreach($packCapacities as $capacity)
+                            <option value="{{ $capacity->id }}"
+                                    {{ old('pack_capacity_id', $itemPack->pack_capacity_id) == $capacity->id ? 'selected' : '' }}>
+                                {{ $capacity->name_en ?? $capacity->name_ar }}
+                                ({{ $capacity->uom->uom_symbol ?? '' }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('pack_capacity_id') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Quantity in Pack <span class="nova-text-danger">*</span></label>
+                    <input type="number" step="0.001" min="0.001" name="quantity_in_pack"
+                           class="nova-input @error('quantity_in_pack') nova-invalid @enderror"
+                           value="{{ old('quantity_in_pack', $itemPack->quantity_in_pack) }}" required>
+                    @error('quantity_in_pack') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Barcode <span class="nova-text-danger">*</span></label>
+                    <input type="text" name="barcode"
+                           class="nova-input @error('barcode') nova-invalid @enderror"
+                           value="{{ old('barcode', $itemPack->barcode) }}" required>
+                    @error('barcode') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Serial Separator</label>
+                    <input type="text" name="serial_separator" class="nova-input"
+                           value="{{ old('serial_separator', $itemPack->serial_separator) }}">
+                    @error('serial_separator') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Equivalency Factor</label>
+                    <input type="number" step="0.0001" min="0" name="equivalency_factor"
+                           class="nova-input @error('equivalency_factor') nova-invalid @enderror"
+                           value="{{ old('equivalency_factor', $itemPack->equivalency_factor) }}">
+                    @error('equivalency_factor') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Sort Order</label>
+                    <input type="number" name="sort_order" class="nova-input"
+                           value="{{ old('sort_order', $itemPack->sort_order) }}">
+                    @error('sort_order') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Dimensions & Weight ===== --}}
+    <div class="nova-card nova-mb-4">
+        <div class="nova-card-header">
+            <h5 class="nova-card-title"><i class="fas fa-ruler me-2"></i> Dimensions & Weight</h5>
+        </div>
+        <div class="nova-card-body">
+            <div class="form-grid form-grid-4">
+                <div class="nova-form-group">
+                    <label class="nova-label">Height</label>
+                    <input type="number" step="0.01" min="0" name="height" class="nova-input"
+                           value="{{ old('height', $itemPack->height) }}">
+                    @error('height') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Width</label>
+                    <input type="number" step="0.01" min="0" name="width" class="nova-input"
+                           value="{{ old('width', $itemPack->width) }}">
+                    @error('width') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Depth</label>
+                    <input type="number" step="0.01" min="0" name="depth" class="nova-input"
+                           value="{{ old('depth', $itemPack->depth) }}">
+                    @error('depth') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Weight</label>
+                    <input type="number" step="0.01" min="0" name="weight" class="nova-input"
+                           value="{{ old('weight', $itemPack->weight) }}">
+                    @error('weight') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Flags ===== --}}
+    <div class="nova-card nova-mb-4">
+        <div class="nova-card-header">
+            <h5 class="nova-card-title"><i class="fas fa-flag me-2"></i> Flags</h5>
+        </div>
+        <div class="nova-card-body">
+            <div class="flags-list">
+                <div class="nova-form-check">
+                    <input type="hidden" name="is_default_pack" value="0">
+                    <input type="checkbox" name="is_default_pack"
+                           class="nova-form-check-input" value="1" id="is_default_pack"
+                           {{ old('is_default_pack', $itemPack->is_default_pack) ? 'checked' : '' }}>
+                    <label class="nova-form-check-label" for="is_default_pack">
+                        <i class="fas fa-check-circle nova-me-1"></i>
+                        Default Pack
+                        <small class="nova-text-muted d-block">الباكج الافتراضي للعنصر</small>
+                    </label>
+                </div>
+                <div class="nova-form-check">
+                    <input type="hidden" name="is_weight_priced" value="0">
+                    <input type="checkbox" name="is_weight_priced"
+                           class="nova-form-check-input" value="1" id="is_weight_priced"
+                           {{ old('is_weight_priced', $itemPack->is_weight_priced) ? 'checked' : '' }}>
+                    <label class="nova-form-check-label" for="is_weight_priced">
+                        <i class="fas fa-weight-hanging nova-me-1"></i>
+                        Weight Priced
+                        <small class="nova-text-muted d-block">التسعير بناءً على الوزن</small>
+                    </label>
+                </div>
+                <div class="nova-form-check">
+                    <input type="hidden" name="allow_fraction_in_qty" value="0">
+                    <input type="checkbox" name="allow_fraction_in_qty"
+                           class="nova-form-check-input" value="1" id="allow_fraction_in_qty"
+                           {{ old('allow_fraction_in_qty', $itemPack->allow_fraction_in_qty) ? 'checked' : '' }}>
+                    <label class="nova-form-check-label" for="allow_fraction_in_qty">
+                        <i class="fas fa-divide nova-me-1"></i>
+                        Allow Fraction Qty
+                        <small class="nova-text-muted d-block">السماح بكميات كسرية</small>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Relations ===== --}}
+    <div class="nova-card nova-mb-4">
+        <div class="nova-card-header">
+            <h5 class="nova-card-title"><i class="fas fa-link me-2"></i> Relations</h5>
+        </div>
+        <div class="nova-card-body">
+            <div class="form-grid form-grid-2">
+                <div class="nova-form-group">
+                    <label class="nova-label">
+                        Pack Operations
+                        @if($packOperations->count())
+                            <span class="nova-badge primary">{{ $packOperations->count() }}</span>
+                        @endif
+                    </label>
+                    @if($packOperations->count())
+                        <div class="multi-select-list">
+                            @php
+                                $selectedOps = old('pack_operation_ids', $itemPack->packOperations->pluck('id')->toArray());
+                            @endphp
+                            @foreach($packOperations as $operation)
+                                <div class="nova-form-check">
+                                    <input type="checkbox"
+                                           name="pack_operation_ids[]"
+                                           class="nova-form-check-input"
+                                           value="{{ $operation->id }}"
+                                           id="op_{{ $operation->id }}"
+                                           {{ in_array($operation->id, $selectedOps) ? 'checked' : '' }}>
+                                    <label class="nova-form-check-label" for="op_{{ $operation->id }}">
+                                        {{ $operation->name_en ?? $operation->name_ar }}
+                                        <small class="nova-text-muted">({{ $operation->code }})</small>
+                                    </label>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="nova-text-muted nova-fs-sm mb-0">لا توجد عمليات متاحة</p>
+                    @endif
+                    @error('pack_operation_ids') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">
+                        Pack Groups
+                        @if($packGroups->count())
+                            <span class="nova-badge primary">{{ $packGroups->count() }}</span>
+                        @endif
+                    </label>
+                    @if($packGroups->count())
+                        <div class="multi-select-list">
+                            @php
+                                $selectedGroups = old('pack_group_ids', $itemPack->packGroups->pluck('id')->toArray());
+                            @endphp
+                            @foreach($packGroups as $group)
+                                <div class="nova-form-check">
+                                    <input type="checkbox"
+                                           name="pack_group_ids[]"
+                                           class="nova-form-check-input"
+                                           value="{{ $group->id }}"
+                                           id="grp_{{ $group->id }}"
+                                           {{ in_array($group->id, $selectedGroups) ? 'checked' : '' }}>
+                                    <label class="nova-form-check-label" for="grp_{{ $group->id }}">
+                                        {{ $group->name_en ?? $group->name_ar }}
+                                        <small class="nova-text-muted">({{ $group->code }})</small>
+                                    </label>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="nova-text-muted nova-fs-sm mb-0">لا توجد مجموعات متاحة</p>
+                    @endif
+                    @error('pack_group_ids') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Form Actions ===== --}}
+    <div class="form-actions">
+        <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline">
+            <i class="fas fa-times"></i> Cancel
+        </a>
+        <button type="submit" class="nova-btn nova-btn-primary" id="submitBtn">
+            <i class="fas fa-save"></i> Update Item Pack
+        </button>
+    </div>
+</form>
 @endsection
+
+@push('styles')
+<style>
+    /* ===== Form Grids ===== */
+    .form-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .form-grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .form-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .form-grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* ===== Flags List ===== */
+    .flags-list {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+
+    .flags-list .nova-form-check {
+        padding: 0.6rem;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.4rem;
+        background: #fff;
+        transition: all 0.15s ease;
+    }
+
+    .flags-list .nova-form-check:hover {
+        border-color: #4e73df;
+        background: #f8f9fc;
+    }
+
+    .flags-list .nova-form-check-label {
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+
+    /* ===== Multi Select List ===== */
+    .multi-select-list {
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 0.5rem;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.4rem;
+        background: #fff;
+    }
+
+    .multi-select-list .nova-form-check {
+        padding: 0.35rem 0;
+        border-bottom: 1px dashed #e3e6f0;
+    }
+
+    .multi-select-list .nova-form-check:last-child {
+        border-bottom: none;
+    }
+
+    /* ===== Form Actions ===== */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        padding: 1rem 0;
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        border-top: 1px solid #e3e6f0;
+        margin-top: 1rem;
+        z-index: 10;
+    }
+
+    /* ===== Invalid State ===== */
+    .nova-input.nova-invalid,
+    .nova-select.nova-invalid {
+        border-color: #e74a3b;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 992px) {
+        .form-grid-3,
+        .form-grid-4,
+        .flags-list {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .form-grid-2,
+        .form-grid-3,
+        .form-grid-4,
+        .flags-list {
+            grid-template-columns: 1fr;
+        }
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+        .form-actions .nova-btn {
+            width: 100%;
+        }
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var select = document.getElementById('packDefinitionSelect');
-        if (!select) return;
+document.addEventListener('DOMContentLoaded', function() {
 
-        select.addEventListener('change', function () {
-            var packDefinitionId = this.value;
-            if (!packDefinitionId) return;
+    // ===== Pack Definition → Auto-fill =====
+    const packDefinitionSelect = document.getElementById('packDefinitionSelect');
 
-            fetch('/pack-definitions/' + packDefinitionId + '/show-ajax')
-                .then(function (response) { return response.json(); })
-                .then(function (data) {
-                    var setVal = function (name, value) {
-                        var el = document.querySelector('[name="' + name + '"]');
-                        if (el) el.value = value;
-                    };
-                    var setChecked = function (name, checked) {
-                        var el = document.querySelector('[name="' + name + '"]');
-                        if (el) el.checked = !!checked;
-                    };
+    if (packDefinitionSelect) {
+        packDefinitionSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (!selectedOption || !selectedOption.value) return;
 
-                    setVal('pack_type_id', data.pack_type_id);
-                    setVal('pack_capacity_id', data.pack_capacity_id);
-                    setVal('quantity_in_pack', data.quantity_in_pack);
-                    setVal('barcode', data.barcode);
-                    setVal('serial_separator', data.serial_separator);
-                    setVal('equivalency_factor', data.equivalency_factor);
-                    setVal('height', data.height);
-                    setVal('width', data.width);
-                    setVal('depth', data.depth);
-                    setVal('weight', data.weight);
-                    setChecked('is_weight_priced', data.is_weight_priced);
-                    setChecked('allow_fraction_in_qty', data.allow_fraction_in_qty);
-                    setChecked('is_default_pack', data.is_default_pack);
-                })
-                .catch(function (err) { console.error('Error fetching pack definition data', err); });
+            const setVal = (name, value) => {
+                const el = document.querySelector(`[name="${name}"]`);
+                if (el && value !== undefined && value !== null) {
+                    el.value = value;
+                    // Highlight effect
+                    el.style.transition = 'background 0.3s';
+                    el.style.background = 'rgba(28, 200, 138, 0.15)';
+                    setTimeout(() => { el.style.background = ''; }, 800);
+                }
+            };
+
+            const setChecked = (name, checked) => {
+                const el = document.querySelector(`[name="${name}"]`);
+                if (el) {
+                    el.checked = !!parseInt(checked);
+                }
+            };
+
+            setVal('pack_type_id',       selectedOption.dataset.packType);
+            setVal('pack_capacity_id',   selectedOption.dataset.packCapacity);
+            setVal('quantity_in_pack',   selectedOption.dataset.quantity);
+            setVal('barcode',            selectedOption.dataset.barcode);
+            setVal('serial_separator',   selectedOption.dataset.serial);
+            setVal('equivalency_factor', selectedOption.dataset.equivalency);
+            setVal('height',             selectedOption.dataset.height);
+            setVal('width',              selectedOption.dataset.width);
+            setVal('depth',              selectedOption.dataset.depth);
+            setVal('weight',             selectedOption.dataset.weight);
+
+            setChecked('is_weight_priced',      selectedOption.dataset.weightPriced);
+            setChecked('allow_fraction_in_qty', selectedOption.dataset.allowFraction);
+            setChecked('is_default_pack',       selectedOption.dataset.defaultPack);
         });
+    }
+
+    // ===== Submit Button Loading State =====
+    const form = document.getElementById('itemPackForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (form && submitBtn) {
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التحديث...';
+        });
+    }
+
+    // ===== Unsaved Changes Warning =====
+    let formChanged = false;
+    const formInputs = form ? form.querySelectorAll('input:not([type="hidden"]), select, textarea') : [];
+
+    formInputs.forEach(input => {
+        input.addEventListener('change', () => { formChanged = true; });
+        input.addEventListener('input', () => { formChanged = true; });
     });
+
+    if (form) {
+        form.addEventListener('submit', () => { formChanged = false; });
+    }
+
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    // ===== Auto-dismiss alerts =====
+    setTimeout(function() {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s, transform 0.3s';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
 </script>
 @endpush

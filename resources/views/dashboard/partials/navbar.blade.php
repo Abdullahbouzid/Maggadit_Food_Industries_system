@@ -1,191 +1,141 @@
-<nav class="navbar navbar-expand navbar-light navbar-bg">
-    <a class="sidebar-toggle js-sidebar-toggle">
-        <i class="hamburger align-self-center"></i>
-    </a>
+<nav class="nova-topnav">
+    <div class="nova-topnav-left">
+        <button class="nova-icon-btn nova-mobile-menu-btn" type="button" id="novaMobileMenu" aria-label="Open menu">
+            <i class="fas fa-bars"></i>
+        </button>
 
-    <div class="navbar-collapse collapse">
-        <ul class="navbar-nav navbar-align">
-            <!-- أيقونة الإشعارات -->
-            <li class="nav-item dropdown">
-                <a class="nav-icon dropdown-toggle" href="#" id="alertsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="position-relative">
-                        <i class="align-middle" data-feather="bell"></i>
-                        <span class="indicator">4</span>
+        <a class="nova-brand" href="{{ route('dashboard') }}">
+            <div class="nova-brand-logo">M</div>
+            <span class="nova-brand-name">Maggadit<span>.</span></span>
+        </a>
+    </div>
+
+    <div class="nova-search">
+        <i class="fas fa-search"></i>
+        <input type="search" placeholder="Search products, customers, invoices..." aria-label="Search">
+        <kbd>⌘K</kbd>
+    </div>
+
+    <div class="nova-topnav-right">
+        <button class="nova-icon-btn" type="button" id="novaQuickAdd" aria-label="Quick add" title="Quick add">
+            <i class="fas fa-plus"></i>
+        </button>
+
+        <button class="nova-icon-btn" type="button" aria-label="Notifications" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="nova-badge">3</span>
+        </button>
+
+        <button class="nova-theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme" title="Toggle theme">
+            <i class="fas fa-sun"></i>
+            <i class="fas fa-moon"></i>
+        </button>
+
+        <div class="nova-divider"></div>
+
+        <div class="nova-user-menu">
+            <button class="nova-user-trigger" type="button" id="novaUserBtn" aria-haspopup="true">
+                <div class="nova-user-avatar">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</div>
+                <div class="nova-user-info">
+                    <span class="nova-user-name">{{ Auth::user()->name ?? 'User' }}</span>
+                    <span class="nova-user-role">Administrator</span>
+                </div>
+                <i class="fas fa-chevron-down nova-user-arrow"></i>
+            </button>
+            <div class="nova-user-dropdown" id="novaUserDropdown">
+                <div class="nova-dropdown-header">
+                    <div class="nova-user-avatar nova-user-avatar-lg">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</div>
+                    <div>
+                        <div class="nova-dropdown-name">{{ Auth::user()->name ?? 'User' }}</div>
+                        <div class="nova-dropdown-email">{{ Auth::user()->email ?? 'user@maggadit.com' }}</div>
                     </div>
+                </div>
+                <div class="nova-dropdown-divider"></div>
+                <a href="{{ route('profile.show') }}" class="nova-user-dropdown-item">
+                    <i class="fas fa-user"></i> <span>My Profile</span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0" aria-labelledby="alertsDropdown">
-                    <li class="dropdown-menu-header">4 New Notifications</li>
-                    <li class="list-group">
-                        <a href="#" class="list-group-item">
-                            <div class="row g-0 align-items-center">
-                                <div class="col-2"><i class="text-danger" data-feather="alert-circle"></i></div>
-                                <div class="col-10">
-                                    <div class="text-dark">Update completed</div>
-                                    <div class="text-muted small mt-1">Restart server 12 to complete the update.</div>
-                                    <div class="text-muted small mt-1">30m ago</div>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <div class="row g-0 align-items-center">
-                                <div class="col-2"><i class="text-warning" data-feather="bell"></i></div>
-                                <div class="col-10">
-                                    <div class="text-dark">Lorem ipsum</div>
-                                    <div class="text-muted small mt-1">Aliquam ex eros, imperdiet vulputate hendrerit et.</div>
-                                    <div class="text-muted small mt-1">2h ago</div>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <div class="row g-0 align-items-center">
-                                <div class="col-2"><i class="text-primary" data-feather="home"></i></div>
-                                <div class="col-10">
-                                    <div class="text-dark">Login from 192.186.1.8</div>
-                                    <div class="text-muted small mt-1">5h ago</div>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <div class="row g-0 align-items-center">
-                                <div class="col-2"><i class="text-success" data-feather="user-plus"></i></div>
-                                <div class="col-10">
-                                    <div class="text-dark">New connection</div>
-                                    <div class="text-muted small mt-1">Christina accepted your request.</div>
-                                    <div class="text-muted small mt-1">14h ago</div>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="dropdown-menu-footer">
-                        <a href="#" class="text-muted">Show all notifications</a>
-                    </li>
-                </ul>
-            </li>
-
-            <!-- أيقونة الرسائل -->
-            <li class="nav-item dropdown">
-                <a class="nav-icon dropdown-toggle" href="#" id="messagesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="position-relative">
-                        <i class="align-middle" data-feather="message-square"></i>
-                    </div>
+                <a href="#" class="nova-user-dropdown-item">
+                    <i class="fas fa-cog"></i> <span>Settings</span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0" aria-labelledby="messagesDropdown">
-                    <li class="dropdown-menu-header">
-                        <div class="position-relative">4 New Messages</div>
-                    </li>
-                    <li class="list-group">
-                        <a href="#" class="list-group-item">
-                            <div class="row g-0 align-items-center">
-                                <div class="col-2">
-                                    <img src="{{ asset('img/avatars/avatar-5.jpg') }}" class="avatar img-fluid rounded-circle" alt="Vanessa Tucker">
-                                </div>
-                                <div class="col-10 ps-2">
-                                    <div class="text-dark">Vanessa Tucker</div>
-                                    <div class="text-muted small mt-1">Nam pretium turpis et arcu. Duis arcu tortor.</div>
-                                    <div class="text-muted small mt-1">15m ago</div>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <div class="row g-0 align-items-center">
-                                <div class="col-2">
-                                    <img src="{{ asset('img/avatars/avatar-2.jpg') }}" class="avatar img-fluid rounded-circle" alt="William Harris">
-                                </div>
-                                <div class="col-10 ps-2">
-                                    <div class="text-dark">William Harris</div>
-                                    <div class="text-muted small mt-1">Curabitur ligula sapien euismod vitae.</div>
-                                    <div class="text-muted small mt-1">2h ago</div>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <div class="row g-0 align-items-center">
-                                <div class="col-2">
-                                    <img src="{{ asset('img/avatars/avatar-4.jpg') }}" class="avatar img-fluid rounded-circle" alt="Christina Mason">
-                                </div>
-                                <div class="col-10 ps-2">
-                                    <div class="text-dark">Christina Mason</div>
-                                    <div class="text-muted small mt-1">Pellentesque auctor neque nec urna.</div>
-                                    <div class="text-muted small mt-1">4h ago</div>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <div class="row g-0 align-items-center">
-                                <div class="col-2">
-                                    <img src="{{ asset('img/avatars/avatar-3.jpg') }}" class="avatar img-fluid rounded-circle" alt="Sharon Lessman">
-                                </div>
-                                <div class="col-10 ps-2">
-                                    <div class="text-dark">Sharon Lessman</div>
-                                    <div class="text-muted small mt-1">Aenean tellus metus, bibendum sed, posuere ac, mattis non.</div>
-                                    <div class="text-muted small mt-1">5h ago</div>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="dropdown-menu-footer">
-                        <a href="#" class="text-muted">Show all messages</a>
-                    </li>
-                </ul>
-            </li>
-
-            <!-- قائمة المستخدم (الاسم والصورة) -->
-            @auth
-                <li class="nav-item dropdown">
-                    <a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="align-middle" data-feather="settings"></i>
-                    </a>
-
-                    <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                        
-                        <span class="text-dark">{{ Auth::user()->name }}</span>
-                    </a>
-
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li>
-                            <a class="dropdown-item" href="{{ route('profile.show', [], false) }}" onclick="event.preventDefault(); alert('Profile page route not defined yet. Add route: profile.show');">
-                                <i class="align-middle me-1" data-feather="user"></i> Profile
-                            </a>
-                        </li>
-                        <li><a class="dropdown-item" href="#"><i class="align-middle me-1" data-feather="pie-chart"></i> Analytics</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item" href="" onclick="event.preventDefault(); alert('Settings page route not defined yet. Add route: ');">
-                                <i class="align-middle me-1" data-feather="settings"></i> Settings & Privacy
-                            </a>
-                        </li>
-                        <li><a class="dropdown-item" href="#"><i class="align-middle me-1" data-feather="help-circle"></i> Help Center</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="dropdown-item" style="background: none; border: none; width: 100%; text-align: left;">
-                                    <i class="align-middle me-1" data-feather="log-out"></i> Log out
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-            @else
-                <li class="nav-item">
-                    <a href="{{ route('login') }}" class="nav-link">Login</a>
-                </li>
-            @endauth
-        </ul>
+                <a href="#" class="nova-user-dropdown-item">
+                    <i class="fas fa-life-ring"></i> <span>Help & Support</span>
+                </a>
+                <div class="nova-dropdown-divider"></div>
+                <a href="#" onclick="event.preventDefault(); document.getElementById('nova-logout-form').submit();" class="nova-user-dropdown-item nova-text-danger">
+                    <i class="fas fa-sign-out-alt"></i> <span>Log out</span>
+                </a>
+            </div>
+        </div>
     </div>
 </nav>
 
+<!-- Quick Add Dropdown -->
+<div class="nova-quickadd-menu" id="novaQuickAddMenu">
+    <div class="nova-quickadd-header">Quick Add</div>
+    <a href="{{ route('items.create') }}" class="nova-quickadd-item">
+        <i class="fas fa-box"></i> <span>New Product</span>
+    </a>
+    <a href="{{ route('customers.create') }}" class="nova-quickadd-item">
+        <i class="fas fa-user-plus"></i> <span>New Customer</span>
+    </a>
+    <a href="{{ route('offers.create') }}" class="nova-quickadd-item">
+        <i class="fas fa-tag"></i> <span>New Offer</span>
+    </a>
+    <a href="{{ route('invoices.create') }}" class="nova-quickadd-item">
+        <i class="fas fa-file-invoice"></i> <span>New Invoice</span>
+    </a>
+    <a href="{{ route('pack-definitions.create') }}" class="nova-quickadd-item">
+        <i class="fas fa-box-open"></i> <span>New Pack Definition</span>
+    </a>
+    <a href="{{ route('warehouses.create') }}" class="nova-quickadd-item">
+        <i class="fas fa-warehouse"></i> <span>New Warehouse</span>
+    </a>
+</div>
+
+<!-- Sidebar Overlay (for mobile) -->
+<div class="nova-sidebar-overlay"></div>
+
 <script>
-    // إعادة تهيئة Feather Icons بعد تحميل الصفحة لتحويل الأيقونات إلى SVG
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
-        
-        // تأكيد عمل dropdowns من Bootstrap (عادة لا حاجة لها، لكن للتأكد)
-        var dropdownTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
-        dropdownTriggerList.map(function (dropdownTriggerEl) {
-            return new bootstrap.Dropdown(dropdownTriggerEl);
+document.addEventListener('DOMContentLoaded', function() {
+    const userBtn = document.getElementById('novaUserBtn');
+    const userDropdown = document.getElementById('novaUserDropdown');
+
+    function closeAllDropdowns() {
+        if (userDropdown) userDropdown.classList.remove('show');
+        const qa = document.getElementById('novaQuickAddMenu');
+        if (qa) qa.classList.remove('show');
+    }
+
+    if (userBtn && userDropdown) {
+        userBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isShowing = userDropdown.classList.contains('show');
+            closeAllDropdowns();
+            if (!isShowing) userDropdown.classList.add('show');
         });
+    }
+
+    const quickAdd = document.getElementById('novaQuickAdd');
+    const quickAddMenu = document.getElementById('novaQuickAddMenu');
+
+    if (quickAdd && quickAddMenu) {
+        quickAdd.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isShowing = quickAddMenu.classList.contains('show');
+            closeAllDropdowns();
+            if (!isShowing) {
+                const rect = quickAdd.getBoundingClientRect();
+                quickAddMenu.style.top = (rect.bottom + 8) + 'px';
+                quickAddMenu.style.right = (window.innerWidth - rect.right) + 'px';
+                quickAddMenu.classList.add('show');
+            }
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.nova-user-menu') && !e.target.closest('#novaQuickAdd') && !e.target.closest('.nova-quickadd-menu')) {
+            closeAllDropdowns();
+        }
     });
+});
 </script>

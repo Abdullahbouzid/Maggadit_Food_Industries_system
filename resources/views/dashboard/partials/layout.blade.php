@@ -1,43 +1,22 @@
 @include('dashboard.partials.header')
 
-<body class="nativephp-safe-area" >
-    <!-- Layout wrapper -->
-  	<div class="wrapper">
-                  @include('dashboard.partials.sidebar')
+<body class="nova-app">
+    <div class="nova-shell">
+        <!-- Sidebar Navigation -->
+        @include('dashboard.partials.sidebar')
 
-		<div class="main">
-		
+        <!-- Main Content Area -->
+        <div class="nova-content-wrapper">
+            @include('dashboard.partials.navbar')
 
+            <main class="nova-main">
+                @yield('content')
+            
 
-                              @include('dashboard.partials.navbar')
+    <!-- Modals for Data Definitions & Customer App Properties -->
+    @include('dashboard.partials.modals')
 
-            <!-- / Menu -->
-
-            <!-- Layout container -->
-         
-                <!-- Navbar -->
-                <!-- / Navbar -->   
-			<main class="content">
-            <!-- Menu -->
-
-                    @yield('content')
-                    <!-- Footer -->
-
-
-           <!-- / Layout container -->
-                </main>
-            <!-- / Layout container -->
-                    @include('dashboard.partials.footer')
-                    <!-- / Footer -->
-        </div>
-
-        <!-- / Layout wrapper -->
-    </div>
-        <!-- / Layout wrapper -->   
-  
-
-    @include('dashboard.partials.script')
-@stack('scripts')
+    @stack('scripts')
 </body>
 
 </html>

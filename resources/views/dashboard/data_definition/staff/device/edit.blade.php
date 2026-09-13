@@ -1,31 +1,201 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Edit Device')
+@section('title', 'تعديل الجهاز')
 
 @section('content')
-<div class="wrapper">
-    <div class="main"><main class="content"><div class="container-fluid p-0">
-        <div class="row mb-4"><div class="col-12"><h1 class="display-5 fw-bold"><i data-feather="edit"></i> Edit Device: {{ $device->serial }}</h1></div></div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            تعديل الجهاز: {{ $device->serial }}
+        </h2>
+        <p class="nova-page-subtitle">تحرير بيانات الجهاز</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('devices.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> العودة
+        </a>
+    </div>
+</div>
+
+@if($errors->any())
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <ul class="mb-0 mt-2">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="nova-card">
+    <div class="nova-card-header">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-file-alt"></i> بيانات الجهاز
+        </h5>
+    </div>
+    <div class="nova-card-body">
         <form action="{{ route('devices.update', $device) }}" method="POST">
             @csrf @method('PUT')
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">Name (English) <span class="text-danger">*</span></label><input type="text" name="name_en" class="form-control" value="{{ old('name_en', $device->name_en) }}" required></div>
-                        <div class="col-md-6"><label class="form-label">Name (Arabic) <span class="text-danger">*</span></label><input type="text" name="name_ar" class="form-control" value="{{ old('name_ar', $device->name_ar) }}" required></div>
-                        <div class="col-md-6"><label class="form-label">Serial Number <span class="text-danger">*</span></label><input type="text" name="serial" class="form-control" value="{{ old('serial', $device->serial) }}" required></div>
-                        <div class="col-md-6"><label class="form-label">Organization <span class="text-danger">*</span></label><select name="organization_id" class="form-select" required>@foreach($organizations as $org)<option value="{{ $org->id }}" {{ old('organization_id', $device->organization_id)==$org->id?'selected':'' }}>{{ $org->name }}</option>@endforeach</select></div>
-                        <div class="col-md-4"><label class="form-label">Model No</label><input type="text" name="model_no" class="form-control" value="{{ old('model_no', $device->model_no) }}"></div>
-                        <div class="col-md-4"><label class="form-label">Brand</label><input type="text" name="brand" class="form-control" value="{{ old('brand', $device->brand) }}"></div>
-                        <div class="col-md-4"><div class="form-check form-switch mt-4"><input type="checkbox" name="is_inactive" value="1" class="form-check-input" id="is_inactive" {{ old('is_inactive', $device->is_inactive)?'checked':'' }}><label class="form-check-label" for="is_inactive">Inactive</label></div></div>
-                        <div class="col-md-6"><label class="form-label">Purchase Date</label><input type="date" name="purchase_date" class="form-control" value="{{ old('purchase_date', $device->purchase_date?->format('Y-m-d')) }}"></div>
-                        <div class="col-md-6"><label class="form-label">Warranty Expiry</label><input type="date" name="warranty_expiry" class="form-control" value="{{ old('warranty_expiry', $device->warranty_expiry?->format('Y-m-d')) }}"></div>
-                        <div class="col-12"><label class="form-label">Remark</label><textarea name="remark" class="form-control" rows="3">{{ old('remark', $device->remark) }}</textarea></div>
+
+            <div class="nova-row g-4">
+                {{-- Name (EN) --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-tag me-1"></i> الاسم (إنجليزي) <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="name_en"
+                               class="nova-input @error('name_en') nova-invalid @enderror"
+                               value="{{ old('name_en', $device->name_en) }}"
+                               placeholder="أدخل الاسم بالإنجليزية..."
+                               required>
+                    </div>
+                    @error('name_en') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Name (AR) --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-tag me-1"></i> الاسم (عربي) <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="name_ar"
+                               class="nova-input @error('name_ar') nova-invalid @enderror"
+                               value="{{ old('name_ar', $device->name_ar) }}"
+                               placeholder="أدخل الاسم بالعربية..."
+                               required>
+                    </div>
+                    @error('name_ar') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Serial Number --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-qrcode me-1"></i> الشيفرة الخاصة <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="serial"
+                               class="nova-input @error('serial') nova-invalid @enderror"
+                               value="{{ old('serial', $device->serial) }}"
+                               placeholder="أدخل الشيفرة الخاصة..."
+                               required>
+                    </div>
+                    @error('serial') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Organization --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-building me-1"></i> المنظمة <span class="nova-text-danger">*</span>
+                        </label>
+                        <select name="organization_id"
+                                class="nova-select @error('organization_id') nova-invalid @enderror"
+                                required>
+                            <option value="">اختر المنظمة</option>
+                            @foreach($organizations as $org)
+                                <option value="{{ $org->id }}" {{ old('organization_id', $device->organization_id) == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @error('organization_id') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Model No --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-cube me-1"></i> رقم الموديل
+                        </label>
+                        <input type="text"
+                               name="model_no"
+                               class="nova-input"
+                               value="{{ old('model_no', $device->model_no) }}"
+                               placeholder="أدخل رقم الموديل...">
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0"><button type="submit" class="btn btn-primary">Update</button> <a href="{{ route('devices.index') }}" class="btn btn-secondary">Cancel</a></div>
+
+                {{-- Brand --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-tag me-1"></i> الماركة (صانع الجهاز)
+                        </label>
+                        <input type="text"
+                               name="brand"
+                               class="nova-input"
+                               value="{{ old('brand', $device->brand) }}"
+                               placeholder="مثال: أبل، سامسونج، ديل...">
+                    </div>
+                </div>
+
+                {{-- Purchase Date --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-calendar me-1"></i> تاريخ الشراء
+                        </label>
+                        <input type="date"
+                               name="purchase_date"
+                               class="nova-input"
+                               value="{{ old('purchase_date', $device->purchase_date?->format('Y-m-d')) }}">
+                    </div>
+                </div>
+
+                {{-- Warranty Expiry --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-calendar-check me-1"></i> انتهاء الضمان
+                        </label>
+                        <input type="date"
+                               name="warranty_expiry"
+                               class="nova-input"
+                               value="{{ old('warranty_expiry', $device->warranty_expiry?->format('Y-m-d')) }}">
+                    </div>
+                </div>
+
+                {{-- Inactive --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-check">
+                        <input type="hidden" name="is_inactive" value="0">
+                        <input class="nova-form-check-input" type="checkbox" name="is_inactive" value="1" id="is_inactive" {{ old('is_inactive', $device->is_inactive) ? 'checked' : '' }}>
+                        <label class="nova-form-check-label fw-bold" for="is_inactive">غير نشط</label>
+                        <div class="nova-help-text">تعطيل هذا الجهاز</div>
+                    </div>
+                </div>
+
+                {{-- Remark --}}
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-comment me-1"></i> الملاحظات
+                        </label>
+                        <textarea name="remark"
+                                  class="nova-textarea"
+                                  rows="3"
+                                  placeholder="أدخل ملاحظات إضافية...">{{ old('remark', $device->remark) }}</textarea>
+                    </div>
+                </div>
+
+                {{-- Form Actions --}}
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-actions">
+                        <a href="{{ route('devices.index') }}" class="nova-btn nova-btn-outline">
+                            <i class="fas fa-x me-1"></i> إلغاء
+                        </a>
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-save me-1"></i> تحديث
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
-    </div></main></div>
+    </div>
 </div>
 @endsection

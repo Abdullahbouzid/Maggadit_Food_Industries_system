@@ -1,138 +1,198 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'إدارة نبذة المنظمات')
+@section('title', 'Organization About')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-
-                {{-- Header --}}
-                <div class="row mb-4">
-                    <div class="col-12 col-lg-8">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="info" class="align-middle me-2"></i>
-                            نبذة المنظمات
-                        </h1>
-                        <p class="text-muted">إدارة محتوى صفحة "نبذة عنا" لكل منظمة</p>
-                    </div>
-                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="{{ route('organization-about.create') }}" class="btn btn-primary btn-lg shadow-sm">
-                            <i data-feather="plus-circle"></i> إضافة نبذة جديدة
-                        </a>
-                    </div>
-                </div>
-
-                {{-- Alert Messages --}}
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i data-feather="check-circle" class="me-2"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i data-feather="alert-circle" class="me-2"></i> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                {{-- Table --}}
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-                        <h5 class="fw-bold mb-0"><i data-feather="list"></i> قائمة النبذات</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4">#</th>
-                                        <th>المنظمة</th>
-                                        <th>العنوان</th>
-                                        <th>الرؤية</th>
-                                        <th>الحالة</th>
-                                        <th class="pe-4 text-end">الإجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($abouts as $about)
-                                    <tr>
-                                        <td class="ps-4 fw-semibold">{{ $loop->iteration + ($abouts->currentPage() - 1) * $abouts->perPage() }}</td>
-                                        <td>
-                                            <span class="fw-semibold">{{ $about->organization->name ?? '—' }}</span>
-                                        </td>
-                                        <td>{{ $about->title ?? '—' }}</td>
-                                        <td>{{ Str::limit($about->vision, 30) ?: '—' }}</td>
-                                        <td>
-                                            @if($about->is_active)
-                                                <span class="badge bg-success">نشط</span>
-                                            @else
-                                                <span class="badge bg-secondary">غير نشط</span>
-                                            @endif
-                                        </td>
-                                        <td class="pe-4 text-end">
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ route('organization-about.show', $about) }}" class="btn btn-outline-info" title="عرض"><i data-feather="eye"></i></a>
-                                                <a href="{{ route('organization-about.edit', $about) }}" class="btn btn-outline-warning" title="تعديل"><i data-feather="edit"></i></a>
-                                                <button type="button" class="btn btn-outline-danger" title="حذف" onclick="confirmDelete('{{ $about->id }}', '{{ addslashes($about->title ?? 'نبذة') }}')">
-                                                    <i data-feather="trash-2"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center py-5">
-                                            <div class="py-4">
-                                                <i data-feather="info" style="width: 48px; height: 48px;" class="text-muted mb-3"></i>
-                                                <h5 class="text-muted">لا توجد نبذات</h5>
-                                                <a href="{{ route('organization-about.create') }}" class="btn btn-primary">
-                                                    <i data-feather="plus-circle"></i> إضافة أول نبذة
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 py-3 px-4">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap">
-                            <div class="small text-muted">
-                                عرض {{ $abouts->firstItem() ?? 0 }} إلى {{ $abouts->lastItem() ?? 0 }} من {{ $abouts->total() }} إدخال
-                            </div>
-                            <div>{{ $abouts->appends(request()->query())->links('pagination::bootstrap-5') }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Organization About
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage 'About Us' page content for organizations</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('organization-about.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus"></i> New Entry
+        </a>
     </div>
 </div>
 
-{{-- Delete Modal --}}
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ session('error') }}
+    </div>
+@endif
+@if(session('warning'))
+    <div class="nova-alert warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ session('warning') }}
+    </div>
+@endif
+
+@if(session('import_errors'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>أخطاء الاستيراد:</strong>
+        <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+            @foreach(session('import_errors') as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+{{-- Statistics Cards --}}
+<div class="nova-row cols-2 cols-lg-4 nova-mb-4">
+    <div class="nova-stat">
+        <div class="nova-stat-icon primary">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <p class="nova-stat-label">Total Entries</p>
+        <p class="nova-stat-value">{{ $abouts->total() }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon secondary">
+            <i class="fas fa-building"></i>
+        </div>
+        <p class="nova-stat-label">Active Organizations</p>
+        <p class="nova-stat-value">{{ $abouts->where('is_active', true)->count() }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon accent">
+            <i class="fas fa-edit"></i>
+        </div>
+        <p class="nova-stat-label">With Title</p>
+        <p class="nova-stat-value">{{ $abouts->whereNotNull('title')->count() }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon danger">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <p class="nova-stat-label">Inactive</p>
+        <p class="nova-stat-value">{{ $abouts->where('is_active', false)->count() }}</p>
+    </div>
+</div>
+
+{{-- About Table --}}
+<div class="nova-table-wrapper">
+    <div class="nova-toolbar">
+        <div class="nova-toolbar-filters">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-list"></i>
+                About List
+            </h3>
+        </div>
+        <div class="nova-toolbar-search">
+            <i class="fas fa-search"></i>
+            <input type="search" class="nova-input" placeholder="Search about entries...">
+        </div>
+        <div class="nova-toolbar-actions">
+            <a href="{{ route('organization-about.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+                <i class="fas fa-plus"></i> Add Entry
+            </a>
+        </div>
+    </div>
+    <div class="nova-table-scroll">
+        <table class="nova-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Organization</th>
+                    <th>Title</th>
+                    <th>Vision</th>
+                    <th>Status</th>
+                    <th class="nova-text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($abouts as $about)
+                <tr class="{{ $about->is_active ? '' : 'nova-row-inactive' }}">
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($abouts->currentPage() - 1) * $abouts->perPage() }}</td>
+                    <td>
+                        <div class="nova-flex nova-items-center">
+                            <div class="nova-stat-icon primary nova-me-2" style="width: 32px; height: 32px;">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <span>{{ $about->organization->name ?? '—' }}</span>
+                        </div>
+                    </td>
+                    <td>{{ $about->title ?? '—' }}</td>
+                    <td>{{ Str::limit($about->vision, 30) ?: '—' }}</td>
+                    <td>
+                        @if($about->is_active)
+                            <span class="nova-badge success">Active</span>
+                        @else
+                            <span class="nova-badge secondary">Inactive</span>
+                        @endif
+                    </td>
+                    <td class="nova-text-end">
+                        <div class="nova-table-actions">
+                            <a href="{{ route('organization-about.show', $about) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('organization-about.edit', $about) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete({{ $about->id }}, '{{ addslashes($about->title ?? 'About Entry') }}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6">
+                        <div class="nova-empty">
+                            <div class="nova-empty-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <h3 class="nova-empty-title">No about entries found</h3>
+                            <p class="nova-empty-text">Create your first about entry to get started.</p>
+                            <a href="{{ route('organization-about.create') }}" class="nova-btn nova-btn-primary">
+                                <i class="fas fa-plus"></i> Create Entry
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="nova-card-footer">
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                Showing {{ $abouts->firstItem() ?? 0 }} to {{ $abouts->lastItem() ?? 0 }} of {{ $abouts->total() }} entries
             </div>
-            <div class="modal-body text-center pt-0">
-                <div class="bg-danger bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
-                    <i data-feather="alert-triangle" class="text-danger" style="width: 40px;"></i>
-                </div>
-                <h4 class="fw-bold">تأكيد الحذف</h4>
-                <p class="text-muted">هل أنت متأكد من حذف <strong id="deleteName" class="text-danger"></strong>؟<br>هذا الإجراء لا يمكن التراجع عنه.</p>
+            <div class="nova-pagination">
+                {{ $abouts->appends(request()->query())->links() }}
             </div>
-            <div class="modal-footer border-0 pt-0 justify-content-center gap-2">
-                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+{{-- Delete Confirmation Modal (Nova) --}}
+<div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete <strong id="deleteName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">Cancel</button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger px-4">حذف نهائي</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
                 </form>
             </div>
         </div>
@@ -142,10 +202,30 @@
 
 @push('scripts')
 <script>
-    function confirmDelete(id, name) {
+document.addEventListener('DOMContentLoaded', function() {
+    window.confirmDelete = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/organization-about/' + id;
-        new bootstrap.Modal(document.getElementById('deleteModal')).show();
-    }
+        document.getElementById('deleteModal').classList.add('show');
+    };
+
+    setTimeout(function() {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s, transform 0.3s';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
 </script>
 @endpush
+
+<style>
+.nova-row-inactive {
+    background: rgba(148, 163, 184, 0.05);
+}
+.nova-me-2 {
+    margin-right: 0.5rem;
+}
+</style>

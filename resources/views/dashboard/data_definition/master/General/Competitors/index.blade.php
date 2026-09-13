@@ -3,392 +3,562 @@
 @section('title', 'Competitors Management')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <!-- Header with stats and buttons -->
-                <div class="row mb-4">
-                    <div class="col-12 col-lg-8">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="users" class="align-middle me-2"></i>
-                            Competitors
-                        </h1>
-                        <p class="text-muted">Manage competitor data, codes, and associated organizations</p>
-                    </div>
-                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="{{ route('competitors.create') }}" class="btn btn-primary btn-lg shadow-sm">
-                            <i data-feather="plus-circle"></i> Create
-                        </a>
-                        <a href="{{ route('competitors.export', request()->query()) }}" class="btn btn-secondary btn-lg shadow-sm ms-2">
-                            <i data-feather="download"></i> Export Table
-                        </a>
-                    </div>
-                </div>
+@php
+    $typeLabels = ['direct' => 'Direct', 'indirect' => 'Indirect', 'potential' => 'Potential'];
+    $typeBadgeClasses = ['direct' => 'primary', 'indirect' => 'info', 'potential' => 'secondary'];
+@endphp
 
-                <!-- Alerts Section -->
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i data-feather="check-circle" class="me-2"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i data-feather="alert-circle" class="me-2"></i> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
-
-                @if(session('warning'))
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <i data-feather="alert-triangle" class="me-2"></i> {{ session('warning') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
-
-                @if(session('import_errors'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <h6 class="alert-heading"><i data-feather="alert-circle" class="me-2"></i> Import Errors:</h6>
-                        <ul class="mb-0">
-                            @foreach(session('import_errors') as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
-
-                <!-- Statistics Cards -->
-                <div class="row g-4 mb-4">
-                    <div class="col-sm-6 col-xl-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <h6 class="text-uppercase text-muted mb-2">Total Competitors</h6>
-                                        <h2 class="mb-0">{{ $totalCompetitors ?? $competitors->total() }}</h2>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="bg-primary bg-opacity-10 rounded-circle p-3"><i data-feather="users" class="text-primary"></i></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-xl-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <h6 class="text-uppercase text-muted mb-2">Linked to Organization</h6>
-                                        <h2 class="mb-0">{{ $withOrganization ?? 0 }}</h2>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="bg-success bg-opacity-10 rounded-circle p-3"><i data-feather="building" class="text-success"></i></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-xl-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <h6 class="text-uppercase text-muted mb-2">Have GLN</h6>
-                                        <h2 class="mb-0">{{ $withGln ?? 0 }}</h2>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="bg-warning bg-opacity-10 rounded-circle p-3"><i data-feather="hash" class="text-warning"></i></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- =================== -->
-                <!-- IMPORT SECTION -->
-                <!-- =================== -->
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-header bg-light border-0 py-3">
-                        <h6 class="fw-bold mb-0"><i data-feather="upload"></i> Import Competitors</h6>
-                    </div>
-                    <div class="card-body">
-                        <form action="{{ route('competitors.import') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
-                            @csrf
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Excel File (.xlsx, .xls, .csv)</label>
-                                <input type="file" name="import_file" class="form-control" required>
-                                <div class="form-text">Required columns: <strong>name, code, organization_id, competitor_type, gln, contact_person, phone, email, address</strong>. Organization ID must exist.</div>
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-success w-100">
-                                    <i data-feather="upload"></i> Import Data
-                                </button>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('competitors.template') }}" class="btn btn-outline-secondary w-100">
-                                    <i data-feather="file-text"></i> Download Template
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- =================== -->
-                <!-- EXPORT OPTIONS (CUSTOM FILTERS) -->
-                <!-- =================== -->
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-header bg-light border-0 py-3">
-                        <h6 class="fw-bold mb-0"><i data-feather="download"></i> Export Options (Custom Filters)</h6>
-                    </div>
-                    <div class="card-body">
-                        <form action="{{ route('competitors.export') }}" method="GET" class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Search (name/code/GLN)</label>
-                                <input type="text" name="search" class="form-control" placeholder="Enter keyword...">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold">Organization</label>
-                                <select name="organization_id" class="form-select">
-                                    <option value="">All</option>
-                                    @foreach($organizationsList ?? [] as $org)
-                                        <option value="{{ $org->id }}">{{ $org->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold">Competitor Type</label>
-                               <select name="competitor_type" class="form-select">
-                                    <option value="">All</option>
-                                    <option value="direct" {{ request('competitor_type') == 'direct' ? 'selected' : '' }}>Direct Competitor</option>
-                                    <option value="indirect" {{ request('competitor_type') == 'indirect' ? 'selected' : '' }}>Indirect Competitor</option>
-                                    <option value="potential" {{ request('competitor_type') == 'potential' ? 'selected' : '' }}>Potential Competitor</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i data-feather="file-text"></i> Export Filtered
-                                </button>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-text">Use these filters to download Excel with only the matching records.</div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- =================== -->
-                <!-- MAIN FILTER (for table) -->
-                <!-- =================== -->
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body">
-                        <form id="filterForm" method="GET" action="{{ route('competitors.index') }}" class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Search (table)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0"><i data-feather="search"></i></span>
-                                    <input type="text" name="search" class="form-control border-start-0" placeholder="Name, code, or GLN..." value="{{ request('search') }}">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold">Organization</label>
-                                <select name="organization_id" class="form-select">
-                                    <option value="">All</option>
-                                    @foreach($organizationsList ?? [] as $org)
-                                        <option value="{{ $org->id }}" {{ request('organization_id') == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold">Rows per page</label>
-                                <select name="per_page" class="form-select">
-                                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                                    <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
-                                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary w-100">Filter</button>
-                                    @if(request('search') || request('organization_id') || request('per_page'))
-                                        <a href="{{ route('competitors.index') }}" class="btn btn-outline-secondary">Reset</a>
-                                    @endif
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- =================== -->
-                <!-- DATA TABLE -->
-                <!-- =================== -->
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-                        <h5 class="fw-bold mb-0"><i data-feather="list"></i> Competitors List</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4">#</th>
-                                        <th>Name</th>
-                                        <th>Code</th>
-                                        <th>Organization</th>
-                                        <th>Type</th>
-                                        <th>GLN</th>
-                                        <th>Contact Person</th>
-                                        <th class="pe-4 text-end">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($competitors as $comp)
-                                    <tr>
-                                        <td class="ps-4 fw-semibold">{{ $loop->iteration + ($competitors->currentPage() - 1) * $competitors->perPage() }}</td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="bg-info bg-opacity-10 rounded-circle p-2 me-2">
-                                                    <i data-feather="user" class="text-info" style="width: 16px;"></i>
-                                                </div>
-                                                <span>{{ $comp->name }}</span>
-                                            </div>
-                                        </td>
-                                        <td><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-2">{{ $comp->code }}</span></td>
-                                        <td>
-                                            @if($comp->organization)
-                                                <i data-feather="building" class="text-muted me-1" style="width: 14px;"></i>
-                                                {{ $comp->organization->name }}
-                                            @else
-                                                <span class="text-muted fst-italic">—</span>
-                                            @endif
-                                         </td>
-                                        <td>{{ $comp->competitor_type ?: '—' }}</td>
-                                        <td>
-                                            @if($comp->gln)
-                                                <code class="text-primary bg-light p-1 rounded">{{ $comp->gln }}</code>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                         </td>
-                                        <td>{{ $comp->contact_person ?: '—' }}</td>
-                                        <td class="pe-4 text-end">
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{{ route('competitors.show', $comp) }}" class="btn btn-outline-info" title="View"><i data-feather="eye"></i></a>
-                                                <a href="{{ route('competitors.edit', $comp) }}" class="btn btn-outline-warning" title="Edit"><i data-feather="edit"></i></a>
-                                                <button type="button" class="btn btn-outline-danger" title="Delete" onclick="confirmDelete({{ $comp->id }}, '{{ addslashes($comp->name) }}')">
-                                                    <i data-feather="trash-2"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="8" class="text-center py-5">
-                                            <div class="py-4">
-                                                <i data-feather="database" style="width: 48px; height: 48px;" class="text-muted mb-3"></i>
-                                                <h5 class="text-muted">No competitors found</h5>
-                                                <p class="text-muted">Try adjusting your search or create a new competitor.</p>
-                                                <a href="{{ route('competitors.create') }}" class="btn btn-primary"><i data-feather="plus-circle"></i> Create Competitor</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 py-3 px-4">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap">
-                            <div class="small text-muted">
-                                Showing {{ $competitors->firstItem() ?? 0 }} to {{ $competitors->lastItem() ?? 0 }} of {{ $competitors->total() }} entries
-                            </div>
-                            <div>{{ $competitors->appends(request()->query())->links('pagination::bootstrap-5') }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+{{-- ===== Action Bar ===== --}}
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-users" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Competitors
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
+            Manage competitor data, codes, and associated organizations
+        </p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('competitors.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus"></i> Create
+        </a>
+        <a href="{{ route('competitors.export', request()->query()) }}" class="nova-btn nova-btn-secondary nova-btn-sm">
+            <i class="fas fa-download"></i> Export Table
+        </a>
     </div>
 </div>
 
-<!-- Global Delete Modal -->
-<div class="modal fade" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center pt-0">
-                <div class="bg-danger bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
-                    <i data-feather="alert-triangle" class="text-danger" style="width: 40px;"></i>
+{{-- ===== Alerts ===== --}}
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ session('error') }}
+    </div>
+@endif
+@if(session('warning'))
+    <div class="nova-alert warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ session('warning') }}
+    </div>
+@endif
+@if(session('import_errors'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        <div>
+            <strong>Import Errors:</strong>
+            <ul class="nova-mb-0 nova-mt-1">
+                @foreach(session('import_errors') as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
+
+{{-- ===== Statistics ===== --}}
+<div class="nova-row cols-3 nova-mb-4">
+    <div class="nova-stat">
+        <div class="nova-stat-icon primary">
+            <i class="fas fa-users"></i>
+        </div>
+        <p class="nova-stat-label">Total Competitors</p>
+        <p class="nova-stat-value">{{ $totalCompetitors ?? $competitors->total() }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon success">
+            <i class="fas fa-building"></i>
+        </div>
+        <p class="nova-stat-label">Linked to Organization</p>
+        <p class="nova-stat-value">{{ $withOrganization ?? 0 }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon accent">
+            <i class="fas fa-hash"></i>
+        </div>
+        <p class="nova-stat-label">Have GLN</p>
+        <p class="nova-stat-value">{{ $withGln ?? 0 }}</p>
+    </div>
+</div>
+
+{{-- ============================================================
+     Import Section
+     ============================================================ --}}
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h6 class="nova-fw-bold nova-mb-0">
+            <i class="fas fa-upload"></i> Import Competitors
+        </h6>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('competitors.import') }}" method="POST" enctype="multipart/form-data" class="import-form">
+            @csrf
+            <div class="nova-form-group import-form-input">
+                <label class="nova-label">Excel File (.xlsx, .xls, .csv)</label>
+                <input type="file" name="import_file" class="nova-input" required>
+                <div class="nova-help-text">
+                    Required columns: <strong>name, code, organization_id, competitor_type, gln, contact_person, phone, email, address</strong>. Organization ID must exist.
                 </div>
-                <h4 class="fw-bold">Confirm Deletion</h4>
-                <p class="text-muted">Are you sure you want to delete <strong id="deleteCompetitorName" class="text-danger"></strong>?<br>This action cannot be undone.</p>
             </div>
-            <div class="modal-footer border-0 pt-0 justify-content-center gap-2">
-                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger px-4">Delete Permanently</button>
-                </form>
+            <div class="import-form-actions">
+                <button type="submit" class="nova-btn nova-btn-success">
+                    <i class="fas fa-upload"></i> Import Data
+                </button>
+                <a href="{{ route('competitors.template') }}" class="nova-btn nova-btn-outline">
+                    <i class="fas fa-file-text"></i> Download Template
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ============================================================
+     Export Options (Custom Filters)
+     ============================================================ --}}
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h6 class="nova-fw-bold nova-mb-0">
+            <i class="fas fa-download"></i> Export Options (Custom Filters)
+        </h6>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('competitors.export') }}" method="GET" class="nova-row nova-gap-3 nova-items-end">
+            <div class="nova-col nova-col-md-4">
+                <label class="nova-label nova-fs-sm nova-fw-semibold">Search (name/code/GLN)</label>
+                <input type="text" name="search" class="nova-input" placeholder="Enter keyword...">
+            </div>
+            <div class="nova-col nova-col-md-3">
+                <label class="nova-label nova-fs-sm nova-fw-semibold">Organization</label>
+                <select name="organization_id" class="nova-select">
+                    <option value="">All</option>
+                    @foreach($organizationsList ?? [] as $org)
+                        <option value="{{ $org->id }}">{{ $org->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="nova-col nova-col-md-3">
+                <label class="nova-label nova-fs-sm nova-fw-semibold">Competitor Type</label>
+                <select name="competitor_type" class="nova-select">
+                    <option value="">All</option>
+                    <option value="direct" {{ request('competitor_type') == 'direct' ? 'selected' : '' }}>Direct Competitor</option>
+                    <option value="indirect" {{ request('competitor_type') == 'indirect' ? 'selected' : '' }}>Indirect Competitor</option>
+                    <option value="potential" {{ request('competitor_type') == 'potential' ? 'selected' : '' }}>Potential Competitor</option>
+                </select>
+            </div>
+            <div class="nova-col nova-col-md-2">
+                <button type="submit" class="nova-btn nova-btn-primary nova-w-100">
+                    <i class="fas fa-file-text"></i> Export Filtered
+                </button>
+            </div>
+            <div class="nova-col nova-col-12">
+                <div class="nova-help-text">Use these filters to download Excel with only the matching records.</div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ============================================================
+     Filter Section
+     ============================================================ --}}
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-body">
+        <form id="filterForm" method="GET" action="{{ route('competitors.index') }}" class="filter-form">
+            <div class="nova-form-group filter-item filter-item-search">
+                <label class="nova-label nova-fs-sm nova-fw-semibold">Search (table)</label>
+                <div class="filter-search-wrapper">
+                    <span class="filter-search-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" name="search" class="nova-input filter-search-input"
+                           placeholder="Name, code, or GLN..."
+                           value="{{ request('search') }}">
+                </div>
+            </div>
+
+            <div class="nova-form-group filter-item">
+                <label class="nova-label nova-fs-sm nova-fw-semibold">Organization</label>
+                <select name="organization_id" class="nova-select">
+                    <option value="">All</option>
+                    @foreach($organizationsList ?? [] as $org)
+                        <option value="{{ $org->id }}" {{ request('organization_id') == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="nova-form-group filter-item">
+                <label class="nova-label nova-fs-sm nova-fw-semibold">Rows per page</label>
+                <select name="per_page" class="nova-select">
+                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                    <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
+                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                </select>
+            </div>
+
+            <div class="nova-form-group filter-item filter-item-actions">
+                <button type="submit" class="nova-btn nova-btn-primary">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                @if(request('search') || request('organization_id') || request('per_page'))
+                    <a href="{{ route('competitors.index') }}" class="nova-btn nova-btn-outline">
+                        <i class="fas fa-rotate-left"></i> Reset
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ============================================================
+     Data Table
+     ============================================================ --}}
+<div class="nova-table-wrapper">
+    <div class="nova-toolbar">
+        <div class="nova-toolbar-filters">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-list"></i>
+                Competitors List
+            </h3>
+        </div>
+        <div class="nova-toolbar-actions">
+            <a href="{{ route('competitors.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+                <i class="fas fa-plus"></i> Add Competitor
+            </a>
+        </div>
+    </div>
+
+    <div class="nova-table-scroll">
+        <table class="nova-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">#</th>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Organization</th>
+                    <th>Type</th>
+                    <th>GLN</th>
+                    <th>Contact Person</th>
+                    <th class="nova-text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($competitors as $comp)
+                <tr>
+                    <td class="nova-fw-semibold">
+                        {{ $loop->iteration + ($competitors->currentPage() - 1) * $competitors->perPage() }}
+                    </td>
+                    <td>
+                        <div class="nova-flex nova-items-center">
+                            <div class="nova-bg-light nova-rounded-full nova-p-2 nova-me-2">
+                                <i class="fas fa-user nova-text-info"></i>
+                            </div>
+                            <span class="table-name">{{ $comp->name }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <code class="table-code">{{ $comp->code }}</code>
+                    </td>
+                    <td>
+                        @if($comp->organization)
+                            <i class="fas fa-building nova-text-muted nova-me-1"></i>
+                            {{ $comp->organization->name }}
+                        @else
+                            <span class="nova-text-muted">—</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($comp->competitor_type && isset($typeLabels[$comp->competitor_type]))
+                            <span class="nova-badge {{ $typeBadgeClasses[$comp->competitor_type] }}">{{ $typeLabels[$comp->competitor_type] }}</span>
+                        @else
+                            <span class="nova-text-muted">—</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($comp->gln)
+                            <code class="table-code">{{ $comp->gln }}</code>
+                        @else
+                            <span class="nova-text-muted">—</span>
+                        @endif
+                    </td>
+                    <td>{{ $comp->contact_person ?: '—' }}</td>
+                    <td class="nova-text-end">
+                        <div class="nova-table-actions">
+                            <a href="{{ route('competitors.show', $comp) }}"
+                               class="nova-icon-btn nova-btn-sm" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('competitors.edit', $comp) }}"
+                               class="nova-icon-btn nova-btn-sm" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button"
+                                    class="nova-icon-btn nova-btn-sm nova-text-danger"
+                                    title="Delete"
+                                    onclick="confirmDelete({{ $comp->id }}, '{{ addslashes($comp->name) }}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="8">
+                        <div class="nova-empty">
+                            <div class="nova-empty-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <h3 class="nova-empty-title">No competitors found</h3>
+                            <p class="nova-empty-text">Try adjusting your search or create a new competitor.</p>
+                            <a href="{{ route('competitors.create') }}" class="nova-btn nova-btn-primary">
+                                <i class="fas fa-plus"></i> Create Competitor
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="nova-card-footer">
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                Showing {{ $competitors->firstItem() ?? 0 }} to {{ $competitors->lastItem() ?? 0 }} of {{ $competitors->total() }} entries
+            </div>
+            <div class="nova-pagination">
+                {{ $competitors->appends(request()->query())->links() }}
             </div>
         </div>
     </div>
 </div>
 
+{{-- ============================================================
+     Delete Confirmation Modal
+     ============================================================ --}}
+<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">
+                Are you sure you want to delete competitor
+                <strong id="deleteCompetitorName" class="nova-text-danger"></strong>?<br>
+                This action cannot be undone.
+            </p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline"
+                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
 <style>
-    .rounded-4 { border-radius: 1rem !important; }
-    .table thead th { border-bottom-width: 1px; font-weight: 600; }
-    .btn-group .btn { transition: all 0.2s ease; }
-    .btn-group .btn:hover { transform: translateY(-2px); }
-    .badge.bg-secondary.bg-opacity-10 { background-color: rgba(108,117,125,0.1) !important; color: #212529; }
+    /* ============================================================
+       Import Form
+       ============================================================ */
+    .import-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .import-form .nova-form-group {
+        margin-bottom: 0;
+    }
+
+    .import-form-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    /* ============================================================
+       Filter Form - Grid Layout
+       ============================================================ */
+    .filter-form {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    .filter-form .nova-form-group {
+        margin-bottom: 0;
+        min-width: 0;
+    }
+
+    /* Search Input Wrapper */
+    .filter-search-wrapper {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .filter-search-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 0.875rem;
+        background: var(--nova-surface-2);
+        border: 1.5px solid var(--nova-border);
+        border-right: none;
+        border-radius: 10px 0 0 10px;
+        color: var(--nova-text-4);
+        flex-shrink: 0;
+    }
+
+    .filter-search-input {
+        border-radius: 0 10px 10px 0 !important;
+        border-left: none !important;
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Filter Actions */
+    .filter-item-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .filter-item-actions .nova-btn {
+        white-space: nowrap;
+    }
+
+    /* ============================================================
+       Table Enhancements
+       ============================================================ */
+    .table-code {
+        background: #f1f3f9;
+        padding: 0.15rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        color: #5a5c69;
+        font-weight: 500;
+    }
+
+    .table-name {
+        font-size: 0.875rem;
+        color: var(--nova-text-1);
+    }
+
+    /* ============================================================
+       Responsive
+       ============================================================ */
+    @media (max-width: 992px) {
+        .filter-form {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .filter-item-search {
+            grid-column: span 3;
+        }
+
+        .filter-item-actions {
+            grid-column: span 3;
+            justify-content: flex-end;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .import-form {
+            grid-template-columns: 1fr;
+        }
+
+        .import-form-actions {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .import-form-actions .nova-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .filter-form {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .filter-item-search {
+            grid-column: span 2;
+        }
+
+        .filter-item-actions {
+            grid-column: span 2;
+            justify-content: stretch;
+        }
+
+        .filter-item-actions .nova-btn {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .filter-form {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-item-search,
+        .filter-item-actions {
+            grid-column: span 1;
+        }
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Replace Feather icons
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
-
-        // Auto-submit filter form when per_page changes
+        /* ============================================================
+           Auto-submit on per_page change
+           ============================================================ */
         const perPageSelect = document.querySelector('select[name="per_page"]');
         if (perPageSelect) {
-            perPageSelect.addEventListener('change', function() {
+            perPageSelect.addEventListener('change', () => {
                 document.getElementById('filterForm').submit();
             });
         }
 
-        // Global delete confirmation
+        /* ============================================================
+           Delete Confirmation
+           ============================================================ */
         window.confirmDelete = function(id, name) {
             document.getElementById('deleteCompetitorName').innerText = name;
             document.getElementById('deleteForm').action = '/competitors/' + id;
-            var modalEl = document.getElementById('globalDeleteModal');
-            var modal = new bootstrap.Modal(modalEl);
-            modal.show();
+            document.getElementById('globalDeleteModal').classList.add('show');
         };
 
-        // Auto-dismiss alerts after 5 seconds
-        setTimeout(function() {
-            document.querySelectorAll('.alert').forEach(function(alert) {
-                if (typeof bootstrap !== 'undefined') {
-                    var bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                } else {
-                    alert.style.display = 'none';
-                }
+        /* ============================================================
+           Auto-dismiss Alerts
+           ============================================================ */
+        setTimeout(() => {
+            document.querySelectorAll('.nova-alert').forEach(alert => {
+                alert.style.transition = 'opacity 0.3s, transform 0.3s';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(() => alert.remove(), 300);
             });
         }, 5000);
     });

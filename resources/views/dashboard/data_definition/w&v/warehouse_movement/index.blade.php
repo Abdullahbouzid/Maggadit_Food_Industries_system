@@ -1,214 +1,292 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'حركات المخازن والباتشات')
+@section('title', 'دفعات الحركات')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
+{{-- ===== Action Bar ===== --}}
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-boxes-stacked" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            دفعات الحركات
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة جميع حركات النقل والتوزيع والاسترجاع</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('warehouse-movements.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus"></i> إضافة حركة
+        </a>
+        <a href="{{ route('warehouse-movements.export', request()->query()) }}" class="nova-btn nova-btn-secondary nova-btn-sm">
+            <i class="fas fa-download"></i> تصدير إكسل
+        </a>
+    </div>
+</div>
 
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="activity" class="align-middle me-2"></i>
-                            حركات المخازن والباتشات
-                        </h1>
-                        <p class="text-muted">عرض وإدارة جميع حركات النقل والتوزيع والاسترجاع</p>
-                    </div>
-                </div>
+{{-- ===== Alerts ===== --}}
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ session('error') }}
+    </div>
+@endif
 
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show">{{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
+{{-- ===== Statistics ===== --}}
+<div class="nova-row cols-4 nova-mb-4">
+    <div class="nova-stat">
+        <div class="nova-stat-icon primary">
+            <i class="fas fa-list"></i>
+        </div>
+        <p class="nova-stat-label">إجمالي الحركات</p>
+        <p class="nova-stat-value">{{ $total }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon success">
+            <i class="fas fa-arrow-down"></i>
+        </div>
+        <p class="nova-stat-label">وارد (توزيع)</p>
+        <p class="nova-stat-value">{{ $inCount }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon accent">
+            <i class="fas fa-exchange-alt"></i>
+        </div>
+        <p class="nova-stat-label">نقل</p>
+        <p class="nova-stat-value">{{ $transferCount }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon danger">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <p class="nova-stat-label">استرجاع منتهي الصلاحية</p>
+        <p class="nova-stat-value">{{ $expiryCount }}</p>
+    </div>
+</div>
 
-                <!-- بطاقات الإحصائيات -->
-                <div class="row g-4 mb-4">
-                    <div class="col-sm-6 col-xl-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                                        <i data-feather="list" class="text-primary" style="width: 24px;"></i>
-                                    </div>
-                                </div>
-                                <div><h6 class="text-muted mb-1">إجمالي الحركات</h6><h2 class="mb-0 fw-bold">{{ $total }}</h2></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-xl-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                                        <i data-feather="arrow-down" class="text-success" style="width: 24px;"></i>
-                                    </div>
-                                </div>
-                                <div><h6 class="text-muted mb-1">وارد (توزيع)</h6><h2 class="mb-0 fw-bold">{{ $inCount }}</h2></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-xl-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                        <i data-feather="move" class="text-warning" style="width: 24px;"></i>
-                                    </div>
-                                </div>
-                                <div><h6 class="text-muted mb-1">نقل بين المخازن</h6><h2 class="mb-0 fw-bold">{{ $transferCount }}</h2></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-xl-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="bg-danger bg-opacity-10 rounded-circle p-3">
-                                        <i data-feather="alert-triangle" class="text-danger" style="width: 24px;"></i>
-                                    </div>
-                                </div>
-                                <div><h6 class="text-muted mb-1">استرجاع صلاحية</h6><h2 class="mb-0 fw-bold">{{ $expiryCount }}</h2></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- نموذج الفلاتر -->
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body">
-                        <form method="GET" action="{{ route('warehouse-movements.index') }}" class="row g-3 align-items-end">
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold">نوع الحركة</label>
-                                <select name="movement_type" class="form-select">
-                                    <option value="">الكل</option>
-                                    @foreach($movementTypes as $key => $label)
-                                        <option value="{{ $key }}" {{ request('movement_type') == $key ? 'selected' : '' }}>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold">المخزن المصدر</label>
-                                <select name="from_warehouse_id" class="form-select">
-                                    <option value="">الكل</option>
-                                    @foreach($warehouses as $wh)
-                                        <option value="{{ $wh->id }}" {{ request('from_warehouse_id') == $wh->id ? 'selected' : '' }}>{{ $wh->name_en }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold">المخزن الهدف</label>
-                                <select name="to_warehouse_id" class="form-select">
-                                    <option value="">الكل</option>
-                                    @foreach($warehouses as $wh)
-                                        <option value="{{ $wh->id }}" {{ request('to_warehouse_id') == $wh->id ? 'selected' : '' }}>{{ $wh->name_en }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold">من تاريخ</label>
-                                <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold">إلى تاريخ</label>
-                                <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100"><i data-feather="filter"></i> فلتر</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- قائمة الحركات المجمعة -->
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-header bg-white border-0 pt-4 d-flex justify-content-between align-items-center flex-wrap">
-                        <h5 class="fw-bold mb-0"><i data-feather="list"></i> قائمة الحركات (مجموعة حسب الدفعة)</h5>
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('warehouse-movements.create') }}" class="btn btn-primary btn-sm">
-                                <i data-feather="plus"></i> إضافة حركة
-                            </a>
-                            <a href="{{ route('warehouse-movements.export', request()->query()) }}" class="btn btn-success btn-sm">
-                                <i data-feather="download"></i> تصدير Excel
-                            </a>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>نوع الحركة</th>
-                                        <th>رقم الدفعة</th>
-                                        <th>المخزن المصدر</th>
-                                        <th>المخزن الهدف</th>
-                                        <th>تاريخ الحركة</th>
-                                        <th>عدد المنتجات</th>
-                                        <th>إجمالي الكمية</th>
-                                        <th>الإجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($groupsPaginated as $group)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>
-                                                @php
-                                                    $labels = ['in' => 'وارد', 'transfer' => 'نقل', 'expiry_return' => 'استرجاع'];
-                                                    $colors = ['in' => 'success', 'transfer' => 'warning', 'expiry_return' => 'danger'];
-                                                @endphp
-                                                <span class="badge bg-{{ $colors[$group->movement_type] ?? 'secondary' }}">
-                                                    {{ $labels[$group->movement_type] ?? $group->movement_type }}
-                                                </span>
-                                            </td>
-                                            <td><strong>{{ $group->batch_number }}</strong></td>
-                                            <td>{{ $group->from_warehouse }}</td>
-                                            <td>{{ $group->to_warehouse }}</td>
-                                            <td>{{ $group->movement_date ? $group->movement_date->format('Y-m-d') : '-' }}</td>
-                                            <td>{{ $group->items_count }}</td>
-                                            <td>{{ number_format($group->total_quantity, 3) }}</td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    {{-- نمرر معرف أول حركة في المجموعة --}}
-                                                    <a href="{{ route('warehouse-movements.show', $group->first_movement->id) }}" class="btn btn-outline-info" title="عرض التفاصيل"><i data-feather="eye"></i></a>
-                                                    <a href="{{ route('warehouse-movements.edit', $group->first_movement->id) }}" class="btn btn-outline-warning" title="تعديل"><i data-feather="edit"></i></a>
-                                                    <form action="{{ route('warehouse-movements.destroy', $group->first_movement->id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
-                                                        @csrf @method('DELETE')
-                                                        <button type="submit" class="btn btn-outline-danger"><i data-feather="trash-2"></i></button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr><td colspan="9" class="text-center text-muted">لا توجد حركات مطابقة للفلاتر.</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                        @if(method_exists($groupsPaginated, 'links'))
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div>{{ $groupsPaginated->appends(request()->query())->links() }}</div>
-                                <div>
-                                    <form method="GET" action="{{ route('warehouse-movements.index') }}" class="d-inline">
-                                        <input type="hidden" name="per_page" value="all">
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">عرض الكل</button>
-                                    </form>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
+{{-- ===== Filter Section ===== --}}
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-body" style="padding: 1rem 1.5rem;">
+        <form method="GET" action="{{ route('warehouse-movements.index') }}" class="filter-form">
+            <div class="nova-form-group filter-item">
+                <label class="nova-label">نوع الحركة</label>
+                <select name="movement_type" class="nova-select">
+                    <option value="">الكل</option>
+                    @foreach($movementTypes as $key => $label)
+                        <option value="{{ $key }}" {{ request('movement_type') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
             </div>
-        </main>
+            <div class="nova-form-group filter-item">
+                <label class="nova-label">المخزن المصدر</label>
+                <select name="from_warehouse_id" class="nova-select">
+                    <option value="">الكل</option>
+                    @foreach($warehouses as $wh)
+                        <option value="{{ $wh->id }}" {{ request('from_warehouse_id') == $wh->id ? 'selected' : '' }}>{{ $wh->name_en }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="nova-form-group filter-item">
+                <label class="nova-label">المخزن الهدف</label>
+                <select name="to_warehouse_id" class="nova-select">
+                    <option value="">الكل</option>
+                    @foreach($warehouses as $wh)
+                        <option value="{{ $wh->id }}" {{ request('to_warehouse_id') == $wh->id ? 'selected' : '' }}>{{ $wh->name_en }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="nova-form-group filter-item">
+                <label class="nova-label">منذ تاريخ</label>
+                <input type="date" name="date_from" class="nova-input" value="{{ request('date_from') }}">
+            </div>
+            <div class="nova-form-group filter-item">
+                <label class="nova-label">حتى تاريخ</label>
+                <input type="date" name="date_to" class="nova-input" value="{{ request('date_to') }}">
+            </div>
+            <div class="nova-form-group filter-item filter-item-actions">
+                <button type="submit" class="nova-btn nova-btn-primary">
+                    <i class="fas fa-filter"></i> تصفية
+                </button>
+                <a href="{{ route('warehouse-movements.index') }}" class="nova-btn nova-btn-outline">
+                    <i class="fas fa-rotate-left"></i> إعادة ضبط
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ===== Movements Table ===== --}}
+<div class="nova-table-wrapper">
+    <div class="nova-toolbar">
+        <div class="nova-toolbar-filters">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-list"></i>
+                قائمة الحركات (مجمعة حسب الدفعة)
+            </h3>
+        </div>
+    </div>
+    <div class="nova-table-scroll">
+        <table class="nova-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>نوع الحركة</th>
+                    <th>رقم الدفعة</th>
+                    <th>المخزن المصدر</th>
+                    <th>المخزن الهدف</th>
+                    <th>تاريخ الحركة</th>
+                    <th>عدد المنتجات</th>
+                    <th>إجمالي الكمية</th>
+                    <th class="nova-text-end">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($groupsPaginated as $group)
+                <tr>
+                    <td class="nova-fw-semibold">{{ $loop->iteration }}</td>
+                    <td>
+                        @php
+                            $labels = ['in' => 'وارد', 'transfer' => 'نقل', 'expiry_return' => 'استرجاع منتهي'];
+                            $colors = ['in' => 'success', 'transfer' => 'accent', 'expiry_return' => 'danger'];
+                        @endphp
+                        <span class="nova-badge {{ $colors[$group->movement_type] ?? 'secondary' }}">
+                            {{ $labels[$group->movement_type] ?? $group->movement_type }}
+                        </span>
+                    </td>
+                    <td><strong>{{ $group->batch_number }}</strong></td>
+                    <td>{{ $group->from_warehouse ?? '—' }}</td>
+                    <td>{{ $group->to_warehouse ?? '—' }}</td>
+                    <td>{{ $group->movement_date ? $group->movement_date->format('Y-m-d') : '—' }}</td>
+                    <td>{{ $group->items_count }}</td>
+                    <td>{{ number_format($group->total_quantity, 3) }}</td>
+                    <td class="nova-text-end">
+                        <div class="nova-table-actions">
+                            <a href="{{ route('warehouse-movements.show', $group->first_movement->id) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('warehouse-movements.edit', $group->first_movement->id) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف"
+                                    onclick="confirmDelete({{ $group->first_movement->id }}, '{{ addslashes($group->batch_number) }}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="9">
+                        <div class="nova-empty">
+                            <div class="nova-empty-icon">
+                                <i class="fas fa-boxes-stacked"></i>
+                            </div>
+                            <h3 class="nova-empty-title">لا توجد حركات مخازن</h3>
+                            <p class="nova-empty-text">أنشئ حركتك الأولى.</p>
+                            <a href="{{ route('warehouse-movements.create') }}" class="nova-btn nova-btn-primary">
+                                <i class="fas fa-plus-circle"></i> إضافة حركة
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="nova-card-footer">
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                عرض {{ $groupsPaginated->firstItem() ?? 0 }} إلى {{ $groupsPaginated->lastItem() ?? 0 }} من أصل {{ $groupsPaginated->total() }} إدخال
+            </div>
+            <div class="nova-pagination">
+                {{ $groupsPaginated->appends(request()->query())->links() }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ===== Delete Confirmation Modal ===== --}}
+<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">
+                هل أنت متأكد من رغبتك في حذف الحركة
+                <strong id="deleteItemName" class="nova-text-danger"></strong>؟<br>
+                لا يمكن التراجع عن هذا الإجراء.
+            </p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline"
+                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
+                    إلغاء
+                </button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    .filter-form {
+        display: grid;
+        grid-template-columns: 1.2fr 1.2fr 1.2fr 1fr 1fr auto;
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    .filter-form .nova-form-group {
+        margin-bottom: 0;
+        min-width: 0;
+    }
+
+    .filter-item-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .filter-item-actions .nova-btn {
+        white-space: nowrap;
+    }
+
+    @media (max-width: 1200px) {
+        .filter-form {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        .filter-item-actions {
+            grid-column: 1 / -1;
+            justify-content: flex-end;
+        }
+    }
+    @media (max-width: 768px) {
+        .filter-form {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        window.confirmDelete = function(id, name) {
+            document.getElementById('deleteItemName').innerText = name;
+            document.getElementById('deleteForm').action = '/warehouse-movements/' + id;
+            document.getElementById('globalDeleteModal').classList.add('show');
+        };
+    });
+</script>
+@endpush

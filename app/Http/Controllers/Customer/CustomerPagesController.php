@@ -114,6 +114,42 @@ class CustomerPagesController extends Controller
         return view('app_android.more.faq', compact('faqsByCategory'));
     }
 
+    public function contactInfoWeb(Request $request)
+    {
+        $organizationId = $request->query('organization_id');
+
+        if (! $organizationId) {
+            $customer = $this->getCustomer($request);
+            if ($customer) {
+                $organizationId = $customer->active_organization_id;
+                if (! $organizationId) {
+                    $activeOrg = $customer->activeOrganizations()->first();
+                    if ($activeOrg) {
+                        $organizationId = $activeOrg->id;
+                    }
+                }
+            }
+        }
+
+        $organization = null;
+        if ($organizationId) {
+            $organization = \App\Models\Organization::find($organizationId);
+        }
+
+        if (! $organization) {
+            $organization = \App\Models\Organization::first();
+        }
+
+        $customers = \App\Models\Customer::where('active_organization_id', $organization->id)
+            ->orWhereHas('organizations', function ($q) use ($organization) {
+                $q->where('organizations.id', $organization->id);
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('dashboard.contact_info.index', compact('organization', 'customers'));
+    }
+
     public function contactUs(Request $request)
     {
         $request->validate([

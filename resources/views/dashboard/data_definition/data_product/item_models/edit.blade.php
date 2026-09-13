@@ -1,63 +1,131 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Edit Item Model')
+@section('title', 'تعديل نموذج منتج')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold"><i data-feather="edit-2"></i> Edit Item Model</h1>
-                        <p class="text-muted">Update the item model settings.</p>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            تعديل نموذج المنتج: {{ $itemModel->name_en }}
+        </h2>
+        <p class="nova-page-subtitle">تحرير بيانات نموذج المنتج</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('item-models.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> العودة
+        </a>
+    </div>
+</div>
+
+@if($errors->any())
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <ul class="mb-0 mt-2">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="nova-card">
+    <div class="nova-card-header">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-file-alt"></i> بيانات نموذج المنتج
+        </h5>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('item-models.update', $itemModel) }}" method="POST">
+            @csrf @method('PUT')
+
+            <div class="nova-row g-4">
+                {{-- Code --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-qrcode me-1"></i> الشيفرة <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="code"
+                               class="nova-input @error('code') nova-invalid @enderror"
+                               value="{{ old('code', $itemModel->code) }}"
+                               placeholder="أدخل الشيفرة..."
+                               required>
+                    </div>
+                    @error('code') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Sort Order --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-arrows-up-down me-1"></i> ترتيب الفرز
+                        </label>
+                        <input type="number"
+                               name="sort_order"
+                               class="nova-input @error('sort_order') nova-invalid @enderror"
+                               value="{{ old('sort_order', $itemModel->sort_order) }}"
+                               placeholder="أدخل رقم الترتيب...">
+                    </div>
+                    @error('sort_order') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Name (EN) --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-tag me-1"></i> الاسم (إنجليزي) <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="name_en"
+                               class="nova-input @error('name_en') nova-invalid @enderror"
+                               value="{{ old('name_en', $itemModel->name_en) }}"
+                               placeholder="أدخل الاسم بالإنجليزية..."
+                               required>
+                    </div>
+                    @error('name_en') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Name (AR) --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-tag me-1"></i> الاسم (عربي) <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="name_ar"
+                               class="nova-input @error('name_ar') nova-invalid @enderror"
+                               value="{{ old('name_ar', $itemModel->name_ar) }}"
+                               placeholder="أدخل الاسم بالعربية..."
+                               required>
+                    </div>
+                    @error('name_ar') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Active --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-check">
+                        <input type="hidden" name="is_active" value="0">
+                        <input class="nova-form-check-input" type="checkbox" name="is_active" value="1" id="is_active" {{ old('is_active', $itemModel->is_active) ? 'checked' : '' }}>
+                        <label class="nova-form-check-label fw-bold" for="is_active">نشط</label>
+                        <div class="nova-help-text">تفعيل هذا النموذج</div>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <form action="{{ route('item-models.update', $itemModel) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Code <span class="text-danger">*</span></label>
-                                    <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code', $itemModel->code) }}" required>
-                                    @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Sort Order</label>
-                                    <input type="number" name="sort_order" class="form-control @error('sort_order') is-invalid @enderror" value="{{ old('sort_order', $itemModel->sort_order) }}">
-                                    @error('sort_order')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Name (English) <span class="text-danger">*</span></label>
-                                    <input type="text" name="name_en" class="form-control @error('name_en') is-invalid @enderror" value="{{ old('name_en', $itemModel->name_en) }}" required>
-                                    @error('name_en')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Name (Arabic) <span class="text-danger">*</span></label>
-                                    <input type="text" name="name_ar" class="form-control @error('name_ar') is-invalid @enderror" value="{{ old('name_ar', $itemModel->name_ar) }}" required>
-                                    @error('name_ar')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-check mt-4">
-                                        <input type="hidden" name="is_active" value="0">
-                                        <input type="checkbox" name="is_active" class="form-check-input" value="1" {{ old('is_active', $itemModel->is_active) ? 'checked' : '' }}>
-                                        <label class="form-check-label">Active</label>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <hr>
-                                    <button type="submit" class="btn btn-primary px-5">Update Model</button>
-                                    <a href="{{ route('item-models.index') }}" class="btn btn-secondary px-5">Cancel</a>
-                                </div>
-                            </div>
-                        </form>
+                {{-- Form Actions --}}
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-actions">
+                        <a href="{{ route('item-models.index') }}" class="nova-btn nova-btn-outline">
+                            <i class="fas fa-x me-1"></i> إلغاء
+                        </a>
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-save me-1"></i> تحديث
+                        </button>
                     </div>
                 </div>
             </div>
-        </main>
+        </form>
     </div>
 </div>
 @endsection

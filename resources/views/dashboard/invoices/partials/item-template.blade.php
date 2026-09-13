@@ -1,43 +1,54 @@
 <template id="itemTemplate">
-    <div class="row mb-3 item-row p-3 border rounded bg-light">
-        <div class="col-md-4">
-            <label class="form-label small fw-bold">المنتج (الصنف)</label>
-            <input type="hidden" name="items[__INDEX__][item_id]" class="item-id-input" value="">
-            <div class="input-group">
-                <select name="items[__INDEX__][item_id_select]" class="form-select item-select" required
-                        onchange="fetchWarehouses(this, __INDEX__); syncItemId(this)">
-                    <option value="">اختر المنتج</option>
-                    @foreach($items as $item)
-                        <option value="{{ $item->id }}" data-name="{{ $item->name_ar }}">
-                            {{ $item->name_ar }} ({{ $item->category->name_ar ?? '' }})
-                        </option>
-                    @endforeach
-                </select>
-                <button type="button" class="btn btn-outline-secondary"
-                        onclick="this.closest('.item-row').remove()">
-                    <i data-feather="trash-2"></i>
-                </button>
+    <div class="nova-card nova-mb-3 item-row" style="background: var(--nova-surface-2);">
+        <div class="nova-card-body">
+            <div class="nova-row nova-gap-3">
+                <div class="nova-col">
+                    <div class="nova-form-group">
+                        <label class="nova-label nova-fs-sm nova-fw-bold">المنتج (الصنف)</label>
+                        <input type="hidden" name="items[__INDEX__][item_id]" class="item-id-input" value="">
+                        <div class="nova-flex nova-gap-2">
+                            <select name="items[__INDEX__][item_id_select]" class="nova-select item-select" required
+                                    onchange="fetchWarehouses(this, __INDEX__); syncItemId(this)" style="flex: 1;">
+                                <option value="">اختر المنتج</option>
+                                @foreach($items as $item)
+                                    <option value="{{ $item->id }}" data-name="{{ $item->name_ar }}">
+                                        {{ $item->name_ar }} ({{ $item->category->name_ar ?? '' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="nova-btn nova-btn-danger nova-btn-sm" onclick="this.closest('.item-row').remove()">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="nova-col">
+                    <div class="nova-form-group">
+                        <label class="nova-label nova-fs-sm nova-fw-bold">المخزن (مصدر الصرف)</label>
+                        <select name="items[__INDEX__][warehouse_id]" class="nova-select warehouse-select" required>
+                            <option value="">اختر المنتج أولاً</option>
+                        </select>
+                        <small class="nova-help-text available-stock">المتوفر: -</small>
+                    </div>
+                </div>
+                <div class="nova-col">
+                    <div class="nova-form-group">
+                        <label class="nova-label nova-fs-sm nova-fw-bold">السعر</label>
+                        <input type="number" name="items[__INDEX__][unit_price]" class="nova-input price-input"
+                               step="0.01" min="0" placeholder="السعر" readonly>
+                    </div>
+                </div>
+                <div class="nova-col">
+                    <div class="nova-form-group">
+                        <label class="nova-label nova-fs-sm nova-fw-bold">الكمية</label>
+                        <input type="number" name="items[__INDEX__][quantity]" class="nova-input qty-input"
+                               min="1" step="0.01" required>
+                    </div>
+                </div>
+                <div class="nova-col nova-flex nova-items-end">
+                    <span class="nova-text-muted nova-fs-sm subtotal-display">0 ر.س</span>
+                </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label small fw-bold">المخزن (مصدر الصرف)</label>
-            <select name="items[__INDEX__][warehouse_id]" class="form-select warehouse-select" required>
-                <option value="">اختر المنتج أولاً</option>
-            </select>
-            <small class="text-muted available-stock d-block mt-1">المتوفر: -</small>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label small fw-bold">السعر</label>
-            <input type="number" name="items[__INDEX__][unit_price]" class="form-control price-input"
-                   step="0.01" min="0" placeholder="السعر" readonly>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label small fw-bold">الكمية</label>
-            <input type="number" name="items[__INDEX__][quantity]" class="form-control qty-input"
-                   min="1" step="0.01" required>
-        </div>
-        <div class="col-md-1 d-flex align-items-end">
-            <span class="text-muted small">subtotal</span>
         </div>
     </div>
 </template>

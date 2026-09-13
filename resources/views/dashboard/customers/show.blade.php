@@ -1,133 +1,149 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Customer Details')
+@section('title', 'تفاصيل العميل')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <!-- Header -->
-                <div class="row mb-4">
-                    <div class="col-12 col-lg-8">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="user" class="align-middle me-2"></i>
-                            Customer Details
-                        </h1>
-                        <p class="text-muted">View complete information about <strong>{{ $customer->name }}</strong></p>
-                    </div>
-                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="{{ route('customers.edit', $customer->id) }}" class="btn btn-warning btn-lg shadow-sm me-1">
-                            <i data-feather="edit"></i> Edit
-                        </a>
-                        <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary btn-lg shadow-sm">
-                            <i data-feather="arrow-left"></i> Back
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Customer Profile Card -->
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <div class="row g-4">
-                            <!-- Avatar Column -->
-                            <div class="col-md-4 text-center">
-                                @if($customer->avatar)
-                                    <img src="{{ asset('uploads/customers/' . $customer->avatar) }}" alt="{{ $customer->name }}" class="img-fluid rounded-circle" style="width: 200px; height: 200px; object-fit: cover; border: 4px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                                @else
-                                    <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 200px; height: 200px; font-size: 4rem; color: #6c757d; border: 4px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                                        {{ strtoupper(substr($customer->name, 0, 2)) }}
-                                    </div>
-                                @endif
-                            </div>
-
-                            <!-- Details Column -->
-                            <div class="col-md-8">
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <h2 class="fw-bold">{{ $customer->name }}</h2>
-                                        <hr>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="fw-semibold text-muted">Username</label>
-                                        <p class="fw-semibold">{{ $customer->username }}</p>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="fw-semibold text-muted">Email</label>
-                                        <p><a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></p>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="fw-semibold text-muted">Active Organization</label>
-                                        <p>
-                                            @if($customer->activeOrganization)
-                                                <span class="badge bg-success bg-opacity-10 text-dark px-3 py-2">
-                                                    {{ $customer->activeOrganization->name }}
-                                                </span>
-                                            @else
-                                                <span class="text-muted fst-italic">None</span>
-                                            @endif
-                                        </p>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="fw-semibold text-muted">All Organizations</label>
-                                        <p>
-                                            @if($customer->organizations->count())
-                                                @foreach($customer->organizations as $org)
-                                                    <span class="badge bg-info bg-opacity-10 text-dark me-1">{{ $org->name }}</span>
-                                                @endforeach
-                                            @else
-                                                <span class="text-muted fst-italic">No organizations assigned</span>
-                                            @endif
-                                        </p>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="fw-semibold text-muted">Created At</label>
-                                        <p>{{ $customer->created_at->format('M d, Y H:i:s') }}</p>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="fw-semibold text-muted">Updated At</label>
-                                        <p>{{ $customer->updated_at->format('M d, Y H:i:s') }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Optional: Additional actions -->
-                <div class="mt-4 d-flex gap-2 justify-content-end">
-                    <a href="{{ route('customers.edit', $customer->id) }}" class="btn btn-warning px-4">
-                        <i data-feather="edit"></i> Edit
-                    </a>
-                    <button type="button" class="btn btn-danger px-4" onclick="confirmDelete('{{ $customer->id }}', '{{ addslashes($customer->name) }}')">
-                        <i data-feather="trash-2"></i> Delete
-                    </button>
-                </div>
-            </div>
-        </main>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            تفاصيل العميل
+        </h2>
+        <p class="nova-page-subtitle">عرض كامل لمعلومات {{ $customer->name }}</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('customers.edit', $customer) }}" class="nova-btn nova-btn-warning nova-btn-sm">
+            <i class="fas fa-edit"></i> تعديل
+        </a>
+        <a href="{{ route('customers.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> العودة
+        </a>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal (same as index) -->
-<div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+
+<div class="nova-card">
+    <div class="nova-card-header">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-file-alt"></i> بيانات العميل
+        </h5>
+    </div>
+    <div class="nova-card-body">
+        <div class="nova-row nova-gap-4" style="align-items: start;">
+            {{-- Avatar --}}
+            <div class="nova-col nova-col-md-4" style="text-align: center;">
+                @if($customer->avatar)
+                    <img src="{{ $customer->avatar_url }}" alt="{{ $customer->name }}" class="nova-avatar nova-avatar-xl" style="width: 160px; height: 160px; object-fit: cover; border: 4px solid var(--nova-surface-2); box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                @else
+                    <div class="nova-stat-icon primary" style="width: 160px; height: 160px; font-size: 3rem; margin: 0 auto; border: 4px solid var(--nova-surface-2); box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 50%;">
+                        {{ strtoupper(substr($customer->name, 0, 2)) }}
+                    </div>
+                @endif
             </div>
-            <div class="modal-body text-center pt-0">
-                <div class="bg-danger bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
-                    <i data-feather="alert-triangle" class="text-danger" style="width: 40px;"></i>
+
+            {{-- Details --}}
+            <div class="nova-col nova-col-md-8">
+                <div class="nova-table-scroll">
+                    <table class="nova-table">
+                        <tr>
+                            <th style="width: 30%;">الاسم</th>
+                            <td class="nova-fw-semibold">{{ $customer->name }}</td>
+                        </tr>
+                        <tr>
+                            <th>اسم المستخدم</th>
+                            <td>{{ $customer->username }}</td>
+                        </tr>
+                        <tr>
+                            <th>البريد الإلكتروني</th>
+                            <td>
+                                <i class="fas fa-envelope nova-text-muted me-1"></i>
+                                <a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>المنظمة النشطة</th>
+                            <td>
+                                @if($customer->activeOrganization)
+                                    <span class="nova-badge success">{{ $customer->activeOrganization->name }}</span>
+                                @else
+                                    <span class="nova-text-muted fst-italic">—</span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>جميع المنظمات</th>
+                            <td>
+                                @if($customer->organizations->count())
+                                    @foreach($customer->organizations as $org)
+                                        <span class="nova-badge secondary">{{ $org->name }}</span>
+                                    @endforeach
+                                @else
+                                    <span class="nova-text-muted fst-italic">—</span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>قائمة الأسعار</th>
+                            <td>{{ $customer->priceList?->name ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <th>تاريخ الإنشاء</th>
+                            <td>
+                                <i class="fas fa-calendar nova-text-muted me-1"></i>
+                                {{ $customer->created_at ? $customer->created_at->format('d M Y, h:i A') : '—' }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>آخر تحديث</th>
+                            <td>
+                                <i class="fas fa-history nova-text-muted me-1"></i>
+                                {{ $customer->updated_at ? $customer->updated_at->format('d M Y, h:i A') : '—' }}
+                            </td>
+                        </tr>
+                    </table>
                 </div>
-                <h4 class="fw-bold">Confirm Deletion</h4>
-                <p class="text-muted">Are you sure you want to delete customer <strong id="deleteCustomerName" class="text-danger"></strong>?<br>This action cannot be undone.</p>
             </div>
-            <div class="modal-footer border-0 pt-0 justify-content-center gap-2">
-                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteCustomerForm" method="POST" action="">
+        </div>
+    </div>
+    <div class="nova-card-footer">
+        <div class="nova-flex nova-justify-between nova-gap-2">
+            <a href="{{ route('customers.index') }}" class="nova-btn nova-btn-outline">
+                <i class="fas fa-list"></i> العودة إلى القائمة
+            </a>
+            <div class="nova-flex nova-gap-2">
+                <a href="{{ route('customers.edit', $customer) }}" class="nova-btn nova-btn-warning">
+                    <i class="fas fa-edit"></i> تعديل
+                </a>
+                <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
+                        onclick="confirmDelete({{ $customer->id }}, '{{ addslashes($customer->name) }}')">
+                    <i class="fas fa-trash-alt"></i> حذف
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Delete Confirmation Modal (Nova) --}}
+<div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">هل أنت متأكد أنك تريد حذف العميل <strong id="deleteName" class="nova-text-danger"></strong>؟<br>هذا الإجراء لا يمكن التراجع عنه.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">إلغاء</button>
+                <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger px-4">Delete Forever</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف نهائي</button>
                 </form>
             </div>
         </div>
@@ -137,22 +153,12 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof feather !== 'undefined') feather.replace();
-        // Define delete confirmation function (reused from index)
-        window.confirmDelete = function(id, name) {
-            document.getElementById('deleteCustomerName').innerText = name;
-            document.getElementById('deleteCustomerForm').action = '/customers/' + id;
-            var modal = new bootstrap.Modal(document.getElementById('deleteCustomerModal'));
-            modal.show();
-        };
-        // Auto-dismiss alerts if any (though not shown in show, but for safety)
-        setTimeout(() => {
-            document.querySelectorAll('.alert').forEach(alert => {
-                let bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            });
-        }, 5000);
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    window.confirmDelete = function(id, name) {
+        document.getElementById('deleteName').innerText = name;
+        document.getElementById('deleteForm').action = '/customers/' + id;
+        document.getElementById('deleteModal').classList.add('show');
+    };
+});
 </script>
 @endpush

@@ -1,137 +1,149 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'إدارة قوائم الأسعار')
+@section('title', 'Price Lists')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12 col-lg-8">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="dollar-sign" class="align-middle me-2"></i>
-                            إدارة قوائم الأسعار
-                        </h1>
-                        <p class="text-muted">إنشاء وإدارة قوائم أسعار مخصصة للعملاء</p>
-                    </div>
-                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="{{ route('price-lists.create') }}" class="btn btn-primary btn-lg shadow-sm">
-                            <i data-feather="plus-circle"></i> إضافة قائمة أسعار
-                        </a>
-                    </div>
-                </div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-dollar-sign" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Price Lists
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Create and manage price lists for customers</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('price-lists.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus"></i> Add Price List
+        </a>
+    </div>
+</div>
 
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i data-feather="check-circle" class="me-2"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
 
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-header bg-white border-0 pt-4 pb-3 px-4">
-                        <div class="row g-2">
-                            <div class="col-md-4">
-                                <form method="GET" class="d-flex">
-                                    <input type="text" name="search" class="form-control form-control-sm" placeholder="بحث عن قائمة أسعار..." value="{{ request('search') }}">
-                                    <button type="submit" class="btn btn-primary btn-sm"><i data-feather="search"></i></button>
-                                </form>
-                            </div>
-                            <div class="col-md-3">
-                                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                                    <option value="">كل الحالات</option>
-                                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشطة</option>
-                                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشطة</option>
-                                </select>
-                            </div>
-                            @if(request()->hasAny(['search', 'status']))
-                                <div class="col-md-2">
-                                    <a href="{{ route('price-lists.index') }}" class="btn btn-sm btn-outline-secondary">
-                                        <i data-feather="x"></i> مسح
-                                    </a>
-                                </div>
-                            @endif
+<div class="nova-table-wrapper">
+    <div class="nova-toolbar">
+        <div class="nova-toolbar-filters">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-list"></i>
+                Price Lists
+            </h3>
+        </div>
+        <div class="nova-toolbar-search">
+            <i class="fas fa-search"></i>
+            <input type="search" placeholder="Search price lists...">
+        </div>
+    </div>
+    <div class="nova-table-scroll">
+        <table class="nova-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Items</th>
+                    <th>Created By</th>
+                    <th class="nova-text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($priceLists as $priceList)
+                <tr>
+                    <td>{{ $priceList->id }}</td>
+                    <td><span class="nova-fw-bold">{{ $priceList->name }}</span></td>
+                    <td><small class="nova-text-muted">{{ Str::limit($priceList->description, 50) }}</small></td>
+                    <td>
+                        @if($priceList->status === 'active')
+                            <span class="nova-badge success">Active</span>
+                        @else
+                            <span class="nova-badge secondary">Inactive</span>
+                        @endif
+                    </td>
+                    <td>
+                        <span class="nova-badge secondary">{{ $priceList->items_count ?? 0 }}</span>
+                    </td>
+                    <td><small class="nova-text-muted">{{ $priceList->creator?->name ?? '—' }}</small></td>
+                    <td class="nova-text-end">
+                        <div class="nova-table-actions">
+                            <a href="{{ route('price-lists.show', $priceList) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('price-lists.edit', $priceList) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ route('price-lists.toggle-status', $priceList) }}" method="POST" class="nova-delete-form">
+                                @csrf
+                                <button type="submit" class="nova-icon-btn nova-btn-sm {{ $priceList->status === 'active' ? 'nova-text-warning' : 'nova-text-primary' }}" title="{{ $priceList->status === 'active' ? 'Deactivate' : 'Activate' }}">
+                                    <i class="fas fa-{{ $priceList->status === 'active' ? 'pause' : 'play' }}"></i>
+                                </button>
+                            </form>
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $priceList->id }}', '{{ addslashes($priceList->name) }}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
                         </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4">#</th>
-                                        <th>الاسم</th>
-                                        <th>الوصف</th>
-                                        <th>الحالة</th>
-                                        <th>عدد المنتجات</th>
-                                        <th>المستخدم الذي أنشأها</th>
-                                        <th class="pe-4 text-end">إجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($priceLists as $priceList)
-                                        <tr>
-                                            <td class="ps-4 fw-semibold">{{ $priceList->id }}</td>
-                                            <td><strong>{{ $priceList->name }}</strong></td>
-                                            <td><small class="text-muted">{{ Str::limit($priceList->description, 50) }}</small></td>
-                                            <td>
-                                                @if($priceList->status === 'active')
-                                                    <span class="badge bg-success">نشطة</span>
-                                                @else
-                                                    <span class="badge bg-secondary">معطلة</span>
-                                                @endif
-                                            </td>
-                                            <td><span class="badge bg-info">{{ $priceList->items_count ?? 0 }}</span></td>
-                                            <td><small class="text-muted">{{ $priceList->creator?->name ?? '—' }}</small></td>
-                                            <td class="pe-4 text-end">
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{{ route('price-lists.show', $priceList) }}" class="btn btn-outline-info" title="عرض"><i data-feather="eye"></i></a>
-                                                    <a href="{{ route('price-lists.edit', $priceList) }}" class="btn btn-outline-warning" title="تعديل"><i data-feather="edit"></i></a>
-                                                    <form action="{{ route('price-lists.toggle-status', $priceList) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-outline-{{ $priceList->status === 'active' ? 'warning' : 'success' }}" title="{{ $priceList->status === 'active' ? 'تعطيل' : 'تفعيل' }}">
-                                                            <i data-feather="{{ $priceList->status === 'active' ? 'pause' : 'play' }}"></i>
-                                                        </button>
-                                                    </form>
-                                                    <form action="{{ route('price-lists.destroy', $priceList) }}" method="POST" class="d-inline" onsubmit="return confirm('حذف قائمة الأسعار؟')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-outline-danger" title="حذف"><i data-feather="trash-2"></i></button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center py-5">
-                                                <div class="py-4">
-                                                    <i data-feather="dollar-sign" style="width: 48px; height: 48px;" class="text-muted mb-3"></i>
-                                                    <h5 class="text-muted">لا توجد قوائم أسعار</h5>
-                                                    <a href="{{ route('price-lists.create') }}" class="btn btn-primary">
-                                                        <i data-feather="plus-circle"></i> إضافة قائمة أسعار
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7">
+                        <div class="nova-empty">
+                            <div class="nova-empty-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <h3 class="nova-empty-title">No price lists found</h3>
+                            <p class="nova-empty-text">Create your first price list to get started.</p>
+                            <a href="{{ route('price-lists.create') }}" class="nova-btn nova-btn-primary">
+                                <i class="fas fa-plus"></i> Add Price List
+                            </a>
                         </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 py-3 px-4">
-                        {{ $priceLists->links('pagination::bootstrap-5') }}
-                    </div>
-                </div>
-            </div>
-        </main>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="nova-card-footer">
+        <div class="nova-pagination">
+            {{ $priceLists->appends(request()->query())->links() }}
+        </div>
     </div>
 </div>
 @endsection
 
+{{-- Delete Confirmation Modal (Nova) --}}
+<div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete price list <strong id="deleteName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">Cancel</button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof feather !== 'undefined') feather.replace();
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    window.confirmDelete = function(id, name) {
+        document.getElementById('deleteName').innerText = name;
+        document.getElementById('deleteForm').action = '/price-lists/' + id;
+        document.getElementById('deleteModal').classList.add('show');
+    };
+});
 </script>
 @endpush

@@ -3,47 +3,125 @@
 @section('title', 'Item Image Details')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12 col-lg-8">
-                        <h1 class="display-5 fw-bold"><i data-feather="image"></i> Item Image Details</h1>
-                        <p class="text-muted">Review the selected item image and metadata.</p>
-                    </div>
-                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="{{ route('item-images.edit', $itemImage) }}" class="btn btn-warning"><i data-feather="edit"></i> Edit</a>
-                        <a href="{{ route('item-images.index') }}" class="btn btn-secondary"><i data-feather="arrow-left"></i> Back</a>
-                    </div>
-                </div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Item Image Details
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Review the selected item image and metadata.</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('item-images.edit', $itemImage) }}" class="nova-btn nova-btn-warning nova-btn-sm">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{{ route('item-images.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> Back to List
+        </a>
+    </div>
+</div>
 
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <label class="form-label text-muted">Item</label>
-                                <div class="fw-semibold">{{ $itemImage->item->name_en ?? $itemImage->item->name_ar ?? '—' }}</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label text-muted">Sort Order</label>
-                                <div class="fw-semibold">{{ $itemImage->sort_order }}</div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label text-muted">Image</label>
-                                <div class="border rounded p-3 text-center">
-                                    <img src="{{ $itemImage->url }}" alt="{{ $itemImage->alt_text }}" class="img-fluid" style="max-height: 360px;">
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label text-muted">Alt Text</label>
-                                <div class="fw-semibold">{{ $itemImage->alt_text ?? '—' }}</div>
-                            </div>
-                        </div>
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Item Image Details</h5>
+    </div>
+    <div class="nova-card-body">
+        <div class="nova-row g-4">
+            <div class="nova-col nova-col-md-6">
+                <div class="nova-form-group">
+                    <label class="nova-label nova-text-muted">Item</label>
+                    <div class="nova-fw-semibold">{{ $itemImage->item->name_en ?? $itemImage->item->name_ar ?? '—' }}</div>
+                </div>
+            </div>
+            <div class="nova-col nova-col-md-6">
+                <div class="nova-form-group">
+                    <label class="nova-label nova-text-muted">Sort Order</label>
+                    <div class="nova-fw-semibold">{{ $itemImage->sort_order }}</div>
+                </div>
+            </div>
+            <div class="nova-col nova-col-12">
+                <div class="nova-form-group">
+                    <label class="nova-label nova-text-muted">Image</label>
+                    <div class="border rounded nova-py-3 nova-px-2 nova-text-center">
+                        <img src="{{ $itemImage->url }}" alt="{{ $itemImage->alt_text }}" class="img-fluid" style="max-height: 360px;">
                     </div>
                 </div>
             </div>
-        </main>
+            <div class="nova-col nova-col-12">
+                <div class="nova-form-group">
+                    <label class="nova-label nova-text-muted">Alt Text</label>
+                    <div class="nova-fw-semibold">{{ $itemImage->alt_text ?? '—' }}</div>
+                </div>
+            </div>
+            <div class="nova-col nova-col-12">
+                <div class="nova-form-actions">
+                    <a href="{{ route('item-images.edit', $itemImage) }}" class="nova-btn nova-btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{{ route('item-images.index') }}" class="nova-btn nova-btn-outline">
+                        <i class="fas fa-list"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ============================================================
+     Delete Confirmation Modal
+     ============================================================ --}}
+<div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">
+                Are you sure you want to delete item image
+                <strong id="deleteName" class="nova-text-danger"></strong>?<br>
+                This action cannot be undone.
+            </p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline"
+                        onclick="document.getElementById('deleteModal').classList.remove('show')">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    window.confirmDelete = function(id, name) {
+        document.getElementById('deleteName').innerText = name;
+        document.getElementById('deleteForm').action = '/item-images/' + id;
+        document.getElementById('deleteModal').classList.add('show');
+    };
+
+    setTimeout(function() {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s, transform 0.3s';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
+</script>
+@endpush

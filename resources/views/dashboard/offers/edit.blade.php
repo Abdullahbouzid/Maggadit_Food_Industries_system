@@ -1,134 +1,130 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'تعديل العرض')
+@section('title', 'Edit Offer')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="edit-2" class="me-2"></i>
-                            تعديل العرض
-                        </h1>
-                    </div>
-                </div>
-
-                <form action="{{ route('offers.update', $offer) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-body p-4">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">المنتج <span class="text-danger">*</span></label>
-                                    <select name="item_id" id="item-select" class="form-control" required>
-                                        <option value="">اختر المنتج</option>
-                                        @foreach($items as $item)
-                                            <option value="{{ $item['id'] }}" 
-                                                            data-price="{{ $item['price'] }}"
-                                                            data-packs="{{ json_encode($item['packs']) }}"
-                                                            data-name="{{ $item['name'] }}"
-                                                            data-pack="{{ $item['pack_type'] }}"
-                                                            {{ old('item_id', $offer->item_id) == $item['id'] ? 'selected' : '' }}>
-                                                {{ $item['full_name'] }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <div id="selected-item-info" class="mt-2 p-2 bg-light rounded d-none">
-                                        <small class="text-muted">السعر الحالي: <strong id="current-price">0</strong> ر.س</small>
-                                        <small class="text-muted d-block" id="current-pack"></small>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 d-none" id="pack-select-container">
-                                    <label class="form-label fw-semibold">العبوة <span class="text-danger">*</span></label>
-                                    <select name="item_pack_id" id="pack-select" class="form-control">
-                                        <option value="">اختر العبوة</option>
-                                    </select>
-                                    <div id="selected-pack-info" class="mt-2 p-2 bg-light rounded d-none">
-                                        <small class="text-muted">سعر العبوة: <strong id="pack-price">0</strong> ر.س</small>
-                                        <small class="text-muted d-block">الكمية المتوفرة: <strong id="pack-quantity">0</strong></small>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">عنوان العرض</label>
-                                    <input type="text" name="title" class="form-control" value="{{ old('title', $offer->title) }}" placeholder="مثال: خصم نهاية الأسبوع">
-                                </div>
-
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold">وصف العرض</label>
-                                    <textarea name="description" rows="3" class="form-control" placeholder="وصف مختصر للعرض...">{{ old('description', $offer->description) }}</textarea>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">السعر القديم <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" name="old_price" id="old-price" class="form-control" value="{{ old('old_price', $offer->old_price) }}" required>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">السعر الجديد <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" name="new_price" id="new-price" class="form-control" value="{{ old('new_price', $offer->new_price) }}" required>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">نسبة الخصم (%)</label>
-                                    <input type="number" step="0.01" name="discount_percentage" id="discount-percentage" class="form-control" value="{{ old('discount_percentage', $offer->discount_percentage) }}" readonly>
-                                    <div class="form-text">يُحسب تلقائياً</div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">تاريخ البداية <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" name="start_date" class="form-control" value="{{ old('start_date', $offer->start_date?->format('Y-m-d H:i')) }}" required>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">تاريخ النهاية <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" name="end_date" class="form-control" value="{{ old('end_date', $offer->end_date?->format('Y-m-d H:i')) }}" required>
-                                </div>
-
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold">صورة العرض</label>
-                                    <input type="file" name="image" class="form-control" accept="image/*">
-                                    @if($offer->image)
-                                        <img src="{{ asset('storage/' . $offer->image) }}" alt="صورة العرض الحالية" class="mt-2 rounded shadow-sm" style="max-height: 150px;">
-                                    @endif
-                                </div>
-
-                                <div class="col-12">
-                                    <div class="form-check form-switch">
-                                        <input type="checkbox" name="is_active" class="form-check-input" id="isActive" value="1" {{ $offer->is_active ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-semibold" for="isActive">نشط</label>
-                                    </div>
-                                </div>
-
-                                <div class="col-12">
-                                    <button type="submit" class="btn btn-primary btn-lg px-5">
-                                        <i data-feather="save"></i> حفظ التغييرات
-                                    </button>
-                                    <a href="{{ route('offers.index') }}" class="btn btn-light btn-lg px-5 ms-2">إلغاء</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </main>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Offer
+        </h2>
     </div>
 </div>
+
+<form action="{{ route('offers.update', $offer) }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    @method('PUT')
+    <div class="nova-card">
+        <div class="nova-card-header">
+            <h2 class="nova-card-title">
+                <i class="fas fa-edit"></i>
+                Offer Details
+            </h2>
+        </div>
+        <div class="nova-card-body">
+            <div class="nova-row cols-2">
+                <div class="nova-form-group">
+                    <label class="nova-label">Product <span class="nova-text-danger">*</span></label>
+                    <select name="item_id" id="item-select" class="nova-select" required>
+                        <option value="">Select product</option>
+                        @foreach($items as $item)
+                            <option value="{{ $item['id'] }}" 
+                                            data-price="{{ $item['price'] }}"
+                                            data-packs="{{ json_encode($item['packs']) }}"
+                                            data-name="{{ $item['name'] }}"
+                                            data-pack="{{ $item['pack_type'] }}"
+                                            {{ old('item_id', $offer->item_id) == $item['id'] ? 'selected' : '' }}>
+                                {{ $item['full_name'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div id="selected-item-info" class="nova-alert info" style="display: none; margin-top: 0.5rem;">
+                        <small class="nova-text-muted">Current price: <strong id="current-price">0</strong> SAR</small>
+                        <small class="nova-text-muted d-block" id="current-pack"></small>
+                    </div>
+                </div>
+                <div class="nova-form-group nova-hidden" id="pack-select-container">
+                    <label class="nova-label">Pack <span class="nova-text-danger">*</span></label>
+                    <select name="item_pack_id" id="pack-select" class="nova-select">
+                        <option value="">Select pack</option>
+                    </select>
+                    <div id="selected-pack-info" class="nova-alert info" style="display: none; margin-top: 0.5rem;">
+                        <small class="nova-text-muted">Pack price: <strong id="pack-price">0</strong> SAR</small>
+                        <small class="nova-text-muted d-block">Quantity: <strong id="pack-quantity">0</strong></small>
+                    </div>
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Offer Title</label>
+                    <input type="text" name="title" class="nova-input" value="{{ old('title', $offer->title) }}" placeholder="Example: Weekend Discount">
+                </div>
+            </div>
+            <div class="nova-form-group">
+                <label class="nova-label">Description</label>
+                <textarea name="description" rows="3" class="nova-textarea" placeholder="Brief description for the offer...">{{ old('description', $offer->description) }}</textarea>
+            </div>
+            <div class="nova-row cols-3">
+                <div class="nova-form-group">
+                    <label class="nova-label">Old Price <span class="nova-text-danger">*</span></label>
+                    <input type="number" step="0.01" name="old_price" id="old-price" class="nova-input" value="{{ old('old_price', $offer->old_price) }}" required>
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">New Price <span class="nova-text-danger">*</span></label>
+                    <input type="number" step="0.01" name="new_price" id="new-price" class="nova-input" value="{{ old('new_price', $offer->new_price) }}" required>
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">Discount (%)</label>
+                    <input type="number" step="0.01" name="discount_percentage" id="discount-percentage" class="nova-input" value="{{ old('discount_percentage', $offer->discount_percentage) }}" readonly>
+                    <div class="nova-form-help">Calculated automatically</div>
+                </div>
+            </div>
+            <div class="nova-row cols-2">
+                <div class="nova-form-group">
+                    <label class="nova-label">Start Date <span class="nova-text-danger">*</span></label>
+                    <input type="datetime-local" name="start_date" class="nova-input" value="{{ old('start_date', $offer->start_date?->format('Y-m-d\\TH:i')) }}" required>
+                </div>
+                <div class="nova-form-group">
+                    <label class="nova-label">End Date <span class="nova-text-danger">*</span></label>
+                    <input type="datetime-local" name="end_date" class="nova-input" value="{{ old('end_date', $offer->end_date?->format('Y-m-d\\TH:i')) }}" required>
+                </div>
+            </div>
+            <div class="nova-form-group">
+                <label class="nova-label">Offer Image</label>
+                <input type="file" name="image" class="nova-input" accept="image/*">
+                @if($offer->image)
+                    <img src="{{ asset('storage/' . $offer->image) }}" alt="Current offer image" class="nova-mt-2 rounded" style="max-height: 150px;">
+                @endif
+            </div>
+            <div class="nova-form-group">
+                <label class="nova-switch">
+                    <input type="checkbox" name="is_active" class="nova-switch-input" id="isActive" value="1" {{ $offer->is_active ? 'checked' : '' }}>
+                    <span class="nova-switch-slider"></span>
+                    <span class="nova-fw-semibold">Active</span>
+                </label>
+            </div>
+        </div>
+        <div class="nova-card-footer">
+            <button type="submit" class="nova-btn nova-btn-primary">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <a href="{{ route('offers.index') }}" class="nova-btn nova-btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </div>
+</form>
 @endsection
 
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
     .select2-container--default .select2-selection--single {
-        height: 38px;
-        padding: 4px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
+        height: 38px; padding: 4px 12px; border: 1.5px solid var(--nova-border); border-radius: 10px;
+        background: var(--nova-surface); color: var(--nova-text); font-size: 0.95rem;
+    }
+    .select2-container--default .select2-selection--single:focus {
+        border-color: var(--nova-primary);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
 </style>
 @endpush
@@ -138,14 +134,8 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
-        feather.replace();
-        
         if (typeof $.fn.select2 !== 'undefined') {
-            $('#item-select').select2({
-                placeholder: 'ابحث عن منتج...',
-                allowClear: true,
-                width: '100%'
-            });
+            $('#item-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%' });
         }
 
         $('#item-select').on('change', function() {
@@ -153,36 +143,25 @@
             const price = parseFloat(selectedOption.data('price')) || 0;
             const pack = selectedOption.data('pack') || '';
             let packs = [];
+            try { packs = JSON.parse(selectedOption.data('packs') || '[]'); } catch (e) { packs = []; }
             
-            try {
-                packs = JSON.parse(selectedOption.data('packs') || '[]');
-            } catch (e) {
-                packs = [];
-            }
-            
-            $('#pack-select-container').addClass('d-none');
+            $('#pack-select-container').addClass('nova-hidden');
             $('#pack-select').val('');
             
             if (packs.length > 0) {
                 const packSelect = $('#pack-select');
-                packSelect.empty().append('<option value="">اختر العبوة</option>');
-                
+                packSelect.empty().append('<option value="">Select pack</option>');
                 packs.forEach(function(p) {
-                    const packName = p.name || '';
-                    const packPrice = p.price || 0;
-                    const packQty = p.quantity || 0;
-                    packSelect.append('<option value="' + p.id + '" data-price="' + packPrice + '" data-quantity="' + packQty + '">' + packName + ' - ' + packPrice + ' ر.س</option>');
+                    packSelect.append('<option value="' + p.id + '" data-price="' + (p.price || 0) + '" data-quantity="' + (p.quantity || 0) + '">' + (p.name || '') + ' - ' + (p.price || 0) + ' SAR</option>');
                 });
-                
-                $('#pack-select-container').removeClass('d-none');
+                $('#pack-select-container').removeClass('nova-hidden');
                 packSelect.val(packs[0].id).trigger('change');
             } else if (price > 0) {
                 $('#old-price').val(price);
                 $('#current-price').text(price.toFixed(2));
-                $('#selected-item-info').removeClass('d-none');
+                $('#selected-item-info').removeClass('nova-hidden');
             }
-            
-            $('#current-pack').text(pack ? 'الوحدة: ' + pack : '');
+            $('#current-pack').text(pack ? 'Unit: ' + pack : '');
             calculateDiscount();
         });
 
@@ -190,31 +169,26 @@
             const selectedOption = $(this).find('option:selected');
             const price = parseFloat(selectedOption.data('price')) || 0;
             const quantity = parseFloat(selectedOption.data('quantity')) || 0;
-            
             if (price > 0) {
                 $('#old-price').val(price);
                 $('#pack-price').text(price.toFixed(2));
                 $('#pack-quantity').text(quantity);
-                $('#selected-pack-info').removeClass('d-none');
-                $('#selected-item-info').removeClass('d-none');
+                $('#selected-pack-info').removeClass('nova-hidden');
+                $('#selected-item-info').removeClass('nova-hidden');
             } else {
                 $('#old-price').val('');
-                $('#selected-pack-info').addClass('d-none');
+                $('#selected-pack-info').addClass('nova-hidden');
             }
-            
             calculateDiscount();
         });
 
         function calculateDiscount() {
             const oldPrice = parseFloat($('#old-price').val()) || 0;
             const newPrice = parseFloat($('#new-price').val()) || 0;
-            
             if (oldPrice > 0 && newPrice > 0 && newPrice < oldPrice) {
                 const discount = ((oldPrice - newPrice) / oldPrice) * 100;
                 $('#discount-percentage').val(discount.toFixed(2));
-            } else {
-                $('#discount-percentage').val('');
-            }
+            } else { $('#discount-percentage').val(''); }
         }
     });
 </script>

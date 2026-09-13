@@ -3,72 +3,103 @@
 @section('title', 'Edit Category: ' . $category->name)
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold">
-                            <i data-feather="edit"></i> Edit Category
-                        </h1>
-                        <p class="text-muted">Edit category: {{ $category->name }}</p>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Category: {{ $category->name }}
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Modify category details</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('categories.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> Back
+        </a>
+    </div>
+</div>
+
+@if($errors->any())
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <ul class="nova-mb-0 nova-mt-2">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Category Information</h5>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('categories.update', $category) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+            <div class="nova-row g-4">
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Category Code <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="code" class="nova-input @error('code') nova-invalid @enderror" value="{{ old('code', $category->code) }}" required>
+                        @error('code')
+                            <div class="nova-form-error">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
-
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <form action="{{ route('categories.update', $category) }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            @method('PUT')
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="code" class="form-label fw-semibold">Category Code <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('code') is-invalid @enderror" id="code" name="code" value="{{ old('code', $category->code) }}" required>
-                                    @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="name" class="form-label fw-semibold">Category Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $category->name) }}" required>
-                                    @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Category Name <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="name" class="nova-input @error('name') nova-invalid @enderror" value="{{ old('name', $category->name) }}" required>
+                        @error('name')
+                            <div class="nova-form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Division <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="division" class="nova-input @error('division') nova-invalid @enderror" value="{{ old('division', $category->division) }}" required>
+                        @error('division')
+                            <div class="nova-form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Current Image</label>
+                        @if($category->image)
+                            <div class="nova-mb-2">
+                                <img src="{{ asset('uploads/' . $category->image) }}" alt="{{ $category->name }}" width="100" style="object-fit: cover; border: 1px solid var(--nova-border); border-radius: 10px; box-shadow: var(--nova-shadow-sm);">
                             </div>
-
-                            <div class="mb-3">
-                                <label for="division" class="form-label fw-semibold">Division <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('division') is-invalid @enderror" id="division" name="division" value="{{ old('division', $category->division) }}" required>
-                                @error('division')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Current Image</label>
-                                @if($category->image)
-                                    <div class="mb-2">
-                                        <img src="{{ asset('uploads/' . $category->image) }}" alt="{{ $category->name }}" width="100" class="rounded border shadow-sm">
-                                    </div>
-                                @else
-                                    <p class="text-muted">No image uploaded yet.</p>
-                                @endif
-                                <label for="image" class="form-label fw-semibold">Change Image (Optional)</label>
-                                <input type="file" class="form-control @error('image') is-invalid @enderror" id="image" name="image" accept="image/*">
-                                @error('image')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-
-                            <div class="mb-4 form-check form-switch">
-                                <input type="checkbox" class="form-check-input" id="show_in_customer_app" name="show_in_customer_app" value="1" {{ old('show_in_customer_app', $category->show_in_customer_app) ? 'checked' : '' }}>
-                                <label class="form-check-label fw-semibold" for="show_in_customer_app">Show in Customer App</label>
-                            </div>
-
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary px-4"><i data-feather="save"></i> Update</button>
-                                <a href="{{ route('categories.index') }}" class="btn btn-light px-4">Cancel</a>
-                            </div>
-                        </form>
+                        @else
+                            <p class="nova-text-muted">No image uploaded yet.</p>
+                        @endif
+                        <label class="nova-label">Change Image (Optional)</label>
+                        <input type="file" name="image" class="nova-input @error('image') nova-invalid @enderror" accept="image/*">
+                        @error('image')
+                            <div class="nova-form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-check">
+                        <input type="checkbox" name="show_in_customer_app" value="1" class="nova-form-check-input" id="show_in_customer_app" {{ old('show_in_customer_app', $category->show_in_customer_app) ? 'checked' : '' }}>
+                        <label class="nova-form-check-label" for="show_in_customer_app">Show in Customer App</label>
+                    </div>
+                </div>
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-actions">
+                        <a href="{{ route('categories.index') }}" class="nova-btn nova-btn-outline">
+                            <i class="fas fa-x me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-save me-1"></i> Update
+                        </button>
                     </div>
                 </div>
             </div>
-        </main>
+        </form>
     </div>
 </div>
 @endsection

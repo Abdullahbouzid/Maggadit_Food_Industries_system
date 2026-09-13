@@ -1,115 +1,151 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Add Country')
+@section('title', 'إنشاء بلد جديد')
 
 @section('content')
-<div class="container-fluid p-0">
-    <div class="row mb-4">
-        <div class="col">
-            <h1><i data-feather="flag"></i> Add Country</h1>
-        </div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            إضافة بلد جديد
+        </h2>
+        <p class="nova-page-subtitle">أدخل بيانات البلد والمعلومات اللازمة</p>
     </div>
-    <div class="card shadow-sm rounded-4">
-        <div class="card-body">
-            <form action="{{ route('countries.store') }}" method="POST">
-                @csrf
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Country Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control" required>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('geographical.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> العودة
+        </a>
+    </div>
+</div>
+
+@if($errors->any())
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <ul class="mb-0 mt-2">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="nova-card">
+    <div class="nova-card-header">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-file-alt"></i> بيانات البلد
+        </h5>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('countries.store') }}" method="POST">
+            @csrf
+
+            <div class="nova-row g-4">
+                {{-- Country Name --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-flag me-1"></i> اسم البلد <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text" name="name" class="nova-input nova-invalid @error('name') nova-invalid @enderror" value="{{ old('name') }}" required>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Country Code <span class="text-danger">*</span></label>
-                        <input type="text" name="code" class="form-control" required placeholder="e.g. SA, EG, US">
+                    @error('name') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Country Code --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-hashtag me-1"></i> شيفرة البلد <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text" name="code" class="nova-input @error('code') nova-invalid @enderror" value="{{ old('code') }}" required placeholder="مثال: SA, EG, US">
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Latitude</label>
-                        <input type="number" step="any" name="latitude" id="lat" class="form-control" placeholder="24.774265">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Longitude</label>
-                        <input type="number" step="any" name="longitude" id="lng" class="form-control" placeholder="46.738586">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Pick Location on Map</label>
-                        <div id="mapPicker" style="height: 400px; width: 100%; border-radius: 0.75rem; background: #e9ecef;"></div>
-                        <div class="form-text mt-2">Click on the map or drag the marker to set coordinates.</div>
-                    </div>
-                    <div class="col-12 mt-4">
-                        <button type="submit" class="btn btn-primary px-5">Save Country</button>
-                        <a href="{{ route('geographical.index') }}" class="btn btn-secondary px-5 ms-2">Cancel</a>
+                    @error('code') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Latitude --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label"><i class="fas fa-map-marker-alt me-1"></i> خط العرض</label>
+                        <input type="number" step="any" name="latitude" id="lat" class="nova-input" value="{{ old('latitude') }}" placeholder="24.774265">
                     </div>
                 </div>
-            </form>
-        </div>
+
+                {{-- Longitude --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label"><i class="fas fa-map-marker-alt me-1"></i> خط الطول</label>
+                        <input type="number" step="any" name="longitude" id="lng" class="nova-input" value="{{ old('longitude') }}" placeholder="46.738586">
+                    </div>
+                </div>
+
+                {{-- Map Picker --}}
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-group">
+                        <label class="nova-label"><i class="fas fa-map me-1"></i> الموقع على الخريطة</label>
+                        <div id="mapPicker" style="height: 400px; width: 100%; border-radius: 0.75rem;"></div>
+                        <div class="nova-help-text">انقر على الخريطة أو اسحب العلامة لتحديد الإحداثيات.</div>
+                    </div>
+                </div>
+
+                {{-- Form Actions --}}
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-actions">
+                        <a href="{{ route('geographical.index') }}" class="nova-btn nova-btn-outline">
+                            <i class="fas fa-x me-1"></i> إلغاء
+                        </a>
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-save me-1"></i> حفظ البلد
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 @endsection
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>
-    #mapPicker { height: 400px; width: 100%; border-radius: 0.75rem; z-index: 1; }
-</style>
 @endpush
 
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    (function() {
-        // انتظر حتى يتم تحميل الصفحة بالكامل
-        window.addEventListener('load', function() {
-            const mapDiv = document.getElementById('mapPicker');
-            if (!mapDiv) {
-                console.error('Element #mapPicker not found!');
-                return;
-            }
+document.addEventListener('DOMContentLoaded', function() {
+    const mapDiv = document.getElementById('mapPicker');
+    if (!mapDiv) return;
 
-            // الإحداثيات الافتراضية (الرياض)
-            let defaultLat = 24.774265;
-            let defaultLng = 46.738586;
+    let defaultLat = 24.774265;
+    let defaultLng = 46.738586;
 
-            // محاولة أخذ القيم من الحقول إذا كانت موجودة (مفيد عند التعديل)
-            const latInput = document.getElementById('lat');
-            const lngInput = document.getElementById('lng');
-            if (latInput && latInput.value && !isNaN(parseFloat(latInput.value))) {
-                defaultLat = parseFloat(latInput.value);
-            }
-            if (lngInput && lngInput.value && !isNaN(parseFloat(lngInput.value))) {
-                defaultLng = parseFloat(lngInput.value);
-            }
+    const latInput = document.getElementById('lat');
+    const lngInput = document.getElementById('lng');
+    if (latInput && latInput.value && !isNaN(parseFloat(latInput.value))) defaultLat = parseFloat(latInput.value);
+    if (lngInput && lngInput.value && !isNaN(parseFloat(lngInput.value))) defaultLng = parseFloat(lngInput.value);
 
-            // إنشاء الخريطة
-            const map = L.map('mapPicker').setView([defaultLat, defaultLng], 5);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+    const map = L.map('mapPicker').setView([defaultLat, defaultLng], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-            // إضافة علامة قابلة للسحب
-            const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+    const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
 
-            // دالة تحديث الحقول بالإحداثيات
-            function updateCoordinates(lat, lng) {
-                if (latInput) latInput.value = lat.toFixed(6);
-                if (lngInput) lngInput.value = lng.toFixed(6);
-            }
+    function updateCoordinates(lat, lng) {
+        if (latInput) latInput.value = lat.toFixed(6);
+        if (lngInput) lngInput.value = lng.toFixed(6);
+    }
 
-            // عند سحب العلامة
-            marker.on('dragend', function(e) {
-                const pos = marker.getLatLng();
-                updateCoordinates(pos.lat, pos.lng);
-            });
+    marker.on('dragend', function() {
+        const pos = marker.getLatLng();
+        updateCoordinates(pos.lat, pos.lng);
+    });
 
-            // عند النقر على الخريطة
-            map.on('click', function(e) {
-                marker.setLatLng(e.latlng);
-                updateCoordinates(e.latlng.lat, e.latlng.lng);
-            });
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        updateCoordinates(e.latlng.lat, e.latlng.lng);
+    });
 
-            // تحديث الحقول في البداية إذا كانت القيم الافتراضية موجودة
-            updateCoordinates(defaultLat, defaultLng);
-            console.log('Map initialized successfully');
-        });
-    })();
+    updateCoordinates(defaultLat, defaultLng);
+});
 </script>
 @endpush

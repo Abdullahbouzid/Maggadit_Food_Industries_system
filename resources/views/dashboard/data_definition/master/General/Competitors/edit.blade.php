@@ -1,39 +1,124 @@
 @extends('dashboard.partials.layout')
-@section('title','Edit Competitor')
+
+@section('title', 'Edit Competitor')
+
 @section('content')
-<div class="container-fluid p-0">
-    <div class="row mb-4">
-        <div class="col">
-            <h1><i data-feather="edit-2"></i> Edit Competitor: {{ $competitor->name }}</h1>
-        </div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Competitor: {{ $competitor->name }}
+        </h2>
+        <p class="nova-page-subtitle">Modify competitor details</p>
     </div>
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body">
-            <form action="{{ route('competitors.update', $competitor->id) }}" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="row g-3">
-                    <div class="col-md-6"><label class="form-label">Name *</label><input type="text" name="name" value="{{ old('name', $competitor->name) }}" class="form-control @error('name') is-invalid @enderror" required>@error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
-                    <div class="col-md-6"><label class="form-label">Code *</label><input type="text" name="code" value="{{ old('code', $competitor->code) }}" class="form-control @error('code') is-invalid @enderror" required>@error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
-                    <div class="col-md-6"><label class="form-label">Organization</label><select name="organization_id" class="form-select"><option value="">None</option>@foreach($organizations as $org)<option value="{{ $org->id }}" {{ old('organization_id', $competitor->organization_id) == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>@endforeach</select></div>
-                    <div class="col-md-6">
-                        <label class="form-label">Competitor Type</label>
-                        <select name="competitor_type" class="form-select">
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('competitors.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> Back
+        </a>
+    </div>
+</div>
+
+@if($errors->any())
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <ul class="nova-mb-0 nova-mt-2">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h5 class="nova-fw-bold nova-mb-0"><i class="fas fa-file-alt nova-me-1"></i> Basic Information</h5>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('competitors.update', $competitor->id) }}" method="POST">
+            @csrf @method('PUT')
+            <div class="nova-row nova-gap-3">
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Name <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="name" class="nova-input @error('name') nova-invalid @enderror" value="{{ old('name', $competitor->name) }}" required>
+                        @error('name') <div class="nova-form-error">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Code <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="code" class="nova-input @error('code') nova-invalid @enderror" value="{{ old('code', $competitor->code) }}" required>
+                        @error('code') <div class="nova-form-error">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Organization</label>
+                        <select name="organization_id" class="nova-select @error('organization_id') nova-invalid @enderror">
+                            <option value="">None</option>
+                            @foreach($organizations as $org)
+                                <option value="{{ $org->id }}" {{ old('organization_id', $competitor->organization_id) == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('organization_id') <div class="nova-form-error">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Competitor Type</label>
+                        <select name="competitor_type" class="nova-select @error('competitor_type') nova-invalid @enderror">
                             <option value="">-- Select Type --</option>
                             <option value="direct" {{ old('competitor_type', $competitor->competitor_type) == 'direct' ? 'selected' : '' }}>Direct Competitor</option>
                             <option value="indirect" {{ old('competitor_type', $competitor->competitor_type) == 'indirect' ? 'selected' : '' }}>Indirect Competitor</option>
                             <option value="potential" {{ old('competitor_type', $competitor->competitor_type) == 'potential' ? 'selected' : '' }}>Potential Competitor</option>
                         </select>
+                        @error('competitor_type') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-md-6"><label class="form-label">GLN</label><input type="text" name="gln" value="{{ old('gln', $competitor->gln) }}" class="form-control @error('gln') is-invalid @enderror">@error('gln')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
-                    <div class="col-md-6"><label class="form-label">Contact Person</label><input type="text" name="contact_person" value="{{ old('contact_person', $competitor->contact_person) }}" class="form-control"></div>
-                    <div class="col-md-6"><label class="form-label">Phone</label><input type="text" name="phone" value="{{ old('phone', $competitor->phone) }}" class="form-control"></div>
-                    <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" value="{{ old('email', $competitor->email) }}" class="form-control @error('email') is-invalid @enderror">@error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
-                    <div class="col-12"><label class="form-label">Address</label><textarea name="address" class="form-control" rows="2">{{ old('address', $competitor->address) }}</textarea></div>
-                    <div class="col-12"><button type="submit" class="btn btn-primary">Update</button> <a href="{{ route('competitors.index') }}" class="btn btn-secondary">Cancel</a></div>
                 </div>
-            </form>
-        </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">GLN</label>
+                        <input type="text" name="gln" class="nova-input @error('gln') nova-invalid @enderror" value="{{ old('gln', $competitor->gln) }}">
+                        @error('gln') <div class="nova-form-error">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Contact Person</label>
+                        <input type="text" name="contact_person" class="nova-input" value="{{ old('contact_person', $competitor->contact_person) }}">
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Phone</label>
+                        <input type="text" name="phone" class="nova-input" value="{{ old('phone', $competitor->phone) }}">
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Email</label>
+                        <input type="email" name="email" class="nova-input @error('email') nova-invalid @enderror" value="{{ old('email', $competitor->email) }}">
+                        @error('email') <div class="nova-form-error">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Address</label>
+                        <textarea name="address" class="nova-input" rows="2">{{ old('address', $competitor->address) }}</textarea>
+                    </div>
+                </div>
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-actions">
+                        <a href="{{ route('competitors.index') }}" class="nova-btn nova-btn-outline">
+                            <i class="fas fa-x nova-me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-save nova-me-1"></i> Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

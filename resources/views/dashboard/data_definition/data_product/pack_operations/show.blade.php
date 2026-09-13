@@ -1,61 +1,152 @@
-{{-- resources/views/dashboard/data_definition/data_product/pack_operations/show.blade.php --}}
 @extends('dashboard.partials.layout')
 
 @section('title', 'Pack Operation Details: ' . $packOperation->name_en)
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold">
-                            <i data-feather="info"></i> Pack Operation Details
-                        </h1>
-                        <p class="text-muted">Viewing information for <strong>{{ $packOperation->name_en }} ({{ $packOperation->name_ar }})</strong></p>
-                    </div>
-                </div>
+{{-- ===== Action Bar ===== --}}
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Pack Operation: {{ $packOperation->code }}
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Viewing information for {{ $packOperation->name_en }} ({{ $packOperation->name_ar }})</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('pack-operations.edit', $packOperation) }}" class="nova-btn nova-btn-warning nova-btn-sm">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{{ route('pack-operations.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> Back to List
+        </a>
+    </div>
+</div>
 
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <h6 class="text-muted mb-1">Code</h6>
-                                <p class="fs-5"><code>{{ $packOperation->code }}</code></p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-muted mb-1">Sort Order</h6>
-                                <p class="fs-5">{{ $packOperation->sort_order ?? '—' }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-muted mb-1">Name (English)</h6>
-                                <p class="fs-5">{{ $packOperation->name_en }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-muted mb-1">Name (Arabic)</h6>
-                                <p class="fs-5">{{ $packOperation->name_ar }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-muted mb-1">Status</h6>
-                                <p>
-                                    @if($packOperation->is_active)
-                                        <span class="badge bg-success">Active</span>
-                                    @else
-                                        <span class="badge bg-secondary">Inactive</span>
-                                    @endif
-                                </p>
-                            </div>
-                            <div class="col-12">
-                                <hr>
-                                <a href="{{ route('pack-operations.edit', $packOperation) }}" class="btn btn-warning"><i data-feather="edit"></i> Edit</a>
-                                <a href="{{ route('pack-operations.index') }}" class="btn btn-secondary">Back to List</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Pack Operation Details</h5>
+    </div>
+    <div class="nova-card-body">
+        <div class="nova-table-scroll">
+            <table class="nova-table">
+                <tr>
+                    <th style="width: 30%;">ID</th>
+                    <td>{{ $packOperation->id }}</td>
+                </tr>
+                <tr>
+                    <th>Code</th>
+                    <td><code class="table-code">{{ $packOperation->code }}</code></td>
+                </tr>
+                <tr>
+                    <th>Name (English)</th>
+                    <td>{{ $packOperation->name_en }}</td>
+                </tr>
+                <tr>
+                    <th>Name (Arabic)</th>
+                    <td>{{ $packOperation->name_ar }}</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td>
+                        @if($packOperation->is_active)
+                            <span class="nova-badge success"><i class="fas fa-check me-1"></i> Active</span>
+                        @else
+                            <span class="nova-badge secondary"><i class="fas fa-x me-1"></i> Inactive</span>
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <th>Sort Order</th>
+                    <td>{{ $packOperation->sort_order ?? '—' }}</td>
+                </tr>
+                <tr>
+                    <th>Created At</th>
+                    <td>
+                        <i class="fas fa-calendar nova-text-muted me-1"></i>
+                        {{ $packOperation->created_at ? $packOperation->created_at->format('F d, Y h:i A') : '—' }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Last Updated</th>
+                    <td>
+                        <i class="fas fa-history nova-text-muted me-1"></i>
+                        {{ $packOperation->updated_at ? $packOperation->updated_at->format('F d, Y h:i A') : '—' }}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="nova-form-actions nova-mt-4">
+            <a href="{{ route('pack-operations.index') }}" class="nova-btn nova-btn-outline">
+                <i class="fas fa-list"></i> Back to List
+            </a>
+            <div class="nova-flex nova-gap-2">
+                <a href="{{ route('pack-operations.edit', $packOperation) }}" class="nova-btn nova-btn-warning">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
+                        onclick="confirmDelete({{ $packOperation->id }}, '{{ addslashes($packOperation->name_en) }}')">
+                    <i class="fas fa-trash-alt"></i> Delete
+                </button>
             </div>
-        </main>
+        </div>
+    </div>
+</div>
+
+{{-- ============================================================
+     Delete Confirmation Modal
+     ============================================================ --}}
+<div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">
+                Are you sure you want to delete pack operation
+                <strong id="deleteName" class="nova-text-danger"></strong>?<br>
+                This action cannot be undone.
+            </p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline"
+                        onclick="document.getElementById('deleteModal').classList.remove('show')">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    window.confirmDelete = function(id, name) {
+        document.getElementById('deleteName').innerText = name;
+        document.getElementById('deleteForm').action = '/pack-operations/' + id;
+        document.getElementById('deleteModal').classList.add('show');
+    };
+
+    setTimeout(function() {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s, transform 0.3s';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
+</script>
+@endpush

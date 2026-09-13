@@ -1,120 +1,188 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'سياسات الخصوصية')
+@section('title', 'Privacy Policies')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12 col-lg-8">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="shield" class="align-middle me-2"></i>
-                            سياسات الخصوصية والشروط
-                        </h1>
-                        <p class="text-muted">إدارة سياسات الخصوصية وشروط الخدمة التي تظهر للعملاء</p>
-                    </div>
-                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="{{ route('privacy-policies.create') }}" class="btn btn-primary btn-lg shadow-sm">
-                            <i data-feather="plus-circle"></i> إضافة سياسة
-                        </a>
-                    </div>
-                </div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-shield-alt" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Privacy & Terms
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage privacy policies and terms of service</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('privacy-policies.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus"></i> Add Policy
+        </a>
+    </div>
+</div>
 
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i data-feather="check-circle" class="me-2"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
 
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-header bg-white border-0 pt-4 pb-3 px-4">
-                        <h5 class="fw-bold mb-0"><i data-feather="list"></i> القائمة</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4">#</th>
-                                        <th>العنوان</th>
-                                        <th>النوع</th>
-                                        <th>الحالة</th>
-                                        <th>تاريخ الإنشاء</th>
-                                        <th class="pe-4 text-end">إجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($policies as $policy)
-                                        <tr>
-                                            <td class="ps-4 fw-semibold">{{ $policy->id }}</td>
-                                            <td>
-                                                <span class="fw-bold">{{ $policy->title ?? $policy->type }}</span>
-                                            </td>
-                                            <td>
-                                                @if($policy->type == 'privacy_policy')
-                                                    <span class="badge bg-info">سياسة خصوصية</span>
-                                                @else
-                                                    <span class="badge bg-warning text-dark">شروط خدمة</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($policy->is_active)
-                                                    <span class="badge bg-success">نشط</span>
-                                                @else
-                                                    <span class="badge bg-secondary">غير نشط</span>
-                                                @endif
-                                            </td>
-                                            <td>{{ $policy->created_at->format('Y-m-d') }}</td>
-                                            <td class="pe-4 text-end">
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{{ route('privacy-policies.show', $policy) }}" class="btn btn-outline-info" title="عرض"><i data-feather="eye"></i></a>
-                                                    <a href="{{ route('privacy-policies.edit', $policy) }}" class="btn btn-outline-warning" title="تعديل"><i data-feather="edit"></i></a>
-                                                    <form action="{{ route('privacy-policies.destroy', $policy) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد؟')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-outline-danger" title="حذف">
-                                                            <i data-feather="trash-2"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="6" class="text-center py-5">
-                                                <div class="py-4">
-                                                    <i data-feather="shield" style="width: 48px; height: 48px;" class="text-muted mb-3"></i>
-                                                    <h5 class="text-muted">لا توجد سياسات</h5>
-                                                    <a href="{{ route('privacy-policies.create') }}" class="btn btn-primary">
-                                                        <i data-feather="plus-circle"></i> إضافة سياسة
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+{{-- Statistics Cards --}}
+<div class="nova-row cols-3">
+    <div class="nova-stat">
+        <div class="nova-stat-icon primary">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <p class="nova-stat-label">Total Policies</p>
+        <p class="nova-stat-value">{{ $policies->total() }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon secondary">
+            <i class="fas fa-file-text"></i>
+        </div>
+        <p class="nova-stat-label">Active Policies</p>
+        <p class="nova-stat-value">{{ $policies->where('is_active', true)->count() }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon accent">
+            <i class="fas fa-clipboard-check"></i>
+        </div>
+        <p class="nova-stat-label">Privacy Policies</p>
+        <p class="nova-stat-value">{{ $policies->where('type', 'privacy_policy')->count() }}</p>
+    </div>
+</div>
+
+{{-- Policies Table --}}
+<div class="nova-table-wrapper">
+    <div class="nova-toolbar">
+        <div class="nova-toolbar-filters">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-list"></i>
+                Policies List
+            </h3>
+        </div>
+        <div class="nova-toolbar-search">
+            <i class="fas fa-search"></i>
+            <input type="search" placeholder="Search policies...">
+        </div>
+        <div class="nova-toolbar-actions">
+            <a href="{{ route('privacy-policies.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+                <i class="fas fa-plus"></i> Add Policy
+            </a>
+        </div>
+    </div>
+    <div class="nova-table-scroll">
+        <table class="nova-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Created Date</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($policies as $policy)
+                <tr>
+                    <td>{{ $policy->id }}</td>
+                    <td>
+                        <span class="nova-fw-bold">{{ $policy->title ?? $policy->type }}</span>
+                    </td>
+                    <td>
+                        @if($policy->type == 'privacy_policy')
+                            <span class="nova-badge secondary">Privacy Policy</span>
+                        @else
+                            <span class="nova-badge accent">Terms of Service</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($policy->is_active)
+                            <span class="nova-badge success">Active</span>
+                        @else
+                            <span class="nova-badge secondary">Inactive</span>
+                        @endif
+                    </td>
+                    <td>{{ $policy->created_at->format('Y-m-d') }}</td>
+                    <td class="nova-text-end">
+                        <div class="nova-table-actions">
+                            <a href="{{ route('privacy-policies.show', $policy) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('privacy-policies.edit', $policy) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                             <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $policy->id }}', '{{ addslashes($policy->title ?? ($policy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة')) }}')">
+                                 <i class="fas fa-trash-alt"></i>
+                             </button>
                         </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 py-3 px-4">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap">
-                            <div>{{ $policies->links('pagination::bootstrap-5') }}</div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6">
+                        <div class="nova-empty">
+                            <div class="nova-empty-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3 class="nova-empty-title">No policies found</h3>
+                            <p class="nova-empty-text">Create your first policy to get started.</p>
+                            <a href="{{ route('privacy-policies.create') }}" class="nova-btn nova-btn-primary">
+                                <i class="fas fa-plus"></i> Add Policy
+                            </a>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="nova-card-footer">
+        <div class="nova-pagination">
+                {{ $policies->appends(request()->query())->links() }}
+        </div>
     </div>
 </div>
 @endsection
 
+{{-- Delete Confirmation Modal (Nova) --}}
+<div class="nova-modal-backdrop" id="deletePolicyModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete policy <strong id="deletePolicyName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePolicyModal').classList.remove('show')">Cancel</button>
+                <form id="deletePolicyForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof feather !== 'undefined') feather.replace();
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    window.confirmDelete = function(id, name) {
+        document.getElementById('deletePolicyName').innerText = name;
+        document.getElementById('deletePolicyForm').action = '/privacy-policies/' + id;
+        document.getElementById('deletePolicyModal').classList.add('show');
+    };
+
+    setTimeout(function() {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s, transform 0.3s';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
 </script>
+@endpush
 @endpush

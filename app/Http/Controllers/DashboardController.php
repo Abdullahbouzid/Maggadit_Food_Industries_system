@@ -353,9 +353,9 @@ class DashboardController extends Controller
                         $stats['visitors']['trend'] = $currentVisitors > $previousVisitors ? 'up' :
                                                      ($currentVisitors < $previousVisitors ? 'down' : 'neutral');
                     }
-                    // Fallback: just count active users
+                    // Fallback: just count users
                     else {
-                        $currentVisitors = $userModel->where('active', true)->count();
+                        $currentVisitors = $userModel->count();
                         $previousVisitors = $currentVisitors; // Assume same for simplicity
                         $stats['visitors']['value'] = $currentVisitors;
                         $stats['visitors']['change'] = 0;

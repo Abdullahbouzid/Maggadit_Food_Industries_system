@@ -1,76 +1,145 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Create Vendor')
+@section('title', 'إنشاء مورد جديد')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold mb-2"><i data-feather="truck"></i> Create Vendor</h1>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            إضافة مورد جديد
+        </h2>
+        <p class="nova-page-subtitle">أدخل بيانات المورد والمعلومات اللازمة</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('vendors.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> العودة
+        </a>
+    </div>
+</div>
+
+@if($errors->any())
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <ul class="mb-0 mt-2">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="nova-card">
+    <div class="nova-card-header">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-file-alt"></i> بيانات المورد
+        </h5>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('vendors.store') }}" method="POST">
+            @csrf
+
+            <div class="nova-row g-4">
+                {{-- Vendor Name --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-truck me-1"></i> اسم المورد <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="vendor_name"
+                               class="nova-input @error('vendor_name') nova-invalid @enderror"
+                               value="{{ old('vendor_name') }}"
+                               required>
+                    </div>
+                    @error('vendor_name') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Code --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-hashtag me-1"></i> الشيفرة <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="code"
+                               class="nova-input @error('code') nova-invalid @enderror"
+                               value="{{ old('code') }}"
+                               required>
+                    </div>
+                    @error('code') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Phone --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label"><i class="fas fa-phone me-1"></i> الهاتف</label>
+                        <input type="text" name="phone" class="nova-input" value="{{ old('phone') }}" placeholder="+966 12 345 6789">
                     </div>
                 </div>
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <form action="{{ route('vendors.store') }}" method="POST">
-                            @csrf
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Vendor Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="vendor_name" class="form-control @error('vendor_name') is-invalid @enderror" value="{{ old('vendor_name') }}">
-                                    @error('vendor_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Code <span class="text-danger">*</span></label>
-                                    <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}">
-                                    @error('code') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Phone</label>
-                                    <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Fax</label>
-                                    <input type="text" name="fax" class="form-control" value="{{ old('fax') }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Contact Person</label>
-                                    <input type="text" name="contact_person" class="form-control" value="{{ old('contact_person') }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Contact Number</label>
-                                    <input type="text" name="contact_number" class="form-control" value="{{ old('contact_number') }}">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold">Street Address</label>
-                                    <textarea name="street" class="form-control" rows="2">{{ old('street') }}</textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Commission Percentage (%)</label>
-                                    <input type="number" step="0.01" name="commission_percentage" class="form-control" value="{{ old('commission_percentage', 0) }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-check form-switch mt-4">
-                                        <input class="form-check-input" type="checkbox" name="inactive" value="1" id="inactive" {{ old('inactive') ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-semibold" for="inactive">Inactive</label>
-                                        <div class="form-text">If checked, vendor will be inactive.</div>
-                                    </div>
-                                </div>
-                                <div class="col-12 mt-4">
-                                    <hr>
-                                    <div class="d-flex gap-2 justify-content-end">
-                                        <a href="{{ route('vendors.index') }}" class="btn btn-light px-4">Cancel</a>
-                                        <button type="submit" class="btn btn-primary px-4">Create Vendor</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
+
+                {{-- Fax --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label"><i class="fas fa-fax me-1"></i> الفاكس</label>
+                        <input type="text" name="fax" class="nova-input" value="{{ old('fax') }}" placeholder="+966 12 345 6790">
+                    </div>
+                </div>
+
+                {{-- Contact Person --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label"><i class="fas fa-user me-1"></i> شخص التواصل</label>
+                        <input type="text" name="contact_person" class="nova-input" value="{{ old('contact_person') }}">
+                    </div>
+                </div>
+
+                {{-- Contact Number --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label"><i class="fas fa-mobile-alt me-1"></i> رقم التواصل</label>
+                        <input type="text" name="contact_number" class="nova-input" value="{{ old('contact_number') }}" placeholder="+966 50 123 4567">
+                    </div>
+                </div>
+
+                {{-- Street Address --}}
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-group">
+                        <label class="nova-label"><i class="fas fa-map-marker-alt me-1"></i> العنوان</label>
+                        <textarea name="street" class="nova-textarea" rows="2" placeholder="أدخل العنوان الكامل...">{{ old('street') }}</textarea>
+                    </div>
+                </div>
+
+                {{-- Commission Percentage --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label"><i class="fas fa-percentage me-1"></i> نسبة العمولة (%)</label>
+                        <input type="number" step="0.01" name="commission_percentage" class="nova-input" value="{{ old('commission_percentage', 0) }}">
+                    </div>
+                </div>
+
+                {{-- Inactive Toggle --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-check">
+                        <input type="checkbox" name="inactive" class="nova-form-check-input" id="inactive" value="1" {{ old('inactive') ? 'checked' : '' }}>
+                        <label class="nova-form-check-label fw-bold" for="inactive">غير نشط</label>
+                        <div class="nova-help-text">إذا تم تحديده، سيتم إيقاف المورد.</div>
+                    </div>
+                </div>
+
+                {{-- Form Actions --}}
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-actions">
+                        <a href="{{ route('vendors.index') }}" class="nova-btn nova-btn-outline">
+                            <i class="fas fa-x me-1"></i> إلغاء
+                        </a>
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-save me-1"></i> حفظ المورد
+                        </button>
                     </div>
                 </div>
             </div>
-        </main>
+        </form>
     </div>
 </div>
 @endsection

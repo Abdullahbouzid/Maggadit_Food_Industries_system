@@ -3,107 +3,434 @@
 @section('title', 'Pack Groups Management')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12 col-lg-8">
-                        <h1 class="display-5 fw-bold"><i data-feather="layers"></i> Pack Groups</h1>
-                        <p class="text-muted">Manage pack groups for item packs</p>
-                    </div>
-                    <div class="col-12 col-lg-4 text-lg-end">
-                        <a href="{{ route('pack-groups.create') }}" class="btn btn-primary btn-lg"><i data-feather="plus-circle"></i> Add</a>
-                        <a href="{{ route('pack-groups.export', request()->query()) }}" class="btn btn-secondary btn-lg"><i data-feather="download"></i> Export</a>
-                    </div>
-                </div>
-
-                @if(session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-
-                <div class="row g-4 mb-4">
-                    <div class="col-sm-6 col-xl-4">
-                        <div class="card"><div class="card-body"><h6 class="text-muted">Total Groups</h6><h2>{{ $total }}</h2></div></div>
-                    </div>
-                    <div class="col-sm-6 col-xl-4">
-                        <div class="card"><div class="card-body"><h6 class="text-muted">Active</h6><h2>{{ $active }}</h2></div></div>
-                    </div>
-                    <div class="col-sm-6 col-xl-4">
-                        <div class="card"><div class="card-body"><h6 class="text-muted">Inactive</h6><h2>{{ $inactive }}</h2></div></div>
-                    </div>
-                </div>
-
-                {{-- Import Section --}}
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form action="{{ route('pack-groups.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
-                            @csrf
-                            <div class="col-md-6"><input type="file" name="import_file" class="form-control" required></div>
-                            <div class="col-md-3"><button type="submit" class="btn btn-success"><i data-feather="upload"></i> Import</button></div>
-                            <div class="col-md-3"><a href="{{ route('pack-groups.template') }}" class="btn btn-outline-secondary">Download Template</a></div>
-                        </form>
-                    </div>
-                </div>
-
-                {{-- Filter --}}
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form method="GET" class="row g-3">
-                            <div class="col-md-4"><input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request('search') }}"></div>
-                            <div class="col-md-3">
-                                <select name="status" class="form-select">
-                                    <option value="">All</option>
-                                    <option value="active" {{ request('status')=='active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ request('status')=='inactive' ? 'selected' : '' }}>Inactive</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2"><select name="per_page" class="form-select" onchange="this.form.submit()">
-                                <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="all">All</option>
-                            </select></div>
-                            <div class="col-md-3"><button type="submit" class="btn btn-primary w-100">Filter</button></div>
-                        </form>
-                    </div>
-                </div>
-
-                {{-- Table --}}
-                <div class="card">
-                    <div class="card-body p-0">
-                        <table class="table table-hover">
-                            <thead><tr><th>#</th><th>Code</th><th>Name (EN)</th><th>Name (AR)</th><th>Status</th><th>Sort</th><th>Actions</th></tr></thead>
-                            <tbody>
-                                @forelse($packGroups as $g)
-                                <tr>
-                                    <td>{{ $loop->iteration + ($packGroups->currentPage()-1)*$packGroups->perPage() }}</td>
-                                    <td><code>{{ $g->code }}</code></td>
-                                    <td>{{ $g->name_en }}</td>
-                                    <td>{{ $g->name_ar }}</td>
-                                    <td>@if($g->is_active) <span class="badge bg-success">Active</span> @else <span class="badge bg-secondary">Inactive</span> @endif</td>
-                                    <td>{{ $g->sort_order }}</td>
-                                    <td>
-                                        <a href="{{ route('pack-groups.show', $g) }}" class="btn btn-sm btn-outline-info"><i data-feather="eye"></i></a>
-                                        <a href="{{ route('pack-groups.edit', $g) }}" class="btn btn-sm btn-outline-warning"><i data-feather="edit"></i></a>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete({{ $g->id }}, '{{ $g->name_en }}')"><i data-feather="trash-2"></i></button>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="7" class="text-center">No records found.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="card-footer">{{ $packGroups->appends(request()->query())->links() }}</div>
-                </div>
-            </div>
-        </main>
+{{-- ===== Action Bar ===== --}}
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-layer-group" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Pack Groups
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage pack groups for item packs</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('pack-groups.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+            <i class="fas fa-plus-circle"></i> Add New
+        </a>
+        <a href="{{ route('pack-groups.export', request()->query()) }}" class="nova-btn nova-btn-secondary nova-btn-sm">
+            <i class="fas fa-download"></i> Export Table
+        </a>
     </div>
 </div>
-<div class="modal fade" id="deleteModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body">Delete <strong id="deleteName"></strong>?</div><div class="modal-footer"><form id="deleteForm" method="POST"><button type="submit" class="btn btn-danger">Delete</button></form></div></div></div></div>
-<script>
-function confirmDelete(id, name) {
-    document.getElementById('deleteName').innerText = name;
-    document.getElementById('deleteForm').action = '/pack-groups/' + id;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
-</script>
+
+{{-- ===== Alerts ===== --}}
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ session('error') }}
+    </div>
+@endif
+@if(session('import_errors'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        <div>
+            <strong>Import Errors:</strong>
+            <ul class="nova-mb-0 nova-mt-1">
+                @foreach(session('import_errors') as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
+
+{{-- ===== Statistics ===== --}}
+<div class="nova-row cols-3 nova-mb-4">
+    <div class="nova-stat">
+        <div class="nova-stat-icon primary">
+            <i class="fas fa-layer-group"></i>
+        </div>
+        <p class="nova-stat-label">Total Groups</p>
+        <p class="nova-stat-value">{{ $total }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon success">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <p class="nova-stat-label">Active</p>
+        <p class="nova-stat-value">{{ $active }}</p>
+    </div>
+    <div class="nova-stat">
+        <div class="nova-stat-icon accent">
+            <i class="fas fa-eye-off"></i>
+        </div>
+        <p class="nova-stat-label">Inactive</p>
+        <p class="nova-stat-value">{{ $inactive }}</p>
+    </div>
+</div>
+
+{{-- ============================================================
+     Import Section
+     ============================================================ --}}
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h6 class="nova-fw-bold mb-0">
+            <i class="fas fa-upload"></i> Import Pack Groups
+        </h6>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('pack-groups.import') }}" method="POST" enctype="multipart/form-data" class="import-form">
+            @csrf
+            <div class="nova-form-group import-form-input">
+                <label class="nova-label">Excel File (.xlsx, .xls, .csv)</label>
+                <input type="file" name="import_file" class="nova-input" required>
+                <div class="nova-help-text">
+                    Required columns: <strong>code, name_en, name_ar</strong>.
+                    Optional: is_active, sort_order.
+                </div>
+            </div>
+            <div class="import-form-actions">
+                <button type="submit" class="nova-btn nova-btn-success">
+                    <i class="fas fa-upload"></i> Import Data
+                </button>
+                <a href="{{ route('pack-groups.template') }}" class="nova-btn nova-btn-outline">
+                    <i class="fas fa-file-text"></i> Download Template
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ============================================================
+     Filter Section
+     ============================================================ --}}
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-body" style="padding: 1rem 1.5rem;">
+        <form id="filterForm" method="GET" action="{{ route('pack-groups.index') }}" class="filter-form">
+            {{-- Search --}}
+            <div class="nova-form-group filter-item filter-item-search">
+                <label class="nova-label">Search</label>
+                <div class="filter-search-wrapper">
+                    <span class="filter-search-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" name="search" class="nova-input filter-search-input"
+                           placeholder="Code, Name (EN/AR)..."
+                           value="{{ request('search') }}">
+                </div>
+            </div>
+
+            {{-- Status --}}
+            <div class="nova-form-group filter-item">
+                <label class="nova-label">Status</label>
+                <select name="status" class="nova-select">
+                    <option value="">All</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                </select>
+            </div>
+
+            {{-- Per Page --}}
+            <div class="nova-form-group filter-item">
+                <label class="nova-label">Per Page</label>
+                <select name="per_page" class="nova-select">
+                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                    <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
+                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                </select>
+            </div>
+
+            {{-- Actions --}}
+            <div class="nova-form-group filter-item filter-item-actions">
+                <button type="submit" class="nova-btn nova-btn-primary">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                @if(request()->anyFilled(['search', 'status', 'per_page']))
+                    <a href="{{ route('pack-groups.index') }}" class="nova-btn nova-btn-outline">
+                        <i class="fas fa-rotate-left"></i> Reset
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ============================================================
+     Data Table
+     ============================================================ --}}
+<div class="nova-table-wrapper">
+    <div class="nova-toolbar">
+        <div class="nova-toolbar-filters">
+            <h3 class="nova-card-title" style="margin: 0;">
+                <i class="fas fa-list"></i> Pack Groups List
+            </h3>
+        </div>
+        <div class="nova-toolbar-actions">
+            <a href="{{ route('pack-groups.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
+                <i class="fas fa-plus-circle"></i> Add Group
+            </a>
+        </div>
+    </div>
+
+    <div class="nova-table-scroll">
+        <table class="nova-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">#</th>
+                    <th>Code</th>
+                    <th>Name (EN)</th>
+                    <th>Name (AR)</th>
+                    <th>Status</th>
+                    <th>Sort Order</th>
+                    <th class="nova-text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($packGroups as $g)
+                <tr>
+                    <td class="nova-fw-semibold">
+                        {{ $loop->iteration + ($packGroups->currentPage() - 1) * $packGroups->perPage() }}
+                    </td>
+                    <td>
+                        <code class="table-code">{{ $g->code }}</code>
+                    </td>
+                    <td>{{ $g->name_en }}</td>
+                    <td>{{ $g->name_ar }}</td>
+                    <td>
+                        @if($g->is_active)
+                            <span class="nova-badge success">
+                                <i class="fas fa-check"></i> Active
+                            </span>
+                        @else
+                            <span class="nova-badge secondary">
+                                <i class="fas fa-x"></i> Inactive
+                            </span>
+                        @endif
+                    </td>
+                    <td>{{ $g->sort_order }}</td>
+                    <td class="nova-text-end">
+                        <div class="nova-table-actions">
+                            <a href="{{ route('pack-groups.show', $g) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('pack-groups.edit', $g) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete"
+                                    onclick="confirmDelete({{ $g->id }}, '{{ addslashes($g->name_en) }}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7">
+                        <div class="nova-empty">
+                            <div class="nova-empty-icon">
+                                <i class="fas fa-layer-group" style="width: 48px; height: 48px;"></i>
+                            </div>
+                            <h3 class="nova-empty-title">No pack groups found</h3>
+                            <p class="nova-empty-text">Create your first pack group.</p>
+                            <a href="{{ route('pack-groups.create') }}" class="nova-btn nova-btn-primary">
+                                <i class="fas fa-plus-circle"></i> Add Pack Group
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="nova-card-footer">
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                Showing {{ $packGroups->firstItem() ?? 0 }} to {{ $packGroups->lastItem() ?? 0 }} of {{ $packGroups->total() }} entries
+            </div>
+            <div class="nova-pagination">
+                {{ $packGroups->appends(request()->query())->links() }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ============================================================
+     Delete Confirmation Modal
+     ============================================================ --}}
+<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">
+                Are you sure you want to delete pack group
+                <strong id="deleteName" class="nova-text-danger"></strong>?<br>
+                This action cannot be undone.
+            </p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline"
+                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        /* ============================================================
+           Auto-submit on per_page change
+           ============================================================ */
+        const perPageSelect = document.querySelector('select[name="per_page"]');
+        if (perPageSelect) {
+            perPageSelect.addEventListener('change', () => {
+                document.getElementById('filterForm').submit();
+            });
+        }
+
+        /* ============================================================
+           Delete Confirmation
+           ============================================================ */
+        window.confirmDelete = function(id, name) {
+            document.getElementById('deleteName').innerText = name;
+            document.getElementById('deleteForm').action = '/pack-groups/' + id;
+            document.getElementById('globalDeleteModal').classList.add('show');
+        };
+
+        /* ============================================================
+           Auto-dismiss Alerts
+           ============================================================ */
+        setTimeout(() => {
+            document.querySelectorAll('.nova-alert').forEach(alert => {
+                alert.style.transition = 'opacity 0.3s, transform 0.3s';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+    });
+</script>
+@endpush
+
+@push('styles')
+<style>
+    .import-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .import-form .nova-form-group {
+        margin-bottom: 0;
+    }
+
+    .import-form-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .filter-form {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    .filter-form .nova-form-group {
+        margin-bottom: 0;
+        min-width: 0;
+    }
+
+    .filter-search-wrapper {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .filter-search-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 0.875rem;
+        background: var(--nova-surface-2);
+        border: 1.5px solid var(--nova-border);
+        border-right: none;
+        border-radius: 10px 0 0 10px;
+        color: var(--nova-text-4);
+        flex-shrink: 0;
+    }
+
+    .filter-search-input {
+        border-radius: 0 10px 10px 0 !important;
+        border-left: none !important;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .filter-item-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .filter-item-actions .nova-btn {
+        white-space: nowrap;
+    }
+
+    .table-code {
+        background: #f1f3f9;
+        padding: 0.15rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        color: #5a5c69;
+        font-weight: 500;
+    }
+
+    @media (max-width: 992px) {
+        .filter-form {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .filter-item-search {
+            grid-column: span 2;
+        }
+
+        .filter-item-actions {
+            grid-column: span 2;
+            justify-content: flex-end;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .filter-form {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-item-search,
+        .filter-item-actions {
+            grid-column: span 1;
+        }
+    }
+</style>
+@endpush

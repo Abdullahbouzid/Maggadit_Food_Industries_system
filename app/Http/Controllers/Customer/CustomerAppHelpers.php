@@ -26,14 +26,15 @@ trait CustomerAppHelpers
     private function getCustomer(Request $request): ?Customer
     {
         $customer = $request->user('customer')
-            ?: $request->user('api')
-            ?: Auth::guard('customer')->user()
-            ?: Auth::guard('api')->user();
+            ?: Auth::guard('customer')->user();
 
         if (! $customer && $request->bearerToken()) {
             $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
             if ($personalToken && $personalToken->tokenable) {
-                $customer = $personalToken->tokenable;
+                $tokenable = $personalToken->tokenable;
+                if ($tokenable instanceof Customer) {
+                    $customer = $tokenable;
+                }
             }
         }
 

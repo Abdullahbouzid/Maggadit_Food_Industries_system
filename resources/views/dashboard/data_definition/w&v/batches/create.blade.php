@@ -3,137 +3,338 @@
 @section('title', 'إنشاء دفعة جديدة')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="plus-circle" class="align-middle me-2"></i>
-                            إنشاء دفعة جديدة
-                        </h1>
-                        <p class="text-muted">أدخل بيانات الدفعة والمنتجات المرتبطة بها</p>
-                    </div>
-                </div>
-
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show">
-                        <i data-feather="alert-circle" class="me-2"></i>
-                        <strong>يوجد أخطاء في الإدخال:</strong>
-                        <ul class="mb-0 mt-2">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                <form action="{{ route('production-batches.store') }}" method="POST" id="batchForm">
-                    @csrf
-
-                    <div class="row">
-                        <!-- بيانات الدفعة -->
-                        <div class="col-lg-6">
-                            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                <div class="card-header bg-light border-0 py-3">
-                                    <h6 class="fw-bold mb-0"><i data-feather="info"></i> معلومات الدفعة</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="batch_number" class="form-label fw-semibold">رقم الدفعة <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('batch_number') is-invalid @enderror" id="batch_number" name="batch_number" value="{{ old('batch_number', $batchNumber) }}" required>
-                                        @error('batch_number')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="production_date" class="form-label fw-semibold">تاريخ الإنتاج</label>
-                                        <input type="date" class="form-control @error('production_date') is-invalid @enderror" id="production_date" name="production_date" value="{{ old('production_date') }}">
-                                        @error('production_date')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="expiry_date" class="form-label fw-semibold">تاريخ الانتهاء</label>
-                                        <input type="date" class="form-control @error('expiry_date') is-invalid @enderror" id="expiry_date" name="expiry_date" value="{{ old('expiry_date') }}">
-                                        @error('expiry_date')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="status" class="form-label fw-semibold">الحالة <span class="text-danger">*</span></label>
-                                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                                            <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>نشطة</option>
-                                            <option value="expired" {{ old('status') == 'expired' ? 'selected' : '' }}>منتهية</option>
-                                            <option value="consumed" {{ old('status') == 'consumed' ? 'selected' : '' }}>مستهلكة</option>
-                                        </select>
-                                        @error('status')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="notes" class="form-label fw-semibold">ملاحظات</label>
-                                        <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
-                                        @error('notes')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- سلة المنتجات -->
-                        <div class="col-lg-6">
-                            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center">
-                                    <h6 class="fw-bold mb-0"><i data-feather="shopping-bag"></i> المنتجات في الدفعة</h6>
-                                    <button type="button" class="btn btn-sm btn-primary" id="addItemRow">
-                                        <i data-feather="plus"></i> إضافة منتج
-                                    </button>
-                                </div>
-                                <div class="card-body">
-                                    <div id="itemsContainer">
-                                        <!-- سيتم إضافة الصفوف ديناميكياً -->
-                                    </div>
-                                    <div id="itemsError" class="text-danger mt-2" style="display:none;">يجب إضافة منتج واحد على الأقل.</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-success btn-lg shadow-sm">
-                                <i data-feather="save"></i> حفظ الدفعة
-                            </button>
-                            <a href="{{ route('production-batches.index') }}" class="btn btn-secondary btn-lg shadow-sm ms-2">إلغاء</a>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </main>
+{{-- ===== Action Bar ===== --}}
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            إنشاء دفعة جديدة
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">أدخل بيانات الدفعة والمنتجات المرتبطة بها</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('production-batches.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> عودة
+        </a>
     </div>
 </div>
+
+{{-- ===== Validation Errors ===== --}}
+@if($errors->any())
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+            <strong>يوجد أخطاء في الإدخال:</strong>
+            <ul class="nova-mb-0 nova-mt-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
+
+<form action="{{ route('production-batches.store') }}" method="POST" id="batchForm">
+    @csrf
+
+    {{-- ============================================================
+         Section 1: Batch Information
+         ============================================================ --}}
+    <div class="nova-card nova-mb-4">
+        <div class="nova-card-header">
+            <h5 class="nova-fw-bold mb-0">
+                <i class="fas fa-file-alt me-1"></i> معلومات الدفعة
+            </h5>
+        </div>
+        <div class="nova-card-body">
+            <div class="form-grid form-grid-3">
+                <div class="nova-form-group">
+                    <label class="nova-label">رقم الدفعة <span class="nova-text-danger">*</span></label>
+                    <input type="text" name="batch_number"
+                           class="nova-input @error('batch_number') nova-invalid @enderror"
+                           value="{{ old('batch_number', $batchNumber) }}" required>
+                    @error('batch_number') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="nova-form-group">
+                    <label class="nova-label">تاريخ الإنتاج</label>
+                    <input type="date" name="production_date"
+                           class="nova-input @error('production_date') nova-invalid @enderror"
+                           value="{{ old('production_date') }}">
+                    @error('production_date') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="nova-form-group">
+                    <label class="nova-label">تاريخ الانتهاء</label>
+                    <input type="date" name="expiry_date"
+                           class="nova-input @error('expiry_date') nova-invalid @enderror"
+                           value="{{ old('expiry_date') }}">
+                    @error('expiry_date') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="nova-form-group">
+                    <label class="nova-label">الحالة <span class="nova-text-danger">*</span></label>
+                    <select name="status" class="nova-select @error('status') nova-invalid @enderror" required>
+                        <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>نشطة</option>
+                        <option value="expired" {{ old('status') == 'expired' ? 'selected' : '' }}>منتهية</option>
+                        <option value="consumed" {{ old('status') == 'consumed' ? 'selected' : '' }}>مستهلكة</option>
+                    </select>
+                    @error('status') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="nova-form-group form-grid-span-2">
+                    <label class="nova-label">ملاحظات</label>
+                    <textarea name="notes" class="nova-input @error('notes') nova-invalid @enderror"
+                              rows="1">{{ old('notes') }}</textarea>
+                    @error('notes') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="nova-form-group form-grid-span-3">
+                    <div class="nova-form-check status-checkbox-wrapper">
+                        <input type="checkbox" name="is_active" value="1"
+                               class="nova-form-check-input" id="is_active"
+                               {{ old('is_active', true) ? 'checked' : '' }}>
+                        <label class="nova-form-check-label" for="is_active">
+                            <i class="fas fa-toggle-on"></i> نشط
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ============================================================
+         Section 2: Products in Batch
+         ============================================================ --}}
+    <div class="nova-card nova-mb-4">
+        <div class="nova-card-header nova-flex nova-justify-between nova-items-center">
+            <h5 class="nova-fw-bold mb-0">
+                <i class="fas fa-shopping-bag me-1"></i> المنتجات في الدفعة
+            </h5>
+            <button type="button" class="nova-btn nova-btn-primary nova-btn-sm" id="addItemRow">
+                <i class="fas fa-plus"></i> إضافة منتج
+            </button>
+        </div>
+        <div class="nova-card-body">
+            <div id="itemsContainer" class="items-container"></div>
+
+            <div id="itemsError" class="nova-alert danger nova-mt-3" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                يجب إضافة منتج واحد على الأقل.
+            </div>
+        </div>
+    </div>
+
+    {{-- ============================================================
+         Form Actions
+         ============================================================ --}}
+    <div class="form-actions">
+        <button type="submit" class="nova-btn nova-btn-success nova-btn-lg">
+            <i class="fas fa-save"></i> حفظ الدفعة
+        </button>
+        <a href="{{ route('production-batches.index') }}" class="nova-btn nova-btn-secondary nova-btn-lg">
+            <i class="fas fa-times"></i> إلغاء
+        </a>
+    </div>
+</form>
 @endsection
+
+@push('styles')
+<style>
+    /* ============================================================
+       Form Grid System
+       ============================================================ */
+    .form-grid {
+        display: grid;
+        gap: 1.25rem;
+    }
+
+    .form-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .form-grid-span-1 {
+        grid-column: span 1;
+    }
+
+    .form-grid-span-2 {
+        grid-column: span 2;
+    }
+
+    .form-grid-span-3 {
+        grid-column: span 3;
+    }
+
+    .form-grid .nova-form-group {
+        margin-bottom: 0;
+    }
+
+    /* ============================================================
+       Status Checkbox
+       ============================================================ */
+    .status-checkbox-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.875rem;
+        background: #f0fdf4;
+        border: 1.5px solid #86efac;
+        border-radius: 10px;
+        width: fit-content;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .status-checkbox-wrapper:hover {
+        background: #dcfce7;
+        border-color: #22c55e;
+    }
+
+    .status-checkbox-wrapper .nova-form-check-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: #166534;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    /* ============================================================
+       Items Container
+       ============================================================ */
+    .items-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* ============================================================
+       Item Row - Grid Layout
+       ============================================================ */
+    .item-row {
+        display: grid;
+        grid-template-columns: 2fr 2fr 2fr 1.2fr auto;
+        gap: 0.75rem;
+        align-items: end;
+        padding: 1rem;
+        background: #f8f9fc;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .item-row:hover {
+        background: #f1f3f9;
+        border-color: #d1d3e2;
+    }
+
+    .item-row .nova-form-group {
+        margin-bottom: 0;
+        min-width: 0;
+    }
+
+    .item-row .nova-form-col-auto {
+        display: flex;
+        align-items: end;
+        justify-content: flex-end;
+    }
+
+    .item-row .remove-item-row {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        flex-shrink: 0;
+    }
+
+    /* ============================================================
+       Form Actions
+       ============================================================ */
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 1rem 0;
+        border-top: 1px solid var(--nova-border);
+    }
+
+    /* ============================================================
+       Responsive
+       ============================================================ */
+    @media (max-width: 1200px) {
+        .item-row {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .item-row .nova-form-col-auto {
+            grid-column: span 2;
+            justify-content: flex-start;
+        }
+
+        .item-row .remove-item-row {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .form-grid-3 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .form-grid-span-3 {
+            grid-column: span 2;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-grid-3 {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid-span-2,
+        .form-grid-span-3 {
+            grid-column: span 1;
+        }
+
+        .item-row {
+            grid-template-columns: 1fr;
+        }
+
+        .item-row .nova-form-col-auto {
+            grid-column: span 1;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .form-actions .nova-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        feather.replace();
-
-        // بيانات المنتجات والعبوات (من الـ Controller)
-         const items = @json($items);
-        const warehouses = @json($warehouses ?? \App\Models\Warehouse::where('is_active', true)->get());
+        const items = @json($items);
+        const warehouses = @json($warehouses ?? []);
+        const itemsContainer = document.getElementById('itemsContainer');
+        const itemsError = document.getElementById('itemsError');
 
         let rowCounter = 0;
 
-         function createItemRow(itemId = '', packId = '', quantity = '', warehouseId = '') {
+        /* ============================================================
+           Create Item Row HTML
+           ============================================================ */
+        function createItemRow(itemId = '', packId = '', quantity = '', warehouseId = '') {
             rowCounter++;
             const rowId = 'item-row-' + rowCounter;
 
@@ -157,75 +358,92 @@
                 warehouseOptions += `<option value="${wh.id}" ${wh.id == warehouseId ? 'selected' : ''}>${wh.name_en || wh.name_ar}</option>`;
             });
 
-            const html = `
-                <div class="row g-3 align-items-end mb-3 item-row" id="${rowId}">
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">المنتج</label>
-                        <select name="items[${rowCounter}][item_id]" class="form-select item-select" required>
+            return `
+                <div class="item-row" id="${rowId}">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-box item-label-icon"></i> المنتج
+                        </label>
+                        <select name="items[${rowCounter}][item_id]" class="nova-select item-select" required>
                             ${itemOptions}
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold">العبوة</label>
-                        <select name="items[${rowCounter}][item_pack_id]" class="form-select pack-select">
+
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-cube item-label-icon"></i> العبوة
+                        </label>
+                        <select name="items[${rowCounter}][item_pack_id]" class="nova-select pack-select">
                             ${packOptions}
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold">المخزن <span class="text-info">(يتم تعبئته تلقائياً)</span></label>
-                        <select name="items[${rowCounter}][warehouse_id]" class="form-select warehouse-select">
+
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-warehouse item-label-icon"></i> المخزن
+                            <small class="nova-text-muted">(تلقائي)</small>
+                        </label>
+                        <select name="items[${rowCounter}][warehouse_id]" class="nova-select warehouse-select">
                             ${warehouseOptions}
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold">الكمية <span class="text-danger">*</span></label>
-                        <input type="number" step="0.001" min="0.001" name="items[${rowCounter}][quantity]" class="form-control quantity-input" value="${quantity}" required>
+
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-hashtag item-label-icon"></i> الكمية
+                            <span class="nova-text-danger">*</span>
+                        </label>
+                        <input type="number" step="0.001" min="0.001"
+                               name="items[${rowCounter}][quantity]"
+                               class="nova-input quantity-input"
+                               value="${quantity}" required>
                     </div>
-                    <div class="col-md-1 d-flex justify-content-end">
-                        <button type="button" class="btn btn-outline-danger remove-item-row" style="margin-top: 24px;">
-                            <i data-feather="trash-2"></i>
+
+                    <div class="nova-form-group nova-form-col-auto">
+                        <button type="button"
+                                class="nova-btn nova-btn-outline nova-btn-sm nova-text-danger remove-item-row"
+                                title="حذف الصف">
+                            <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
                 </div>
             `;
-            return html;
         }
 
-        function addDefaultRow() {
-            const container = document.getElementById('itemsContainer');
-            const rowHtml = createItemRow();
-            container.insertAdjacentHTML('beforeend', rowHtml);
-            if (window.feather) feather.replace();
-        }
-
+        /* ============================================================
+           Add Item Row
+           ============================================================ */
         document.getElementById('addItemRow').addEventListener('click', function() {
-            const container = document.getElementById('itemsContainer');
-            const rowHtml = createItemRow();
-            container.insertAdjacentHTML('beforeend', rowHtml);
-            if (window.feather) feather.replace();
-            document.getElementById('itemsError').style.display = 'none';
+            itemsContainer.insertAdjacentHTML('beforeend', createItemRow());
+            itemsError.style.display = 'none';
         });
 
+        /* ============================================================
+           Remove Item Row (Event Delegation)
+           ============================================================ */
         document.addEventListener('click', function(e) {
-            if (e.target.closest('.remove-item-row')) {
-                const row = e.target.closest('.item-row');
+            const removeBtn = e.target.closest('.remove-item-row');
+            if (removeBtn) {
+                const row = removeBtn.closest('.item-row');
                 if (row) {
                     row.remove();
                     if (document.querySelectorAll('.item-row').length === 0) {
-                        const rowHtml = createItemRow();
-                        document.getElementById('itemsContainer').insertAdjacentHTML('beforeend', rowHtml);
-                        if (window.feather) feather.replace();
+                        itemsContainer.insertAdjacentHTML('beforeend', createItemRow());
                     }
                 }
             }
         });
 
-        // Fetch packs via AJAX when item changes
+        /* ============================================================
+           Fetch Packs via AJAX when Item changes
+           ============================================================ */
         document.addEventListener('change', function(e) {
             if (e.target.classList.contains('item-select')) {
                 const itemId = e.target.value;
-                const packSelect = e.target.closest('.item-row').querySelector('.pack-select');
-                const warehouseSelect = e.target.closest('.item-row').querySelector('.warehouse-select');
+                const row = e.target.closest('.item-row');
+                const packSelect = row.querySelector('.pack-select');
+                const warehouseSelect = row.querySelector('.warehouse-select');
+
                 packSelect.innerHTML = '<option value="">جاري التحميل...</option>';
                 packSelect.disabled = true;
 
@@ -256,7 +474,9 @@
             }
         });
 
-        // Auto-fill warehouse when pack changes
+        /* ============================================================
+           Auto-fill Warehouse when Pack changes
+           ============================================================ */
         document.addEventListener('change', function(e) {
             if (e.target.classList.contains('pack-select')) {
                 const selectedOption = e.target.options[e.target.selectedIndex];
@@ -275,21 +495,40 @@
             }
         });
 
+        /* ============================================================
+           Form Submit Validation
+           ============================================================ */
         document.getElementById('batchForm').addEventListener('submit', function(e) {
             const rows = document.querySelectorAll('.item-row');
             if (rows.length === 0) {
                 e.preventDefault();
-                document.getElementById('itemsError').style.display = 'block';
+                itemsError.style.display = 'flex';
+                itemsError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
 
-        addDefaultRow();
-
-        document.addEventListener('DOMNodeInserted', function(e) {
-            if (e.target.closest && e.target.closest('.item-row')) {
-                if (window.feather) feather.replace();
-            }
-        });
+        /* ============================================================
+           Add Default Row
+           ============================================================ */
+        itemsContainer.insertAdjacentHTML('beforeend', createItemRow());
     });
 </script>
+@endpush
+
+@push('styles')
+<style>
+    /* Item label icons */
+    .item-label-icon {
+        color: #b7b9cc;
+        font-size: 0.75rem;
+        margin-right: 0.25rem;
+    }
+
+    /* Items error alert display fix */
+    #itemsError {
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
 @endpush

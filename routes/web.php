@@ -420,9 +420,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
             ->first();
 
         return view('app_android.more.privacy_policy', compact('policy'));
-    })->name('terms');
-    Route::get('/about-us', [CustomerPagesController::class, 'aboutUsWeb'])->name('about');
-    Route::get('/contact-info', [CustomerPagesController::class, 'contactInfo'])->name('contact.info');
+})->name('terms');
     Route::get('/contact-us', function () {
         return view('app_android.more.contact_us');
     })->name('contact');
@@ -609,6 +607,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('item-packs', ItemPackController::class);
     Route::resource('item-images', ItemImageController::class);
     Route::resource('item-models', ItemModelController::class);
+    Route::get('item-models/export', [ItemModelController::class, 'export'])->name('item-models.export');
+    Route::get('item-models/template', [ItemModelController::class, 'downloadTemplate'])->name('item-models.template');
+    Route::post('item-models/import', [ItemModelController::class, 'import'])->name('item-models.import');
     Route::resource('item-pack-pack-groups', ItemPackPackGroupController::class)->only(['store', 'destroy']);
     Route::resource('item-pack-pack-operations', ItemPackPackOperationController::class)->only(['store', 'destroy']);
 
@@ -642,6 +643,9 @@ Route::middleware(['auth'])->group(function () {
 
         // Warehouse transfer from warehouse show page
         Route::post('/{warehouse}/transfer/store-selection-from-warehouse', [WarehouseController::class, 'transferStoreSelectionFromWarehouse'])->name('warehouses.transfer.store-selection-from-warehouse');
+        Route::get('/{warehouse}/transfer/store-selection-from-warehouse', function() {
+            return redirect()->back()->with('error', 'يرجى تحديد المنتجات ثم النقر على زر النقل.');
+        });
         Route::get('/{warehouse}/transfer/confirm-from-warehouse', [WarehouseController::class, 'transferConfirmFromWarehouse'])->name('warehouses.transfer.confirm-from-warehouse');
     });
 
@@ -701,6 +705,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('contact-messages/{contactMessage}/close', [ContactMessageController::class, 'close'])->name('contact-messages.close');
     Route::post('contact-messages/{contactMessage}/status', [ContactMessageController::class, 'updateStatus'])->name('contact-messages.status');
     Route::post('contact-messages/{contactMessage}/importance', [ContactMessageController::class, 'updateImportance'])->name('contact-messages.importance');
+
+    Route::get('contact-info', [CustomerPagesController::class, 'contactInfoWeb'])->name('contact.info');
 
     Route::resource('notifications', NotificationController::class);
     Route::post('notifications/{notification}/resend', [NotificationController::class, 'resend'])->name('notifications.resend');

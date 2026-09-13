@@ -3,59 +3,52 @@
 @section('title', 'إضافة قائمة أسعار')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="plus-circle" class="align-middle me-2"></i>
-                            إضافة قائمة أسعار
-                        </h1>
-                    </div>
-                </div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            إضافة قائمة أسعار
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Create a new price list</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('price-lists.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
 
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <form method="POST" action="{{ route('price-lists.store') }}">
-                            @csrf
-                            <div class="mb-3">
-                                <label class="form-label">الاسم <span class="text-danger">*</span></label>
-                                <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
-                                @error('name') <div class="text-danger mt-1">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">الوصف</label>
-                                <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
-                                @error('description') <div class="text-danger mt-1">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">الحالة</label>
-                                <select name="status" class="form-select">
-                                    <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>نشطة</option>
-                                    <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>غير نشطة</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i data-feather="save"></i> حفظ
-                            </button>
-                            <a href="{{ route('price-lists.index') }}" class="btn btn-secondary">
-                                <i data-feather="x"></i> إلغاء
-                            </a>
-                        </form>
-                    </div>
-                </div>
+<div class="nova-card">
+    <div class="nova-card-body">
+        <form method="POST" action="{{ route('price-lists.store') }}">
+            @csrf
+            <div class="nova-form-group">
+                <label class="nova-label">الاسم <span class="nova-text-danger">*</span></label>
+                <input type="text" name="name" class="nova-input" value="{{ old('name') }}" required>
+                @error('name') <div class="nova-form-error">{{ $message }}</div> @enderror
             </div>
-        </main>
+            <div class="nova-form-group">
+                <label class="nova-label">الوصف</label>
+                <textarea name="description" class="nova-input" rows="3">{{ old('description') }}</textarea>
+                @error('description') <div class="nova-form-error">{{ $message }}</div> @enderror
+            </div>
+            <div class="nova-form-group">
+                <label class="nova-label">الحالة</label>
+                <select name="status" class="nova-select">
+                    <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>نشطة</option>
+                    <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>غير نشطة</option>
+                </select>
+            </div>
+            <div class="nova-flex nova-items-center nova-gap-2">
+                <button type="submit" class="nova-btn nova-btn-primary">
+                    <i class="fas fa-save"></i> حفظ
+                </button>
+                <a href="{{ route('price-lists.index') }}" class="nova-btn nova-btn-outline">
+                    <i class="fas fa-times"></i> إلغاء
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 @endsection
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof feather !== 'undefined') feather.replace();
-    });
-</script>
-@endpush

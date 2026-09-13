@@ -11,61 +11,72 @@
     $itemCategory = $item ? ($item->category->name_ar ?? '') : '';
 @endphp
 
-<div class="row mb-3 item-row p-3 border rounded bg-light">
-    <div class="col-md-4">
-        <label class="form-label small fw-bold">المنتج (الصنف)</label>
-        <input type="hidden" name="items[{{ $itemIndex }}][item_id]" class="item-id-input" value="{{ $itemId }}">
-        <div class="input-group">
-            <select name="items[{{ $itemIndex }}][item_id_select]" class="form-select item-select" required
-                    onchange="fetchWarehouses(this, {{ $itemIndex }}); syncItemId(this)">
-                <option value="{{ $itemId }}" selected data-price="{{ $item ? $item->price : $unitPrice }}">
-                    {{ $itemNameStr }} ({{ $itemCategory }})
-                </option>
-                @foreach($items as $availItem)
-                    @if($availItem->id != $itemId)
-                        <option value="{{ $availItem->id }}" data-price="{{ $availItem->price }}">
-                            {{ $availItem->name_ar }} ({{ $availItem->category->name_ar ?? '' }})
-                        </option>
-                    @endif
-                @endforeach
-            </select>
-            <button type="button" class="btn btn-outline-secondary"
-                    onclick="this.closest('.item-row').remove()">
-                <i data-feather="trash-2"></i>
-            </button>
+<div class="nova-card nova-mb-3 item-row" style="background: var(--nova-surface-2);">
+    <div class="nova-card-body">
+        <div class="nova-row nova-gap-3">
+            <div class="nova-col">
+                <div class="nova-form-group">
+                    <label class="nova-label nova-fs-sm nova-fw-bold">المنتج (الصنف)</label>
+                    <input type="hidden" name="items[{{ $itemIndex }}][item_id]" class="item-id-input" value="{{ $itemId }}">
+                    <div class="nova-flex nova-gap-2">
+                        <select name="items[{{ $itemIndex }}][item_id_select]" class="nova-select item-select" required
+                                onchange="fetchWarehouses(this, {{ $itemIndex }}); syncItemId(this)" style="flex: 1;">
+                            <option value="{{ $itemId }}" selected data-price="{{ $item ? $item->price : $unitPrice }}">
+                                {{ $itemNameStr }} ({{ $itemCategory }})
+                            </option>
+                            @foreach($items as $availItem)
+                                @if($availItem->id != $itemId)
+                                    <option value="{{ $availItem->id }}" data-price="{{ $availItem->price }}">
+                                        {{ $availItem->name_ar }} ({{ $availItem->category->name_ar ?? '' }})
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                        <button type="button" class="nova-btn nova-btn-danger nova-btn-sm" onclick="this.closest('.item-row').remove()">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nova-col">
+                <div class="nova-form-group">
+                    <label class="nova-label nova-fs-sm nova-fw-bold">المخزن (مصدر الصرف)</label>
+                    <select name="items[{{ $itemIndex }}][warehouse_id]" class="nova-select warehouse-select" required>
+                        <option value="">اختر المنتج أولاً</option>
+                        @if($selectedWarehouseId)
+                            @php $selectedWarehouse = \App\Models\Warehouse::find($selectedWarehouseId); @endphp
+                            @if($selectedWarehouse)
+                                <option value="{{ $selectedWarehouse->id }}" selected>
+                                    {{ $selectedWarehouse->name }}
+                                </option>
+                            @endif
+                        @endif
+                    </select>
+                    <small class="nova-help-text available-stock">جارٍ التحميل من المخازن...</small>
+                </div>
+            </div>
+
+            <div class="nova-col">
+                <div class="nova-form-group">
+                    <label class="nova-label nova-fs-sm nova-fw-bold">السعر</label>
+                    <input type="number" name="items[{{ $itemIndex }}][unit_price]" class="nova-input price-input"
+                           step="0.01" min="0" value="{{ $unitPrice ?? 0 }}" readonly>
+                </div>
+            </div>
+
+            <div class="nova-col">
+                <div class="nova-form-group">
+                    <label class="nova-label nova-fs-sm nova-fw-bold">الكمية</label>
+                    <input type="number" name="items[{{ $itemIndex }}][quantity]" class="nova-input qty-input"
+                           min="1" step="0.01" value="{{ $quantity }}" required>
+                </div>
+            </div>
+
+            <div class="nova-col nova-flex nova-items-end">
+                <span class="nova-text-muted nova-fs-sm subtotal-display">0 ر.س</span>
+            </div>
         </div>
-    </div>
-
-    <div class="col-md-3">
-        <label class="form-label small fw-bold">المخزن (مصدر الصرف)</label>
-        <select name="items[{{ $itemIndex }}][warehouse_id]" class="form-select warehouse-select" required>
-            <option value="">اختر المنتج أولاً</option>
-            @if($selectedWarehouseId)
-                @php $selectedWarehouse = \App\Models\Warehouse::find($selectedWarehouseId); @endphp
-                @if($selectedWarehouse)
-                    <option value="{{ $selectedWarehouse->id }}" selected>
-                        {{ $selectedWarehouse->name }}
-                    </option>
-                @endif
-            @endif
-        </select>
-        <small class="text-muted available-stock d-block mt-1">جارٍ التحميل من المخازن...</small>
-    </div>
-
-    <div class="col-md-2">
-        <label class="form-label small fw-bold">السعر</label>
-        <input type="number" name="items[{{ $itemIndex }}][unit_price]" class="form-control price-input"
-               step="0.01" min="0" value="{{ $unitPrice ?? 0 }}" readonly>
-    </div>
-
-    <div class="col-md-2">
-        <label class="form-label small fw-bold">الكمية</label>
-        <input type="number" name="items[{{ $itemIndex }}][quantity]" class="form-control qty-input"
-               min="1" step="0.01" value="{{ $quantity }}" required>
-    </div>
-
-    <div class="col-md-1 d-flex align-items-end">
-        <span class="text-muted small subtotal-display">0 ر.س</span>
     </div>
 </div>
 

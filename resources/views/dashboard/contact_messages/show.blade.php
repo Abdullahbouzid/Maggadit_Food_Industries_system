@@ -3,154 +3,196 @@
 @section('title', 'عرض الرسالة')
 
 @section('content')
-<div class="wrapper">
-    <div class="main">
-        <main class="content">
-            <div class="container-fluid p-0">
-                <div class="row mb-4">
-                    <div class="col-12 col-lg-8">
-                        <h1 class="display-5 fw-bold mb-2">
-                            <i data-feather="message-square" class="align-middle me-2"></i>
-                            رسالة من {{ $contactMessage->name }}
-                        </h1>
-                        <p class="text-muted">تاريخ الإرسال: {{ $contactMessage->created_at->format('Y-m-d H:i') }}</p>
-                    </div>
-                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="{{ route('contact-messages.index') }}" class="btn btn-secondary">
-                            <i data-feather="list"></i> القائمة
-                        </a>
-                    </div>
-                </div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-message-square" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            رسالة من {{ $contactMessage->name }}
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
+            <i class="fas fa-clock"></i> تاريخ الإرسال: {{ $contactMessage->created_at->format('Y-m-d H:i') }}
+        </p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('contact-messages.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-list"></i> القائمة
+        </a>
+    </div>
+</div>
 
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i data-feather="check-circle" class="me-2"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i data-feather="alert-circle" class="me-2"></i> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+@if(session('success'))
+    <div class="nova-alert success">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ session('error') }}
+    </div>
+@endif
 
-                <div class="row">
-                    <div class="col-lg-8 mx-auto">
-                        <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
-                            <div class="card-header bg-primary text-white py-3 px-4">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h5 class="fw-bold mb-0">تفاصيل الرسالة</h5>
-                                    <span class="badge bg-{{ $contactMessage->status == 'new' ? 'warning text-dark' : ($contactMessage->status == 'read' ? 'info' : ($contactMessage->status == 'replied' ? 'success' : 'secondary')) }}">
-                                        {{ $contactMessage->status == 'new' ? 'جديدة' : ($contactMessage->status == 'read' ? 'مقروءة' : ($contactMessage->status == 'replied' ? 'تم الرد' : 'مغلقة')) }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="card-body p-4">
-                                <table class="table table-borderless mb-4">
-                                    <tr>
-                                        <th class="w-25">الاسم</th>
-                                        <td>{{ $contactMessage->name }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>البريد الإلكتروني</th>
-                                        <td><a href="mailto:{{ $contactMessage->email }}">{{ $contactMessage->email }}</a></td>
-                                    </tr>
-                                    @if($contactMessage->phone)
-                                        <tr>
-                                            <th>الهاتف</th>
-                                            <td>{{ $contactMessage->phone }}</td>
-                                        </tr>
-                                    @endif
-                                    @if($contactMessage->subject)
-                                        <tr>
-                                            <th>الموضوع</th>
-                                            <td>{{ $contactMessage->subject }}</td>
-                                        </tr>
-                                    @endif
-                                    <tr>
-                                        <th>المنظمة</th>
-                                        <td>{{ $contactMessage->organization?->name ?? 'عامة' }}</td>
-                                    </tr>
-                                </table>
+<div class="nova-card">
+    <div class="nova-card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">
+                <i class="fas fa-info-circle"></i> تفاصيل الرسالة
+            </h5>
+            @php
+                $statusClass = $contactMessage->status == 'new' ? 'warning' : ($contactMessage->status == 'read' ? 'info' : ($contactMessage->status == 'replied' ? 'success' : 'secondary'));
+                $statusText = $contactMessage->status == 'new' ? 'جديدة' : ($contactMessage->status == 'read' ? 'مقروءة' : ($contactMessage->status == 'replied' ? 'تم الرد' : 'مغلقة'));
+            @endphp
+            <span class="nova-badge {{ $statusClass }}">{{ $statusText }}</span>
+        </div>
+    </div>
+    <div class="nova-card-body">
+        <table class="nova-table nova-table-borderless">
+            <tr>
+                <th class="nova-col nova-col-md-4">الاسم</th>
+                <td>{{ $contactMessage->name }}</td>
+            </tr>
+            <tr>
+                <th>البريد الإلكتروني</th>
+                <td><a href="mailto:{{ $contactMessage->email }}" class="nova-text-primary">{{ $contactMessage->email }}</a></td>
+            </tr>
+            @if($contactMessage->phone)
+                <tr>
+                    <th>الهاتف</th>
+                    <td>{{ $contactMessage->phone }}</td>
+                </tr>
+            @endif
+            @if($contactMessage->subject)
+                <tr>
+                    <th>الموضوع</th>
+                    <td>{{ $contactMessage->subject }}</td>
+                </tr>
+            @endif
+            <tr>
+                <th>المنظمة</th>
+                <td>{{ $contactMessage->organization?->name ?? 'عامة' }}</td>
+            </tr>
+        </table>
 
-                                <div class="bg-light p-4 rounded-3">
-                                    <h6 class="fw-bold mb-2">الرسالة:</h6>
-                                    <p class="white-space-pre-wrap mb-0">{{ $contactMessage->message }}</p>
-                                </div>
-
-                                @if($contactMessage->forwarded_to_email)
-                                    <div class="alert alert-success mt-3">
-                                        <i data-feather="check" class="align-middle me-1"></i>
-                                        تم تحويل هذه الرسالة إلى البريد الإلكتروني في {{ $contactMessage->forwarded_at?->format('Y-m-d H:i') }}
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="card border-0 shadow-sm rounded-4">
-                            <div class="card-body p-4">
-                                <h6 class="fw-bold mb-3">تحديث الحالة</h6>
-                                <form action="{{ route('contact-messages.status', $contactMessage) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
-                                        @foreach($statuses as $st)
-                                            <option value="{{ $st }}" {{ $contactMessage->status == $st ? 'selected' : '' }}>
-                                                {{ $st == 'new' ? 'جديدة' : ($st == 'read' ? 'مقروءة' : ($st == 'replied' ? 'تم الرد' : 'مغلقة')) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </form>
-
-                                <h6 class="fw-bold mt-4 mb-3">تحديث الأهمية</h6>
-                                <form action="{{ route('contact-messages.importance', $contactMessage) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <select name="importance" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
-                                        @foreach($importances as $imp)
-                                            <option value="{{ $imp }}" {{ $contactMessage->importance == $imp ? 'selected' : '' }}>
-                                                {{ $imp == 'urgent' ? 'عاجلة' : ($imp == 'high' ? 'عالية' : ($imp == 'medium' ? 'متوسطة' : 'منخفضة')) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </form>
-
-                                <hr class="my-4">
-
-                                <div class="d-flex flex-wrap gap-2">
-                                    <form action="{{ route('contact-messages.forward', $contactMessage) }}" method="POST" class="d-inline" onsubmit="return confirm('تحويل هذه الرسالة إلى البريد الإلكتروني؟')">
-                                        @csrf
-                                        <button type="submit" class="btn btn-success" {{ $contactMessage->forwarded_to_email ? 'disabled' : '' }}>
-                                            <i data-feather="send"></i> تحويل للبريد
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('contact-messages.close', $contactMessage) }}" method="POST" class="d-inline" onsubmit="return confirm('إغلاق هذه الرسالة؟')">
-                                        @csrf
-                                        <button type="submit" class="btn btn-secondary" {{ $contactMessage->status == 'closed' ? 'disabled' : '' }}>
-                                            <i data-feather="x-circle"></i> إغلاق
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('contact-messages.destroy', $contactMessage) }}" method="POST" class="d-inline" onsubmit="return confirm('حذف هذه الرسالة نهائياً؟')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger">
-                                            <i data-feather="trash-2"></i> حذف
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="nova-form-card nova-mt-4">
+            <div class="nova-form-card-header">
+                <h6 class="fw-bold mb-0">
+                    <i class="fas fa-file-alt"></i> الرسالة
+                </h6>
             </div>
-        </main>
+            <div class="nova-form-card-body">
+                <p class="mb-0" style="white-space: pre-wrap;">{{ $contactMessage->message }}</p>
+            </div>
+        </div>
+
+        @if($contactMessage->forwarded_to_email)
+            <div class="nova-alert success nova-mt-4">
+                <i class="fas fa-check-circle"></i>
+                تم تحويل هذه الرسالة إلى البريد الإلكتروني في {{ $contactMessage->forwarded_at?->format('Y-m-d H:i') }}
+            </div>
+        @endif
+    </div>
+</div>
+
+{{-- Update Actions --}}
+<div class="nova-card nova-mt-4">
+    <div class="nova-card-header">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-cog"></i> إدارة الحالة
+        </h5>
+    </div>
+    <div class="nova-card-body">
+        <div class="nova-form-group">
+            <label class="nova-label">
+                <i class="fas fa-flag me-1"></i> تحديث الحالة
+            </label>
+            <form action="{{ route('contact-messages.status', $contactMessage) }}" method="POST">
+                @csrf
+                <select name="status" class="nova-select" onchange="this.form.submit()">
+                    @foreach($statuses as $st)
+                        <option value="{{ $st }}" {{ $contactMessage->status == $st ? 'selected' : '' }}>
+                            {{ $st == 'new' ? 'جديدة' : ($st == 'read' ? 'مقروءة' : ($st == 'replied' ? 'تم الرد' : 'مغلقة')) }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
+
+        <div class="nova-form-group nova-mt-3">
+            <label class="nova-label">
+                <i class="fas fa-exclamation-circle me-1"></i> تحديث الأهمية
+            </label>
+            <form action="{{ route('contact-messages.importance', $contactMessage) }}" method="POST">
+                @csrf
+                <select name="importance" class="nova-select" onchange="this.form.submit()">
+                    @foreach($importances as $imp)
+                        <option value="{{ $imp }}" {{ $contactMessage->importance == $imp ? 'selected' : '' }}>
+                            {{ $imp == 'urgent' ? 'عاجلة' : ($imp == 'high' ? 'عالية' : ($imp == 'medium' ? 'متوسطة' : 'منخفضة')) }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Action Buttons --}}
+<div class="nova-card nova-mt-4">
+    <div class="nova-card-body">
+        <div class="nova-flex nova-gap-2">
+            <a href="{{ route('contact-messages.index') }}" class="nova-btn nova-btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Messages
+            </a>
+            <form action="{{ route('contact-messages.forward', $contactMessage) }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="nova-btn nova-btn-success" {{ $contactMessage->forwarded_to_email ? 'disabled' : '' }}>
+                    <i class="fas fa-paper-plane"></i> تحويل للبريد
+                </button>
+            </form>
+            <form action="{{ route('contact-messages.close', $contactMessage) }}" method="POST" class="d-inline" onsubmit="return confirm('إغلاق هذه الرسالة؟')">
+                @csrf
+                <button type="submit" class="nova-btn nova-btn-secondary" {{ $contactMessage->status == 'closed' ? 'disabled' : '' }}>
+                    <i class="fas fa-times-circle"></i> إغلاق
+                </button>
+            </form>
+            <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
+                    onclick="confirmDelete({{ $contactMessage->id }}, '{{ addslashes($contactMessage->name ?? 'Message') }}')">
+                <i class="fas fa-trash-alt"></i> حذف
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Delete Confirmation Modal (Nova) --}}
+<div class="nova-modal-backdrop" id="deleteMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete the message from <strong id="deleteMessageName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteMessageModal').classList.remove('show')">Cancel</button>
+                <form id="deleteMessageForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof feather !== 'undefined') feather.replace();
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    window.confirmDelete = function(id, name) {
+        document.getElementById('deleteMessageName').innerText = name;
+        document.getElementById('deleteMessageForm').action = '/contact-messages/' + id;
+        document.getElementById('deleteMessageModal').classList.add('show');
+    };
+});
 </script>
 @endpush

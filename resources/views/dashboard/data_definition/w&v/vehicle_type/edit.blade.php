@@ -3,25 +3,91 @@
 @section('title', 'Edit Vehicle Type')
 
 @section('content')
-<div class="wrapper">
-    <div class="main"><main class="content"><div class="container-fluid p-0">
-        <div class="row mb-4"><div class="col-12"><h1 class="display-5 fw-bold"><i data-feather="edit"></i> Edit Vehicle Type: {{ $vehicleType->code }}</h1></div></div>
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Vehicle Type: {{ $vehicleType->code }}
+        </h2>
+        <p class="nova-page-subtitle">Modify vehicle classification</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('vehicle-types.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> Back
+        </a>
+    </div>
+</div>
+
+@if($errors->any())
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <ul class="mb-0 mt-2">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Basic Information</h5>
+    </div>
+    <div class="nova-card-body">
         <form action="{{ route('vehicle-types.update', $vehicleType) }}" method="POST">
             @csrf @method('PUT')
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4"><label class="form-label">Code</label><input type="text" name="code" class="form-control" value="{{ old('code', $vehicleType->code) }}" required></div>
-                        <div class="col-md-4"><label class="form-label">Name (English)</label><input type="text" name="name_en" class="form-control" value="{{ old('name_en', $vehicleType->name_en) }}" required></div>
-                        <div class="col-md-4"><label class="form-label">Name (Arabic)</label><input type="text" name="name_ar" class="form-control" value="{{ old('name_ar', $vehicleType->name_ar) }}" required></div>
-                        <div class="col-12"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="3">{{ old('description', $vehicleType->description) }}</textarea></div>
-                        <div class="col-md-4"><label class="form-label">Sort Order</label><input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', $vehicleType->sort_order) }}"></div>
-                        <div class="col-md-4"><div class="form-check form-switch mt-4"><input type="checkbox" name="is_active" value="1" class="form-check-input" id="is_active" {{ old('is_active', $vehicleType->is_active)?'checked':'' }}><label class="form-check-label" for="is_active">Active</label></div></div>
+            <div class="nova-row nova-gap-4">
+                <div class="nova-col nova-col-md-4">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Code <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="code" class="nova-input @error('code') nova-invalid @enderror" value="{{ old('code', $vehicleType->code) }}" required>
+                        @error('code') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0"><button type="submit" class="btn btn-primary">Update</button> <a href="{{ route('vehicle-types.index') }}" class="btn btn-secondary">Cancel</a></div>
+                <div class="nova-col nova-col-md-4">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Name (English) <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="name_en" class="nova-input @error('name_en') nova-invalid @enderror" value="{{ old('name_en', $vehicleType->name_en) }}" required>
+                        @error('name_en') <div class="nova-form-error">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-4">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Name (Arabic) <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="name_ar" class="nova-input @error('name_ar') nova-invalid @enderror" value="{{ old('name_ar', $vehicleType->name_ar) }}" required>
+                        @error('name_ar') <div class="nova-form-error">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Description</label>
+                        <textarea name="description" class="nova-input" rows="3">{{ old('description', $vehicleType->description) }}</textarea>
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-4">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Sort Order</label>
+                        <input type="number" name="sort_order" class="nova-input" value="{{ old('sort_order', $vehicleType->sort_order) }}">
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-4">
+                    <div class="nova-form-check nova-mt-4">
+                        <input type="checkbox" name="is_active" value="1" class="nova-form-check-input" id="is_active" {{ old('is_active', $vehicleType->is_active) ? 'checked' : '' }}>
+                        <label class="nova-form-check-label" for="is_active">Active</label>
+                    </div>
+                </div>
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-actions">
+                        <a href="{{ route('vehicle-types.index') }}" class="nova-btn nova-btn-outline">
+                            <i class="fas fa-x me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-save me-1"></i> Update
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
-    </div></main></div>
+    </div>
 </div>
 @endsection
