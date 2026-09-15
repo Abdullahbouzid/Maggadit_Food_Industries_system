@@ -1,32 +1,32 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Item Details')
+@section('title', 'Item التفاصيل')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Item Details
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            Item التفاصيل
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
-            Viewing information for
+            عرضing information for
             <strong>{{ $item->name_en }}</strong>
             @if($item->name_ar)
                 ({{ $item->name_ar }})
             @endif
             @if($item->code)
-                <span class="nova-badge info" style="margin-left: 0.5rem;">{{ $item->code }}</span>
+                <span class="nova-badge info" style="margin-inline-start: 0.5rem;">{{ $item->code }}</span>
             @endif
         </p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('items.edit', $item) }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-edit"></i> Edit
+            <i class="fas fa-edit"></i> تعديل
         </a>
         <a href="{{ route('items.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back to List
+            <i class="fas fa-arrow-left"></i> رجوع to List
         </a>
     </div>
 </div>
@@ -71,11 +71,11 @@
                 <p class="detail-value">{{ $item->sequence ?? '—' }}</p>
             </div>
             <div class="detail-item">
-                <label class="detail-label">Name (English)</label>
+                <label class="detail-label">الاسم بالإنجليزي</label>
                 <p class="detail-value nova-fw-bold">{{ $item->name_en }}</p>
             </div>
             <div class="detail-item">
-                <label class="detail-label">Name (Arabic)</label>
+                <label class="detail-label">الاسم بالعربي</label>
                 <p class="detail-value">{{ $item->name_ar ?: '—' }}</p>
             </div>
             <div class="detail-item detail-item-full">
@@ -94,7 +94,7 @@
     <div class="nova-card-body">
         <div class="detail-grid detail-grid-5">
             <div class="detail-item">
-                <label class="detail-label">Item Type</label>
+                <label class="detail-label">نوع العنصر</label>
                 <p class="detail-value">
                     @if($item->itemType)
                         <span class="nova-badge secondary">{{ $item->itemType->name_en ?? $item->itemType->name }}</span>
@@ -104,7 +104,7 @@
                 </p>
             </div>
             <div class="detail-item">
-                <label class="detail-label">Category</label>
+                <label class="detail-label">الفئة</label>
                 <p class="detail-value">
                     @if($item->category)
                         <span class="nova-badge secondary">{{ $item->category->name_en ?? $item->category->name }}</span>
@@ -158,7 +158,7 @@
                 <p class="detail-value">{{ $item->weight_tolerance ?? '—' }}</p>
             </div>
             <div class="detail-item">
-                <label class="detail-label">Low Stock Qty</label>
+                <label class="detail-label">منخفض Stock Qty</label>
                 <p class="detail-value">
                     @if($item->low_stock_qty !== null)
                         <span class="nova-badge warning">{{ $item->low_stock_qty }}</span>
@@ -179,15 +179,15 @@
     <div class="nova-card-body">
         @php
             $flags = array_filter([
-                $item->is_inactive       ? ['label' => 'Inactive',            'class' => 'secondary', 'icon' => 'eye-slash'] : null,
-                $item->is_new            ? ['label' => 'New',                 'class' => 'primary',   'icon' => 'star'] : null,
+                $item->is_inactive       ? ['label' => 'غير نشط',            'class' => 'secondary', 'icon' => 'eye-slash'] : null,
+                $item->is_new            ? ['label' => 'جديد',                 'class' => 'primary',   'icon' => 'star'] : null,
                 $item->is_price_protected? ['label' => 'Price Protected',     'class' => 'warning',   'icon' => 'lock'] : null,
                 $item->is_power_sku      ? ['label' => 'Power SKU',           'class' => 'accent',    'icon' => 'bolt'] : null,
-                $item->is_default_batch  ? ['label' => 'Default Batch',       'class' => 'info',      'icon' => 'layer-group'] : null,
+                $item->is_default_batch  ? ['label' => 'افتراضي Batch',       'class' => 'info',      'icon' => 'layer-group'] : null,
                 $item->is_temp_credit    ? ['label' => 'Temp Credit',         'class' => 'info',      'icon' => 'credit-card'] : null,
                 $item->is_batch_priced   ? ['label' => 'Batch Priced',        'class' => 'primary',   'icon' => 'tags'] : null,
                 $item->is_initiative     ? ['label' => 'Initiative',          'class' => 'accent',    'icon' => 'rocket'] : null,
-                $item->force_default_pack? ['label' => 'Force Default Pack',  'class' => 'warning',   'icon' => 'box'] : null,
+                $item->force_default_pack? ['label' => 'Force افتراضي Pack',  'class' => 'warning',   'icon' => 'box'] : null,
                 $item->has_serial_number ? ['label' => 'Has Serial',          'class' => 'success',   'icon' => 'barcode'] : null,
                 $item->required_by_liter ? ['label' => 'By Liter',            'class' => 'info',      'icon' => 'flask'] : null,
                 $item->required_by_weight? ['label' => 'By Weight',           'class' => 'warning',   'icon' => 'weight'] : null,
@@ -203,7 +203,7 @@
                 @endforeach
             </div>
         @else
-            <p class="nova-text-muted mb-0">— No flags set —</p>
+            <p class="nova-text-muted mb-0">— لا flags set —</p>
         @endif
     </div>
 </div>
@@ -280,10 +280,10 @@
                             <td class="nova-text-center">
                                 @if($pack->is_default_pack)
                                     <span class="nova-badge success">
-                                        <i class="fas fa-check-circle"></i> Yes
+                                        <i class="fas fa-check-circle"></i> نعم
                                     </span>
                                 @else
-                                    <span class="nova-badge secondary">No</span>
+                                    <span class="nova-badge secondary">لا</span>
                                 @endif
                             </td>
                         </tr>
@@ -296,17 +296,17 @@
                 <div class="empty-state-icon">
                     <i class="fas fa-boxes"></i>
                 </div>
-                <h5 class="nova-text-muted">No packs defined</h5>
+                <h5 class="nova-text-muted">لا packs defined</h5>
                 <p class="nova-text-muted nova-fs-sm">This item doesn't have any packs yet.</p>
             </div>
         @endif
     </div>
 </div>
 
-{{-- ===== Images ===== --}}
+{{-- ===== الصورةs ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h5 class="nova-card-title"><i class="fas fa-image me-2"></i> Images</h5>
+        <h5 class="nova-card-title"><i class="fas fa-image me-2"></i> الصورةs</h5>
     </div>
     <div class="nova-card-body">
         @if($item->image || $item->images->count())
@@ -332,54 +332,54 @@
                 <div class="empty-state-icon">
                     <i class="fas fa-image"></i>
                 </div>
-                <h5 class="nova-text-muted">No images available</h5>
+                <h5 class="nova-text-muted">لا images available</h5>
                 <p class="nova-text-muted nova-fs-sm">This item doesn't have any images yet.</p>
             </div>
         @endif
     </div>
 </div>
 
-{{-- ===== Actions ===== --}}
+{{-- ===== إجراءات ===== --}}
 <div class="nova-card">
     <div class="nova-card-body">
         <div class="detail-actions">
             <a href="{{ route('items.edit', $item) }}" class="nova-btn nova-btn-primary">
-                <i class="fas fa-edit"></i> Edit Item
+                <i class="fas fa-edit"></i> تعديل Item
             </a>
             <a href="{{ route('items.index') }}" class="nova-btn nova-btn-outline">
-                <i class="fas fa-arrow-left"></i> Back to List
+                <i class="fas fa-arrow-left"></i> رجوع to List
             </a>
             <button type="button"
                     class="nova-btn nova-btn-danger"
-                    onclick="confirmDelete({{ $item->id }}, '{{ addslashes($item->name_en) }}')">
-                <i class="fas fa-trash-alt"></i> Delete
+                    onclick="confirmحذف({{ $item->id }}, '{{ addslashes($item->name_en) }}')">
+                <i class="fas fa-trash-alt"></i> حذف
             </button>
         </div>
     </div>
 </div>
 
-{{-- ===== Delete Confirmation Modal ===== --}}
+{{-- ===== حذف تأكيدation Modal ===== --}}
 <div class="nova-modal-backdrop" id="deleteItemModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
             <p class="nova-delete-modal-text">
                 Are you sure you want to delete
                 <strong id="deleteItemName" class="nova-text-danger"></strong>?
-                <br>This action cannot be undone.
+                <br>لا يمكن التراجع عن هذا الإجراء.
             </p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="closeDeleteModal()">
-                    Cancel
+                <button type="button" class="nova-btn nova-btn-outline" onclick="closeحذفModal()">
+                    إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="nova-btn nova-btn-danger">
-                        <i class="fas fa-trash-alt"></i> Delete Permanently
+                        <i class="fas fa-trash-alt"></i> الحذف النهائي
                     </button>
                 </form>
             </div>
@@ -440,7 +440,7 @@
         border: 1px solid #e3e6f0;
     }
 
-    /* ===== Images Grid ===== */
+    /* ===== الصورةs Grid ===== */
     .images-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -507,7 +507,7 @@
         margin-bottom: 0.5rem;
     }
 
-    /* ===== Actions ===== */
+    /* ===== إجراءات ===== */
     .detail-actions {
         display: flex;
         gap: 0.5rem;
@@ -611,37 +611,37 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ===== Delete Modal =====
-    window.confirmDelete = function(id, name) {
+    // ===== حذف Modal =====
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteItemName').innerText = name;
         document.getElementById('deleteForm').action = '/items/' + id;
         document.getElementById('deleteItemModal').classList.add('show');
     };
 
-    window.closeDeleteModal = function() {
+    window.closeحذفModal = function() {
         document.getElementById('deleteItemModal').classList.remove('show');
     };
 
-    // Close modal on backdrop click
+    // إغلاق modal on backdrop click
     const modal = document.getElementById('deleteItemModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
             if (e.target === modal) {
-                closeDeleteModal();
+                closeحذفModal();
             }
         });
     }
 
-    // Close modal on Escape key
+    // إغلاق modal on Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
-            closeDeleteModal();
+            closeحذفModal();
         }
     });
 
     // ===== Auto-dismiss alerts =====
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

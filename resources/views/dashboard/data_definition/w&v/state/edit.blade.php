@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Edit State')
+@section('title', 'تعديل State')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Edit State: {{ $state->code }}
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            تعديل State: {{ $state->code }}
         </h2>
         <p class="nova-page-subtitle">Modify state classification</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('states.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back
+            <i class="fas fa-arrow-right"></i> رجوع
         </a>
     </div>
 </div>
@@ -59,40 +59,40 @@
                 </div>
                 <div class="nova-col nova-col-md-4">
                     <div class="nova-form-group">
-                        <label class="nova-label">Name (English) <span class="nova-text-danger">*</span></label>
+                        <label class="nova-label">الاسم بالإنجليزي <span class="nova-text-danger">*</span></label>
                         <input type="text" name="name_en" class="nova-input @error('name_en') nova-invalid @enderror" value="{{ old('name_en', $state->name_en) }}" required>
                         @error('name_en') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
                 </div>
                 <div class="nova-col nova-col-md-4">
                     <div class="nova-form-group">
-                        <label class="nova-label">Name (Arabic) <span class="nova-text-danger">*</span></label>
+                        <label class="nova-label">الاسم بالعربي <span class="nova-text-danger">*</span></label>
                         <input type="text" name="name_ar" class="nova-input @error('name_ar') nova-invalid @enderror" value="{{ old('name_ar', $state->name_ar) }}" required>
                         @error('name_ar') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
                 </div>
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-group">
-                        <label class="nova-label">Description</label>
+                        <label class="nova-label">الوصف</label>
                         <textarea name="description" class="nova-input" rows="3">{{ old('description', $state->description) }}</textarea>
                     </div>
                 </div>
                 <div class="nova-col nova-col-md-4">
                     <div class="nova-form-group">
-                        <label class="nova-label">Sort Order</label>
+                        <label class="nova-label">ترتيب الفرز</label>
                         <input type="number" name="sort_order" class="nova-input" value="{{ old('sort_order', $state->sort_order) }}">
                     </div>
                 </div>
                 <div class="nova-col nova-col-md-4">
                     <div class="nova-form-check nova-mt-4">
                         <input type="checkbox" name="is_active" value="1" class="nova-form-check-input" id="is_active" {{ old('is_active', $state->is_active) ? 'checked' : '' }}>
-                        <label class="nova-form-check-label" for="is_active">Active</label>
+                        <label class="nova-form-check-label" for="is_active">نشط</label>
                     </div>
                 </div>
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('states.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-x me-1"></i> Cancel
+                            <i class="fas fa-x me-1"></i> إلغاء
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
                             <i class="fas fa-save me-1"></i> Update

@@ -8,7 +8,7 @@
     <div>
         <h2 class="nova-actionbar-title">
             <i class="fas fa-{{ isset($warehouseMovement) ? 'edit' : 'plus-circle' }}"
-               style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+               style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             {{ isset($warehouseMovement) ? 'تعديل الحركة #' . $warehouseMovement->id : 'إضافة حركة جديدة' }}
         </h2>
         <p class="nova-page-subtitle">أدخل بيانات الحركة بين المخازن</p>
@@ -264,7 +264,7 @@
                 </div>
             </div>
 
-            {{-- Actions --}}
+            {{-- إجراءات --}}
             <div class="nova-card nova-actions-sticky">
                 <div class="nova-card-header">
                     <h5 class="nova-fw-bold mb-0">
@@ -425,7 +425,7 @@
         margin-top: 3px;
     }
 
-    /* ===== Actions ===== */
+    /* ===== إجراءات ===== */
     .nova-action-stack {
         display: flex;
         flex-direction: column;
@@ -459,7 +459,7 @@
 
     .selected-row {
         background: linear-gradient(90deg, rgba(59,130,246,.08), transparent) !important;
-        border-right: 3px solid #3b82f6;
+        border-end: 3px solid #3b82f6;
     }
 
     @media (max-width: 768px) {
@@ -545,18 +545,18 @@
                     enableCheckboxInteractivity();
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('خطأ:', error);
                     availableItemsBody.innerHTML = '<tr><td colspan="7" class="nova-text-center nova-text-danger">خطأ في تحميل البيانات</td></tr>';
                 });
         });
 
         function enableCheckboxInteractivity() {
             // Enable checkboxes and quantity inputs
-            document.querySelectorAll('.item-checkbox').forEach(cb => cb.disabled = false);
-            document.querySelectorAll('.item-quantity').forEach(qi => qi.disabled = false);
+            document.querySelectorالكل('.item-checkbox').forEach(cb => cb.disabled = false);
+            document.querySelectorالكل('.item-quantity').forEach(qi => qi.disabled = false);
 
             // Row click toggles checkbox (but not when clicking checkbox or quantity input directly)
-            document.querySelectorAll('.available-item-row').forEach(row => {
+            document.querySelectorالكل('.available-item-row').forEach(row => {
                 row.addEventListener('click', function (e) {
                     const cb = this.querySelector('.item-checkbox');
                     const qty = this.querySelector('.item-quantity');
@@ -570,7 +570,7 @@
             });
 
             // Checkbox change
-            document.querySelectorAll('.item-checkbox').forEach(cb => {
+            document.querySelectorالكل('.item-checkbox').forEach(cb => {
                 cb.addEventListener('change', function () {
                     const qty = this.closest('tr').querySelector('.item-quantity');
                     toggleQuantity(qty, this);
@@ -589,7 +589,7 @@
         }
 
         function updateSelectedCount() {
-            const checked = document.querySelectorAll('.item-checkbox:checked');
+            const checked = document.querySelectorالكل('.item-checkbox:checked');
             const count = checked.length;
             if (count === 0) {
                 itemsCountBadge.textContent = '0 منتج';
@@ -631,9 +631,9 @@
 
         // Form submit: collect selected items and build hidden inputs
         form.addEventListener('submit', function (e) {
-            const checked = document.querySelectorAll('.item-checkbox:checked');
+            const checked = document.querySelectorالكل('.item-checkbox:checked');
             if (checked.length === 0) {
-                e.preventDefault();
+                e.preventافتراضي();
                 const alert = document.createElement('div');
                 alert.className = 'nova-alert danger nova-mt-3';
                 alert.innerHTML = '<i class="fas fa-exclamation-triangle"></i><strong>يرجى اختيار منتج واحد على الأقل.</strong>';
@@ -670,7 +670,7 @@
 
         // Initialize checkbox interactivity if items were pre-loaded
         if (fromWarehouseSelect.value) {
-            if (document.querySelectorAll('.item-checkbox').length > 0) {
+            if (document.querySelectorالكل('.item-checkbox').length > 0) {
                 enableCheckboxInteractivity();
             }
         }

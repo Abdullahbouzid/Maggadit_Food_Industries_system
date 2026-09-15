@@ -1,23 +1,23 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Pack Operations Management')
+@section('title', 'إدارة عمليات الباك')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-box" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-box" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Pack Operations
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage pack operations like "Sales Order Return +10", "Transfer +5", etc.</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('pack-operations.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus-circle"></i> Add New
+            <i class="fas fa-plus-circle"></i> إضافة جديد
         </a>
         <a href="{{ route('pack-operations.export', request()->query()) }}" class="nova-btn nova-btn-secondary nova-btn-sm">
-            <i class="fas fa-download"></i> Export Table
+            <i class="fas fa-download"></i> تصدير Table
         </a>
     </div>
 </div>
@@ -39,7 +39,7 @@
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-circle"></i>
         <div>
-            <strong>Import Errors:</strong>
+            <strong>أخطاء الاستيراد:</strong>
             <ul class="nova-mb-0 nova-mt-1">
                 @foreach(session('import_errors') as $error)
                     <li>{{ $error }}</li>
@@ -62,14 +62,14 @@
         <div class="nova-stat-icon success">
             <i class="fas fa-check-circle"></i>
         </div>
-        <p class="nova-stat-label">Active</p>
+        <p class="nova-stat-label">نشط</p>
         <p class="nova-stat-value">{{ $activeCount }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon warning">
-            <i class="fas fa-eye-off"></i>
+            <i class="fas fa-eye-منf"></i>
         </div>
-        <p class="nova-stat-label">Inactive</p>
+        <p class="nova-stat-label">غير نشط</p>
         <p class="nova-stat-value">{{ $inactiveCount }}</p>
     </div>
 </div>
@@ -87,18 +87,18 @@
         <form action="{{ route('pack-operations.import') }}" method="POST" enctype="multipart/form-data" class="import-form">
             @csrf
             <div class="nova-form-group import-form-input">
-                <label class="nova-label">Excel File (.xlsx, .xls, .csv)</label>
+                <label class="nova-label">ملف Excel</label>
                 <input type="file" name="import_file" class="nova-input" required>
                 <div class="nova-help-text">
-                    Required columns: <strong>code, name_en, name_ar</strong> | Optional: is_active, sort_order
+                    الأعمدة المطلوبة | اختياري: is_active, sort_order
                 </div>
             </div>
             <div class="import-form-actions">
                 <button type="submit" class="nova-btn nova-btn-success">
-                    <i class="fas fa-upload"></i> Import Data
+                    <i class="fas fa-upload"></i> استيراد البيانات
                 </button>
                 <a href="{{ route('pack-operations.template') }}" class="nova-btn nova-btn-outline">
-                    <i class="fas fa-file-text"></i> Download Template
+                    <i class="fas fa-file-text"></i> تحميل القالب
                 </a>
             </div>
         </form>
@@ -106,54 +106,54 @@
 </div>
 
 {{-- ============================================================
-     Filter Section
+     فلتر Section
      ============================================================ --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('pack-operations.index') }}" class="filter-form">
-            {{-- Search --}}
+            {{-- بحث --}}
             <div class="nova-form-group filter-item filter-item-search">
-                <label class="nova-label">Search</label>
+                <label class="nova-label">بحث</label>
                 <div class="filter-search-wrapper">
                     <span class="filter-search-icon">
                         <i class="fas fa-search"></i>
                     </span>
                     <input type="text" name="search" class="nova-input filter-search-input"
-                           placeholder="Code, Name (EN/AR)..."
+                           placeholder="Code, Name (E—R)..."
                            value="{{ request('search') }}">
                 </div>
             </div>
 
-            {{-- Status --}}
+            {{-- الحالة --}}
             <div class="nova-form-group filter-item">
-                <label class="nova-label">Status</label>
+                <label class="nova-label">الحالة</label>
                 <select name="status" class="nova-select">
-                    <option value="">All</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="">الكل</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
                 </select>
             </div>
 
-            {{-- Per Page --}}
+            {{-- لكل صفحة --}}
             <div class="nova-form-group filter-item">
-                <label class="nova-label">Per Page</label>
+                <label class="nova-label">لكل صفحة</label>
                 <select name="per_page" class="nova-select">
                     <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
                 </select>
             </div>
 
-            {{-- Actions --}}
+            {{-- إجراءات --}}
             <div class="nova-form-group filter-item filter-item-actions">
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-filter"></i> Filter
+                    <i class="fas fa-filter"></i> فلتر
                 </button>
                 @if(request()->anyFilled(['search', 'status', 'per_page']))
                     <a href="{{ route('pack-operations.index') }}" class="nova-btn nova-btn-outline">
-                        <i class="fas fa-rotate-left"></i> Reset
+                        <i class="fas fa-rotate-left"></i> إعادة تعيين
                     </a>
                 @endif
             </div>
@@ -168,7 +168,7 @@
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
             <h3 class="nova-card-title" style="margin: 0;">
-                <i class="fas fa-list"></i> Pack Operations List
+                <i class="fas fa-list"></i> قائمة عمليات الباك
             </h3>
         </div>
         <div class="nova-toolbar-actions">
@@ -186,16 +186,16 @@
                     <th>Code</th>
                     <th>Name (EN)</th>
                     <th>Name (AR)</th>
-                    <th>Status</th>
-                    <th>Sort Order</th>
-                    <th class="nova-text-end">Actions</th>
+                    <th>الحالة</th>
+                    <th>ترتيب الفرز</th>
+                    <th class="nova-text-end">إجراءات</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($packOperations as $op)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($packOperations->currentPage() - 1) * $packOperations->perPage() }}
+                        {{ $loop->iteration + ($packOperations->currentصفحة() - 1) * $packOperations->perصفحة() }}
                     </td>
                     <td>
                         <code class="table-code">{{ $op->code }}</code>
@@ -205,25 +205,25 @@
                     <td>
                         @if($op->is_active)
                             <span class="nova-badge success">
-                                <i class="fas fa-check"></i> Active
+                                <i class="fas fa-check"></i> نشط
                             </span>
                         @else
                             <span class="nova-badge secondary">
-                                <i class="fas fa-x"></i> Inactive
+                                <i class="fas fa-x"></i> غير نشط
                             </span>
                         @endif
                     </td>
                     <td>{{ $op->sort_order ?? '—' }}</td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                            <a href="{{ route('pack-operations.show', $op) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                            <a href="{{ route('pack-operations.show', $op) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{{ route('pack-operations.edit', $op) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                            <a href="{{ route('pack-operations.edit', $op) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete"
-                                    onclick="confirmDelete({{ $op->id }}, '{{ addslashes($op->name_en) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف"
+                                    onclick="confirmحذف({{ $op->id }}, '{{ addslashes($op->name_en) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -236,7 +236,7 @@
                             <div class="nova-empty-icon">
                                 <i class="fas fa-box" style="width: 48px; height: 48px;"></i>
                             </div>
-                            <h3 class="nova-empty-title">No pack operations found</h3>
+                            <h3 class="nova-empty-title">لا pack operations found</h3>
                             <p class="nova-empty-text">Example: "Sales Order Return +10", "Transfer +5"</p>
                             <a href="{{ route('pack-operations.create') }}" class="nova-btn nova-btn-primary">
                                 <i class="fas fa-plus-circle"></i> Add Operation
@@ -252,7 +252,7 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
-                Showing {{ $packOperations->firstItem() ?? 0 }} to {{ $packOperations->lastItem() ?? 0 }} of {{ $packOperations->total() }} entries
+                عرض {{ $packOperations->firstItem() ?? 0 }} to {{ $packOperations->lastItem() ?? 0 }} من {{ $packOperations->total() }} entries
             </div>
             <div class="nova-pagination">
                 {{ $packOperations->appends(request()->query())->links() }}
@@ -262,29 +262,29 @@
 </div>
 
 {{-- ============================================================
-     Delete Confirmation Modal
+     حذف تأكيدation Modal
      ============================================================ --}}
-<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+<div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
             <p class="nova-delete-modal-text">
                 Are you sure you want to delete pack operation
                 <strong id="deleteName" class="nova-text-danger"></strong>?<br>
-                This action cannot be undone.
+                لا يمكن التراجع عن هذا الإجراء.
             </p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
-                    Cancel
+                        onclick="document.getElementById('globalحذفModal').classList.remove('show')">
+                    إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
                 </form>
             </div>
         </div>
@@ -298,27 +298,27 @@
         /* ============================================================
            Auto-submit on per_page change
            ============================================================ */
-        const perPageSelect = document.querySelector('select[name="per_page"]');
-        if (perPageSelect) {
-            perPageSelect.addEventListener('change', () => {
+        const perصفحةSelect = document.querySelector('select[name="per_page"]');
+        if (perصفحةSelect) {
+            perصفحةSelect.addEventListener('change', () => {
                 document.getElementById('filterForm').submit();
             });
         }
 
         /* ============================================================
-           Delete Confirmation
+           حذف تأكيدation
            ============================================================ */
-        window.confirmDelete = function(id, name) {
+        window.confirmحذف = function(id, name) {
             document.getElementById('deleteName').innerText = name;
             document.getElementById('deleteForm').action = '/pack-operations/' + id;
-            document.getElementById('globalDeleteModal').classList.add('show');
+            document.getElementById('globalحذفModal').classList.add('show');
         };
 
         /* ============================================================
            Auto-dismiss Alerts
            ============================================================ */
         setTimeout(() => {
-            document.querySelectorAll('.nova-alert').forEach(alert => {
+            document.querySelectorالكل('.nova-alert').forEach(alert => {
                 alert.style.transition = 'opacity 0.3s, transform 0.3s';
                 alert.style.opacity = '0';
                 alert.style.transform = 'translateY(-10px)';
@@ -374,7 +374,7 @@
         padding: 0 0.875rem;
         background: var(--nova-surface-2);
         border: 1.5px solid var(--nova-border);
-        border-right: none;
+        border-end: none;
         border-radius: 10px 0 0 10px;
         color: var(--nova-text-4);
         flex-shrink: 0;
@@ -382,7 +382,7 @@
 
     .filter-search-input {
         border-radius: 0 10px 10px 0 !important;
-        border-left: none !important;
+        border-start: none !important;
         flex: 1;
         min-width: 0;
     }

@@ -1,20 +1,20 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Invoices Management')
+@section('title', 'Invoices')
 
 @section('content')
 
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-file-invoice" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Invoices Management
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-file-invoice" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            {{ __('messages.app.page__1') }}
         </h2>
-        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage invoices and assign warehouse stock</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__5') }}</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('invoices.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus"></i> New Invoice
+            <i class="fas fa-plus"></i> {{ __('messages.app.page__12') }}
         </a>
     </div>
 </div>
@@ -29,9 +29,9 @@
 <div class="nova-table-wrapper">
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
-            <h3 class="nova-card-title" style="margin: 0;">
+            <h3 class="nova-card-{{ __('messages.app.page_') }}" style="margin: 0;">
                 <i class="fas fa-list"></i>
-                Invoices List
+                {{ __('messages.app.page__2') }}
             </h3>
         </div>
         <div class="nova-toolbar-search">
@@ -40,7 +40,7 @@
         </div>
         <div class="nova-toolbar-actions">
             <a href="{{ route('invoices.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-                <i class="fas fa-plus"></i> Add Invoice
+                <i class="fas fa-plus"></i> {{ __('messages.app.page__13') }}
             </a>
         </div>
     </div>
@@ -49,12 +49,12 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Invoice No.</th>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th style="text-align: right;">Actions</th>
+                    <th>{{ __('messages.app.page__15') }}</th>
+                    <th>{{ __('messages.app.page__16') }}</th>
+                    <th>{{ __('messages.app.page__17') }}</th>
+                    <th>{{ __('messages.app.page__18') }}</th>
+                    <th>{{ __('messages.app.page__19') }}</th>
+                    <th style="text-align: right;">{{ __('messages.app.page__20') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -69,25 +69,25 @@
                     <td>${{ number_format($invoice->total_amount, 2) }}</td>
                     <td>
                         @if($invoice->status == 'completed')
-                            <span class="nova-badge success">Completed</span>
+                            <span class="nova-badge success">{{ __('messages.app.page__8') }}</span>
                         @elseif($invoice->status == 'pending')
-                            <span class="nova-badge secondary">Pending</span>
+                            <span class="nova-badge secondary">{{ __('messages.app.page__9') }}</span>
                         @else
                             <span class="nova-badge secondary">{{ ucfirst($invoice->status) }}</span>
                         @endif
                     </td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                            <a href="{{ route('invoices.show', $invoice) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                            <a href="{{ route('invoices.show', $invoice) }}" class="nova-icon-btn nova-btn-sm" {{ __('messages.app.page_') }}="View">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{{ route('invoices.edit', $invoice) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                            <a href="{{ route('invoices.edit', $invoice) }}" class="nova-icon-btn nova-btn-sm" {{ __('messages.app.page_') }}="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="nova-delete-form">
                                 @csrf
                                 @method('DELETE')
-                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $invoice->id }}', 'Invoice #{{ $invoice->invoice_number }}')">
+                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" {{ __('messages.app.page_') }}="Delete" onclick="confirmDelete('{{ $invoice->id }}', 'Invoice #{{ $invoice->invoice_number }}')">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>
@@ -101,10 +101,10 @@
                             <div class="nova-empty-icon">
                                 <i class="fas fa-file-invoice"></i>
                             </div>
-                            <h3 class="nova-empty-title">No invoices found</h3>
-                            <p class="nova-empty-text">Create your first invoice to get started.</p>
+                            <h3 class="nova-empty-{{ __('messages.app.page_') }}">{{ __('messages.app.page__3') }}</h3>
+                            <p class="nova-empty-text">{{ __('messages.app.page__6') }}</p>
                             <a href="{{ route('invoices.create') }}" class="nova-btn nova-btn-primary">
-                                <i class="fas fa-plus"></i> Create Invoice
+                                <i class="fas fa-plus"></i> {{ __('messages.app.page__14') }}
                             </a>
                         </div>
                     </td>
@@ -133,14 +133,14 @@
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">{{ __('messages.app.page__4') }}</h4>
             <p class="nova-delete-modal-text">Are you sure you want to delete invoice <strong id="deleteInvoiceName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteInvoiceModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteInvoiceModal').classList.remove('show')">{{ __('messages.app.page__10') }}</button>
                 <form id="deleteInvoiceForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.app.page__11') }}</button>
                 </form>
             </div>
         </div>

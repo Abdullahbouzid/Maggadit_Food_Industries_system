@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تفاصيل البلد
         </h2>
         <p class="nova-page-subtitle">{{ $country->name }}</p>
@@ -132,7 +132,7 @@
                             <a href="{{ route('cities.edit', $city) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDeleteCity({{ $city->id }}, '{{ addslashes($city->name) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذفCity({{ $city->id }}, '{{ addslashes($city->name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -169,9 +169,9 @@
 @if($country->latitude && $country->longitude)
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const map = L.map('countryMap').setView([{{ $country->latitude }}, {{ $country->longitude }}], 6);
+    const map = L.map('countryMap').setعرض([{{ $country->latitude }}, {{ $country->longitude }}], 6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">مفتوحStreetMap</a> contributors'
     }).addTo(map);
     L.marker([{{ $country->latitude }}, {{ $country->longitude }}]).addTo(map)
         .bindPopup('<strong>{{ $country->name }}</strong><br>{{ $country->code }}')
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
 @endif
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDeleteCity = function(id, name) {
+    window.confirmحذفCity = function(id, name) {
         document.getElementById('deleteCityName').innerText = name;
         document.getElementById('deleteCityForm').action = '/cities/' + id;
         document.getElementById('deleteCityModal').classList.add('show');
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 
-{{-- Delete City Modal --}}
+{{-- حذف City Modal --}}
 <div class="nova-modal-backdrop" id="deleteCityModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">

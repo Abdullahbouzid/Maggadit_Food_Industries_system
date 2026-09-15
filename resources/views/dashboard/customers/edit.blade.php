@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تعديل العميل: {{ $customer->name }}
         </h2>
-        <p class="nova-page-subtitle">تحرير بيانات العميل</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}">تحرير بيانات العميل</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('customers.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">

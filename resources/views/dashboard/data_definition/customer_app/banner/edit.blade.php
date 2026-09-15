@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Edit Banner')
+@section('title', 'تعديل Banner')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Edit Banner
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            تعديل Banner
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Update banner details, image, and visibility settings</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('banners.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back to Banners
+            <i class="fas fa-arrow-left"></i> رجوع to Banners
         </a>
     </div>
 </div>
@@ -39,7 +39,7 @@
 <div class="nova-card">
     <div class="nova-card-header">
         <h5 class="mb-0 fw-bold">
-            <i class="fas fa-cog"></i> Banner Details
+            <i class="fas fa-cog"></i> Banner التفاصيل
         </h5>
     </div>
     <div class="nova-card-body">
@@ -67,7 +67,7 @@
                         </label>
                         <select name="type" class="nova-select">
                             <option value="home" {{ old('type', $banner->type) == 'home' ? 'selected' : '' }}>Home</option>
-                            <option value="category" {{ old('type', $banner->type) == 'category' ? 'selected' : '' }}>Category</option>
+                            <option value="category" {{ old('type', $banner->type) == 'category' ? 'selected' : '' }}>الفئة</option>
                             <option value="product" {{ old('type', $banner->type) == 'product' ? 'selected' : '' }}>Product</option>
                             <option value="promo" {{ old('type', $banner->type) == 'promo' ? 'selected' : '' }}>Promo</option>
                             <option value="custom" {{ old('type', $banner->type) == 'custom' ? 'selected' : '' }}>Custom</option>
@@ -76,11 +76,11 @@
                     </div>
                 </div>
 
-                {{-- Current Image --}}
+                {{-- Current الصورة --}}
                 <div class="nova-col nova-col-md-12">
                     <div class="nova-form-group">
                         <label class="nova-label">
-                            <i class="fas fa-image me-1"></i> Current Image
+                            <i class="fas fa-image me-1"></i> Current الصورة
                         </label>
                         <div>
                             @if($banner->image)
@@ -89,17 +89,17 @@
                                     <span class="nova-text-muted small">{{ basename($banner->image) }}</span>
                                 </div>
                             @else
-                                <p class="nova-text-muted fst-italic">No image uploaded</p>
+                                <p class="nova-text-muted fst-italic">لا image uploaded</p>
                             @endif
                         </div>
                     </div>
                 </div>
 
-                {{-- New Image --}}
+                {{-- جديد الصورة --}}
                 <div class="nova-col nova-col-md-12">
                     <div class="nova-form-group">
                         <label class="nova-label">
-                            <i class="fas fa-upload me-1"></i> Replace Image <small class="nova-text-muted">(optional, leave empty to keep current)</small>
+                            <i class="fas fa-upload me-1"></i> Replace الصورة <small class="nova-text-muted">(optional, leave empty to keep current)</small>
                         </label>
                         <input type="file" name="image" class="nova-input" accept="image/*">
                         @error('image') <div class="nova-form-error">{{ $message }}</div> @enderror
@@ -141,7 +141,7 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('banners.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-times"></i> Cancel
+                            <i class="fas fa-times"></i> إلغاء
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
                             <i class="fas fa-save"></i> Update Banner

@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-tag" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            {{ $offer->title ?? 'عرض' }}
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-tag" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            {{ $offer->{{ __('messages.app.page_') }} ?? 'عرض' }}
         </h2>
-        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
+        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">
             <i class="fas fa-cube"></i> عرض على: {{ $offer->item?->name_ar ?: $offer->item?->name_en }}
         </p>
     </div>
@@ -59,10 +59,10 @@
                             @endif
                         </td>
                     </tr>
-                    @if($offer->title)
+                    @if($offer->{{ __('messages.app.page_') }})
                         <tr>
                             <th>العنوان</th>
-                            <td>{{ $offer->title }}</td>
+                            <td>{{ $offer->{{ __('messages.app.page_') }} }}</td>
                         </tr>
                     @endif
                     @if($offer->description)
@@ -112,13 +112,13 @@
     <div class="nova-card-body">
         <div class="nova-flex nova-gap-2">
             <a href="{{ route('offers.index') }}" class="nova-btn nova-btn-outline">
-                <i class="fas fa-arrow-left"></i> Back to Offers
+                <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__5') }}
             </a>
             <a href="{{ route('offers.edit', $offer) }}" class="nova-btn nova-btn-warning">
-                <i class="fas fa-edit"></i> Edit
+                <i class="fas fa-edit"></i> {{ __('messages.app.page__6') }}
             </a>
             <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
-                    onclick="confirmDelete({{ $offer->id }}, '{{ addslashes($offer->title ?? 'Offer') }}')">
+                    onclick="confirmDelete({{ $offer->id }}, '{{ addslashes($offer->{{ __('messages.app.page_') }} ?? 'Offer') }}')">
                 <i class="fas fa-trash-alt"></i> Delete
             </button>
         </div>
@@ -132,14 +132,14 @@
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">{{ __('messages.app.page__1') }}</h4>
             <p class="nova-delete-modal-text">Are you sure you want to delete the offer <strong id="deleteOfferName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteOfferModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteOfferModal').classList.remove('show')">{{ __('messages.app.page__3') }}</button>
                 <form id="deleteOfferForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.app.page__4') }}</button>
                 </form>
             </div>
         </div>

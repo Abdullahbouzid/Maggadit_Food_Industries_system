@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('title', 'الماركات')
+@section('{{ __('messages.app.page_') }}', 'الماركات')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['title' => 'ماركات شهيرة'])
+    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'ماركات شهيرة'])
 
-    <div class="p-4" dir="rtl">
+    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
         <div class="mb-4">
             <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100">
                 <i class="fas fa-arrow-right"></i>

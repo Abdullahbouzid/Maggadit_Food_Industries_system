@@ -1,12 +1,12 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Organization Details')
+@section('title', 'Organization التفاصيل')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-eye" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-eye" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تفاصيل المنظمة
         </h2>
         <p class="nova-page-subtitle">عرض كامل لمعلومات {{ $organization->name }}</p>
@@ -196,9 +196,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     @if($organization->latitude && $organization->longitude)
-        const showMap = L.map('org-map-show').setView([{{ $organization->latitude }}, {{ $organization->longitude }}], 15);
+        const showMap = L.map('org-map-show').setعرض([{{ $organization->latitude }}, {{ $organization->longitude }}], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
+            attribution: '&copy; مفتوحStreetMap contributors',
             maxZoom: 19,
         }).addTo(showMap);
         L.marker([{{ $organization->latitude }}, {{ $organization->longitude }}]).addTo(showMap);

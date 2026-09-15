@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('title', 'جميع المنتجات')
+@section('{{ __('messages.app.page_') }}', 'جميع المنتجات')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['title' => 'جميع المنتجات'])
+    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'جميع المنتجات'])
 
-    <div class="p-4" dir="rtl">
+    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
         <div class="mb-4">
             <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100">
                 <i class="fas fa-arrow-right"></i>
@@ -26,7 +26,7 @@
                     <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
                     <input type="text" id="search-input" placeholder="ابحث عن منتج..." 
                            value="{{ request('search') }}"
-                           class="w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm bg-gray-50">
+                           class="w-full end-10 start-4 py-2.5 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm bg-gray-50">
                 </div>
             </div>
 
@@ -59,7 +59,7 @@
             </div>
 
             <button id="apply-filters" class="w-full mt-3 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-purple-700 transition">
-                <i class="fas fa-filter ml-1"></i> تطبيق الفلاتر
+                <i class="fas fa-filter end-1"></i> تطبيق الفلاتر
             </button>
         </div>
 
@@ -116,7 +116,7 @@
                                     data-image="{{ $itemImage ?? '📦' }}"
                                     data-pack-name="{{ $pack['name'] ?? '' }}"
                                     data-uom-name="{{ $pack['uom_name'] ?? '' }}">
-                                <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
+                                <i class="fas fa-shopping-cart end-1"></i> أضف إلى السلة
                             </button>
                         </div>
                     </div>
@@ -269,21 +269,21 @@
                                         ${item.image ? `<img src="${item.image}" class="w-full h-full object-cover" onerror="this.outerHTML='<span class=\'text-5xl text-gray-400\'>📦</span>'">` : '<span class="text-5xl text-gray-400">📦</span>'}
                                     </div>
                                     <div class="p-3">
-                                        <h3 class="font-bold text-gray-800 text-sm">${item.name || item.name_ar || 'منتج'}</h3>
+                                        <h3 class="font-bold text-gray-800 text-sm">{{ __('messages.app.page__1') }}</h3>
                                         <div class="flex items-center gap-1 mt-1">
                                             <span class="text-yellow-500 text-xs">★</span>
-                                            <span class="text-xs text-gray-600">${parseFloat(item.rate || 0).toFixed(1)}</span>
+                                            <span class="text-xs text-gray-600">{{ __('messages.app.page__2') }}</span>
                                         </div>
                                         <div class="mt-2">
-                                            <span class="text-purple-700 font-bold">${parseFloat(item.price || 0).toFixed(2)} ر.س</span>
-                                            ${item.old_price ? `<span class="text-gray-400 text-xs line-through mr-1">${parseFloat(item.old_price).toFixed(2)} ر.س</span>` : ''}
+                                            <span class="text-purple-700 font-bold">{{ __('messages.app.page__3') }}</span>
+                                            ${item.old_price ? `<span class="text-gray-400 text-xs line-through start-1">{{ __('messages.app.page__4') }}</span>` : ''}
                                         </div>
                                         <button class="add-to-cart mt-2 w-full bg-purple-600 text-white text-xs py-2 rounded-full hover:bg-purple-700 transition"
                                                 data-id="${item.id}"
-                                                data-name="${item.name || item.name_ar || 'منتج'}"
+                                                data-name="{{ __('messages.app.page__1') }}"
                                                 data-price="${item.price || 0}"
                                                 data-image="${item.image || '📦'}">
-                                            <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
+                                            <i class="fas fa-shopping-cart end-1"></i> أضف إلى السلة
                                         </button>
                                     </div>
                                 </div>

@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تعديل المدينة
         </h2>
         <p class="nova-page-subtitle">تحديث بيانات {{ $city->name }}</p>
@@ -119,7 +119,7 @@
                     </div>
                 </div>
 
-                {{-- Form Actions --}}
+                {{-- Form إجراءات --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('cities.index') }}" class="nova-btn nova-btn-outline">
@@ -152,9 +152,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let lat = (latInput && latInput.value && !isNaN(parseFloat(latInput.value))) ? parseFloat(latInput.value) : 24.774265;
     let lng = (lngInput && lngInput.value && !isNaN(parseFloat(lngInput.value))) ? parseFloat(lngInput.value) : 46.738586;
 
-    const map = L.map('mapPicker').setView([lat, lng], 8);
+    const map = L.map('mapPicker').setعرض([lat, lng], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">مفتوحStreetMap</a> contributors'
     }).addTo(map);
 
     const marker = L.marker([lat, lng], { draggable: true }).addTo(map);

@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-map-marker-alt" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-map-marker-alt" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             جميع المدن
         </h2>
         <p class="nova-page-subtitle">إدارة جميع المدن في النظام</p>
@@ -32,7 +32,7 @@
     <div class="nova-alert warning">
         <i class="fas fa-exclamation-triangle"></i>
         <strong>أخطاء الاستيراد:</strong>
-        <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+        <ul style="margin-top: 0.5rem; padding-inline-start: 1.25rem;">
             @foreach(session('import_errors') as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -61,7 +61,7 @@
             <i class="fas fa-map-marked-alt"></i>
         </div>
         <p class="nova-stat-label">مع إحداثيات</p>
-        <p class="nova-stat-value">{{ $cities->whereNotNull('latitude')->count() }}</p>
+        <p class="nova-stat-value">{{ $cities->whereلاtNull('latitude')->count() }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon danger">
@@ -127,7 +127,7 @@
                             <a href="{{ route('cities.edit', $city) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDeleteCity({{ $city->id }}, '{{ addslashes($city->name) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذفCity({{ $city->id }}, '{{ addslashes($city->name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -161,7 +161,7 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteCityModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -186,7 +186,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDeleteCity = function(id, name) {
+    window.confirmحذفCity = function(id, name) {
         document.getElementById('deleteCityName').innerText = name;
         document.getElementById('deleteCityForm').action = '/cities/' + id;
         document.getElementById('deleteCityModal').classList.add('show');

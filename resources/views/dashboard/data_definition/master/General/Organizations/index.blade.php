@@ -1,12 +1,12 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Organizations Management')
+@section('title', 'إدارة المنظمات')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-building" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-building" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             المنظمات
         </h2>
         <p class="nova-page-subtitle">إدارة الهرمكية التنظيمية، الشيفرات، ومعلومات GLN</p>
@@ -47,7 +47,7 @@
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>
         <strong>أخطاء الاستيراد:</strong>
-        <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+        <ul style="margin-top: 0.5rem; padding-inline-start: 1.25rem;">
             @foreach(session('import_errors') as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -117,7 +117,7 @@
     </div>
 </div>
 
-{{-- Export Filter Section --}}
+{{-- تصدير فلتر Section --}}
 <div class="nova-card mb-4">
     <div class="nova-card-header">
         <h2 class="nova-card-title" style="margin: 0;">
@@ -158,17 +158,17 @@
     </div>
 </div>
 
-{{-- Main Filter (for table) --}}
+{{-- Main فلتر (for table) --}}
 <div class="nova-card mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('organizations.index') }}" class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
             <div class="nova-form-group" style="margin-bottom: 0;">
                 <label class="nova-label">بحث (الجدول)</label>
                 <div class="nova-input-group" style="display: flex; gap: 0;">
-                    <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-right: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
+                    <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-end: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
                         <i class="fas fa-search"></i>
                     </span>
-                    <input type="text" name="search" class="nova-input" placeholder="الاسم، الكود، أو GLN..." value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-left: none;">
+                    <input type="text" name="search" class="nova-input" placeholder="الاسم، الكود، أو GLN..." value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-start: none;">
                 </div>
             </div>
             <div class="nova-form-group" style="margin-bottom: 0;">
@@ -222,10 +222,10 @@
             <tbody>
                 @forelse($organizations as $org)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($organizations->currentPage() - 1) * $organizations->perPage() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($organizations->currentصفحة() - 1) * $organizations->perصفحة() }}</td>
                     <td>
                         <div class="nova-flex nova-items-center">
-                            <div class="nova-stat-icon primary" style="width: 32px; height: 32px; margin-right: 0.5rem;">
+                            <div class="nova-stat-icon primary" style="width: 32px; height: 32px; margin-inline-end: 0.5rem;">
                                 <i class="fas fa-building"></i>
                             </div>
                             <span>{{ $org->name }}</span>
@@ -256,7 +256,7 @@
                             <a href="{{ route('organizations.edit', $org) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDelete({{ $org->id }}, '{{ addslashes($org->name) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذف({{ $org->id }}, '{{ addslashes($org->name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -293,7 +293,7 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -318,21 +318,21 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const perPageSelect = document.querySelector('select[name="per_page"]');
-    if (perPageSelect) {
-        perPageSelect.addEventListener('change', function() {
+    const perصفحةSelect = document.querySelector('select[name="per_page"]');
+    if (perصفحةSelect) {
+        perصفحةSelect.addEventListener('change', function() {
             document.getElementById('filterForm').submit();
         });
     }
 
-    window.confirmDelete = function(id, name) {
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/organizations/' + id;
         document.getElementById('deleteModal').classList.add('show');
     };
 
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

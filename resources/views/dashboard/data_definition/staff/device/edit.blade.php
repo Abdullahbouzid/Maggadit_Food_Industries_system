@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تعديل الجهاز: {{ $device->serial }}
         </h2>
         <p class="nova-page-subtitle">تحرير بيانات الجهاز</p>
@@ -106,7 +106,7 @@
                     @error('organization_id') <div class="nova-form-error">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Model No --}}
+                {{-- Model لا --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
                         <label class="nova-label">
@@ -160,7 +160,7 @@
                     </div>
                 </div>
 
-                {{-- Inactive --}}
+                {{-- غير نشط --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-check">
                         <input type="hidden" name="is_inactive" value="0">
@@ -183,7 +183,7 @@
                     </div>
                 </div>
 
-                {{-- Form Actions --}}
+                {{-- Form إجراءات --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('devices.index') }}" class="nova-btn nova-btn-outline">

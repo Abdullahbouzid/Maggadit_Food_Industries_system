@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-truck-moving" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-truck-moving" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             نقل الكميات من الدفعة: {{ $batch->batch_number }}
         </h2>
         <p class="nova-page-subtitle">انقل الكميات بين المخازن مع تسجيل الحركة</p>
@@ -19,7 +19,7 @@
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>
@@ -189,7 +189,7 @@
         </div>
     </div>
 
-    {{-- Submit ===== --}}
+    {{-- إرسال ===== --}}
     <div class="nova-flex nova-gap-2 nova-mt-4">
         <button type="submit" class="nova-btn nova-btn-success nova-btn-lg">
             <i class="fas fa-truck-moving"></i> نقل الكميات
@@ -207,7 +207,7 @@
 
         function loadWarehouseStock(warehouseId) {
             if (!warehouseId) {
-                document.querySelectorAll('[id^="stock-"]').forEach(el => {
+                document.querySelectorالكل('[id^="stock-"]').forEach(el => {
                     el.textContent = '0';
                 });
                 return;
@@ -216,7 +216,7 @@
             fetch(`/production-batches/${batchId}/warehouse-stock/${warehouseId}`)
                 .then(response => response.json())
                 .then(data => {
-                    document.querySelectorAll('[id^="stock-"]').forEach(el => {
+                    document.querySelectorالكل('[id^="stock-"]').forEach(el => {
                         const batchItemId = el.id.replace('stock-', '');
                         const qty = data[batchItemId] || 0;
                         el.textContent = qty.toFixed(3);
@@ -234,7 +234,7 @@
         });
 
         // Update max when quantity input changes
-        document.querySelectorAll('.transfer-qty').forEach(input => {
+        document.querySelectorالكل('.transfer-qty').forEach(input => {
             input.addEventListener('input', function() {
                 const max = parseFloat(this.getAttribute('max'));
                 const val = parseFloat(this.value);

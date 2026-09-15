@@ -5,7 +5,7 @@
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => $brand->name])
 
-    <div class="p-4" dir="rtl">
+    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
         <div class="mb-4">
             <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100">
                 <i class="fas fa-arrow-right"></i>
@@ -76,7 +76,7 @@
                                         data-image="{{ $itemImage ?? '📦' }}"
                                         data-pack-name="{{ $pack['name'] ?? '' }}"
                                         data-uom-name="{{ $pack['uom_name'] ?? '' }}">
-                                    <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
+                                    <i class="fas fa-shopping-cart end-1"></i> أضف إلى السلة
                                 </button>
                             </div>
                         </div>

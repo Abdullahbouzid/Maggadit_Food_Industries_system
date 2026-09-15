@@ -6,19 +6,19 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             إضافة تعريف باكج جديد
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">قم بتعريف باكج جديد يمكن استخدامه للمنتجات</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('pack-definitions.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> __('messages.dashboard.back')
         </a>
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <h6 class="nova-fw-bold"><i class="fas fa-exclamation-circle nova-me-1"></i> يرجى تصحيح الأخطاء التالية:</h6>
@@ -306,7 +306,7 @@
         </div>
     </div>
 
-    {{-- ===== Form Actions ===== --}}
+    {{-- ===== Form إجراءات ===== --}}
     <div class="form-actions">
         <a href="{{ route('pack-definitions.index') }}" class="nova-btn nova-btn-outline">
             <i class="fas fa-times"></i> إلغاء
@@ -439,7 +439,7 @@
         border-bottom: none;
     }
 
-    /* ===== Form Actions ===== */
+    /* ===== Form إجراءات ===== */
     .form-actions {
         display: flex;
         justify-content: flex-end;
@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const pieces = selectedOption.getAttribute('data-pieces');
             if (pieces) {
                 quantityInPackInput.value = pieces;
-                // Highlight effect
+                // عاليlight effect
                 quantityInPackInput.style.transition = 'background 0.3s';
                 quantityInPackInput.style.background = 'rgba(28, 200, 138, 0.15)';
                 setTimeout(() => {
@@ -519,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== Capacity Cards Selection =====
     const capacitySelect = document.getElementById('packCapacitySelect');
-    const capacityCards = document.querySelectorAll('.capacity-card');
+    const capacityCards = document.querySelectorالكل('.capacity-card');
 
     function syncCapacitySelection(capacityId) {
         capacityCards.forEach(card => {
@@ -554,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ===== Submit Button Loading State =====
+    // ===== إرسال Button Loading State =====
     const form = document.getElementById('packDefinitionForm');
     const submitBtn = document.getElementById('submitBtn');
 

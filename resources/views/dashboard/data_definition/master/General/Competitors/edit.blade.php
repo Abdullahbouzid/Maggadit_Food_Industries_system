@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Edit Competitor')
+@section('title', 'تعديل Competitor')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Edit Competitor: {{ $competitor->name }}
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            تعديل Competitor: {{ $competitor->name }}
         </h2>
         <p class="nova-page-subtitle">Modify competitor details</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('competitors.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back
+            <i class="fas fa-arrow-right"></i> رجوع
         </a>
     </div>
 </div>
@@ -55,7 +55,7 @@
                     <div class="nova-form-group">
                         <label class="nova-label">Organization</label>
                         <select name="organization_id" class="nova-select @error('organization_id') nova-invalid @enderror">
-                            <option value="">None</option>
+                            <option value="">لا شيء</option>
                             @foreach($organizations as $org)
                                 <option value="{{ $org->id }}" {{ old('organization_id', $competitor->organization_id) == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>
                             @endforeach
@@ -110,7 +110,7 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('competitors.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-x nova-me-1"></i> Cancel
+                            <i class="fas fa-x nova-me-1"></i> إلغاء
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
                             <i class="fas fa-save nova-me-1"></i> Update

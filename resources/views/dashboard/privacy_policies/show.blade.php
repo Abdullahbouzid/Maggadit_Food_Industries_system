@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            {{ $privacyPolicy->title ?? ($privacyPolicy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة') }}
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            {{ $privacyPolicy->{{ __('messages.app.page_') }} ?? ($privacyPolicy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة') }}
         </h2>
-        <p class="nova-page-subtitle">
+        <p class="nova-page-sub{{ __('messages.app.page_') }}">
             @if($privacyPolicy->organization)
                 المنظمة: {{ $privacyPolicy->organization->name }}
             @else
@@ -54,44 +54,44 @@
             <table class="nova-table">
                 <tbody>
                     <tr>
-                        <th style="width: 30%;">Title</th>
-                        <td>{{ $privacyPolicy->title ?? ($privacyPolicy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة') }}</td>
+                        <th style="width: 30%;">{{ __('messages.app.page__11') }}</th>
+                        <td>{{ $privacyPolicy->{{ __('messages.app.page_') }} ?? ($privacyPolicy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة') }}</td>
                     </tr>
                     <tr>
-                        <th>Type</th>
+                        <th>{{ __('messages.app.page__12') }}</th>
                         <td>
                             @if($privacyPolicy->type == 'privacy_policy')
-                                <span class="nova-badge secondary">Privacy Policy</span>
+                                <span class="nova-badge secondary">{{ __('messages.app.page__3') }}</span>
                             @else
-                                <span class="nova-badge accent">Terms of Service</span>
+                                <span class="nova-badge accent">{{ __('messages.app.page__4') }}</span>
                             @endif
                         </td>
                     </tr>
                     <tr>
-                        <th>Organization</th>
+                        <th>{{ __('messages.app.page__13') }}</th>
                         <td>
                             {{ $privacyPolicy->organization ? $privacyPolicy->organization->name : 'عام (لجميع المنظمات)' }}
                         </td>
                     </tr>
                     <tr>
-                        <th>Status</th>
+                        <th>{{ __('messages.app.page__14') }}</th>
                         <td>
                             @if($privacyPolicy->is_active)
-                                <span class="nova-badge success"><i class="fas fa-check me-1"></i> Active</span>
+                                <span class="nova-badge success"><i class="fas fa-check me-1"></i> {{ __('messages.app.page__5') }}</span>
                             @else
-                                <span class="nova-badge secondary"><i class="fas fa-x me-1"></i> Inactive</span>
+                                <span class="nova-badge secondary"><i class="fas fa-x me-1"></i> {{ __('messages.app.page__6') }}</span>
                             @endif
                         </td>
                     </tr>
                     <tr>
-                        <th>Created At</th>
+                        <th>{{ __('messages.app.page__15') }}</th>
                         <td>
                             <i class="fas fa-calendar nova-text-muted me-1"></i>
                             {{ $privacyPolicy->created_at ? $privacyPolicy->created_at->format('F d, Y h:i A') : '—' }}
                         </td>
                     </tr>
                     <tr>
-                        <th>Last Updated</th>
+                        <th>{{ __('messages.app.page__16') }}</th>
                         <td>
                             <i class="fas fa-history nova-text-muted me-1"></i>
                             {{ $privacyPolicy->updated_at ? $privacyPolicy->updated_at->format('F d, Y h:i A') : '—' }}
@@ -115,29 +115,29 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-gap-2">
             <a href="{{ route('privacy-policies.index') }}" class="nova-btn nova-btn-outline">
-                <i class="fas fa-list"></i> Back to List
+                <i class="fas fa-list"></i> {{ __('messages.app.page__9') }}
             </a>
             <div class="nova-flex nova-gap-2">
                 <a href="{{ route('privacy-policies.edit', $privacyPolicy) }}" class="nova-btn nova-btn-warning">
-                    <i class="fas fa-edit"></i> Edit
+                    <i class="fas fa-edit"></i> {{ __('messages.app.page__10') }}
                 </a>
                 <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
-                        onclick="confirmDelete({{ $privacyPolicy->id }}, '{{ addslashes($privacyPolicy->title ?? ($privacyPolicy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة')) }}')">
-                    <i class="fas fa-trash-alt"></i> Delete
+                        onclick="confirm{{ __('messages.app.page__8') }}({{ $privacyPolicy->id }}, '{{ addslashes($privacyPolicy->{{ __('messages.app.page_') }} ?? ($privacyPolicy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة')) }}')">
+                    <i class="fas fa-trash-alt"></i> {{ __('messages.app.page__8') }}
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Delete Confirmation Modal --}}
+{{-- {{ __('messages.app.page__8') }} Confirmation Modal --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">{{ __('messages.app.page__1') }}</h4>
             <p class="nova-delete-modal-text">
                 Are you sure you want to delete
                 <strong id="deleteName" class="nova-text-danger"></strong>?<br>
@@ -146,12 +146,12 @@
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline"
                         onclick="document.getElementById('deleteModal').classList.remove('show')">
-                    Cancel
+                    {{ __('messages.app.page__7') }}
                 </button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.app.page__8') }}</button>
                 </form>
             </div>
         </div>
@@ -162,7 +162,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
+    window.confirm{{ __('messages.app.page__8') }} = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/privacy-policies/' + id;
         document.getElementById('deleteModal').classList.add('show');

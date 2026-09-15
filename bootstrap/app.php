@@ -9,7 +9,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
-        // ... other routing if any
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [
@@ -18,10 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer/proxy/*',
             'customer/favorite/toggle',
         ]);
-        // Register route middleware aliases
         $middleware->alias([
             'check.customer.session' => CheckCustomerSession::class,
         ]);
+        $middleware->appendToGroup('web', \App\Http\Middleware\Localization::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

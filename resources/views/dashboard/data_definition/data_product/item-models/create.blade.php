@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             إنشاء نوع منتج جديد
         </h2>
         <p class="nova-page-subtitle">أدخل بيانات نوع المنتج الجديد</p>
@@ -56,7 +56,7 @@
                     @error('code') <div class="nova-form-error">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Sort Order --}}
+                {{-- ترتيب الفرز --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
                         <label class="nova-label">
@@ -103,7 +103,7 @@
                     @error('name_ar') <div class="nova-form-error">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Active --}}
+                {{-- نشط --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-check">
                         <input class="nova-form-check-input" type="checkbox" name="is_active" value="1" id="is_active" {{ old('is_active', true) ? 'checked' : '' }}>
@@ -112,7 +112,7 @@
                     </div>
                 </div>
 
-                {{-- Form Actions --}}
+                {{-- Form إجراءات --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('item-models.index') }}" class="nova-btn nova-btn-outline">

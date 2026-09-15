@@ -5,7 +5,7 @@
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => __('messages.dashboard_title')])
 
-    <div class="p-4 space-y-6 mb-5" dir="rtl">
+    <div class="p-4 space-y-6 mb-5" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
     <style>
         .offer-card {
             position: relative;
@@ -187,7 +187,7 @@
                                     </div>
                                 @endif
                             </div>
-                            <div class="flex-1 p-3 text-right flex flex-col justify-between">
+                            <div class="flex-1 p-3 text-end flex flex-col justify-between">
                                 <div>
                                     <h3 class="font-bold text-gray-800 text-base leading-tight line-clamp-1">{{ $offer->title ?: ($offer->name ?? 'عرض خاص') }}</h3>
                                     @if($offer->description)
@@ -520,7 +520,7 @@
                                         <div class="relative w-28 h-28 overflow-hidden bg-gray-100 flex-shrink-0">
                                             ${o.image ? `<img src="${o.image}" alt="${o.name || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/112?text=🛍️';">` : '<div class="w-full h-28 bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl">🛍️</div>'}
                                         </div>
-                                        <div class="flex-1 p-3 text-right flex flex-col justify-between">
+                                        <div class="flex-1 p-3 text-end flex flex-col justify-between">
                                             <div>
                                                 <h3 class="font-bold text-gray-800 text-base leading-tight line-clamp-1">${o.title || o.name || 'عرض خاص'}</h3>
                                                 ${o.description ? `<p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">${o.description}</p>` : ''}

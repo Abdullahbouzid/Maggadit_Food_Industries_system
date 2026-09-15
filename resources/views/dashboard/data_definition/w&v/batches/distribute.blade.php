@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-share-alt" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-share-alt" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             توزيع الدفعة: {{ $batch->batch_number }}
         </h2>
         <p class="nova-page-subtitle">قم بتوزيع المنتجات من هذه الدفعة إلى أحد المخازن</p>
@@ -19,7 +19,7 @@
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>
@@ -34,7 +34,7 @@
     </div>
 @endif
 
-{{-- ===== Fully Distributed Warning ===== --}}
+{{-- ===== Fully Distributed تحذير ===== --}}
 @if(isset($isFullyDistributed) && $isFullyDistributed)
     <div class="nova-alert warning">
         <i class="fas fa-lock"></i>
@@ -141,7 +141,7 @@
                     @endif
                 </div>
                 <div class="nova-card-body">
-                    @if($batch->batchItems->filter(function($i) { return $i->quantity - $i->dispatched_quantity > 0; })->isNotEmpty())
+                    @if($batch->batchItems->filter(function($i) { return $i->quantity - $i->dispatched_quantity > 0; })->isلاtEmpty())
                         <div class="nova-table-wrapper">
                             <div class="nova-table-scroll">
                                 <table class="nova-table distribution-table">
@@ -261,7 +261,7 @@
     </div>
 
     {{-- ============================================================
-         Form Actions
+         Form إجراءات
          ============================================================ --}}
     @if(!isset($isFullyDistributed) || !$isFullyDistributed)
         <div class="form-actions">
@@ -421,7 +421,7 @@
     }
 
     /* ============================================================
-       Form Actions
+       Form إجراءات
        ============================================================ */
     .form-actions {
         display: flex;
@@ -495,8 +495,8 @@
            ============================================================ */
         function loadWarehouseStock(warehouseId) {
             if (!warehouseId) {
-                // Reset stock badges to 0
-                document.querySelectorAll('[id^="stock-"]').forEach(el => {
+                // إعادة تعيين stock badges to 0
+                document.querySelectorالكل('[id^="stock-"]').forEach(el => {
                     el.textContent = '0';
                 });
                 return;
@@ -505,7 +505,7 @@
             fetch(`/production-batches/${batchId}/warehouse-stock/${warehouseId}`)
                 .then(response => response.json())
                 .then(data => {
-                    document.querySelectorAll('[id^="stock-"]').forEach(el => {
+                    document.querySelectorالكل('[id^="stock-"]').forEach(el => {
                         const batchItemId = el.id.replace('stock-', '');
                         const qty = data[batchItemId] || 0;
                         el.textContent = parseFloat(qty).toFixed(3);
@@ -533,7 +533,7 @@
         /* ============================================================
            Distribute Quantity Input Validation
            ============================================================ */
-        document.querySelectorAll('.distribute-qty').forEach(input => {
+        document.querySelectorالكل('.distribute-qty').forEach(input => {
             input.addEventListener('input', function() {
                 const max = parseFloat(this.getAttribute('max')) || 0;
                 const val = parseFloat(this.value) || 0;

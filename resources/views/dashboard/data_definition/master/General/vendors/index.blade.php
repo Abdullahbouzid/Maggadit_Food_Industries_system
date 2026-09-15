@@ -1,12 +1,12 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Vendors Management')
+@section('title', 'إدارة الموردون')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-truck" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-truck" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             الموردين
         </h2>
         <p class="nova-page-subtitle">إدارة معلومات الموردين وعلاقات التوريق</p>
@@ -47,7 +47,7 @@
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>
         <strong>أخطاء الاستيراد:</strong>
-        <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+        <ul style="margin-top: 0.5rem; padding-inline-start: 1.25rem;">
             @foreach(session('import_errors') as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -73,7 +73,7 @@
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon danger">
-            <i class="fas fa-toggle-off"></i>
+            <i class="fas fa-toggle-منf"></i>
         </div>
         <p class="nova-stat-label">غير نشطين</p>
         <p class="nova-stat-value">{{ $inactiveVendors ?? 0 }}</p>
@@ -153,7 +153,7 @@
             <tbody>
                 @forelse($vendors as $vendor)
                 <tr class="{{ $vendor->inactive ? 'nova-row-inactive' : '' }}">
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($vendors->currentPage() - 1) * $vendors->perPage() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($vendors->currentصفحة() - 1) * $vendors->perصفحة() }}</td>
                     <td>
                         <div class="nova-flex nova-items-center">
                             <div class="nova-stat-icon primary me-2" style="width: 32px; height: 32px;">
@@ -181,7 +181,7 @@
                             <a href="{{ route('vendors.edit', $vendor) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDelete({{ $vendor->id }}, '{{ addslashes($vendor->vendor_name) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذف({{ $vendor->id }}, '{{ addslashes($vendor->vendor_name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -218,7 +218,7 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -243,14 +243,14 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/vendors/' + id;
         document.getElementById('deleteModal').classList.add('show');
     };
 
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

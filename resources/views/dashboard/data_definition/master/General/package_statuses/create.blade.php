@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             إنشاء حالة طرد جديدة
         </h2>
         <p class="nova-page-subtitle">أدخل بيانات حالة الطرد الجديدة</p>
@@ -40,7 +40,7 @@
             @csrf
 
             <div class="nova-row g-4">
-                {{-- Status Name --}}
+                {{-- الحالة Name --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
                         <label class="nova-label">
@@ -126,7 +126,7 @@
                     </div>
                 </div>
 
-                {{-- Form Actions --}}
+                {{-- Form إجراءات --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('package-statuses.index') }}" class="nova-btn nova-btn-outline">

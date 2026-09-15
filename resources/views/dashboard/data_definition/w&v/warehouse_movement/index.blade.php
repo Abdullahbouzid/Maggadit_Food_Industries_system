@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-boxes-stacked" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-boxes-stacked" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             دفعات الحركات
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة جميع حركات النقل والتوزيع والاسترجاع</p>
@@ -68,7 +68,7 @@
     </div>
 </div>
 
-{{-- ===== Filter Section ===== --}}
+{{-- ===== فلتر Section ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form method="GET" action="{{ route('warehouse-movements.index') }}" class="filter-form">
@@ -172,7 +172,7 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف"
-                                    onclick="confirmDelete({{ $group->first_movement->id }}, '{{ addslashes($group->batch_number) }}')">
+                                    onclick="confirmحذف({{ $group->first_movement->id }}, '{{ addslashes($group->batch_number) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -209,8 +209,8 @@
     </div>
 </div>
 
-{{-- ===== Delete Confirmation Modal ===== --}}
-<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+{{-- ===== حذف تأكيدation Modal ===== --}}
+<div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
@@ -224,7 +224,7 @@
             </p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
+                        onclick="document.getElementById('globalحذفModal').classList.remove('show')">
                     إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
@@ -282,10 +282,10 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        window.confirmDelete = function(id, name) {
+        window.confirmحذف = function(id, name) {
             document.getElementById('deleteItemName').innerText = name;
             document.getElementById('deleteForm').action = '/warehouse-movements/' + id;
-            document.getElementById('globalDeleteModal').classList.add('show');
+            document.getElementById('globalحذفModal').classList.add('show');
         };
     });
 </script>

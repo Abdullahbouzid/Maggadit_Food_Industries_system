@@ -1,25 +1,25 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Edit Warehouse')
+@section('title', 'تعديل Warehouse')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Edit Warehouse: {{ $warehouse->code }}
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            تعديل Warehouse: {{ $warehouse->code }}
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Update warehouse information</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('warehouses.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back
+            <i class="fas fa-arrow-right"></i> رجوع
         </a>
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>
@@ -58,7 +58,7 @@
                 </div>
 
                 <div class="nova-form-group">
-                    <label class="nova-label">Name (English) <span class="nova-text-danger">*</span></label>
+                    <label class="nova-label">الاسم بالإنجليزي <span class="nova-text-danger">*</span></label>
                     <input type="text" name="name_en"
                            class="nova-input @error('name_en') nova-invalid @enderror"
                            value="{{ old('name_en', $warehouse->name_en) }}" required>
@@ -66,7 +66,7 @@
                 </div>
 
                 <div class="nova-form-group">
-                    <label class="nova-label">Name (Arabic) <span class="nova-text-danger">*</span></label>
+                    <label class="nova-label">الاسم بالعربي <span class="nova-text-danger">*</span></label>
                     <input type="text" name="name_ar"
                            class="nova-input @error('name_ar') nova-invalid @enderror"
                            value="{{ old('name_ar', $warehouse->name_ar) }}" required>
@@ -262,28 +262,28 @@
     </div>
 
     {{-- ============================================================
-         Section 5: Status
+         Section 5: الحالة
          ============================================================ --}}
     <div class="nova-card nova-mb-4">
         <div class="nova-card-header">
             <h5 class="nova-fw-bold mb-0">
-                <i class="fas fa-toggle-on me-1"></i> Status
+                <i class="fas fa-toggle-on me-1"></i> الحالة
             </h5>
         </div>
         <div class="nova-card-body">
             <div class="form-grid form-grid-2">
                 <div class="nova-form-group">
-                    <label class="nova-label">Active Status</label>
+                    <label class="nova-label">نشط الحالة</label>
                     <div class="nova-form-check status-checkbox-wrapper">
                         <input type="checkbox" name="is_active" value="1"
                                class="nova-form-check-input" id="is_active"
                                {{ old('is_active', $warehouse->is_active) ? 'checked' : '' }}>
-                        <label class="nova-form-check-label" for="is_active">Active</label>
+                        <label class="nova-form-check-label" for="is_active">نشط</label>
                     </div>
                 </div>
 
                 <div class="nova-form-group">
-                    <label class="nova-label">Sort Order</label>
+                    <label class="nova-label">ترتيب الفرز</label>
                     <input type="number" name="sort_order" class="nova-input"
                            value="{{ old('sort_order', $warehouse->sort_order) }}">
                 </div>
@@ -292,14 +292,14 @@
     </div>
 
     {{-- ============================================================
-         Form Actions
+         Form إجراءات
          ============================================================ --}}
     <div class="form-actions">
         <button type="submit" class="nova-btn nova-btn-primary">
             <i class="fas fa-save"></i> Update Warehouse
         </button>
         <a href="{{ route('warehouses.index') }}" class="nova-btn nova-btn-outline">
-            <i class="fas fa-times"></i> Cancel
+            <i class="fas fa-times"></i> إلغاء
         </a>
     </div>
 </form>
@@ -359,7 +359,7 @@
     }
 
     /* ============================================================
-       Status Checkbox
+       الحالة Checkbox
        ============================================================ */
     .status-checkbox-wrapper {
         display: flex;
@@ -369,7 +369,7 @@
     }
 
     /* ============================================================
-       Form Actions
+       Form إجراءات
        ============================================================ */
     .form-actions {
         display: flex;
@@ -446,10 +446,10 @@
         let lat = parseFloat(latInput.value) || initialData.lat;
         let lng = parseFloat(lngInput.value) || initialData.lng;
 
-        map = L.map('map').setView([lat, lng], 13);
+        map = L.map('map').setعرض([lat, lng], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
+            attribution: '&copy; مفتوحStreetMap contributors'
         }).addTo(map);
 
         marker = L.marker([lat, lng], { draggable: true }).addTo(map);
@@ -480,7 +480,7 @@
                 lngInput.value = lng.toFixed(6);
 
                 if (map) {
-                    map.setView([lat, lng], 15);
+                    map.setعرض([lat, lng], 15);
                     marker.setLatLng([lat, lng]);
                 } else {
                     initMap();
@@ -532,7 +532,7 @@
                         loadAreas(selectedStateId, oldAreaId);
                     }
                 })
-                .catch(err => console.error('Error loading states:', err));
+                .catch(err => console.error('خطأ loading states:', err));
         }
 
         /* ============================================================
@@ -553,7 +553,7 @@
                         citySelect.appendChild(option);
                     });
                 })
-                .catch(err => console.error('Error loading cities:', err));
+                .catch(err => console.error('خطأ loading cities:', err));
         }
 
         /* ============================================================
@@ -574,7 +574,7 @@
                         areaSelect.appendChild(option);
                     });
                 })
-                .catch(err => console.error('Error loading areas:', err));
+                .catch(err => console.error('خطأ loading areas:', err));
         }
 
         /* ============================================================
@@ -590,7 +590,7 @@
         });
 
         /* ============================================================
-           Initial Load (Edit Mode)
+           Initial Load (تعديل Mode)
            ============================================================ */
         const oldCountryId = "{{ old('country_id', $warehouse->country_id ?? '') }}";
         if (oldCountryId) {

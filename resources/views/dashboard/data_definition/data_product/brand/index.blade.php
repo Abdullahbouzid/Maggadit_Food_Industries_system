@@ -1,23 +1,23 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Brands Management')
+@section('title', 'إدارة العلامات التجارية')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-tag" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-tag" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Brands
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage brands, logos, and visibility in customer app</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('brands.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus-circle"></i> Add New
+            <i class="fas fa-plus-circle"></i> إضافة جديد
         </a>
         <a href="{{ route('brands.export', request()->query()) }}" class="nova-btn nova-btn-secondary nova-btn-sm">
-            <i class="fas fa-download"></i> Export Table
+            <i class="fas fa-download"></i> تصدير Table
         </a>
     </div>
 </div>
@@ -39,7 +39,7 @@
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-circle"></i>
         <div>
-            <strong>Import Errors:</strong>
+            <strong>أخطاء الاستيراد:</strong>
             <ul class="nova-mb-0 nova-mt-1">
                 @foreach(session('import_errors') as $error)
                     <li>{{ $error }}</li>
@@ -55,7 +55,7 @@
         <div class="nova-stat-icon primary">
             <i class="fas fa-grid"></i>
         </div>
-        <p class="nova-stat-label">Total Brands</p>
+        <p class="nova-stat-label">إجمالي العلامات التجارية</p>
         <p class="nova-stat-value">{{ $totalBrands }}</p>
     </div>
     <div class="nova-stat">
@@ -67,7 +67,7 @@
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon accent">
-            <i class="fas fa-eye-off"></i>
+            <i class="fas fa-eye-منf"></i>
         </div>
         <p class="nova-stat-label">Hidden in App</p>
         <p class="nova-stat-value">{{ $hiddenInApp }}</p>
@@ -82,14 +82,14 @@
 </div>
 
 {{-- ============================================================
-     Filter Section
+     فلتر Section
      ============================================================ --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('brands.index') }}" class="filter-form">
-            {{-- Search --}}
+            {{-- بحث --}}
             <div class="nova-form-group filter-item filter-item-search">
-                <label class="nova-label">Search (Name)</label>
+                <label class="nova-label">بحث (Name)</label>
                 <div class="filter-search-wrapper">
                     <span class="filter-search-icon">
                         <i class="fas fa-search"></i>
@@ -100,26 +100,26 @@
                 </div>
             </div>
 
-            {{-- Per Page --}}
+            {{-- لكل صفحة --}}
             <div class="nova-form-group filter-item">
-                <label class="nova-label">Per Page</label>
+                <label class="nova-label">لكل صفحة</label>
                 <select name="per_page" class="nova-select">
                     <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
                 </select>
             </div>
 
-            {{-- Actions --}}
+            {{-- إجراءات --}}
             <div class="nova-form-group filter-item filter-item-actions">
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-filter"></i> Filter
+                    <i class="fas fa-filter"></i> فلتر
                 </button>
                 @if(request('search') || request('per_page'))
                     <a href="{{ route('brands.index') }}" class="nova-btn nova-btn-outline">
-                        <i class="fas fa-rotate-left"></i> Reset
+                        <i class="fas fa-rotate-left"></i> إعادة تعيين
                     </a>
                 @endif
             </div>
@@ -134,7 +134,7 @@
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
             <h3 class="nova-card-title" style="margin: 0;">
-                <i class="fas fa-list"></i> Brands List
+                <i class="fas fa-list"></i> قائمة العلامات التجارية
             </h3>
         </div>
         <div class="nova-toolbar-actions">
@@ -152,14 +152,14 @@
                     <th>Name</th>
                     <th>Logo</th>
                     <th>Show in Customer App</th>
-                    <th class="nova-text-end">Actions</th>
+                    <th class="nova-text-end">إجراءات</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($brandsPaginated as $brand)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($brandsPaginated->currentPage() - 1) * $brandsPaginated->perPage() }}
+                        {{ $loop->iteration + ($brandsPaginated->currentصفحة() - 1) * $brandsPaginated->perصفحة() }}
                     </td>
                     <td>
                         <span class="nova-fw-semibold">{{ $brand->name }}</span>
@@ -168,7 +168,7 @@
                         @if($brand->logo)
                             <img src="{{ asset('uploads/' . $brand->logo) }}" alt="{{ $brand->name }}" width="50" height="50" style="object-fit: cover; border: 1px solid var(--nova-border); border-radius: 10px; box-shadow: var(--nova-shadow-sm);">
                         @else
-                            <span class="nova-text-muted" style="font-style: italic;">— No Logo —</span>
+                            <span class="nova-text-muted" style="font-style: italic;">— لا Logo —</span>
                         @endif
                     </td>
                     <td>
@@ -185,17 +185,17 @@
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
                             <a href="{{ route('brands.show', $brand) }}"
-                               class="nova-icon-btn nova-btn-sm" title="View">
+                               class="nova-icon-btn nova-btn-sm" title="عرض">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a href="{{ route('brands.edit', $brand) }}"
-                               class="nova-icon-btn nova-btn-sm" title="Edit">
+                               class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button type="button"
                                     class="nova-icon-btn nova-btn-sm nova-text-danger"
-                                    title="Delete"
-                                    onclick="confirmDelete({{ $brand->id }}, '{{ addslashes($brand->name) }}')">
+                                    title="حذف"
+                                    onclick="confirmحذف({{ $brand->id }}, '{{ addslashes($brand->name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -208,7 +208,7 @@
                             <div class="nova-empty-icon">
                                 <i class="fas fa-database" style="width: 48px; height: 48px;"></i>
                             </div>
-                            <h3 class="nova-empty-title">No brands found</h3>
+                            <h3 class="nova-empty-title">لا brands found</h3>
                             <p class="nova-empty-text">You can add a new brand using the add button.</p>
                             <a href="{{ route('brands.create') }}" class="nova-btn nova-btn-primary">
                                 <i class="fas fa-plus-circle"></i> Add Brand
@@ -224,7 +224,7 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
-                Showing {{ $brandsPaginated->firstItem() ?? 0 }} to {{ $brandsPaginated->lastItem() ?? 0 }} of {{ $brandsPaginated->total() }} entries
+                عرض {{ $brandsPaginated->firstItem() ?? 0 }} to {{ $brandsPaginated->lastItem() ?? 0 }} من {{ $brandsPaginated->total() }} entries
             </div>
             <div class="nova-pagination">
                 {{ $brandsPaginated->appends(request()->query())->links() }}
@@ -234,29 +234,29 @@
 </div>
 
 {{-- ============================================================
-     Delete Confirmation Modal
+     حذف تأكيدation Modal
      ============================================================ --}}
-<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+<div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
             <p class="nova-delete-modal-text">
                 Are you sure you want to delete brand
                 <strong id="deleteBrandName" class="nova-text-danger"></strong>?<br>
-                This action cannot be undone.
+                لا يمكن التراجع عن هذا الإجراء.
             </p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
-                    Cancel
+                        onclick="document.getElementById('globalحذفModal').classList.remove('show')">
+                    إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
                 </form>
             </div>
         </div>
@@ -270,27 +270,27 @@
         /* ============================================================
            Auto-submit on per_page change
            ============================================================ */
-        const perPageSelect = document.querySelector('select[name="per_page"]');
-        if (perPageSelect) {
-            perPageSelect.addEventListener('change', () => {
+        const perصفحةSelect = document.querySelector('select[name="per_page"]');
+        if (perصفحةSelect) {
+            perصفحةSelect.addEventListener('change', () => {
                 document.getElementById('filterForm').submit();
             });
         }
 
         /* ============================================================
-           Delete Confirmation
+           حذف تأكيدation
            ============================================================ */
-        window.confirmDelete = function(id, name) {
+        window.confirmحذف = function(id, name) {
             document.getElementById('deleteBrandName').innerText = name;
             document.getElementById('deleteForm').action = '/brands/' + id;
-            document.getElementById('globalDeleteModal').classList.add('show');
+            document.getElementById('globalحذفModal').classList.add('show');
         };
 
         /* ============================================================
            Auto-dismiss Alerts
            ============================================================ */
         setTimeout(() => {
-            document.querySelectorAll('.nova-alert').forEach(alert => {
+            document.querySelectorالكل('.nova-alert').forEach(alert => {
                 alert.style.transition = 'opacity 0.3s, transform 0.3s';
                 alert.style.opacity = '0';
                 alert.style.transform = 'translateY(-10px)';
@@ -329,7 +329,7 @@
         padding: 0 0.875rem;
         background: var(--nova-surface-2);
         border: 1.5px solid var(--nova-border);
-        border-right: none;
+        border-end: none;
         border-radius: 10px 0 0 10px;
         color: var(--nova-text-4);
         flex-shrink: 0;
@@ -337,7 +337,7 @@
 
     .filter-search-input {
         border-radius: 0 10px 10px 0 !important;
-        border-left: none !important;
+        border-start: none !important;
         flex: 1;
         min-width: 0;
     }

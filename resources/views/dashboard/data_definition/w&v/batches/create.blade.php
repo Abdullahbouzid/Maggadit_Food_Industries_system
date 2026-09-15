@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             إنشاء دفعة جديدة
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">أدخل بيانات الدفعة والمنتجات المرتبطة بها</p>
@@ -19,7 +19,7 @@
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>
@@ -118,7 +118,7 @@
         <div class="nova-card-body">
             <div id="itemsContainer" class="items-container"></div>
 
-            <div id="itemsError" class="nova-alert danger nova-mt-3" style="display: none;">
+            <div id="itemsخطأ" class="nova-alert danger nova-mt-3" style="display: none;">
                 <i class="fas fa-exclamation-triangle"></i>
                 يجب إضافة منتج واحد على الأقل.
             </div>
@@ -126,7 +126,7 @@
     </div>
 
     {{-- ============================================================
-         Form Actions
+         Form إجراءات
          ============================================================ --}}
     <div class="form-actions">
         <button type="submit" class="nova-btn nova-btn-success nova-btn-lg">
@@ -170,7 +170,7 @@
     }
 
     /* ============================================================
-       Status Checkbox
+       الحالة Checkbox
        ============================================================ */
     .status-checkbox-wrapper {
         display: inline-flex;
@@ -252,7 +252,7 @@
     }
 
     /* ============================================================
-       Form Actions
+       Form إجراءات
        ============================================================ */
     .form-actions {
         display: flex;
@@ -327,7 +327,7 @@
         const items = @json($items);
         const warehouses = @json($warehouses ?? []);
         const itemsContainer = document.getElementById('itemsContainer');
-        const itemsError = document.getElementById('itemsError');
+        const itemsخطأ = document.getElementById('itemsخطأ');
 
         let rowCounter = 0;
 
@@ -411,11 +411,11 @@
         }
 
         /* ============================================================
-           Add Item Row
+           إضافة عنصر Row
            ============================================================ */
         document.getElementById('addItemRow').addEventListener('click', function() {
             itemsContainer.insertAdjacentHTML('beforeend', createItemRow());
-            itemsError.style.display = 'none';
+            itemsخطأ.style.display = 'none';
         });
 
         /* ============================================================
@@ -427,7 +427,7 @@
                 const row = removeBtn.closest('.item-row');
                 if (row) {
                     row.remove();
-                    if (document.querySelectorAll('.item-row').length === 0) {
+                    if (document.querySelectorالكل('.item-row').length === 0) {
                         itemsContainer.insertAdjacentHTML('beforeend', createItemRow());
                     }
                 }
@@ -496,19 +496,19 @@
         });
 
         /* ============================================================
-           Form Submit Validation
+           Form إرسال Validation
            ============================================================ */
         document.getElementById('batchForm').addEventListener('submit', function(e) {
-            const rows = document.querySelectorAll('.item-row');
+            const rows = document.querySelectorالكل('.item-row');
             if (rows.length === 0) {
-                e.preventDefault();
-                itemsError.style.display = 'flex';
-                itemsError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                e.preventافتراضي();
+                itemsخطأ.style.display = 'flex';
+                itemsخطأ.scrollIntoعرض({ behavior: 'smooth', block: 'center' });
             }
         });
 
         /* ============================================================
-           Add Default Row
+           Add افتراضي Row
            ============================================================ */
         itemsContainer.insertAdjacentHTML('beforeend', createItemRow());
     });
@@ -525,7 +525,7 @@
     }
 
     /* Items error alert display fix */
-    #itemsError {
+    #itemsخطأ {
         display: none;
         align-items: center;
         gap: 0.5rem;

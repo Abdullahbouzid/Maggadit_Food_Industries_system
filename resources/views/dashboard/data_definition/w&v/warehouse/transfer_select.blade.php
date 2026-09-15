@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-check-square" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-check-square" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             اختيار المنتجات للنقل من المخزن: {{ $warehouse->code }}
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
@@ -18,12 +18,12 @@
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('warehouses.show', $warehouse) }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back to Warehouse
+            <i class="fas fa-arrow-right"></i> رجوع to Warehouse
         </a>
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if ($errors->any())
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>
@@ -38,10 +38,10 @@
     </div>
 @endif
 
-{{-- ===== Main Grid: Filters + Products ===== --}}
+{{-- ===== Main Grid: فلترs + Products ===== --}}
 <div class="selection-layout">
     {{-- ============================================================
-         Filter Sidebar
+         فلتر Sidebar
          ============================================================ --}}
     <aside class="selection-sidebar">
         <div class="nova-card">
@@ -146,7 +146,7 @@
                                     <thead>
                                         <tr>
                                             <th class="nova-text-center" style="width: 40px;">
-                                                <input type="checkbox" id="selectAll" class="nova-form-check-input">
+                                                <input type="checkbox" id="selectالكل" class="nova-form-check-input">
                                             </th>
                                             <th>المنتج</th>
                                             <th>الرمز</th>
@@ -224,7 +224,7 @@
                             </div>
                         </div>
 
-                        {{-- ===== Selection Summary + Submit ===== --}}
+                        {{-- ===== Selection Summary + إرسال ===== --}}
                         <div class="selection-footer">
                             <div class="selection-footer-info">
                                 <i class="fas fa-info-circle"></i>
@@ -267,7 +267,7 @@
     }
 
     /* ============================================================
-       Filter Stack
+       فلتر Stack
        ============================================================ */
     .filter-stack {
         display: flex;
@@ -427,22 +427,22 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const selectAllCheckbox = document.getElementById('selectAll');
-    const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+    const selectالكلCheckbox = document.getElementById('selectالكل');
+    const itemCheckboxes = document.querySelectorالكل('.item-checkbox');
     const filterForm = document.getElementById('filterForm');
     const selectedCountEl = document.getElementById('selectedCount');
 
     /* ============================================================
-       Update Select-All State
+       Update Select-الكل State
        ============================================================ */
-    function updateSelectAllState() {
-        const allEnabled = document.querySelectorAll('.item-checkbox:not(:disabled)');
-        const checkedCount = document.querySelectorAll('.item-checkbox:checked:not(:disabled)').length;
-        const totalCount = allEnabled.length;
+    function updateSelectالكلState() {
+        const allمفعّل = document.querySelectorالكل('.item-checkbox:not(:disabled)');
+        const checkedCount = document.querySelectorالكل('.item-checkbox:checked:not(:disabled)').length;
+        const totalCount = allمفعّل.length;
 
-        if (selectAllCheckbox) {
-            selectAllCheckbox.checked = (totalCount > 0 && checkedCount === totalCount);
-            selectAllCheckbox.indeterminate = (checkedCount > 0 && checkedCount < totalCount);
+        if (selectالكلCheckbox) {
+            selectالكلCheckbox.checked = (totalCount > 0 && checkedCount === totalCount);
+            selectالكلCheckbox.indeterminate = (checkedCount > 0 && checkedCount < totalCount);
         }
 
         // Update selected count display
@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedCountEl.textContent = checkedCount;
         }
 
-        // Highlight selected rows
+        // عاليlight selected rows
         itemCheckboxes.forEach(cb => {
             const row = cb.closest('tr');
             if (row) {
@@ -464,16 +464,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /* ============================================================
-       Select-All Checkbox
+       Select-الكل Checkbox
        ============================================================ */
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
+    if (selectالكلCheckbox) {
+        selectالكلCheckbox.addEventListener('change', function() {
             itemCheckboxes.forEach(checkbox => {
                 if (!checkbox.disabled) {
                     checkbox.checked = this.checked;
                 }
             });
-            updateSelectAllState();
+            updateSelectالكلState();
         });
     }
 
@@ -482,17 +482,17 @@ document.addEventListener('DOMContentLoaded', function() {
        ============================================================ */
     itemCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
-            updateSelectAllState();
+            updateSelectالكلState();
         });
     });
 
-    updateSelectAllState();
+    updateSelectالكلState();
 
     /* ============================================================
-       Auto-submit Filters
+       Auto-submit فلترs
        ============================================================ */
     if (filterForm) {
-        const filterInputs = filterForm.querySelectorAll('select');
+        const filterInputs = filterForm.querySelectorالكل('select');
         filterInputs.forEach(input => {
             input.addEventListener('change', function() {
                 filterForm.submit();
@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /* ============================================================
-       Focus Search Input
+       Focus بحث Input
        ============================================================ */
     const searchInput = document.querySelector('input[name="search"]');
     if (searchInput && searchInput.value) {
@@ -509,14 +509,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /* ============================================================
-       Form Submit Validation
+       Form إرسال Validation
        ============================================================ */
     const selectionForm = document.getElementById('selectionForm');
     if (selectionForm) {
         selectionForm.addEventListener('submit', function(e) {
-            const checkedCount = document.querySelectorAll('.item-checkbox:checked:not(:disabled)').length;
+            const checkedCount = document.querySelectorالكل('.item-checkbox:checked:not(:disabled)').length;
             if (checkedCount === 0) {
-                e.preventDefault();
+                e.preventافتراضي();
                 alert('يرجى اختيار منتج واحد على الأقل للنقل.');
             }
         });
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
     /* Selected row highlight */
     .selection-row-selected {
         background-color: #f0fdf4 !important;
-        border-right: 3px solid #16a34a;
+        border-end: 3px solid #16a34a;
     }
 
     .selection-row-selected:hover {

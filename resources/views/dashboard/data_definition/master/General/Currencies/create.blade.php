@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             إنشاء عملة جديدة
         </h2>
         <p class="nova-page-subtitle">أدخل بيانات العملة الجديدة</p>
@@ -72,7 +72,7 @@
                     @error('code') <div class="nova-form-error">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Coin Description --}}
+                {{-- Coin الوصف --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-group">
                         <label class="nova-label">
@@ -97,7 +97,7 @@
                     </div>
                 </div>
 
-                {{-- Form Actions --}}
+                {{-- Form إجراءات --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('currencies.index') }}" class="nova-btn nova-btn-outline">

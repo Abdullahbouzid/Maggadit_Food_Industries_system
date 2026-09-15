@@ -8,11 +8,12 @@
             </a>
         </div>
 
+        <br><br>
         <!-- Dashboard -->
         <div class="nova-sidebar-section">
             <a href="{{ route('dashboard') }}" class="nova-sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i class="fas fa-th-large"></i>
-                <span>Dashboard</span>
+                <span>{{ __('messages.dashboard.sidebar.dashboard') }}</span>
             </a>
         </div>
 
@@ -20,7 +21,7 @@
         <div class="nova-sidebar-section">
             <a href="javascript:void(0);" class="nova-sidebar-link" id="novaDataDefinitionsBtn" data-modal="data-definitions-modal">
                 <i class="fas fa-database"></i>
-                <span>Data Definitions</span>
+                <span>{{ __('messages.dashboard.sidebar.data_definitions') }}</span>
             </a>
         </div>
 
@@ -28,57 +29,57 @@
         <div class="nova-sidebar-section">
             <a href="javascript:void(0);" class="nova-sidebar-link" id="novaCustomerAppBtn" data-modal="customer-app-modal">
                 <i class="fas fa-mobile-alt"></i>
-                <span>Customer App Properties</span>
+                <span>{{ __('messages.dashboard.sidebar.customer_app_properties') }}</span>
             </a>
         </div>
 
         <!-- Permissions & Roles -->
         <div class="nova-sidebar-section">
-            <div class="nova-sidebar-title">Permissions & Roles</div>
+            <div class="nova-sidebar-title">{{ __('messages.dashboard.sidebar.permissions_roles') }}</div>
             <a href="{{ route('roles.index') }}" class="nova-sidebar-link {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                 <i class="fas fa-user-shield"></i>
-                <span>Roles</span>
+                <span>{{ __('messages.dashboard.sidebar.roles') ?? 'Roles' }}</span>
             </a>
             <a href="{{ route('invoices.index') }}" class="nova-sidebar-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
                 <i class="fas fa-file-invoice"></i>
-                <span>الفواتير</span>
+                <span>{{ __('messages.dashboard.sidebar.invoices') ?? 'الفواتير' }}</span>
             </a>
         </div>
 
         <!-- Inventory & Products -->
         <div class="nova-sidebar-section">
-            <div class="nova-sidebar-title">المخزون و المنتجات</div>
+            <div class="nova-sidebar-title">{{ __('messages.dashboard.sidebar.inventory_products') }}</div>
             <a href="{{ route('warehouses.index') }}" class="nova-sidebar-link {{ request()->routeIs('warehouses.*') ? 'active' : '' }}">
                 <i class="fas fa-warehouse"></i>
-                <span>المخزون</span>
+                <span>{{ __('messages.dashboard.sidebar.warehouses') ?? 'المخزون' }}</span>
             </a>
             <a href="{{ route('items.index') }}" class="nova-sidebar-link {{ request()->routeIs('items.*') ? 'active' : '' }}">
                 <i class="fas fa-box"></i>
-                <span>ال products</span>
+                <span>{{ __('messages.dashboard.sidebar.items') ?? 'المنتجات' }}</span>
             </a>
             <a href="{{ route('item-packs.index') }}" class="nova-sidebar-link {{ request()->routeIs('item-packs.*') ? 'active' : '' }}">
                 <i class="fas fa-boxes"></i>
-                <span> بكجات المنتج</span>
+                <span>{{ __('messages.dashboard.sidebar.item_packs') ?? 'بكجات المنتج' }}</span>
             </a>
             <a href="{{ route('uoms.index') }}" class="nova-sidebar-link {{ request()->routeIs('uoms.*') ? 'active' : '' }}">
                 <i class="fas fa-balance-scale"></i>
-                <span>وحدة القياس</span>
+                <span>{{ __('messages.dashboard.sidebar.uom') ?? 'وحدة القياس' }}</span>
             </a>
             <a href="{{ route('pack-types.index') }}" class="nova-sidebar-link {{ request()->routeIs('pack-types.*') ? 'active' : '' }}">
                 <i class="fas fa-layer-group"></i>
-                <span> أنواع الbach</span>
+                <span>{{ __('messages.dashboard.sidebar.pack_types') ?? 'أنواع الباك' }}</span>
             </a>
             <a href="{{ route('pack-capacities.index') }}" class="nova-sidebar-link {{ request()->routeIs('pack-capacities.*') ? 'active' : '' }}">
                 <i class="fas fa-cube"></i>
-                <span>Pack Capacities</span>
+                <span>{{ __('messages.dashboard.sidebar.pack_capacities') ?? 'سعات الباك' }}</span>
             </a>
             <a href="{{ route('pack-definitions.index') }}" class="nova-sidebar-link {{ request()->routeIs('pack-definitions.*') ? 'active' : '' }}">
                 <i class="fas fa-box-open"></i>
-                <span>Pack Definitions</span>
+                <span>{{ __('messages.dashboard.sidebar.pack_definitions') ?? 'تعريفات الباك' }}</span>
             </a>
             <a href="{{ route('price-lists.index') }}" class="nova-sidebar-link {{ request()->routeIs('price-lists.*') ? 'active' : '' }}">
                 <i class="fas fa-dollar-sign"></i>
-                <span>قوائم الأسعار</span>
+                <span>{{ __('messages.dashboard.sidebar.price_lists') ?? 'قوائم الأسعار' }}</span>
             </a>
         </div>
 
@@ -86,11 +87,11 @@
         <div class="nova-sidebar-section">
             <a href="{{ route('permissions.index') }}" class="nova-sidebar-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}">
                 <i class="fas fa-key"></i>
-                <span>Permissions</span>
+                <span>{{ __('messages.dashboard.sidebar.permissions') ?? 'الصلاحيات' }}</span>
             </a>
             <a href="#" onclick="event.preventDefault(); document.getElementById('nova-logout-form').submit();" class="nova-sidebar-link nova-text-danger">
                 <i class="fas fa-sign-out-alt"></i>
-                <span>Sign out</span>
+                <span>{{ __('messages.dashboard.sidebar.sign_out') }}</span>
             </a>
         </div>
     </div>

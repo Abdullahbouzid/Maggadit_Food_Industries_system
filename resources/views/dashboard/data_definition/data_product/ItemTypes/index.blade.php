@@ -1,22 +1,22 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Item Types Management')
+@section('title', 'إدارة أنواع العناصر')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-box" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Item Types
+            <i class="fas fa-box" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            نوع العنصرs
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage item types, codes, activation status and images</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('item-types.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus-circle"></i> Add New
+            <i class="fas fa-plus-circle"></i> إضافة جديد
         </a>
         <a href="{{ route('item-types.export', request()->query()) }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-download"></i> Export Table
+            <i class="fas fa-download"></i> تصدير Table
         </a>
     </div>
 </div>
@@ -38,7 +38,7 @@
 
 @if(session('import_errors'))
     <div class="nova-alert danger">
-        <h6 class="nova-fw-bold"><i class="fas fa-exclamation-circle nova-me-1"></i> Import Errors:</h6>
+        <h6 class="nova-fw-bold"><i class="fas fa-exclamation-circle nova-me-1"></i> أخطاء الاستيراد:</h6>
         <ul class="nova-mb-0">
             @foreach(session('import_errors') as $error)
                 <li>{{ $error }}</li>
@@ -60,21 +60,21 @@
         <div class="nova-stat-icon success">
             <i class="fas fa-check-circle"></i>
         </div>
-        <p class="nova-stat-label">Active</p>
+        <p class="nova-stat-label">نشط</p>
         <p class="nova-stat-value">{{ $activeCount }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon accent">
-            <i class="fas fa-eye-off"></i>
+            <i class="fas fa-eye-منf"></i>
         </div>
-        <p class="nova-stat-label">Inactive</p>
+        <p class="nova-stat-label">غير نشط</p>
         <p class="nova-stat-value">{{ $inactiveCount }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon secondary">
             <i class="fas fa-image"></i>
         </div>
-        <p class="nova-stat-label">With Image</p>
+        <p class="nova-stat-label">مع صورة</p>
         <p class="nova-stat-value">{{ $withImageCount }}</p>
     </div>
 </div>
@@ -82,25 +82,25 @@
 {{-- ===== Import Section ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h5 class="nova-card-title"><i class="fas fa-upload nova-me-2"></i> Import Item Types</h5>
+        <h5 class="nova-card-title"><i class="fas fa-upload nova-me-2"></i> Import نوع العنصرs</h5>
     </div>
     <div class="nova-card-body">
         <form action="{{ route('item-types.import') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="import-grid">
                 <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">Excel File (.xlsx, .xls, .csv)</label>
+                    <label class="nova-label">ملف Excel</label>
                     <input type="file" name="import_file" class="nova-input" required>
                     <small class="nova-help-text">
-                        Required columns: <strong>code, name</strong> | Optional: description, is_active, sort_order
+                        مطلوب columns: <strong>code, name</strong> | اختياري: description, is_active, sort_order
                     </small>
                 </div>
                 <div class="import-actions">
                     <button type="submit" class="nova-btn nova-btn-success">
-                        <i class="fas fa-upload"></i> Import Data
+                        <i class="fas fa-upload"></i> استيراد البيانات
                     </button>
                     <a href="{{ route('item-types.template') }}" class="nova-btn nova-btn-outline">
-                        <i class="fas fa-file-text"></i> Download Template
+                        <i class="fas fa-file-text"></i> تحميل القالب
                     </a>
                 </div>
             </div>
@@ -108,44 +108,44 @@
     </div>
 </div>
 
-{{-- ===== Filter Section (FIXED: form id added) ===== --}}
+{{-- ===== فلتر Section (FIXED: form id added) ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body">
         <form method="GET" action="{{ route('item-types.index') }}" id="filterForm">
             <div class="filter-grid">
                 <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">Search (Code/Name)</label>
+                    <label class="nova-label">بحث (Code/Name)</label>
                     <div class="nova-input-group">
                         <span class="nova-input-group-text"><i class="fas fa-search"></i></span>
                         <input type="text" name="search" id="searchInput" class="nova-input"
-                               placeholder="Code or name..." value="{{ request('search') }}" autocomplete="off">
+                               placeholder="Code or name..." value="{{ request('search') }}" autocomplete="منf">
                     </div>
                 </div>
                 <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">Status</label>
+                    <label class="nova-label">الحالة</label>
                     <select name="status" class="nova-select" onchange="document.getElementById('filterForm').submit();">
-                        <option value="">All</option>
-                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                        <option value="">الكل</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
                     </select>
                 </div>
                 <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">Records per page</label>
+                    <label class="nova-label">Records لكل صفحة</label>
                     <select name="per_page" class="nova-select" onchange="document.getElementById('filterForm').submit();">
                         <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                         <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                         <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                         <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
                     </select>
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="nova-btn nova-btn-primary">
-                        <i class="fas fa-filter"></i> Filter
+                        <i class="fas fa-filter"></i> فلتر
                     </button>
                     @if(request()->anyFilled(['search', 'status', 'per_page']))
                         <a href="{{ route('item-types.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-times"></i> Reset
+                            <i class="fas fa-times"></i> إعادة تعيين
                         </a>
                     @endif
                 </div>
@@ -160,9 +160,9 @@
         <div class="nova-toolbar-filters">
             <h3 class="nova-card-title" style="margin: 0;">
                 <i class="fas fa-list"></i>
-                Item Types List
+                قائمة أنواع العناصر
                 @if($itemTypes->total())
-                    <span class="nova-badge primary" style="margin-left: 0.5rem;">{{ $itemTypes->total() }}</span>
+                    <span class="nova-badge primary" style="margin-inline-start: 0.5rem;">{{ $itemTypes->total() }}</span>
                 @endif
             </h3>
         </div>
@@ -184,7 +184,7 @@
                 @forelse($itemTypes as $type)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($itemTypes->currentPage() - 1) * $itemTypes->perPage() }}
+                        {{ $loop->iteration + ($itemTypes->currentصفحة() - 1) * $itemTypes->perصفحة() }}
                     </td>
                     <td><code class="nova-code">{{ $type->code }}</code></td>
                     <td><span class="nova-fw-bold">{{ $type->name }}</span></td>
@@ -200,34 +200,34 @@
                                  class="nova-table-thumb"
                                  loading="lazy">
                         @else
-                            <span class="nova-text-muted nova-fs-sm">— No Image —</span>
+                            <span class="nova-text-muted nova-fs-sm">— لا الصورة —</span>
                         @endif
                     </td>
                     <td>
                         @if($type->is_active)
                             <span class="nova-badge success">
-                                <i class="fas fa-check-circle"></i> Active
+                                <i class="fas fa-check-circle"></i> نشط
                             </span>
                         @else
                             <span class="nova-badge secondary">
-                                <i class="fas fa-eye-off"></i> Inactive
+                                <i class="fas fa-eye-منf"></i> غير نشط
                             </span>
                         @endif
                     </td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
                             <a href="{{ route('item-types.show', $type) }}"
-                               class="nova-icon-btn nova-btn-sm" title="View">
+                               class="nova-icon-btn nova-btn-sm" title="عرض">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a href="{{ route('item-types.edit', $type) }}"
-                               class="nova-icon-btn nova-btn-sm" title="Edit">
+                               class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button type="button"
                                     class="nova-icon-btn nova-btn-sm nova-text-danger"
-                                    title="Delete"
-                                    onclick="confirmDelete({{ $type->id }}, '{{ addslashes($type->name) }}')">
+                                    title="حذف"
+                                    onclick="confirmحذف({{ $type->id }}, '{{ addslashes($type->name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -240,21 +240,21 @@
                             <div class="empty-state-icon">
                                 <i class="fas fa-database"></i>
                             </div>
-                            <h5 class="nova-text-muted">No item types found</h5>
+                            <h5 class="nova-text-muted">لا item types found</h5>
                             <p class="nova-text-muted nova-fs-sm">
                                 @if(request()->anyFilled(['search', 'status']))
-                                    Try adjusting your search or filter criteria.
+                                    يرجى تعديل معايير البحث أو الفلتر
                                 @else
                                     Get started by adding your first item type.
                                 @endif
                             </p>
                             @if(request()->anyFilled(['search', 'status']))
                                 <a href="{{ route('item-types.index') }}" class="nova-btn nova-btn-outline nova-mt-2">
-                                    <i class="fas fa-times"></i> Clear Filters
+                                    <i class="fas fa-times"></i> مسح الفلاتر
                                 </a>
                             @else
                                 <a href="{{ route('item-types.create') }}" class="nova-btn nova-btn-primary nova-mt-2">
-                                    <i class="fas fa-plus-circle"></i> Add Item Type
+                                    <i class="fas fa-plus-circle"></i> Add نوع العنصر
                                 </a>
                             @endif
                         </div>
@@ -267,7 +267,7 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
-                Showing {{ $itemTypes->firstItem() ?? 0 }} to {{ $itemTypes->lastItem() ?? 0 }} of {{ $itemTypes->total() }} entries
+                عرض {{ $itemTypes->firstItem() ?? 0 }} to {{ $itemTypes->lastItem() ?? 0 }} من {{ $itemTypes->total() }} entries
             </div>
             <div class="nova-pagination">
                 {{ $itemTypes->appends(request()->query())->links() }}
@@ -276,28 +276,28 @@
     </div>
 </div>
 
-{{-- ===== Delete Confirmation Modal (moved inside content) ===== --}}
+{{-- ===== حذف تأكيدation Modal (moved inside content) ===== --}}
 <div class="nova-modal-backdrop" id="deleteItemTypeModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
             <p class="nova-delete-modal-text">
                 Are you sure you want to delete item type
                 <strong id="deleteItemTypeName" class="nova-text-danger"></strong>?
-                <br>This action cannot be undone.
+                <br>لا يمكن التراجع عن هذا الإجراء.
             </p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="closeDeleteModal()">
-                    Cancel
+                <button type="button" class="nova-btn nova-btn-outline" onclick="closeحذفModal()">
+                    إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="nova-btn nova-btn-danger">
-                        <i class="fas fa-trash-alt"></i> Delete Permanently
+                        <i class="fas fa-trash-alt"></i> الحذف النهائي
                     </button>
                 </form>
             </div>
@@ -323,7 +323,7 @@
         flex-wrap: wrap;
     }
 
-    /* ===== Filter Grid ===== */
+    /* ===== فلتر Grid ===== */
     .filter-grid {
         display: grid;
         grid-template-columns: 2fr 1fr 1fr auto;
@@ -469,31 +469,31 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ===== Delete Modal =====
-    window.confirmDelete = function(id, name) {
+    // ===== حذف Modal =====
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteItemTypeName').innerText = name;
         document.getElementById('deleteForm').action = '/item-types/' + id;
         document.getElementById('deleteItemTypeModal').classList.add('show');
     };
 
-    window.closeDeleteModal = function() {
+    window.closeحذفModal = function() {
         document.getElementById('deleteItemTypeModal').classList.remove('show');
     };
 
-    // Close modal on backdrop click
+    // إغلاق modal on backdrop click
     const modal = document.getElementById('deleteItemTypeModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
             if (e.target === modal) {
-                closeDeleteModal();
+                closeحذفModal();
             }
         });
     }
 
-    // Close modal on Escape key
+    // إغلاق modal on Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
-            closeDeleteModal();
+            closeحذفModal();
         }
     });
 
@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== Auto-dismiss alerts =====
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

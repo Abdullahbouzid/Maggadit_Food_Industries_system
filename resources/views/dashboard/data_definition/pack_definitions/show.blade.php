@@ -6,17 +6,18 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-box" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تفاصيل تعريف الباكج
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">عرض معلومات وتعريفات الباكج</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('pack-definitions.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> __('messages.dashboard.back')
         </a>
-        <a href="{{ route('pack-definitions.edit', $packDefinition) }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-edit"></i> Edit
+        <a href="تعديل
+        " class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-"></i> تعديل
         </a>
     </div>
 </div>
@@ -195,21 +196,21 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- __('messages.modal.delete') تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deletePackDefModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete pack definition <strong id="deletePackDefName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <h4 class="nova-delete-modal-title">{{ __('messages.dashboard.confirm_deletion') }}</h4>
+            <p class="nova-delete-modal-text">{{ __('messages.modal.are_you_sure') }} pack definition <strong id="deletePackDefName" class="nova-text-danger"></strong>?<br>{{ __('messages.modal.irreversible') }}.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePackDefModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePackDefModal').classList.remove('show')">{{ __('messages.dashboard.cancel') }}</button>
                 <form id="deletePackDefForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.dashboard.delete') }}</button>
                 </form>
             </div>
         </div>
@@ -226,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تعديل إصدار - {{ $priceList->name }}
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">تاريخ السريان: {{ $version->effective_date->format('Y-m-d') }}</p>
@@ -75,7 +75,7 @@
                                 <td>
                                     <span class="nova-fw-bold">{{ $item['name_ar'] ?: $item['name_en'] }}</span>
                                     @if($item['is_new'] ?? false)
-                                        <span class="nova-badge accent" style="margin-right: 0.5rem;">جديد</span>
+                                        <span class="nova-badge accent" style="margin-inline-end: 0.5rem;">جديد</span>
                                     @endif
                                 </td>
                                 <td><small class="nova-text-muted">{{ $item['pack_type'] ?? 'قطعة' }}</small></td>

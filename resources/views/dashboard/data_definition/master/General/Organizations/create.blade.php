@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             إنشاء منظمة جديدة
         </h2>
         <p class="nova-page-subtitle">أضف منظمة جديدة إلى الهرمكية. الحقول المرمزة بـ <span class="nova-text-danger">*</span> مطلوبة.</p>
@@ -204,7 +204,7 @@
                     </div>
                 </div>
 
-                {{-- Form Actions --}}
+                {{-- Form إجراءات --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('organizations.index') }}" class="nova-btn nova-btn-outline">
@@ -232,9 +232,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const defaultLat = parseFloat(document.getElementById('latitude').value) || 32.8872;
     const defaultLng = parseFloat(document.getElementById('longitude').value) || 13.1913;
 
-    const map = L.map('map-picker').setView([defaultLat, defaultLng], 13);
+    const map = L.map('map-picker').setعرض([defaultLat, defaultLng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
+        attribution: '&copy; مفتوحStreetMap contributors',
         maxZoom: 19,
     }).addTo(map);
 
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const lat = parseFloat(latInput.value);
             const lng = parseFloat(lngInput.value);
             if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                map.setView([lat, lng], 13);
+                map.setعرض([lat, lng], 13);
                 if (marker) marker.setLatLng([lat, lng]);
                 else marker = L.marker([lat, lng]).addTo(map);
             }

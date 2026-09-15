@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-layer-group" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-layer-group" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Pack Types
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة أنواع الباكجات (صندوق 3×3، قطعة، إلخ)</p>
@@ -56,10 +56,10 @@
                             <td>{{ $packType->description ?? '-' }}</td>
                             <td class="nova-text-end">
                                 <div class="nova-table-actions">
-                                    <a href="{{ route('pack-types.edit', $packType) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                                    <a href="{{ route('pack-types.edit', $packType) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDeletePackType({{ $packType->id }}, '{{ addslashes($packType->name_ar ?? $packType->name ?? 'بدون اسم') }}')">
+                                    <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذفPackType({{ $packType->id }}, '{{ addslashes($packType->name_ar ?? $packType->name ?? 'بدون اسم') }}')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -87,21 +87,21 @@
 </div>
 @endsection
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deletePackTypeModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete pack type <strong id="deletePackTypeName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete pack type <strong id="deletePackTypeName" class="nova-text-danger"></strong>?<br>لا يمكن التراجع عن هذا الإجراء.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePackTypeModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePackTypeModal').classList.remove('show')">إلغاء</button>
                 <form id="deletePackTypeForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
                 </form>
             </div>
         </div>
@@ -113,7 +113,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 });
 
-window.confirmDeletePackType = function(id, name) {
+window.confirmحذفPackType = function(id, name) {
     document.getElementById('deletePackTypeName').innerText = name;
     document.getElementById('deletePackTypeForm').action = '/pack-types/' + id;
     document.getElementById('deletePackTypeModal').classList.add('show');

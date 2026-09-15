@@ -7,7 +7,7 @@
     <div class="nova-actionbar">
         <div>
             <h2 class="nova-actionbar-title">
-                <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+                <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
                 تفاصيل الحركة: {{ $movement->id }}
             </h2>
             <p class="nova-page-subtitle">لوحة معلومات شاملة للحركة المخزنية</p>
@@ -172,7 +172,7 @@
             </div>
         </div>
 
-        {{-- Notes --}}
+        {{-- لاtes --}}
         <div class="nova-dash-card">
             <div class="nova-dash-card-header">
                 <div class="nova-dash-card-icon">
@@ -187,7 +187,7 @@
             </div>
         </div>
 
-        {{-- Actions --}}
+        {{-- إجراءات --}}
         <div class="nova-dash-card">
             <div class="nova-dash-card-header">
                 <div class="nova-dash-card-icon">
@@ -206,7 +206,7 @@
                             class="nova-dash-action delete"
                             data-delete-id="{{ $movement->id }}"
                             data-delete-name="الحركة #{{ $movement->id }}"
-                            onclick="confirmDelete(this.dataset.deleteId, this.dataset.deleteName)">
+                            onclick="confirmحذف(this.dataset.deleteId, this.dataset.deleteName)">
                         <i class="fas fa-trash-alt"></i>
                         <span>حذف الحركة</span>
                     </button>
@@ -311,8 +311,8 @@
         </div>
     </div>
 
-    {{-- ===== Delete Modal ===== --}}
-    <div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true" role="dialog">
+    {{-- ===== حذف Modal ===== --}}
+    <div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true" role="dialog">
         <div class="nova-modal" role="document">
             <div class="nova-delete-modal">
                 <div class="nova-delete-modal-icon">
@@ -574,7 +574,7 @@
         font-size: 0.9rem;
     }
 
-    /* ===== Notes ===== */
+    /* ===== لاtes ===== */
     .nova-dash-notes {
         margin: 0;
         font-size: 0.88rem;
@@ -582,11 +582,11 @@
         line-height: 1.7;
         padding: 0.85rem;
         background: rgba(245,158,11,.06);
-        border-right: 3px solid #f59e0b;
+        border-end: 3px solid #f59e0b;
         border-radius: 8px;
     }
 
-    /* ===== Dash Actions ===== */
+    /* ===== Dash إجراءات ===== */
     .nova-dash-actions {
         display: flex;
         flex-direction: column;
@@ -735,17 +735,17 @@
     (function () {
         'use strict';
 
-        const modal         = document.getElementById('globalDeleteModal');
+        const modal         = document.getElementById('globalحذفModal');
         const deleteForm    = document.getElementById('deleteForm');
         const deleteName    = document.getElementById('deleteItemName');
-        const baseDeleteUrl = @json(url('/warehouse-movements'));
+        const baseحذفUrl = @json(url('/warehouse-movements'));
 
         function openModal()  { modal.classList.add('show');    modal.setAttribute('aria-hidden', 'false'); }
         function closeModal() { modal.classList.remove('show'); modal.setAttribute('aria-hidden', 'true');  }
 
-        window.confirmDelete = function (id, name) {
+        window.confirmحذف = function (id, name) {
             deleteName.textContent = name;
-            deleteForm.action = baseDeleteUrl + '/' + id;
+            deleteForm.action = baseحذفUrl + '/' + id;
             openModal();
         };
 

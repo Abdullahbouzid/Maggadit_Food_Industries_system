@@ -1,13 +1,13 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Areas Management')
+@section('title', 'إدارة المناطق')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-map" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-map" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             المناطق
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة المناطق الجغرافية (الأحياء، الأقسام)</p>
@@ -65,7 +65,7 @@
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon accent">
-            <i class="fas fa-eye-off"></i>
+            <i class="fas fa-eye-منf"></i>
         </div>
         <p class="nova-stat-label">غير نشط</p>
         <p class="nova-stat-value">{{ $inactive }}</p>
@@ -101,11 +101,11 @@
     </div>
 </div>
 
-{{-- ===== Filter Section ===== --}}
+{{-- ===== فلتر Section ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('areas.index') }}" class="filter-form">
-            {{-- Search --}}
+            {{-- بحث --}}
             <div class="nova-form-group filter-item filter-item-search">
                 <label class="nova-label">بحث</label>
                 <div class="filter-search-wrapper">
@@ -131,7 +131,7 @@
                 </select>
             </div>
 
-            {{-- Status --}}
+            {{-- الحالة --}}
             <div class="nova-form-group filter-item">
                 <label class="nova-label">الحالة</label>
                 <select name="status" class="nova-select">
@@ -141,7 +141,7 @@
                 </select>
             </div>
 
-            {{-- Per Page --}}
+            {{-- لكل صفحة --}}
             <div class="nova-form-group filter-item">
                 <label class="nova-label">حسب الصفحة</label>
                 <select name="per_page" class="nova-select">
@@ -153,7 +153,7 @@
                 </select>
             </div>
 
-            {{-- Actions --}}
+            {{-- إجراءات --}}
             <div class="nova-form-group filter-item filter-item-actions">
                 <button type="submit" class="nova-btn nova-btn-primary">
                     <i class="fas fa-filter"></i> تطبيق
@@ -200,7 +200,7 @@
                 @forelse($areas as $area)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($areas->currentPage() - 1) * $areas->perPage() }}
+                        {{ $loop->iteration + ($areas->currentصفحة() - 1) * $areas->perصفحة() }}
                     </td>
                     <td><code>{{ $area->code }}</code></td>
                     <td>{{ $area->name_en }}</td>
@@ -224,7 +224,7 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف"
-                                    onclick="confirmDelete({{ $area->id }}, '{{ addslashes($area->name_en) }}')">
+                                    onclick="confirmحذف({{ $area->id }}, '{{ addslashes($area->name_en) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -261,8 +261,8 @@
     </div>
 </div>
 
-{{-- ===== Delete Confirmation Modal ===== --}}
-<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+{{-- ===== حذف تأكيدation Modal ===== --}}
+<div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
@@ -276,7 +276,7 @@
             </p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
+                        onclick="document.getElementById('globalحذفModal').classList.remove('show')">
                     إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
@@ -310,7 +310,7 @@
         align-items: center;
     }
 
-    /* ===== Filter Form - Grid Layout ===== */
+    /* ===== فلتر Form - Grid Layout ===== */
     .filter-form {
         display: grid;
         grid-template-columns: 2fr 1.2fr 1fr 0.8fr auto;
@@ -323,7 +323,7 @@
         min-width: 0;
     }
 
-    /* Search Input Wrapper */
+    /* بحث Input Wrapper */
     .filter-search-wrapper {
         position: relative;
         display: flex;
@@ -338,7 +338,7 @@
         padding: 0 0.875rem;
         background: var(--nova-surface-2);
         border: 1.5px solid var(--nova-border);
-        border-right: none;
+        border-end: none;
         border-radius: 10px 0 0 10px;
         color: var(--nova-text-4);
         flex-shrink: 0;
@@ -346,12 +346,12 @@
 
     .filter-search-input {
         border-radius: 0 10px 10px 0 !important;
-        border-left: none !important;
+        border-start: none !important;
         flex: 1;
         min-width: 0;
     }
 
-    /* Filter Actions */
+    /* فلتر إجراءات */
     .filter-item-actions {
         display: flex;
         gap: 0.5rem;
@@ -362,7 +362,7 @@
         white-space: nowrap;
     }
 
-    /* ===== Delete Modal ===== */
+    /* ===== حذف Modal ===== */
     .nova-modal-backdrop {
         display: none;
         position: fixed;
@@ -467,13 +467,13 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const perPageSelect = document.querySelector('select[name="per_page"]');
-        if (perPageSelect) perPageSelect.addEventListener('change', () => document.getElementById('filterForm').submit());
+        const perصفحةSelect = document.querySelector('select[name="per_page"]');
+        if (perصفحةSelect) perصفحةSelect.addEventListener('change', () => document.getElementById('filterForm').submit());
 
-        window.confirmDelete = function(id, name) {
+        window.confirmحذف = function(id, name) {
             document.getElementById('deleteItemName').innerText = name;
             document.getElementById('deleteForm').action = '/areas/' + id;
-            document.getElementById('globalDeleteModal').classList.add('show');
+            document.getElementById('globalحذفModal').classList.add('show');
         };
     });
 </script>

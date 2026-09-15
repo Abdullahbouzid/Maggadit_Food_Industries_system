@@ -6,8 +6,8 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-box" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            تعريفات الباكجات (Pack Definitions)
+            <i class="fas" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            تعريفات الباكجات (تعريفات باك)
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة وتعريف أنواع الباكجات القابلة لإعادة الاستخدام للمنتجات</p>
     </div>
@@ -108,10 +108,10 @@
                         <td>{{ $packDef->weight ?? '-' }}</td>
                         <td class="nova-text-end">
                             <div class="nova-table-actions">
-                                <a href="{{ route('pack-definitions.edit', $packDef) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                                <a href="{{ route('pack-definitions.edit', $packDef) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDeletePackDef({{ $packDef->id }}, '{{ addslashes($packDef->name_ar ?? $packDef->name_en ?? $packDef->name ?? 'بدون اسم') }}')">
+                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="{{ __('messages.modal.delete') }}" onclick="confirmDeletePackDef({{ $packDef->id }}, '{{ addslashes($packDef->name_ar ?? $packDef->name_en ?? $packDef->name ?? 'بدون اسم') }}')">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -124,7 +124,7 @@
                                 <div class="nova-empty-icon">
                                     <i class="fas fa-inbox"></i>
                                 </div>
-                                <h3 class="nova-empty-title">No pack definitions</h3>
+                                <h3 class="nova-empty-title">{{ __('messages.dashboard.no_pack_definitions') }}</h3>
                                 <p class="nova-empty-text">لا توجد تعريفات باكجات. قم بإنشاء أول تعريف.</p>
                                 <a href="{{ route('pack-definitions.create') }}" class="nova-btn nova-btn-primary">
                                     <i class="fas fa-plus"></i> Create Pack Definition
@@ -143,21 +143,21 @@
 </div>
 @endsection
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- __('messages.modal.delete') تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deletePackDefModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete pack definition <strong id="deletePackDefName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <h4 class="nova-delete-modal-title">{{ __('messages.dashboard.confirm_deletion') }}</h4>
+            <p class="nova-delete-modal-text">{{ __('messages.modal.are_you_sure') }} pack definition <strong id="deletePackDefName" class="nova-text-danger"></strong>?<br>{{ __('messages.modal.irreversible') }}.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePackDefModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePackDefModal').classList.remove('show')">{{ __('messages.dashboard.cancel') }}</button>
                 <form id="deletePackDefForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.dashboard.delete') }}</button>
                 </form>
             </div>
         </div>
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

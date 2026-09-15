@@ -6,10 +6,10 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تعديل حالة الطرد
         </h2>
-        <p class="nova-page-subtitle">تحديث بيانات {{ $packageStatus->status_name }}</p>
+        <p class="nova-page-subtitle">تحديث بيانات {{ $packageState->status_name }}</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('package-statuses.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
@@ -43,12 +43,12 @@
         </h5>
     </div>
     <div class="nova-card-body">
-        <form action="{{ route('package-statuses.update', $packageStatus) }}" method="POST">
+        <form action="{{ route('package-statuses.update', $packageState) }}" method="POST">
             @csrf
             @method('PUT')
 
             <div class="nova-row g-4">
-                {{-- Status Name --}}
+                {{-- الحالة Name --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
                         <label class="nova-label">
@@ -57,7 +57,7 @@
                         <input type="text"
                                name="status_name"
                                class="nova-input @error('status_name') nova-invalid @enderror"
-                               value="{{ old('status_name', $packageStatus->status_name) }}"
+                               value="{{ old('status_name', $packageState->status_name) }}"
                                placeholder="مثال: نشط، قيد الإرسال، مستلم"
                                required>
                     </div>
@@ -73,7 +73,7 @@
                         <select name="organization_id" class="nova-select @error('organization_id') nova-invalid @enderror" required>
                             <option value="">اختر المنظمة</option>
                             @foreach($organizations as $org)
-                                <option value="{{ $org->id }}" {{ old('organization_id', $packageStatus->organization_id) == $org->id ? 'selected' : '' }}>
+                                <option value="{{ $org->id }}" {{ old('organization_id', $packageState->organization_id) == $org->id ? 'selected' : '' }}>
                                     {{ $org->name }} ({{ $org->code }})
                                 </option>
                             @endforeach
@@ -91,42 +91,42 @@
                     <div class="nova-row g-3">
                         <div class="nova-col nova-col-md-4">
                             <div class="nova-form-check">
-                                <input class="nova-form-check-input" type="checkbox" name="resellable" value="1" id="resellable" {{ old('resellable', $packageStatus->resellable) ? 'checked' : '' }}>
+                                <input class="nova-form-check-input" type="checkbox" name="resellable" value="1" id="resellable" {{ old('resellable', $packageState->resellable) ? 'checked' : '' }}>
                                 <label class="nova-form-check-label fw-bold" for="resellable">قابل لإعادة البيع</label>
                                 <div class="nova-help-text">هل يمكن إعادة بيع هذه الحالة؟</div>
                             </div>
                         </div>
                         <div class="nova-col nova-col-md-4">
                             <div class="nova-form-check">
-                                <input class="nova-form-check-input" type="checkbox" name="expired" value="1" id="expired" {{ old('expired', $packageStatus->expired) ? 'checked' : '' }}>
+                                <input class="nova-form-check-input" type="checkbox" name="expired" value="1" id="expired" {{ old('expired', $packageState->expired) ? 'checked' : '' }}>
                                 <label class="nova-form-check-label fw-bold" for="expired">منتهية الصلاحية</label>
                                 <div class="nova-help-text">وضع علامة على الحالة منتهية الصلاحية</div>
                             </div>
                         </div>
                         <div class="nova-col nova-col-md-4">
                             <div class="nova-form-check">
-                                <input class="nova-form-check-input" type="checkbox" name="default" value="1" id="default" {{ old('default', $packageStatus->default) ? 'checked' : '' }}>
+                                <input class="nova-form-check-input" type="checkbox" name="default" value="1" id="default" {{ old('default', $packageState->default) ? 'checked' : '' }}>
                                 <label class="nova-form-check-label fw-bold" for="default">افتراضي</label>
                                 <div class="nova-help-text">تعيين كحالة افتراضية</div>
                             </div>
                         </div>
                         <div class="nova-col nova-col-md-4">
                             <div class="nova-form-check">
-                                <input class="nova-form-check-input" type="checkbox" name="lpo_required" value="1" id="lpo_required" {{ old('lpo_required', $packageStatus->lpo_required) ? 'checked' : '' }}>
+                                <input class="nova-form-check-input" type="checkbox" name="lpo_required" value="1" id="lpo_required" {{ old('lpo_required', $packageState->lpo_required) ? 'checked' : '' }}>
                                 <label class="nova-form-check-label fw-bold" for="lpo_required">مطلوب LPO</label>
                                 <div class="nova-help-text">إلزامي لهذه الحالة</div>
                             </div>
                         </div>
                         <div class="nova-col nova-col-md-4">
                             <div class="nova-form-check">
-                                <input class="nova-form-check-input" type="checkbox" name="is_related_to_cn_request" value="1" id="is_related_to_cn_request" {{ old('is_related_to_cn_request', $packageStatus->is_related_to_cn_request) ? 'checked' : '' }}>
+                                <input class="nova-form-check-input" type="checkbox" name="is_related_to_cn_request" value="1" id="is_related_to_cn_request" {{ old('is_related_to_cn_request', $packageState->is_related_to_cn_request) ? 'checked' : '' }}>
                                 <label class="nova-form-check-label fw-bold" for="is_related_to_cn_request">مرتبط بـ CN Request</label>
                                 <div class="nova-help-text">مرتبط بطلبات CN</div>
                             </div>
                         </div>
                         <div class="nova-col nova-col-md-4">
                             <div class="nova-form-check">
-                                <input class="nova-form-check-input" type="checkbox" name="is_price_editable" value="1" id="is_price_editable" {{ old('is_price_editable', $packageStatus->is_price_editable) ? 'checked' : '' }}>
+                                <input class="nova-form-check-input" type="checkbox" name="is_price_editable" value="1" id="is_price_editable" {{ old('is_price_editable', $packageState->is_price_editable) ? 'checked' : '' }}>
                                 <label class="nova-form-check-label fw-bold" for="is_price_editable">قابل لتحرير السعر</label>
                                 <div class="nova-help-text">السماح بتغيير الأسعار</div>
                             </div>
@@ -134,7 +134,7 @@
                     </div>
                 </div>
 
-                {{-- Form Actions --}}
+                {{-- Form إجراءات --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('package-statuses.index') }}" class="nova-btn nova-btn-outline">

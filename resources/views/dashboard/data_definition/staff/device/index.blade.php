@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-microchip" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-microchip" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             الأجهزة
         </h2>
         <p class="nova-page-subtitle">إدارة أجهزة المنظمة والماركات والشركات</p>
@@ -43,7 +43,7 @@
 @if(session('import_errors'))
     <div class="nova-alert danger">
         <h6 class="nova-fw-bold" style="margin: 0 0 0.25rem;"><i class="fas fa-exclamation-circle"></i> أخطاء الاستيراد:</h6>
-        <ul style="margin: 0.25rem 0 0; padding-left: 1.25rem;">
+        <ul style="margin: 0.25rem 0 0; padding-inline-start: 1.25rem;">
             @foreach(session('import_errors') as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -113,7 +113,7 @@
     </div>
 </div>
 
-{{-- Main Filter --}}
+{{-- Main فلتر --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('devices.index') }}" class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
@@ -190,7 +190,7 @@
             <tbody>
                 @forelse($devices as $device)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($devices->currentPage() - 1) * $devices->perPage() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($devices->currentصفحة() - 1) * $devices->perصفحة() }}</td>
                     <td>{{ $device->name_en }}</td>
                     <td>{{ $device->name_ar }}</td>
                     <td><code>{{ $device->serial }}</code></td>
@@ -212,7 +212,7 @@
                             <a href="{{ route('devices.edit', $device) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDelete({{ $device->id }}, '{{ addslashes($device->serial) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذف({{ $device->id }}, '{{ addslashes($device->serial) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -249,7 +249,7 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -274,21 +274,21 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const perPageSelect = document.querySelector('select[name="per_page"]');
-    if (perPageSelect) {
-        perPageSelect.addEventListener('change', function() {
+    const perصفحةSelect = document.querySelector('select[name="per_page"]');
+    if (perصفحةSelect) {
+        perصفحةSelect.addEventListener('change', function() {
             document.getElementById('filterForm').submit();
         });
     }
 
-    window.confirmDelete = function(id, name) {
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/devices/' + id;
         document.getElementById('deleteModal').classList.add('show');
     };
 
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

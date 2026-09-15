@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تفاصيل العميل
         </h2>
-        <p class="nova-page-subtitle">عرض كامل لمعلومات {{ $customer->name }}</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}">عرض كامل لمعلومات {{ $customer->name }}</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('customers.edit', $customer) }}" class="nova-btn nova-btn-warning nova-btn-sm">
@@ -136,7 +136,7 @@
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">تأكيد الحذف</h4>
             <p class="nova-delete-modal-text">هل أنت متأكد أنك تريد حذف العميل <strong id="deleteName" class="nova-text-danger"></strong>؟<br>هذا الإجراء لا يمكن التراجع عنه.</p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">إلغاء</button>

@@ -1,16 +1,16 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Edit Item')
+@section('title', 'تعديل Item')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Edit Item
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            تعديل Item
             @if($item->code)
-                <span class="nova-badge info" style="margin-left: 0.5rem;">{{ $item->code }}</span>
+                <span class="nova-badge info" style="margin-inline-start: 0.5rem;">{{ $item->code }}</span>
             @endif
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
@@ -20,15 +20,15 @@
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('items.show', $item) }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-eye"></i> View
+            <i class="fas fa-eye"></i> عرض
         </a>
         <a href="{{ route('items.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> رجوع
         </a>
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <h6 class="nova-fw-bold">
@@ -114,9 +114,9 @@
                 <div class="nova-card-body">
                     <div class="form-grid form-grid-2">
                         <div class="nova-form-group">
-                            <label class="nova-label">Item Type</label>
+                            <label class="nova-label">نوع العنصر</label>
                             <select name="item_type_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($itemTypes as $type)
                                     <option value="{{ $type->id }}"
                                             {{ old('item_type_id', $item->item_type_id) == $type->id ? 'selected' : '' }}>
@@ -126,9 +126,9 @@
                             </select>
                         </div>
                         <div class="nova-form-group">
-                            <label class="nova-label">Category</label>
+                            <label class="nova-label">الفئة</label>
                             <select name="category_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}"
                                             {{ old('category_id', $item->category_id) == $cat->id ? 'selected' : '' }}>
@@ -140,7 +140,7 @@
                         <div class="nova-form-group">
                             <label class="nova-label">Brand</label>
                             <select name="brand_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($brands as $brand)
                                     <option value="{{ $brand->id }}"
                                             {{ old('brand_id', $item->brand_id) == $brand->id ? 'selected' : '' }}>
@@ -152,7 +152,7 @@
                         <div class="nova-form-group">
                             <label class="nova-label">Model</label>
                             <select name="model_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($models as $model)
                                     <option value="{{ $model->id }}"
                                             {{ old('model_id', $item->model_id) == $model->id ? 'selected' : '' }}>
@@ -164,7 +164,7 @@
                         <div class="nova-form-group">
                             <label class="nova-label">Supplier</label>
                             <select name="supplier_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($suppliers as $supplier)
                                     <option value="{{ $supplier->id }}"
                                             {{ old('supplier_id', $item->supplier_id) == $supplier->id ? 'selected' : '' }}>
@@ -207,7 +207,7 @@
                                    value="{{ old('weight_tolerance', $item->weight_tolerance) }}">
                         </div>
                         <div class="nova-form-group">
-                            <label class="nova-label">Low Stock Qty</label>
+                            <label class="nova-label">منخفض Stock Qty</label>
                             <input type="number" step="any" name="low_stock_qty" class="nova-input"
                                    value="{{ old('low_stock_qty', $item->low_stock_qty) }}" min="0">
                         </div>
@@ -219,10 +219,10 @@
         {{-- ===== SIDEBAR COLUMN ===== --}}
         <div class="form-side">
 
-            {{-- ===== Main Image ===== --}}
+            {{-- ===== Main الصورة ===== --}}
             <div class="nova-card nova-mb-4">
                 <div class="nova-card-header">
-                    <h5 class="nova-card-title"><i class="fas fa-image me-2"></i> Main Image</h5>
+                    <h5 class="nova-card-title"><i class="fas fa-image me-2"></i> Main الصورة</h5>
                 </div>
                 <div class="nova-card-body nova-text-center">
                     <div class="image-preview-wrapper">
@@ -234,7 +234,7 @@
                         @else
                             <div id="imagePreview" class="image-preview image-preview-empty">
                                 <i class="fas fa-image"></i>
-                                <span>No image</span>
+                                <span>لا image</span>
                             </div>
                         @endif
                     </div>
@@ -248,26 +248,26 @@
                 </div>
             </div>
 
-            {{-- ===== Status & Flags ===== --}}
+            {{-- ===== الحالة & Flags ===== --}}
             <div class="nova-card nova-mb-4">
                 <div class="nova-card-header">
-                    <h5 class="nova-card-title"><i class="fas fa-flag me-2"></i> Status & Flags</h5>
+                    <h5 class="nova-card-title"><i class="fas fa-flag me-2"></i> الحالة & Flags</h5>
                 </div>
                 <div class="nova-card-body">
                     @php
                         $flags = [
-                            ['name' => 'is_inactive',       'label' => 'Inactive',           'icon' => 'eye-slash'],
-                            ['name' => 'is_new',            'label' => 'New Product',        'icon' => 'star'],
+                            ['name' => 'is_inactive',       'label' => 'غير نشط',           'icon' => 'eye-slash'],
+                            ['name' => 'is_new',            'label' => 'جديد Product',        'icon' => 'star'],
                             ['name' => 'is_price_protected','label' => 'Price Protected',    'icon' => 'lock'],
                             ['name' => 'is_power_sku',      'label' => 'Power SKU',          'icon' => 'bolt'],
-                            ['name' => 'is_default_batch',  'label' => 'Default Batch',      'icon' => 'layer-group'],
+                            ['name' => 'is_default_batch',  'label' => 'افتراضي Batch',      'icon' => 'layer-group'],
                             ['name' => 'is_temp_credit',    'label' => 'Temp Credit',        'icon' => 'credit-card'],
                             ['name' => 'is_batch_priced',   'label' => 'Batch Priced',       'icon' => 'tags'],
                             ['name' => 'is_initiative',     'label' => 'Initiative',         'icon' => 'rocket'],
-                            ['name' => 'force_default_pack','label' => 'Force Default Pack', 'icon' => 'box'],
+                            ['name' => 'force_default_pack','label' => 'Force افتراضي Pack', 'icon' => 'box'],
                             ['name' => 'has_serial_number', 'label' => 'Has Serial Number',  'icon' => 'barcode'],
-                            ['name' => 'required_by_liter', 'label' => 'Required by Liter',  'icon' => 'flask'],
-                            ['name' => 'required_by_weight','label' => 'Required by Weight', 'icon' => 'weight'],
+                            ['name' => 'required_by_liter', 'label' => 'مطلوب by Liter',  'icon' => 'flask'],
+                            ['name' => 'required_by_weight','label' => 'مطلوب by Weight', 'icon' => 'weight'],
                         ];
                     @endphp
 
@@ -291,7 +291,7 @@
                 </div>
             </div>
 
-            {{-- ===== Submit ===== --}}
+            {{-- ===== إرسال ===== --}}
             <div class="nova-card sticky-actions">
                 <div class="nova-card-body">
                     <div class="nova-flex nova-flex-column nova-gap-2">
@@ -299,7 +299,7 @@
                             <i class="fas fa-save"></i> Update Item
                         </button>
                         <a href="{{ route('items.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-times"></i> Cancel
+                            <i class="fas fa-times"></i> إلغاء
                         </a>
                     </div>
                 </div>
@@ -346,7 +346,7 @@
         grid-column: 1 / -1;
     }
 
-    /* ===== Image Preview ===== -- */
+    /* ===== الصورة Preview ===== -- */
     .image-preview-wrapper {
         display: flex;
         justify-content: center;
@@ -399,7 +399,7 @@
         cursor: pointer;
     }
 
-    /* ===== Sticky Actions ===== -- */
+    /* ===== Sticky إجراءات ===== -- */
     .sticky-actions {
         position: sticky;
         bottom: 1rem;
@@ -443,7 +443,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ===== Image Preview =====
+    // ===== الصورة Preview =====
     const imageInput = document.getElementById('imageInput');
     const imagePreview = document.getElementById('imagePreview');
 
@@ -475,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== Submit Button Loading State =====
+    // ===== إرسال Button Loading State =====
     const form = document.getElementById('itemForm');
     const submitBtn = document.getElementById('submitBtn');
 
@@ -486,9 +486,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== Unsaved Changes Warning =====
+    // ===== Unsaved Changes تحذير =====
     let formChanged = false;
-    const formInputs = form ? form.querySelectorAll('input:not([type="hidden"]), select, textarea') : [];
+    const formInputs = form ? form.querySelectorالكل('input:not([type="hidden"]), select, textarea') : [];
 
     formInputs.forEach(input => {
         input.addEventListener('change', () => { formChanged = true; });
@@ -501,14 +501,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener('beforeunload', function(e) {
         if (formChanged) {
-            e.preventDefault();
+            e.preventافتراضي();
             e.returnValue = '';
         }
     });
 
     // ===== Auto-dismiss alerts =====
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

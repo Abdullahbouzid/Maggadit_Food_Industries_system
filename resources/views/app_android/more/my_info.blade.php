@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('title', 'معلوماتي')
+@section('{{ __('messages.app.page_') }}', 'معلوماتي')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['title' => 'معلوماتي'])
+    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'معلوماتي'])
     
-    <div class="p-4" dir="rtl">
+    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
         <!-- زر الرجوع -->
         <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100 mb-5">
             <i class="fas fa-arrow-right"></i> <span>رجوع</span>
@@ -60,7 +60,7 @@
 
         <!-- زر تعديل البيانات -->
         <button id="edit-info-btn" class="mt-6 w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition transform hover:scale-[1.02] active:scale-95">
-            <i class="fas fa-edit ml-2"></i> تعديل البيانات الشخصية
+            <i class="fas fa-edit end-2"></i> تعديل البيانات الشخصية
         </button>
         <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3">
             <br><br>
@@ -69,7 +69,7 @@
 
     <!-- مودال تعديل البيانات -->
     <div id="edit-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 {{ $errors->any() ? 'opacity-100' : 'opacity-0 pointer-events-none' }}">
-        <div class="bg-white rounded-2xl w-11/12 max-w-md p-5 transform {{ $errors->any() ? 'scale-100' : 'scale-95' }} transition-all duration-300 shadow-2xl max-h-screen overflow-y-auto" dir="rtl">
+        <div class="bg-white rounded-2xl w-11/12 max-w-md p-5 transform {{ $errors->any() ? 'scale-100' : 'scale-95' }} transition-all duration-300 shadow-2xl max-h-screen overflow-y-auto" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
             <div class="text-center mb-4">
                 <div class="w-14 h-14 mx-auto bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-2xl">
                     <i class="fas fa-user-edit"></i>
@@ -113,13 +113,13 @@
                 </div>
                 <hr class="my-4 border-gray-200">
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <p class="text-sm font-bold text-gray-800 mb-3"><i class="fas fa-lock text-purple-600 ml-1"></i> تغيير كلمة المرور <span class="text-xs text-gray-400 font-normal">(اختياري)</span></p>
+                    <p class="text-sm font-bold text-gray-800 mb-3"><i class="fas fa-lock text-purple-600 end-1"></i> تغيير كلمة المرور <span class="text-xs text-gray-400 font-normal">(اختياري)</span></p>
                     
                   
                     <div class="mb-3">
                         <label class="block text-xs font-semibold text-gray-700 mb-1">كلمة المرور الجديدة</label>
                         <div class="relative">
-                            <input type="password" id="new_password" name="password" autocomplete="new-password" class="w-full p-3 pl-10 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
+                            <input type="password" id="new_password" name="password" autocomplete="new-password" class="w-full p-3 start-10 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
                             <button type="button" onclick="togglePassword('new_password')" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 focus:outline-none">
                                 <i class="fas fa-eye" id="icon-new_password"></i>
                             </button>
@@ -128,7 +128,7 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">تأكيد كلمة المرور</label>
                         <div class="relative">
-                            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" class="w-full p-3 pl-10 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
+                            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" class="w-full p-3 start-10 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
                             <button type="button" onclick="togglePassword('password_confirmation')" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 focus:outline-none">
                                 <i class="fas fa-eye" id="icon-password_confirmation"></i>
                             </button>
@@ -162,7 +162,7 @@
             toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 transform -translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto`;
             toast.innerHTML = `
                 <i class="fas ${iconClass} text-lg"></i>
-                <span class="text-sm font-medium flex-1">${message}</span>
+                <span class="text-sm font-medium flex-1">{{ __('messages.app.page__1') }}</span>
                 <button onclick="this.parentElement.remove()" class="text-white/80 hover:text-white focus:outline-none">
                     <i class="fas fa-times text-sm"></i>
                 </button>
@@ -259,7 +259,7 @@
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحفظ...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin end-2"></i> جاري الحفظ...';
 
                 try {
                     const data = {

@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تفاصيل نبذة المنظمة
         </h2>
-        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">عرض كامل لمحتوى نبذة المنظمة</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">عرض كامل لمحتوى نبذة المنظمة</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('organization-about.edit', $organizationAbout) }}" class="nova-btn nova-btn-warning nova-btn-sm">
@@ -47,7 +47,7 @@
                     <label class="nova-label nova-text-uppercase small nova-fw-semibold">
                         <i class="fas fa-heading me-1"></i> العنوان الرئيسي
                     </label>
-                    <p class="nova-fw-semibold fs-5 mb-0">{{ $organizationAbout->title ?? '—' }}</p>
+                    <p class="nova-fw-semibold fs-5 mb-0">{{ $organizationAbout->{{ __('messages.app.page_') }} ?? '—' }}</p>
                 </div>
             </div>
 
@@ -231,34 +231,34 @@
     <div class="nova-card-body">
         <div class="nova-flex nova-gap-2">
             <a href="{{ route('organization-about.index') }}" class="nova-btn nova-btn-outline">
-                <i class="fas fa-arrow-left"></i> Back to List
+                <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__5') }}
             </a>
             <a href="{{ route('organization-about.edit', $organizationAbout) }}" class="nova-btn nova-btn-warning">
                 <i class="fas fa-edit"></i> تعديل
             </a>
             <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
-                    onclick="confirmDelete({{ $organizationAbout->id }}, '{{ addslashes($organizationAbout->title ?? 'About Entry') }}')">
+                    onclick="confirm{{ __('messages.app.page__4') }}({{ $organizationAbout->id }}, '{{ addslashes($organizationAbout->{{ __('messages.app.page_') }} ?? 'About Entry') }}')">
                 <i class="fas fa-trash-alt"></i> حذف
             </button>
         </div>
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- {{ __('messages.app.page__4') }} Confirmation Modal (Nova) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">{{ __('messages.app.page__1') }}</h4>
             <p class="nova-delete-modal-text">Are you sure you want to delete <strong id="deleteName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">{{ __('messages.app.page__3') }}</button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.app.page__4') }}</button>
                 </form>
             </div>
         </div>
@@ -269,7 +269,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
+    window.confirm{{ __('messages.app.page__4') }} = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/organization-about/' + id;
         document.getElementById('deleteModal').classList.add('show');

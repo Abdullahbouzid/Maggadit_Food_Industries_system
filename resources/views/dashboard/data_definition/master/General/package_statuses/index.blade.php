@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-layers" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-layers" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             حالات الطرود
         </h2>
         <p class="nova-page-subtitle">إدارة تعريفات حالة الطرود لكل منظمة</p>
@@ -47,7 +47,7 @@
     <div class="nova-alert warning">
         <i class="fas fa-exclamation-triangle"></i>
         <strong>أكمل الاستيراد مع أخطاء في الصفوف التالية:</strong>
-        <ul style="margin: 0.5rem 0 0; padding-left: 1.25rem;">
+        <ul style="margin: 0.5rem 0 0; padding-inline-start: 1.25rem;">
             @foreach(session('import_errors') as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -62,28 +62,28 @@
             <i class="fas fa-layer-group"></i>
         </div>
         <p class="nova-stat-label">إجمالي الحالات</p>
-        <p class="nova-stat-value">{{ $totalStatuses ?? $packageStatuses->total() }}</p>
+        <p class="nova-stat-value">{{ $totalStates ?? $packageStates->total() }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon success">
             <i class="fas fa-shield-check"></i>
         </div>
         <p class="nova-stat-label">قابلة لإعادة البيع</p>
-        <p class="nova-stat-value">{{ $totalStatuses ? $packageStatuses->where('resellable', true)->count() : 0 }}</p>
+        <p class="nova-stat-value">{{ $totalStates ? $packageStates->where('resellable', true)->count() : 0 }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon danger">
             <i class="fas fa-clock"></i>
         </div>
         <p class="nova-stat-label">منتهية الصلاحية</p>
-        <p class="nova-stat-value">{{ $totalStatuses ? $packageStatuses->where('expired', true)->count() : 0 }}</p>
+        <p class="nova-stat-value">{{ $totalStates ? $packageStates->where('expired', true)->count() : 0 }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon accent">
             <i class="fas fa-star"></i>
         </div>
         <p class="nova-stat-label">الحالة الافتراضية</p>
-        <p class="nova-stat-value">{{ $totalStatuses ? $packageStatuses->where('default', true)->count() : 0 }}</p>
+        <p class="nova-stat-value">{{ $totalStates ? $packageStates->where('default', true)->count() : 0 }}</p>
     </div>
 </div>
 
@@ -117,7 +117,7 @@
     </div>
 </div>
 
-{{-- Export Filter Section --}}
+{{-- تصدير فلتر Section --}}
 <div class="nova-card mb-4">
     <div class="nova-card-header">
         <h2 class="nova-card-title" style="margin: 0;">
@@ -166,7 +166,7 @@
     </div>
 </div>
 
-{{-- Main Filter (for table) --}}
+{{-- Main فلتر (for table) --}}
 <div class="nova-card mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('package-statuses.index') }}" class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
@@ -235,9 +235,9 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($packageStatuses as $status)
+                @forelse($packageStates as $status)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($packageStatuses->currentPage() - 1) * $packageStatuses->perPage() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($packageStates->currentصفحة() - 1) * $packageStates->perصفحة() }}</td>
                     <td>{{ $status->status_name }}</td>
                     <td>{{ $status->organization->name ?? '—' }}</td>
                     <td>@if($status->resellable) <span class="nova-badge success">نعم</span> @else <span class="nova-badge secondary">لا</span> @endif</td>
@@ -254,7 +254,7 @@
                             <a href="{{ route('package-statuses.edit', $status) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDelete({{ $status->id }}, '{{ addslashes($status->status_name) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذف({{ $status->id }}, '{{ addslashes($status->status_name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -282,16 +282,16 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
-                عرض {{ $packageStatuses->firstItem() ?? 0 }} إلى {{ $packageStatuses->lastItem() ?? 0 }} من أصل {{ $packageStatuses->total() }} سجلاً
+                عرض {{ $packageStates->firstItem() ?? 0 }} إلى {{ $packageStates->lastItem() ?? 0 }} من أصل {{ $packageStates->total() }} سجلاً
             </div>
             <div class="nova-pagination">
-                {{ $packageStatuses->appends(request()->query())->links() }}
+                {{ $packageStates->appends(request()->query())->links() }}
             </div>
         </div>
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -316,21 +316,21 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const perPageSelect = document.querySelector('select[name="per_page"]');
-    if (perPageSelect) {
-        perPageSelect.addEventListener('change', function() {
+    const perصفحةSelect = document.querySelector('select[name="per_page"]');
+    if (perصفحةSelect) {
+        perصفحةSelect.addEventListener('change', function() {
             document.getElementById('filterForm').submit();
         });
     }
 
-    window.confirmDelete = function(id, name) {
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/package-statuses/' + id;
         document.getElementById('deleteModal').classList.add('show');
     };
 
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('title', 'تغيير المنظمة')
+@section('{{ __('messages.app.page_') }}', 'تغيير المنظمة')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['title' => 'تغيير المنظمة'])
+    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'تغيير المنظمة'])
 
-    <div class="p-4" dir="rtl">
+    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
         <div class="mb-4">
             <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100">
                 <i class="fas fa-arrow-right"></i>
@@ -65,7 +65,7 @@
                             <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-3"></i>
                             <p class="text-gray-600 mb-3">الرجاء تسجيل الدخول أولاً</p>
                             <a href="/mobile/login" class="bg-purple-600 text-white px-6 py-2 rounded-full inline-block">
-                                <i class="fas fa-sign-in-alt ml-2"></i> تسجيل الدخول
+                                <i class="fas fa-sign-in-alt end-2"></i> تسجيل الدخول
                             </a>
                         </div>
                     `;
@@ -90,9 +90,9 @@
                 document.getElementById('organizations-list').innerHTML = `
                     <div class="text-center py-8">
                         <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-3"></i>
-                        <p class="text-gray-500">${error.message}</p>
+                        <p class="text-gray-500">{{ __('messages.app.page__1') }}</p>
                         <button onclick="loadOrganizations()" class="mt-3 bg-purple-600 text-white px-4 py-2 rounded-full text-sm">
-                            <i class="fas fa-sync-alt ml-2"></i> إعادة المحاولة
+                            <i class="fas fa-sync-alt end-2"></i> إعادة المحاولة
                         </button>
                     </div>
                 `;
@@ -119,12 +119,12 @@
                 html += `
                     <div class="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition mb-3">
                         <div>
-                            <p class="font-semibold text-gray-800">${org.name}</p>
-                            <p class="text-xs text-gray-400">${org.code || ''} ${org.organization_type ? ' - ' + org.organization_type : ''}</p>
+                            <p class="font-semibold text-gray-800">{{ __('messages.app.page__2') }}</p>
+                            <p class="text-xs text-gray-400">{{ __('messages.app.page__3') }}</p>
                         </div>
                         ${isActive ? 
                             `<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full flex items-center gap-1"><i class="fas fa-check-circle"></i> نشط</span>` :
-                            `<button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition select-org flex items-center gap-1" data-id="${org.id}" data-name="${org.name}"><i class="fas fa-exchange-alt"></i> تبديل</button>`
+                            `<button class="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition select-org flex items-center gap-1" data-id="${org.id}" data-name="{{ __('messages.app.page__2') }}"><i class="fas fa-exchange-alt"></i> تبديل</button>`
                         }
                     </div>
                 `;

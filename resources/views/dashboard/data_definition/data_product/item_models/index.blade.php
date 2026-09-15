@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-microchip" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-microchip" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             نماذج العناصر
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة نماذج العناصر المستخدمة في المنتجات</p>
@@ -30,7 +30,7 @@
 @if(session('import_errors'))
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-circle"></i>
-        <ul style="margin: 0; padding-left: 1.25rem;">
+        <ul style="margin: 0; padding-inline-start: 1.25rem;">
             @foreach(session('import_errors') as $err)
                 <li>{{ $err }}</li>
             @endforeach
@@ -88,7 +88,7 @@
     </div>
 </div>
 
-{{-- Export Filter --}}
+{{-- تصدير فلتر --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
         <h2 class="nova-card-title">
@@ -118,17 +118,17 @@
     </div>
 </div>
 
-{{-- Main Filter --}}
+{{-- Main فلتر --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('item-models.index') }}" class="nova-flex nova-flex-wrap nova-gap-3" style="align-items: end;">
             <div class="nova-form-group" style="flex: 1 1 17rem; margin-bottom: 0;">
                 <label class="nova-label">بحث</label>
                 <div class="nova-input-group" style="display: flex; gap: 0;">
-                    <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-right: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
+                    <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-end: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
                         <i class="fas fa-search"></i>
                     </span>
-                    <input type="text" name="search" class="nova-input" placeholder="البحث بالكود أو الاسم..." value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-left: none;">
+                    <input type="text" name="search" class="nova-input" placeholder="البحث بالكود أو الاسم..." value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-start: none;">
                 </div>
             </div>
             <div class="nova-form-group" style="flex: 1 1 11rem; margin-bottom: 0;">
@@ -188,7 +188,7 @@
             <tbody>
                 @forelse($models as $model)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($models->currentPage() - 1) * $models->perPage() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($models->currentصفحة() - 1) * $models->perصفحة() }}</td>
                     <td><code>{{ $model->code }}</code></td>
                     <td>{{ $model->name_en }}</td>
                     <td>{{ $model->name_ar }}</td>
@@ -208,7 +208,7 @@
                             <a href="{{ route('item-models.edit', $model) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDelete({{ $model->id }}, '{{ addslashes($model->name_en) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذف({{ $model->id }}, '{{ addslashes($model->name_en) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -245,7 +245,7 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -270,7 +270,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/item-models/' + id;
         document.getElementById('deleteModal').classList.add('show');

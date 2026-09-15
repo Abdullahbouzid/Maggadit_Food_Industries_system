@@ -7,8 +7,8 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Add New Item
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            إضافة جديد Item
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
             Create a product with multiple packs and images
@@ -16,12 +16,12 @@
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('items.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> رجوع
         </a>
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <h6 class="nova-fw-bold">
@@ -65,14 +65,14 @@
                                    value="{{ old('sequence') }}">
                         </div>
                         <div class="nova-form-group">
-                            <label class="nova-label">Name (English) <span class="nova-text-danger">*</span></label>
+                            <label class="nova-label">الاسم بالإنجليزي <span class="nova-text-danger">*</span></label>
                             <input type="text" name="name_en"
                                    class="nova-input @error('name_en') nova-invalid @enderror"
                                    value="{{ old('name_en') }}" required>
                             @error('name_en') <div class="nova-form-error">{{ $message }}</div> @enderror
                         </div>
                         <div class="nova-form-group">
-                            <label class="nova-label">Name (Arabic) <span class="nova-text-danger">*</span></label>
+                            <label class="nova-label">الاسم بالعربي <span class="nova-text-danger">*</span></label>
                             <input type="text" name="name_ar"
                                    class="nova-input @error('name_ar') nova-invalid @enderror"
                                    value="{{ old('name_ar') }}" required dir="rtl">
@@ -97,9 +97,9 @@
                 <div class="nova-card-body">
                     <div class="form-grid form-grid-2">
                         <div class="nova-form-group">
-                            <label class="nova-label">Item Type</label>
+                            <label class="nova-label">نوع العنصر</label>
                             <select name="item_type_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($itemTypes as $type)
                                     <option value="{{ $type->id }}"
                                             {{ old('item_type_id') == $type->id ? 'selected' : '' }}>
@@ -109,9 +109,9 @@
                             </select>
                         </div>
                         <div class="nova-form-group">
-                            <label class="nova-label">Category</label>
+                            <label class="nova-label">الفئة</label>
                             <select name="category_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}"
                                             {{ old('category_id') == $cat->id ? 'selected' : '' }}>
@@ -123,7 +123,7 @@
                         <div class="nova-form-group">
                             <label class="nova-label">Brand</label>
                             <select name="brand_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($brands as $brand)
                                     <option value="{{ $brand->id }}"
                                             {{ old('brand_id') == $brand->id ? 'selected' : '' }}>
@@ -135,7 +135,7 @@
                         <div class="nova-form-group">
                             <label class="nova-label">Model</label>
                             <select name="model_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($models as $model)
                                     <option value="{{ $model->id }}"
                                             {{ old('model_id') == $model->id ? 'selected' : '' }}>
@@ -147,7 +147,7 @@
                         <div class="nova-form-group">
                             <label class="nova-label">Supplier</label>
                             <select name="supplier_id" class="nova-select">
-                                <option value="">-- None --</option>
+                                <option value="">-- لا شيء --</option>
                                 @foreach($suppliers as $supplier)
                                     <option value="{{ $supplier->id }}"
                                             {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>
@@ -190,7 +190,7 @@
                                    value="{{ old('weight_tolerance') }}">
                         </div>
                         <div class="nova-form-group">
-                            <label class="nova-label">Low Stock Qty</label>
+                            <label class="nova-label">منخفض Stock Qty</label>
                             <input type="number" step="any" name="low_stock_qty" class="nova-input"
                                    value="{{ old('low_stock_qty') }}" min="0">
                         </div>
@@ -207,7 +207,7 @@
                         </h5>
                         <a href="{{ route('pack-definitions.create') }}"
                            class="nova-btn nova-btn-primary nova-btn-sm" target="_blank">
-                            <i class="fas fa-plus-circle"></i> New Pack Definition
+                            <i class="fas fa-plus-circle"></i> جديد Pack Definition
                         </a>
                     </div>
                 </div>
@@ -223,7 +223,7 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 40px;">
-                                            <input type="checkbox" id="selectAllPacks"
+                                            <input type="checkbox" id="selectالكلPacks"
                                                    class="nova-form-check-input">
                                         </th>
                                         <th>Name</th>
@@ -288,7 +288,7 @@
                     @else
                         <div class="nova-alert warning">
                             <i class="fas fa-triangle-exclamation"></i>
-                            No pack definitions available.
+                            لا pack definitions available.
                             <a href="{{ route('pack-definitions.create') }}"
                                class="nova-alert-link" target="_blank">
                                 Create a pack definition first
@@ -298,20 +298,20 @@
                 </div>
             </div>
 
-            {{-- ===== Additional Images ===== --}}
+            {{-- ===== Additional الصورةs ===== --}}
             <div class="nova-card nova-mb-4">
                 <div class="nova-card-header">
                     <div class="nova-flex nova-items-center nova-justify-between">
                         <h5 class="nova-card-title">
-                            <i class="fas fa-images me-2"></i> Additional Images
+                            <i class="fas fa-images me-2"></i> Additional الصورةs
                         </h5>
-                        <button type="button" class="nova-btn nova-btn-primary nova-btn-sm" id="addImageBtn">
-                            <i class="fas fa-plus-circle"></i> Add Image
+                        <button type="button" class="nova-btn nova-btn-primary nova-btn-sm" id="addالصورةBtn">
+                            <i class="fas fa-plus-circle"></i> Add الصورة
                         </button>
                     </div>
                 </div>
                 <div class="nova-card-body">
-                    <div id="newImagesContainer"></div>
+                    <div id="newالصورةsContainer"></div>
                     <p class="nova-text-muted nova-fs-sm nova-mt-2">
                         <i class="fas fa-info-circle"></i>
                         You can upload new images (JPEG, PNG, max 2MB each). Click the button to add more image fields.
@@ -323,16 +323,16 @@
         {{-- ===== SIDEBAR COLUMN ===== --}}
         <div class="form-side">
 
-            {{-- ===== Main Image ===== --}}
+            {{-- ===== Main الصورة ===== --}}
             <div class="nova-card nova-mb-4">
                 <div class="nova-card-header">
-                    <h5 class="nova-card-title"><i class="fas fa-image me-2"></i> Main Image</h5>
+                    <h5 class="nova-card-title"><i class="fas fa-image me-2"></i> Main الصورة</h5>
                 </div>
                 <div class="nova-card-body nova-text-center">
                     <div class="image-preview-wrapper">
                         <div id="imagePreview" class="image-preview image-preview-empty">
                             <i class="fas fa-image"></i>
-                            <span>No image selected</span>
+                            <span>لا image selected</span>
                         </div>
                     </div>
                     <input type="file" name="image" id="imageInput"
@@ -344,26 +344,26 @@
                 </div>
             </div>
 
-            {{-- ===== Status & Flags ===== --}}
+            {{-- ===== الحالة & Flags ===== --}}
             <div class="nova-card nova-mb-4">
                 <div class="nova-card-header">
-                    <h5 class="nova-card-title"><i class="fas fa-flag me-2"></i> Status & Flags</h5>
+                    <h5 class="nova-card-title"><i class="fas fa-flag me-2"></i> الحالة & Flags</h5>
                 </div>
                 <div class="nova-card-body">
                     @php
                         $flags = [
-                            ['name' => 'is_inactive',       'label' => 'Inactive',           'icon' => 'eye-slash'],
-                            ['name' => 'is_new',            'label' => 'New Product',        'icon' => 'star'],
+                            ['name' => 'is_inactive',       'label' => 'غير نشط',           'icon' => 'eye-slash'],
+                            ['name' => 'is_new',            'label' => 'جديد Product',        'icon' => 'star'],
                             ['name' => 'is_price_protected','label' => 'Price Protected',    'icon' => 'lock'],
                             ['name' => 'is_power_sku',      'label' => 'Power SKU',          'icon' => 'bolt'],
-                            ['name' => 'is_default_batch',  'label' => 'Default Batch',      'icon' => 'layer-group'],
+                            ['name' => 'is_default_batch',  'label' => 'افتراضي Batch',      'icon' => 'layer-group'],
                             ['name' => 'is_temp_credit',    'label' => 'Temp Credit',        'icon' => 'credit-card'],
                             ['name' => 'is_batch_priced',   'label' => 'Batch Priced',       'icon' => 'tags'],
                             ['name' => 'is_initiative',     'label' => 'Initiative',         'icon' => 'rocket'],
-                            ['name' => 'force_default_pack','label' => 'Force Default Pack', 'icon' => 'box'],
+                            ['name' => 'force_default_pack','label' => 'Force افتراضي Pack', 'icon' => 'box'],
                             ['name' => 'has_serial_number', 'label' => 'Has Serial Number',  'icon' => 'barcode'],
-                            ['name' => 'required_by_liter', 'label' => 'Required by Liter',  'icon' => 'flask'],
-                            ['name' => 'required_by_weight','label' => 'Required by Weight', 'icon' => 'weight'],
+                            ['name' => 'required_by_liter', 'label' => 'مطلوب by Liter',  'icon' => 'flask'],
+                            ['name' => 'required_by_weight','label' => 'مطلوب by Weight', 'icon' => 'weight'],
                         ];
                     @endphp
 
@@ -387,7 +387,7 @@
                 </div>
             </div>
 
-            {{-- ===== Submit ===== --}}
+            {{-- ===== إرسال ===== --}}
             <div class="nova-card sticky-actions">
                 <div class="nova-card-body">
                     <div class="nova-flex nova-flex-column nova-gap-2">
@@ -395,7 +395,7 @@
                             <i class="fas fa-save"></i> Create Item
                         </button>
                         <a href="{{ route('items.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-times"></i> Cancel
+                            <i class="fas fa-times"></i> إلغاء
                         </a>
                     </div>
                 </div>
@@ -465,7 +465,7 @@
         background: rgba(28, 200, 138, 0.08);
     }
 
-    /* ===== Image Preview ===== */
+    /* ===== الصورة Preview ===== */
     .image-preview-wrapper {
         display: flex;
         justify-content: center;
@@ -518,7 +518,7 @@
         cursor: pointer;
     }
 
-    /* ===== Sticky Actions ===== */
+    /* ===== Sticky إجراءات ===== */
     .sticky-actions {
         position: sticky;
         bottom: 1rem;
@@ -530,7 +530,7 @@
         border-color: #e74a3b;
     }
 
-    /* ===== New Image Item ===== */
+    /* ===== جديد الصورة Item ===== */
     .new-image-item {
         display: flex;
         gap: 0.5rem;
@@ -579,8 +579,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const selectedCountEl = document.getElementById('selectedCount');
     const selectedListEl = document.getElementById('selectedList');
-    const selectAllCb = document.getElementById('selectAllPacks');
-    const packCheckboxes = document.querySelectorAll('.pack-definition-checkbox');
+    const selectالكلCb = document.getElementById('selectالكلPacks');
+    const packCheckboxes = document.querySelectorالكل('.pack-definition-checkbox');
 
     function updateSelectedPacks() {
         if (selectedCountEl) selectedCountEl.textContent = selectedPackIds.size;
@@ -623,8 +623,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    if (selectAllCb) {
-        selectAllCb.addEventListener('change', function() {
+    if (selectالكلCb) {
+        selectالكلCb.addEventListener('change', function() {
             packCheckboxes.forEach(cb => {
                 cb.checked = this.checked;
                 const packDefId = parseInt(cb.value);
@@ -640,7 +640,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Click on row to toggle checkbox
-    document.querySelectorAll('.pack-definition-row').forEach(row => {
+    document.querySelectorالكل('.pack-definition-row').forEach(row => {
         row.addEventListener('click', function(e) {
             if (e.target.tagName === 'INPUT' || e.target.closest('a')) return;
             const cb = this.querySelector('.pack-definition-checkbox');
@@ -655,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateSelectedPacks();
     syncRowState();
 
-    // ===== Image Preview =====
+    // ===== الصورة Preview =====
     const imageInput = document.getElementById('imageInput');
     const imagePreview = document.getElementById('imagePreview');
 
@@ -685,11 +685,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== Additional Images =====
-    const newImagesContainer = document.getElementById('newImagesContainer');
-    const addImageBtn = document.getElementById('addImageBtn');
+    // ===== Additional الصورةs =====
+    const newالصورةsContainer = document.getElementById('newالصورةsContainer');
+    const addالصورةBtn = document.getElementById('addالصورةBtn');
 
-    function createImageInput() {
+    function createالصورةInput() {
         const div = document.createElement('div');
         div.className = 'nova-form-group nova-mb-2 new-image-item';
         div.innerHTML = `
@@ -704,18 +704,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return div;
     }
 
-    if (addImageBtn) {
-        addImageBtn.addEventListener('click', function() {
-            newImagesContainer.appendChild(createImageInput());
+    if (addالصورةBtn) {
+        addالصورةBtn.addEventListener('click', function() {
+            newالصورةsContainer.appendChild(createالصورةInput());
         });
     }
 
     // Add first image input by default
-    if (newImagesContainer && newImagesContainer.children.length === 0) {
-        newImagesContainer.appendChild(createImageInput());
+    if (newالصورةsContainer && newالصورةsContainer.children.length === 0) {
+        newالصورةsContainer.appendChild(createالصورةInput());
     }
 
-    // ===== Submit Button Loading State =====
+    // ===== إرسال Button Loading State =====
     const form = document.getElementById('itemForm');
     const submitBtn = document.getElementById('submitBtn');
 
@@ -726,9 +726,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== Unsaved Changes Warning =====
+    // ===== Unsaved Changes تحذير =====
     let formChanged = false;
-    const formInputs = form ? form.querySelectorAll('input:not([type="hidden"]), select, textarea') : [];
+    const formInputs = form ? form.querySelectorالكل('input:not([type="hidden"]), select, textarea') : [];
 
     formInputs.forEach(input => {
         input.addEventListener('change', () => { formChanged = true; });
@@ -741,14 +741,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener('beforeunload', function(e) {
         if (formChanged) {
-            e.preventDefault();
+            e.preventافتراضي();
             e.returnValue = '';
         }
     });
 
     // ===== Auto-dismiss alerts =====
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

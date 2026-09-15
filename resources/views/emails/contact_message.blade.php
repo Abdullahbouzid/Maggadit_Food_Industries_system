@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}" lang="ar">
 <head>
     <meta charset="UTF-8">
     <title>رسالة تواصل جديدة</title>
@@ -35,7 +35,7 @@
             </tr>
         </table>
 
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border-right: 4px solid #2563eb;">
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border-end: 4px solid #2563eb;">
             <h4 style="margin-top: 0; color: #333;">الرسالة:</h4>
             <p style="white-space: pre-wrap; line-height: 1.6;">{{ $contactMessage->message }}</p>
         </div>

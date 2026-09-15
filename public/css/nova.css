@@ -2395,6 +2395,7 @@ button {
     padding: 0 1.5rem;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 1rem;
     transition: background-color 0.3s, border-color 0.3s;
 }
@@ -2410,7 +2411,7 @@ button {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-left: auto;
+    /* margin-left: auto; */
 }
 
 .nova-divider {
@@ -3374,4 +3375,109 @@ kbd {
     .nova-col-md-4 {
         width: 50%;
     }
+}
+
+/* ============================================
+   RTL/LTR Auto-Flip Rules
+   Applied when dir="rtl" is set on <html>
+   ============================================ */
+[dir="rtl"] [dir="ltr"],
+[dir="ltr"] [dir="rtl"] {
+    direction: ltr;
+}
+
+/* Flip flex direction for row */
+[dir="rtl"] .flex-row {
+    flex-direction: row-reverse;
+}
+
+/* Flip space-x for RTL */
+[dir="rtl"] .space-x-reverse {
+    --tw-space-x-reverse: 1;
+}
+
+/* Auto-flip for common patterns */
+[dir="rtl"] .mr-auto {
+    margin-left: auto;
+    margin-right: 0;
+}
+
+[dir="rtl"] .ml-auto {
+    margin-right: auto;
+    margin-left: 0;
+}
+
+/* Text alignment auto-flip */
+[dir="rtl"] .text-start {
+    text-align: right;
+}
+
+[dir="rtl"] .text-end {
+    text-align: left;
+}
+
+[dir="rtl"] [class*="text-left"] {
+    text-align: right;
+}
+
+[dir="rtl"] [class*="text-right"] {
+    text-align: left;
+}
+
+/* Float auto-flip */
+[dir="rtl"] .float-left {
+    float: right;
+}
+
+[dir="rtl"] .float-right {
+    float: left;
+}
+
+/* Clear fixes */
+[dir="rtl"] .clear-left {
+    clear: right;
+}
+
+[dir="rtl"] .clear-right {
+    clear: left;
+}
+
+/* Margin auto flip */
+[dir="rtl"] .ml-0 {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+[dir="rtl"] .mr-0 {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+/* Border end/start consistency */
+[dir="rtl"] .border-start {
+    border-left-width: medium;
+    border-right-width: 0;
+}
+
+[dir="rtl"] .border-end {
+    border-right-width: medium;
+    border-left-width: 0;
+}
+
+
+/* Additional RTL auto-flip for inline styles and positioning */
+[dir="rtl"] [style*="margin-inline-end"] {
+    direction: ltr;
+    /* Keep inline value, just flip the visual */
+}
+
+/* Inline direction flip */
+[dir="rtl"] [style*="margin-inline-start: auto"] {
+    margin-inline-end: auto;
+    margin-inline-start: 0;
+}
+
+[dir="rtl"] [style*="margin-inline-end: auto"] {
+    margin-inline-start: auto;
+    margin-inline-end: 0;
 }

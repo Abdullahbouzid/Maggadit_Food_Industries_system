@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Create Invoice')
+@section('title', '{{ __('messages.app.page__1') }}')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-file-invoice" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Create Invoice
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-file-invoice" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            {{ __('messages.app.page__1') }}
         </h2>
-        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Create a new invoice and assign warehouse stock</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__3') }}</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('invoices.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__4') }}
         </a>
     </div>
 </div>
@@ -25,9 +25,9 @@
             <div class="nova-row nova-gap-4 nova-mb-4">
                 <div class="nova-col">
                     <div class="nova-form-group">
-                        <label class="nova-label">Customer</label>
+                        <label class="nova-label">{{ __('messages.app.page__5') }}</label>
                         <select name="customer_id" class="nova-select" required>
-                            <option value="">Select Customer</option>
+                            <option value="">Select {{ __('messages.app.page__5') }}</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}">{{ $customer->name }}</option>
                             @endforeach
@@ -36,7 +36,7 @@
                 </div>
                 <div class="nova-col">
                     <div class="nova-form-group">
-                        <label class="nova-label">Invoice Date</label>
+                        <label class="nova-label">{{ __('messages.app.page__6') }}</label>
                         <input type="date" name="invoice_date" class="nova-input" value="{{ date('Y-m-d') }}" required>
                     </div>
                 </div>
@@ -44,7 +44,7 @@
 
             <div class="nova-flex nova-items-center nova-gap-2 nova-mb-3" style="border-bottom: 1px solid var(--nova-border); padding-bottom: 0.75rem;">
                 <i class="fas fa-shopping-bag"></i>
-                <h5 class="nova-fw-bold" style="margin: 0;">Invoice Items (Products & Warehouses)</h5>
+                <h5 class="nova-fw-bold" style="margin: 0;">{{ __('messages.app.page__2') }}</h5>
             </div>
 
             <div id="itemsContainer">
@@ -57,7 +57,7 @@
 
             <div class="nova-row">
                 <div class="nova-col nova-text-end">
-                    <table class="nova-table nova-table-borderless nova-mb-3" style="max-width: 300px; margin-left: auto;">
+                    <table class="nova-table nova-table-borderless nova-mb-3" style="max-width: 300px; margin-inline-start: auto;">
                         <tbody>
                             <tr>
                                 <td class="nova-text-muted">الإجمالي:</td>

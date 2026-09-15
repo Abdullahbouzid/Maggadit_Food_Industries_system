@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-map-pin" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-map-pin" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             المواقع الجغرافية
         </h2>
         <p class="nova-page-subtitle">البلدان والمدن على الخريطة - إدارة الهرمكية</p>
@@ -75,7 +75,7 @@
                                 <a href="{{ route('countries.edit', $c) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDeleteCountry({{ $c->id }}, '{{ addslashes($c->name) }}')">
+                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذفCountry({{ $c->id }}, '{{ addslashes($c->name) }}')">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -137,7 +137,7 @@
                                 <a href="{{ route('cities.edit', $city) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDeleteCity({{ $city->id }}, '{{ addslashes($city->name) }}')">
+                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذفCity({{ $city->id }}, '{{ addslashes($city->name) }}')">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -165,7 +165,7 @@
     </div>
 </div>
 
-{{-- Delete Country Modal --}}
+{{-- حذف Country Modal --}}
 <div class="nova-modal-backdrop" id="deleteCountryModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -186,7 +186,7 @@
     </div>
 </div>
 
-{{-- Delete City Modal --}}
+{{-- حذف City Modal --}}
 <div class="nova-modal-backdrop" id="deleteCityModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -219,11 +219,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const markers = @json($markers);
     let map;
 
-    if (typeof L !== 'undefined') {
+    if (typeمن L !== 'undefined') {
         const center = { lat: 20, lng: 0 };
-        map = L.map('map').setView([center.lat, center.lng], 2);
+        map = L.map('map').setعرض([center.lat, center.lng], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">مفتوحStreetMap</a> contributors'
         }).addTo(map);
         markers.forEach(m => {
             L.marker([m.lat, m.lng]).addTo(map)
@@ -231,20 +231,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    window.confirmDeleteCountry = function(id, name) {
+    window.confirmحذفCountry = function(id, name) {
         document.getElementById('deleteCountryName').innerText = name;
         document.getElementById('deleteCountryForm').action = '/countries/' + id;
         document.getElementById('deleteCountryModal').classList.add('show');
     };
 
-    window.confirmDeleteCity = function(id, name) {
+    window.confirmحذفCity = function(id, name) {
         document.getElementById('deleteCityName').innerText = name;
         document.getElementById('deleteCityForm').action = '/cities/' + id;
         document.getElementById('deleteCityModal').classList.add('show');
     };
 
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

@@ -1,13 +1,13 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Item Packs Management')
+@section('title', 'إدارة عناصر الباك')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-box" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-box" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Item Packs
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
@@ -16,7 +16,7 @@
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('item-packs.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus-circle"></i> Add Item Pack
+            <i class="fas fa-plus-circle"></i> إضافة عنصر Pack
         </a>
     </div>
 </div>
@@ -49,7 +49,7 @@
         <div class="nova-stat-icon success">
             <i class="fas fa-check-circle"></i>
         </div>
-        <p class="nova-stat-label">Default Packs</p>
+        <p class="nova-stat-label">افتراضي Packs</p>
         <p class="nova-stat-value">{{ $defaultCount }}</p>
     </div>
     <div class="nova-stat">
@@ -61,18 +61,18 @@
     </div>
 </div>
 
-{{-- ===== Filter Section ===== --}}
+{{-- ===== فلتر Section ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body">
         <form method="GET" action="{{ route('item-packs.index') }}" id="filterForm">
             <div class="filter-grid">
                 <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">Search</label>
+                    <label class="nova-label">بحث</label>
                     <div class="nova-input-group">
                         <span class="nova-input-group-text"><i class="fas fa-search"></i></span>
                         <input type="text" name="search" id="searchInput" class="nova-input"
                                placeholder="Item name, barcode, UOM..."
-                               value="{{ request('search') }}" autocomplete="off">
+                               value="{{ request('search') }}" autocomplete="منf">
                     </div>
                 </div>
                 <div class="nova-form-group" style="margin-bottom: 0;">
@@ -83,16 +83,16 @@
                         <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                         <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                         <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
                     </select>
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="nova-btn nova-btn-primary">
-                        <i class="fas fa-filter"></i> Filter
+                        <i class="fas fa-filter"></i> فلتر
                     </button>
                     @if(request()->anyFilled(['search', 'per_page']))
                         <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-times"></i> Reset
+                            <i class="fas fa-times"></i> إعادة تعيين
                         </a>
                     @endif
                 </div>
@@ -101,7 +101,7 @@
     </div>
 </div>
 
-{{-- ===== Active Filters Indicator ===== --}}
+{{-- ===== نشط فلترs Indicator ===== --}}
 @if(request()->anyFilled(['search']))
     <div class="active-filters">
         <span class="active-filters-label"><i class="fas fa-filter"></i> الفلاتر النشطة:</span>
@@ -117,9 +117,9 @@
         <div class="nova-toolbar-filters">
             <h3 class="nova-card-title" style="margin: 0;">
                 <i class="fas fa-list"></i>
-                Item Packs List
+                قائمة عناصر الباك
                 @if($itemPacks->total())
-                    <span class="nova-badge primary" style="margin-left: 0.5rem;">{{ $itemPacks->total() }}</span>
+                    <span class="nova-badge primary" style="margin-inline-start: 0.5rem;">{{ $itemPacks->total() }}</span>
                 @endif
             </h3>
         </div>
@@ -142,7 +142,7 @@
                 @forelse($itemPacks as $pack)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($itemPacks->currentPage() - 1) * $itemPacks->perPage() }}
+                        {{ $loop->iteration + ($itemPacks->currentصفحة() - 1) * $itemPacks->perصفحة() }}
                     </td>
                     <td>
                         @if($pack->item)
@@ -176,35 +176,35 @@
                     <td class="nova-text-center">
                         @if($pack->is_default_pack)
                             <span class="nova-badge success">
-                                <i class="fas fa-check-circle"></i> Yes
+                                <i class="fas fa-check-circle"></i> نعم
                             </span>
                         @else
-                            <span class="nova-badge secondary">No</span>
+                            <span class="nova-badge secondary">لا</span>
                         @endif
                     </td>
                     <td class="nova-text-center">
                         @if($pack->is_weight_priced)
                             <span class="nova-badge success">
-                                <i class="fas fa-weight-hanging"></i> Yes
+                                <i class="fas fa-weight-hanging"></i> نعم
                             </span>
                         @else
-                            <span class="nova-badge secondary">No</span>
+                            <span class="nova-badge secondary">لا</span>
                         @endif
                     </td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
                             <a href="{{ route('item-packs.show', $pack) }}"
-                               class="nova-icon-btn nova-btn-sm" title="View">
+                               class="nova-icon-btn nova-btn-sm" title="عرض">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a href="{{ route('item-packs.edit', $pack) }}"
-                               class="nova-icon-btn nova-btn-sm" title="Edit">
+                               class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button type="button"
                                     class="nova-icon-btn nova-btn-sm nova-text-danger"
-                                    title="Delete"
-                                    onclick="confirmDelete({{ $pack->id }}, '{{ addslashes($pack->barcode ?? 'Item Pack #' . $pack->id) }}')">
+                                    title="حذف"
+                                    onclick="confirmحذف({{ $pack->id }}, '{{ addslashes($pack->barcode ?? 'Item Pack #' . $pack->id) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -217,21 +217,21 @@
                             <div class="empty-state-icon">
                                 <i class="fas fa-box"></i>
                             </div>
-                            <h5 class="nova-text-muted">No item packs found</h5>
+                            <h5 class="nova-text-muted">لا item packs found</h5>
                             <p class="nova-text-muted nova-fs-sm">
                                 @if(request()->anyFilled(['search']))
-                                    Try adjusting your search or filter criteria.
+                                    يرجى تعديل معايير البحث أو الفلتر
                                 @else
                                     Get started by adding your first item pack.
                                 @endif
                             </p>
                             @if(request()->anyFilled(['search']))
                                 <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline nova-mt-2">
-                                    <i class="fas fa-times"></i> Clear Filters
+                                    <i class="fas fa-times"></i> مسح الفلاتر
                                 </a>
                             @else
                                 <a href="{{ route('item-packs.create') }}" class="nova-btn nova-btn-primary nova-mt-2">
-                                    <i class="fas fa-plus-circle"></i> Add Item Pack
+                                    <i class="fas fa-plus-circle"></i> إضافة عنصر Pack
                                 </a>
                             @endif
                         </div>
@@ -244,7 +244,7 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
-                Showing {{ $itemPacks->firstItem() ?? 0 }} to {{ $itemPacks->lastItem() ?? 0 }} of {{ $itemPacks->total() }} entries
+                عرض {{ $itemPacks->firstItem() ?? 0 }} to {{ $itemPacks->lastItem() ?? 0 }} من {{ $itemPacks->total() }} entries
             </div>
             <div class="nova-pagination">
                 {{ $itemPacks->appends(request()->query())->links() }}
@@ -253,28 +253,28 @@
     </div>
 </div>
 
-{{-- ===== Delete Confirmation Modal (moved inside content) ===== --}}
+{{-- ===== حذف تأكيدation Modal (moved inside content) ===== --}}
 <div class="nova-modal-backdrop" id="deleteItemPackModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
             <p class="nova-delete-modal-text">
                 Are you sure you want to delete item pack
                 <strong id="deleteItemPackName" class="nova-text-danger"></strong>?
-                <br>This action cannot be undone.
+                <br>لا يمكن التراجع عن هذا الإجراء.
             </p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="closeDeleteModal()">
-                    Cancel
+                <button type="button" class="nova-btn nova-btn-outline" onclick="closeحذفModal()">
+                    إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="nova-btn nova-btn-danger">
-                        <i class="fas fa-trash-alt"></i> Delete
+                        <i class="fas fa-trash-alt"></i> حذف
                     </button>
                 </form>
             </div>
@@ -286,7 +286,7 @@
 
 @push('styles')
 <style>
-    /* ===== Filter Grid ===== */
+    /* ===== فلتر Grid ===== */
     .filter-grid {
         display: grid;
         grid-template-columns: 2fr 1fr auto;
@@ -300,7 +300,7 @@
         flex-wrap: wrap;
     }
 
-    /* ===== Active Filters ===== */
+    /* ===== نشط فلترs ===== */
     .active-filters {
         display: flex;
         flex-wrap: wrap;
@@ -439,31 +439,31 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ===== Delete Modal =====
-    window.confirmDelete = function(id, name) {
+    // ===== حذف Modal =====
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteItemPackName').innerText = name;
         document.getElementById('deleteForm').action = '/item-packs/' + id;
         document.getElementById('deleteItemPackModal').classList.add('show');
     };
 
-    window.closeDeleteModal = function() {
+    window.closeحذفModal = function() {
         document.getElementById('deleteItemPackModal').classList.remove('show');
     };
 
-    // Close modal on backdrop click
+    // إغلاق modal on backdrop click
     const modal = document.getElementById('deleteItemPackModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
             if (e.target === modal) {
-                closeDeleteModal();
+                closeحذفModal();
             }
         });
     }
 
-    // Close modal on Escape key
+    // إغلاق modal on Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
-            closeDeleteModal();
+            closeحذفModal();
         }
     });
 
@@ -483,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== Auto-dismiss alerts =====
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

@@ -1,14 +1,14 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Edit Item Pack')
+@section('title', 'تعديل Item Pack')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Edit Item Pack
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            تعديل Item Pack
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
             Update packaging details for
@@ -17,15 +17,15 @@
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('item-packs.show', $itemPack) }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-eye"></i> View
+            <i class="fas fa-eye"></i> عرض
         </a>
         <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> رجوع
         </a>
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <h6 class="nova-fw-bold">
@@ -170,7 +170,7 @@
                     @error('equivalency_factor') <div class="nova-form-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="nova-form-group">
-                    <label class="nova-label">Sort Order</label>
+                    <label class="nova-label">ترتيب الفرز</label>
                     <input type="number" name="sort_order" class="nova-input"
                            value="{{ old('sort_order', $itemPack->sort_order) }}">
                     @error('sort_order') <div class="nova-form-error">{{ $message }}</div> @enderror
@@ -228,7 +228,7 @@
                            {{ old('is_default_pack', $itemPack->is_default_pack) ? 'checked' : '' }}>
                     <label class="nova-form-check-label" for="is_default_pack">
                         <i class="fas fa-check-circle nova-me-1"></i>
-                        Default Pack
+                        افتراضي Pack
                         <small class="nova-text-muted d-block">الباكج الافتراضي للعنصر</small>
                     </label>
                 </div>
@@ -250,7 +250,7 @@
                            {{ old('allow_fraction_in_qty', $itemPack->allow_fraction_in_qty) ? 'checked' : '' }}>
                     <label class="nova-form-check-label" for="allow_fraction_in_qty">
                         <i class="fas fa-divide nova-me-1"></i>
-                        Allow Fraction Qty
+                        الكلow Fraction Qty
                         <small class="nova-text-muted d-block">السماح بكميات كسرية</small>
                     </label>
                 </div>
@@ -333,10 +333,10 @@
         </div>
     </div>
 
-    {{-- ===== Form Actions ===== --}}
+    {{-- ===== Form إجراءات ===== --}}
     <div class="form-actions">
         <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline">
-            <i class="fas fa-times"></i> Cancel
+            <i class="fas fa-times"></i> إلغاء
         </a>
         <button type="submit" class="nova-btn nova-btn-primary" id="submitBtn">
             <i class="fas fa-save"></i> Update Item Pack
@@ -409,7 +409,7 @@
         border-bottom: none;
     }
 
-    /* ===== Form Actions ===== */
+    /* ===== Form إجراءات ===== */
     .form-actions {
         display: flex;
         justify-content: flex-end;
@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const el = document.querySelector(`[name="${name}"]`);
                 if (el && value !== undefined && value !== null) {
                     el.value = value;
-                    // Highlight effect
+                    // عاليlight effect
                     el.style.transition = 'background 0.3s';
                     el.style.background = 'rgba(28, 200, 138, 0.15)';
                     setTimeout(() => { el.style.background = ''; }, 800);
@@ -502,7 +502,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== Submit Button Loading State =====
+    // ===== إرسال Button Loading State =====
     const form = document.getElementById('itemPackForm');
     const submitBtn = document.getElementById('submitBtn');
 
@@ -513,9 +513,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== Unsaved Changes Warning =====
+    // ===== Unsaved Changes تحذير =====
     let formChanged = false;
-    const formInputs = form ? form.querySelectorAll('input:not([type="hidden"]), select, textarea') : [];
+    const formInputs = form ? form.querySelectorالكل('input:not([type="hidden"]), select, textarea') : [];
 
     formInputs.forEach(input => {
         input.addEventListener('change', () => { formChanged = true; });
@@ -528,14 +528,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener('beforeunload', function(e) {
         if (formChanged) {
-            e.preventDefault();
+            e.preventافتراضي();
             e.returnValue = '';
         }
     });
 
     // ===== Auto-dismiss alerts =====
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

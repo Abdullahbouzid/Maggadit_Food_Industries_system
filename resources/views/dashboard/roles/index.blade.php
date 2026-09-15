@@ -5,15 +5,15 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-shield-alt" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Roles & Permissions
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-shield-alt" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            {{ __('messages.app.page__1') }}
         </h2>
-        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage user roles and assign permissions</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__5') }}</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('roles.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus"></i> New Role
+            <i class="fas fa-plus"></i> {{ __('messages.app.page__14') }}
         </a>
     </div>
 </div>
@@ -37,21 +37,21 @@
         <div class="nova-stat-icon primary">
             <i class="fas fa-users"></i>
         </div>
-        <p class="nova-stat-label">Total Roles</p>
+        <p class="nova-stat-label">{{ __('messages.app.page__6') }}</p>
         <p class="nova-stat-value">{{ $roles->total() }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon secondary">
             <i class="fas fa-key"></i>
         </div>
-        <p class="nova-stat-label">Total Permissions</p>
+        <p class="nova-stat-label">{{ __('messages.app.page__7') }}</p>
         <p class="nova-stat-value">{{ \Spatie\Permission\Models\Permission::count() }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon accent">
             <i class="fas fa-star"></i>
         </div>
-        <p class="nova-stat-label">Admins</p>
+        <p class="nova-stat-label">{{ __('messages.app.page__8') }}</p>
         <p class="nova-stat-value">
             @php
                 try {
@@ -68,9 +68,9 @@
 <div class="nova-table-wrapper">
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
-            <h3 class="nova-card-title" style="margin: 0;">
+            <h3 class="nova-card-{{ __('messages.app.page_') }}" style="margin: 0;">
                 <i class="fas fa-list"></i>
-                Roles List
+                {{ __('messages.app.page__2') }}
             </h3>
         </div>
         <div class="nova-toolbar-search">
@@ -79,7 +79,7 @@
         </div>
         <div class="nova-toolbar-actions">
             <a href="{{ route('roles.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-                <i class="fas fa-plus"></i> Add Role
+                <i class="fas fa-plus"></i> {{ __('messages.app.page__15') }}
             </a>
         </div>
     </div>
@@ -88,10 +88,10 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Role Name</th>
-                    <th>Permissions</th>
-                    <th>Guard</th>
-                    <th style="text-align: right;">Actions</th>
+                    <th>{{ __('messages.app.page__17') }}</th>
+                    <th>{{ __('messages.app.page__18') }}</th>
+                    <th>{{ __('messages.app.page__19') }}</th>
+                    <th style="text-align: right;">{{ __('messages.app.page__20') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -100,7 +100,7 @@
                     <td>{{ $loop->iteration + ($roles->currentPage() - 1) * $roles->perPage() }}</td>
                     <td>
                         <div class="nova-flex nova-items-center">
-                            <div class="nova-stat-icon secondary nova-btn-sm" style="width: 32px; height: 32px; margin-right: 0.5rem;">
+                            <div class="nova-stat-icon secondary nova-btn-sm" style="width: 32px; height: 32px; margin-inline-end: 0.5rem;">
                                 <i class="fas fa-lock"></i>
                             </div>
                             <span class="nova-fw-semibold">{{ $role->name }}</span>
@@ -113,16 +113,16 @@
                                 @if($role->permissions->count() > 3) ... @endif
                             </span>
                         @else
-                            <span class="nova-text-muted">No permissions</span>
+                            <span class="nova-text-muted">{{ __('messages.app.page__11') }}</span>
                         @endif
                     </td>
-                    <td><code>web</code></td>
+                    <td><code>{{ __('messages.app.page__21') }}</code></td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                            <a href="{{ route('roles.edit', $role) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                            <a href="{{ route('roles.edit', $role) }}" class="nova-icon-btn nova-btn-sm" {{ __('messages.app.page_') }}="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $role->id }}', '{{ addslashes($role->name) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" {{ __('messages.app.page_') }}="Delete" onclick="confirmDelete('{{ $role->id }}', '{{ addslashes($role->name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -135,10 +135,10 @@
                             <div class="nova-empty-icon">
                                 <i class="fas fa-shield-alt"></i>
                             </div>
-                            <h3 class="nova-empty-title">No roles found</h3>
-                            <p class="nova-empty-text">Create your first role to get started.</p>
+                            <h3 class="nova-empty-{{ __('messages.app.page_') }}">{{ __('messages.app.page__3') }}</h3>
+                            <p class="nova-empty-text">{{ __('messages.app.page__9') }}</p>
                             <a href="{{ route('roles.create') }}" class="nova-btn nova-btn-primary">
-                                <i class="fas fa-plus"></i> Create Role
+                                <i class="fas fa-plus"></i> {{ __('messages.app.page__16') }}
                             </a>
                         </div>
                     </td>
@@ -167,14 +167,14 @@
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">{{ __('messages.app.page__4') }}</h4>
             <p class="nova-delete-modal-text">Are you sure you want to delete role <strong id="deleteRoleName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteRoleModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteRoleModal').classList.remove('show')">{{ __('messages.app.page__12') }}</button>
                 <form id="deleteRoleForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.app.page__13') }}</button>
                 </form>
             </div>
         </div>

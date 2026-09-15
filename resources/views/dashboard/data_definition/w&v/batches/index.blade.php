@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-box-open" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-box-open" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             دفعات الإنتاج
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة الدفعات المنتجة وتفاصيلها</p>
@@ -52,11 +52,11 @@
     </div>
 </div>
 
-{{-- ===== Filter Section ===== --}}
+{{-- ===== فلتر Section ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('production-batches.index') }}" class="filter-form">
-            {{-- Search --}}
+            {{-- بحث --}}
             <div class="nova-form-group filter-item filter-item-search">
                 <label class="nova-label">بحث</label>
                 <div class="filter-search-wrapper">
@@ -69,7 +69,7 @@
                 </div>
             </div>
 
-            {{-- Status --}}
+            {{-- الحالة --}}
             <div class="nova-form-group filter-item">
                 <label class="nova-label">الحالة</label>
                 <select name="status" class="nova-select">
@@ -80,7 +80,7 @@
                 </select>
             </div>
 
-            {{-- Per Page --}}
+            {{-- لكل صفحة --}}
             <div class="nova-form-group filter-item">
                 <label class="nova-label">حسب الصفحة</label>
                 <select name="per_page" class="nova-select">
@@ -91,7 +91,7 @@
                 </select>
             </div>
 
-            {{-- Actions --}}
+            {{-- إجراءات --}}
             <div class="nova-form-group filter-item filter-item-actions">
                 <button type="submit" class="nova-btn nova-btn-primary">
                     <i class="fas fa-filter"></i> تصفية
@@ -132,7 +132,7 @@
                 @forelse($batches as $batch)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $batches instanceof \Illuminate\Pagination\LengthAwarePaginator ? $loop->iteration + ($batches->currentPage() - 1) * $batches->perPage() : $loop->iteration }}
+                        {{ $batches instanceمن \Illuminate\Pagination\LengthAwarePaginator ? $loop->iteration + ($batches->currentصفحة() - 1) * $batches->perصفحة() : $loop->iteration }}
                     </td>
                     <td><code>{{ $batch->batch_number }}</code></td>
                     <td>{{ $batch->batch_items_count }}</td>
@@ -160,7 +160,7 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف"
-                                    onclick="confirmDelete({{ $batch->id }}, '{{ addslashes($batch->batch_number) }}')">
+                                    onclick="confirmحذف({{ $batch->id }}, '{{ addslashes($batch->batch_number) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -185,7 +185,7 @@
             </tbody>
         </table>
     </div>
-    @if($batches instanceof \Illuminate\Pagination\LengthAwarePaginator)
+    @if($batches instanceمن \Illuminate\Pagination\LengthAwarePaginator)
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
@@ -199,8 +199,8 @@
     @endif
 </div>
 
-{{-- ===== Delete Confirmation Modal ===== --}}
-<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+{{-- ===== حذف تأكيدation Modal ===== --}}
+<div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
@@ -214,7 +214,7 @@
             </p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
+                        onclick="document.getElementById('globalحذفModal').classList.remove('show')">
                     إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
@@ -238,7 +238,7 @@
         align-items: end;
     }
 
-    /* ===== Filter Form ===== */
+    /* ===== فلتر Form ===== */
     .filter-form {
         display: grid;
         grid-template-columns: 2fr 1.2fr 1fr auto;
@@ -251,7 +251,7 @@
         min-width: 0;
     }
 
-    /* Search Input Wrapper */
+    /* بحث Input Wrapper */
     .filter-search-wrapper {
         position: relative;
         display: flex;
@@ -266,7 +266,7 @@
         padding: 0 0.875rem;
         background: var(--nova-surface-2);
         border: 1.5px solid var(--nova-border);
-        border-right: none;
+        border-end: none;
         border-radius: 10px 0 0 10px;
         color: var(--nova-text-4);
         flex-shrink: 0;
@@ -274,12 +274,12 @@
 
     .filter-search-input {
         border-radius: 0 10px 10px 0 !important;
-        border-left: none !important;
+        border-start: none !important;
         flex: 1;
         min-width: 0;
     }
 
-    /* Filter Actions */
+    /* فلتر إجراءات */
     .filter-item-actions {
         display: flex;
         gap: 0.5rem;
@@ -290,7 +290,7 @@
         white-space: nowrap;
     }
 
-    /* ===== Delete Modal ===== */
+    /* ===== حذف Modal ===== */
     .nova-modal-backdrop {
         display: none;
         position: fixed;
@@ -387,13 +387,13 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const perPageSelect = document.querySelector('select[name="per_page"]');
-        if (perPageSelect) perPageSelect.addEventListener('change', () => document.getElementById('filterForm').submit());
+        const perصفحةSelect = document.querySelector('select[name="per_page"]');
+        if (perصفحةSelect) perصفحةSelect.addEventListener('change', () => document.getElementById('filterForm').submit());
 
-        window.confirmDelete = function(id, name) {
+        window.confirmحذف = function(id, name) {
             document.getElementById('deleteItemName').innerText = name;
             document.getElementById('deleteForm').action = '/production-batches/' + id;
-            document.getElementById('globalDeleteModal').classList.add('show');
+            document.getElementById('globalحذفModal').classList.add('show');
         };
     });
 </script>

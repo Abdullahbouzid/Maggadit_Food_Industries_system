@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             تفاصيل المدينة
         </h2>
         <p class="nova-page-subtitle">{{ $city->name }}</p>
@@ -125,7 +125,7 @@
                 <p class="nova-text-muted mb-0">حذف هذه المدينة نهائياً. لا يمكن التراجع عن هذا الإجراء.</p>
             </div>
             <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
-                    onclick="confirmDelete({{ $city->id }}, '{{ addslashes($city->name) }}')">
+                    onclick="confirmحذف({{ $city->id }}, '{{ addslashes($city->name) }}')">
                 <i class="fas fa-trash-alt"></i> حذف المدينة
             </button>
         </div>
@@ -142,9 +142,9 @@
 @if($city->latitude && $city->longitude)
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const map = L.map('cityMap').setView([{{ $city->latitude }}, {{ $city->longitude }}], 10);
+    const map = L.map('cityMap').setعرض([{{ $city->latitude }}, {{ $city->longitude }}], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">مفتوحStreetMap</a> contributors'
     }).addTo(map);
     L.marker([{{ $city->latitude }}, {{ $city->longitude }}]).addTo(map)
         .bindPopup('<strong>{{ $city->name }}</strong><br>{{ $city->country->name ?? '' }}')
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
 @endif
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/cities/' + id;
         document.getElementById('deleteModal').classList.add('show');
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">

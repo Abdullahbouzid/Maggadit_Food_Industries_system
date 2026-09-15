@@ -5,15 +5,15 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             إضافة سياسة
         </h2>
-        <p class="nova-page-subtitle">أضف سياسة خصوصية أو شروط خدمة جديدة</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}">أضف سياسة خصوصية أو شروط خدمة جديدة</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('privacy-policies.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back
+            <i class="fas fa-arrow-right"></i> {{ __('messages.app.page__2') }}
         </a>
     </div>
 </div>
@@ -31,7 +31,7 @@
 
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Basic Information</h5>
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> {{ __('messages.app.page__1') }}</h5>
     </div>
     <div class="nova-card-body">
         <form action="{{ route('privacy-policies.store') }}" method="POST">
@@ -63,7 +63,7 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-group">
                         <label class="nova-label">العنوان</label>
-                        <input type="text" name="title" class="nova-input" value="{{ old('title') }}" placeholder="مثال: سياسة الخصوصية الرسمية">
+                        <input type="text" name="{{ __('messages.app.page_') }}" class="nova-input" value="{{ old('{{ __('messages.app.page_') }}') }}" placeholder="مثال: سياسة الخصوصية الرسمية">
                     </div>
                 </div>
 

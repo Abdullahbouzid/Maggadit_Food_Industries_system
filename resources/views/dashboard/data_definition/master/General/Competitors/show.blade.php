@@ -1,6 +1,6 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Competitor Details')
+@section('title', 'Competitor التفاصيل')
 
 @section('content')
 @php
@@ -10,17 +10,17 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Competitor: {{ $competitor->name }}
         </h2>
-        <p class="nova-page-subtitle">View competitor details</p>
+        <p class="nova-page-subtitle">عرض competitor details</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('competitors.edit', $competitor) }}" class="nova-btn nova-btn-warning nova-btn-sm">
-            <i class="fas fa-edit"></i> Edit
+            <i class="fas fa-edit"></i> تعديل
         </a>
         <a href="{{ route('competitors.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back to List
+            <i class="fas fa-arrow-right"></i> رجوع to List
         </a>
     </div>
 </div>
@@ -34,7 +34,7 @@
 
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h5 class="nova-fw-bold nova-mb-0"><i class="fas fa-file-alt nova-me-1"></i> Competitor Details</h5>
+        <h5 class="nova-fw-bold nova-mb-0"><i class="fas fa-file-alt nova-me-1"></i> Competitor التفاصيل</h5>
     </div>
     <div class="nova-card-body">
         <div class="nova-table-scroll">
@@ -86,14 +86,14 @@
                     <td>{{ $competitor->address ?: '—' }}</td>
                 </tr>
                 <tr>
-                    <th>Created At</th>
+                    <th>تاريخ الإنشاء</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted nova-me-1"></i>
                         {{ $competitor->created_at ? $competitor->created_at->format('F d, Y h:i A') : '—' }}
                     </td>
                 </tr>
                 <tr>
-                    <th>Last Updated</th>
+                    <th>الأخير Updated</th>
                     <td>
                         <i class="fas fa-history nova-text-muted nova-me-1"></i>
                         {{ $competitor->updated_at ? $competitor->updated_at->format('F d, Y h:i A') : '—' }}
@@ -105,36 +105,36 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-gap-2">
             <a href="{{ route('competitors.index') }}" class="nova-btn nova-btn-outline">
-                <i class="fas fa-list"></i> Back to List
+                <i class="fas fa-list"></i> رجوع to List
             </a>
             <div class="nova-flex nova-gap-2">
                 <a href="{{ route('competitors.edit', $competitor) }}" class="nova-btn nova-btn-warning">
-                    <i class="fas fa-edit"></i> Edit
+                    <i class="fas fa-edit"></i> تعديل
                 </a>
                 <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
-                        onclick="confirmDelete({{ $competitor->id }}, '{{ addslashes($competitor->name) }}')">
-                    <i class="fas fa-trash-alt"></i> Delete
+                        onclick="confirmحذف({{ $competitor->id }}, '{{ addslashes($competitor->name) }}')">
+                    <i class="fas fa-trash-alt"></i> حذف
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete competitor <strong id="deleteName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete competitor <strong id="deleteName" class="nova-text-danger"></strong>?<br>لا يمكن التراجع عن هذا الإجراء.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">إلغاء</button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
                 </form>
             </div>
         </div>
@@ -145,14 +145,14 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/competitors/' + id;
         document.getElementById('deleteModal').classList.add('show');
     };
 
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

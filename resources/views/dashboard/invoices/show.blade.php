@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-file-text" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-file-text" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             الفاتورة #{{ $invoice->invoice_number }}
         </h2>
-        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Invoice details and items</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__2') }}</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('invoices.edit', $invoice) }}" class="nova-btn nova-btn-primary nova-btn-sm">
@@ -52,7 +52,7 @@
 
 <div class="nova-card">
     <div class="nova-card-header">
-            <h5 class="nova-card-title"><i class="fas fa-shopping-bag" style="margin-left: 0.5rem;"></i> تفاصيل الأصناف</h5>
+            <h5 class="nova-card-{{ __('messages.app.page_') }}"><i class="fas fa-shopping-bag" style="margin-inline-start: 0.5rem;"></i> تفاصيل الأصناف</h5>
     </div>
     <div class="nova-card-body p-0">
         <div class="nova-table-scroll">
@@ -81,7 +81,7 @@
                                 <div class="nova-flex nova-items-center">
                                     @if($item->item->images->first())
                                         <img src="{{ asset('uploads/' . $item->item->images->first()->image_path) }}"
-                                             alt="{{ $item->item->name_ar }}" class="rounded" style="width: 40px; height: 40px; object-fit: cover; margin-left: 0.5rem;">
+                                             alt="{{ $item->item->name_ar }}" class="rounded" style="width: 40px; height: 40px; object-fit: cover; margin-inline-start: 0.5rem;">
                                     @endif
                                     <div>
                                         <span class="nova-fw-bold">{{ $item->item->name_ar }}</span>
@@ -119,7 +119,7 @@
                                 @endif
                             </td>
                             <td class="nova-text-end">
-                                <button class="nova-btn nova-btn-outline nova-btn-sm" title="عرض المواقع"
+                                <button class="nova-btn nova-btn-outline nova-btn-sm" {{ __('messages.app.page_') }}="عرض المواقع"
                                         onclick="showItemWarehouses({{ $item->item_id }}, '{{ $item->item->name_ar }}')">
                                     <i class="fas fa-box"></i> المخازن
                                 </button>
@@ -173,13 +173,13 @@ function showItemWarehouses(itemId, itemName) {
     fetch(`/invoices/get-warehouses/${itemId}`)
         .then(res => res.json())
         .then(data => {
-            let html = `<h6 class="nova-fw-bold nova-mb-3">${itemName}</h6>`;
+            let html = `<h6 class="nova-fw-bold nova-mb-3">{{ __('messages.app.page__1') }}</h6>`;
             html += '<div class="nova-table-scroll"><table class="nova-table"><thead><tr><th>المخزن</th><th class="nova-text-end">الكمية المتوفرة</th></tr></thead><tbody>';
             if (data.length === 0) {
                 html += '<tr><td colspan="2" class="nova-text-center nova-text-muted">لا توفر أي كمية في المخازن</td></tr>';
             } else {
                 data.forEach(wh => {
-                    html += `<tr><td>${wh.name || wh.name_en}</td><td class="nova-text-end">${parseFloat(wh.quantity).toFixed(2)}</td></tr>`;
+                    html += `<tr><td>{{ __('messages.app.page__3') }}</td><td class="nova-text-end">{{ __('messages.app.page__4') }}</td></tr>`;
                 });
             }
             html += '</tbody></table></div>';
@@ -193,7 +193,7 @@ function showItemWarehouses(itemId, itemName) {
 <div class="nova-modal-backdrop" id="warehousesModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-modal-header">
-            <h5 class="nova-modal-title">المواقع المتوفرة للمنتج</h5>
+            <h5 class="nova-modal-{{ __('messages.app.page_') }}">المواقع المتوفرة للمنتج</h5>
             <button class="nova-modal-close" onclick="document.getElementById('warehousesModal').classList.remove('show')" aria-label="Close">
                 <i class="fas fa-times"></i>
             </button>

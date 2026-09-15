@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Create Notification')
+@section('title', 'Create لاtification')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-bell" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Create Notification
+            <i class="fas fa-bell" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            Create لاtification
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Send a new notification to your customers</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('notifications.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back to Notifications
+            <i class="fas fa-arrow-left"></i> رجوع to لاtifications
         </a>
     </div>
 </div>
@@ -32,7 +32,7 @@
 <div class="nova-card">
     <div class="nova-card-header">
         <h5 class="mb-0 fw-bold">
-            <i class="fas fa-bell"></i> Notification Details
+            <i class="fas fa-bell"></i> لاtification التفاصيل
         </h5>
     </div>
     <div class="nova-card-body">
@@ -84,11 +84,11 @@
                     </div>
                 </div>
 
-                {{-- Image --}}
+                {{-- الصورة --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
                         <label class="nova-label">
-                            <i class="fas fa-image me-1"></i> Image <small class="nova-text-muted">(optional)</small>
+                            <i class="fas fa-image me-1"></i> الصورة <small class="nova-text-muted">(optional)</small>
                         </label>
                         <input type="file" name="image" class="nova-input" accept="image/*">
                         <div class="nova-form-help">Max 2MB (JPG, PNG, GIF, SVG)</div>
@@ -114,7 +114,7 @@
                         <label class="nova-label">
                             <i class="fas fa-users-cog me-1"></i> Group <small class="nova-text-muted">(optional)</small>
                         </label>
-                        <input type="text" name="group" class="nova-input" value="{{ old('group') }}" placeholder="e.g., VIP, New Users">
+                        <input type="text" name="group" class="nova-input" value="{{ old('group') }}" placeholder="e.g., VIP, جديد Users">
                         @error('group') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
                 </div>
@@ -126,9 +126,9 @@
                             <i class="fas fa-bell me-1"></i> Channel <span class="nova-text-danger">*</span>
                         </label>
                         <select name="channel" class="nova-select">
-                            <option value="all" {{ old('channel') == 'all' ? 'selected' : '' }}>All Channels</option>
+                            <option value="all" {{ old('channel') == 'all' ? 'selected' : '' }}>الكل Channels</option>
                             <option value="email" {{ old('channel') == 'email' ? 'selected' : '' }}>Email</option>
-                            <option value="push" {{ old('channel') == 'push' ? 'selected' : '' }}>Push Notification</option>
+                            <option value="push" {{ old('channel') == 'push' ? 'selected' : '' }}>Push لاtification</option>
                             <option value="sms" {{ old('channel') == 'sms' ? 'selected' : '' }}>SMS</option>
                         </select>
                         @error('channel') <div class="nova-form-error">{{ $message }}</div> @enderror
@@ -143,7 +143,7 @@
                         </label>
                         <select name="icon_type" class="nova-select">
                             <option value="notification" {{ old('icon_type') == 'notification' ? 'selected' : '' }}>General Bell (إشعار عام)</option>
-                            <option value="offer" {{ old('icon_type') == 'offer' ? 'selected' : '' }}>Offer (عرض)</option>
+                            <option value="منfer" {{ old('icon_type') == 'منfer' ? 'selected' : '' }}>Offer (عرض)</option>
                             <option value="payment" {{ old('icon_type') == 'payment' ? 'selected' : '' }}>Payment (دفع)</option>
                             <option value="receive" {{ old('icon_type') == 'receive' ? 'selected' : '' }}>Receive (استلام)</option>
                             <option value="delivery" {{ old('icon_type') == 'delivery' ? 'selected' : '' }}>Delivery (توصيل)</option>
@@ -159,7 +159,7 @@
                             <i class="fas fa-users me-1"></i> Customers <small class="nova-text-muted">(optional)</small>
                         </label>
                         <select name="customers[]" class="nova-select" multiple>
-                            <option value="all" {{ old('customers') && in_array('all', old('customers')) ? 'selected' : '' }}>All Customers (الكل)</option>
+                            <option value="all" {{ old('customers') && in_array('all', old('customers')) ? 'selected' : '' }}>الكل Customers (الكل)</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ old('customers') && in_array($customer->id, old('customers')) ? 'selected' : '' }}>{{ $customer->name }}</option>
                             @endforeach
@@ -181,12 +181,12 @@
                     </div>
                 </div>
 
-                {{-- Send Now --}}
+                {{-- Send لاw --}}
                 <div class="nova-col nova-col-md-6 d-flex align-items-end">
                     <div class="nova-form-check">
                         <input type="hidden" name="is_sent" value="0">
                         <input type="checkbox" name="is_sent" class="nova-form-check-input" id="isSent" value="1" {{ old('is_sent') ? 'checked' : '' }}>
-                        <label class="nova-form-check-label" for="isSent">Send Now</label>
+                        <label class="nova-form-check-label" for="isSent">Send لاw</label>
                         <div class="nova-form-help">Check to send immediately, or schedule for later</div>
                     </div>
                 </div>
@@ -195,10 +195,10 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('notifications.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-times"></i> Cancel
+                            <i class="fas fa-times"></i> إلغاء
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
-                            <i class="fas fa-paper-plane"></i> Send Notification
+                            <i class="fas fa-paper-plane"></i> Send لاtification
                         </button>
                     </div>
                 </div>

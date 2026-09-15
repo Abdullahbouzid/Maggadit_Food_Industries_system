@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Surveys Management')
+@section('title', '{{ __('messages.app.page__1') }} Management')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-clipboard-list" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Surveys
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-clipboard-list" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            {{ __('messages.app.page__1') }}
         </h2>
-        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage customer app surveys</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__4') }}</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('surveys.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus"></i> New Survey
+            <i class="fas fa-plus"></i> {{ __('messages.app.page__9') }}
         </a>
     </div>
 </div>
@@ -30,8 +30,8 @@
     <div class="nova-card" style="height: 100%;">
         <div class="nova-card-header" style="background: {{ $survey->is_active ? 'linear-gradient(135deg, var(--nova-primary), var(--nova-secondary))' : 'var(--nova-surface-2)' }}; border-bottom: none; padding: 1rem 1.5rem;">
             <div>
-                <h3 class="nova-card-title" style="margin: 0; color: {{ $survey->is_active ? 'white' : 'var(--nova-text)' }};">
-                    {{ $survey->title }}
+                <h3 class="nova-card-{{ __('messages.app.page_') }}" style="margin: 0; color: {{ $survey->is_active ? 'white' : 'var(--nova-text)' }};">
+                    {{ $survey->{{ __('messages.app.page_') }} }}
                 </h3>
                 <small style="color: {{ $survey->is_active ? 'rgba(255,255,255,0.75)' : 'var(--nova-text-3)' }};">
                     <i class="fas fa-question-circle"></i> {{ $survey->questions->count() }} Questions • <i class="fas fa-clock"></i> {{ $survey->estimated_minutes }} min
@@ -49,19 +49,19 @@
                     <div class="nova-stat-value" style="font-size: 1.5rem; color: var(--nova-primary); margin: 0;">
                         <i class="fas fa-comments"></i> {{ $survey->responses_count }}
                     </div>
-                    <div class="nova-stat-label">Responses</div>
+                    <div class="nova-stat-label">{{ __('messages.dashboard.responses') }}</div>
                 </div>
                 <div class="nova-stat" style="padding: 1rem; text-align: center; background: rgba(14, 165, 233, 0.08); border-radius: 10px;">
                     <div class="nova-stat-value" style="font-size: 1.5rem; color: var(--nova-secondary); margin: 0;">
                         <i class="fas fa-question-circle"></i> {{ $survey->questions->count() }}
                     </div>
-                    <div class="nova-stat-label">Questions</div>
+                    <div class="nova-stat-label">{{ __('messages.dashboard.questions') }}</div>
                 </div>
                 <div class="nova-stat" style="padding: 1rem; text-align: center; background: rgba(245, 158, 11, 0.08); border-radius: 10px;">
                     <div class="nova-stat-value" style="font-size: 1.5rem; color: var(--nova-accent); margin: 0;">
                         <i class="fas fa-clock"></i> {{ $survey->estimated_minutes }}
                     </div>
-                    <div class="nova-stat-label">Minutes</div>
+                    <div class="nova-stat-label">{{ __('messages.dashboard.minutes') }}</div>
                 </div>
             </div>
 
@@ -78,10 +78,10 @@
 
             <div class="nova-flex nova-gap-2 nova-flex-wrap">
                 <a href="{{ route('surveys.show', $survey) }}" class="nova-btn nova-btn-outline nova-btn-sm">
-                    <i class="fas fa-chart-bar"></i> Results
+                    <i class="fas fa-chart-bar"></i> {{ __('messages.app.page__10') }}
                 </a>
                 <a href="{{ route('surveys.edit', $survey) }}" class="nova-btn nova-btn-outline nova-btn-sm">
-                    <i class="fas fa-edit"></i> Edit
+                    <i class="fas fa-edit"></i> {{ __('messages.app.page__11') }}
                 </a>
                 <form action="{{ route('surveys.toggle', $survey) }}" method="POST" class="d-inline">
                     @csrf
@@ -92,7 +92,7 @@
                     </button>
                 </form>
                 <button type="button" class="nova-btn nova-btn-outline nova-btn-sm nova-text-danger"
-                        onclick="confirmDelete({{ $survey->id }}, '{{ addslashes($survey->title) }}')">
+                        onclick="confirmDelete({{ $survey->id }}, '{{ addslashes($survey->{{ __('messages.app.page_') }}) }}')">
                     <i class="fas fa-trash-alt"></i> Delete
                 </button>
             </div>
@@ -108,10 +108,10 @@
                 <div class="nova-empty-icon">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
-                <h3 class="nova-empty-title">No surveys found</h3>
-                <p class="nova-empty-text">Create your first survey to start collecting customer feedback.</p>
+                <h3 class="nova-empty-{{ __('messages.app.page_') }}">{{ __('messages.app.page__2') }}</h3>
+                <p class="nova-empty-text">{{ __('messages.app.page__5') }}</p>
                 <a href="{{ route('surveys.create') }}" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-plus"></i> Create Survey
+                    <i class="fas fa-plus"></i> {{ __('messages.app.page__12') }}
                 </a>
             </div>
         </div>
@@ -126,14 +126,14 @@
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">{{ __('messages.app.page__3') }}</h4>
             <p class="nova-delete-modal-text">Are you sure you want to delete survey <strong id="deleteSurveyName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteSurveyModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteSurveyModal').classList.remove('show')">{{ __('messages.app.page__7') }}</button>
                 <form id="deleteSurveyForm" method="POST" action="" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.app.page__8') }}</button>
                 </form>
             </div>
         </div>

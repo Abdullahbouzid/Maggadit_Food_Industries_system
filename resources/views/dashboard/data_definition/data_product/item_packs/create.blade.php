@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Create Item Pack
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
@@ -16,12 +16,12 @@
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> رجوع
         </a>
     </div>
 </div>
 
-{{-- ===== Validation Errors ===== --}}
+{{-- ===== Validation خطأs ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <h6 class="nova-fw-bold">
@@ -157,7 +157,7 @@
                     @error('equivalency_factor') <small class="nova-text-danger">{{ $message }}</small> @enderror
                 </div>
                 <div class="nova-form-group">
-                    <label class="nova-label">Sort Order</label>
+                    <label class="nova-label">ترتيب الفرز</label>
                     <input type="number" name="sort_order" class="nova-input"
                            value="{{ old('sort_order') }}">
                     @error('sort_order') <small class="nova-text-danger">{{ $message }}</small> @enderror
@@ -215,7 +215,7 @@
                            {{ old('is_default_pack') ? 'checked' : '' }}>
                     <label class="nova-form-check-label" for="is_default_pack">
                         <i class="fas fa-check-circle nova-me-1"></i>
-                        Default Pack
+                        افتراضي Pack
                         <small class="nova-text-muted d-block">الباكج الافتراضي للعنصر</small>
                     </label>
                 </div>
@@ -237,7 +237,7 @@
                            {{ old('allow_fraction_in_qty') ? 'checked' : '' }}>
                     <label class="nova-form-check-label" for="allow_fraction_in_qty">
                         <i class="fas fa-divide nova-me-1"></i>
-                        Allow Fraction Qty
+                        الكلow Fraction Qty
                         <small class="nova-text-muted d-block">السماح بكميات كسرية</small>
                     </label>
                 </div>
@@ -322,10 +322,10 @@
         </div>
     </div>
 
-    {{-- ===== Form Actions ===== --}}
+    {{-- ===== Form إجراءات ===== --}}
     <div class="form-actions">
         <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline">
-            <i class="fas fa-times"></i> Cancel
+            <i class="fas fa-times"></i> إلغاء
         </a>
         <button type="submit" class="nova-btn nova-btn-primary" id="submitBtn">
             <i class="fas fa-save"></i> Create Item Pack
@@ -400,7 +400,7 @@
         border-bottom: none;
     }
 
-    /* ===== Form Actions ===== */
+    /* ===== Form إجراءات ===== */
     .form-actions {
         display: flex;
         justify-content: flex-end;
@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== Submit Button Loading State =====
+    // ===== إرسال Button Loading State =====
     const form = document.getElementById('itemPackForm');
     const submitBtn = document.getElementById('submitBtn');
 
@@ -503,9 +503,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== Unsaved Changes Warning =====
+    // ===== Unsaved Changes تحذير =====
     let formChanged = false;
-    const formInputs = form ? form.querySelectorAll('input:not([type="hidden"]), select, textarea') : [];
+    const formInputs = form ? form.querySelectorالكل('input:not([type="hidden"]), select, textarea') : [];
 
     formInputs.forEach(input => {
         input.addEventListener('change', () => { formChanged = true; });
@@ -518,14 +518,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener('beforeunload', function(e) {
         if (formChanged) {
-            e.preventDefault();
+            e.preventافتراضي();
             e.returnValue = '';
         }
     });
 
     // ===== Auto-dismiss alerts =====
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

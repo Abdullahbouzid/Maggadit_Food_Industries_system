@@ -1,23 +1,23 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Warehouse Details: ' . $warehouse->code)
+@section('title', 'Warehouse التفاصيل: ' . $warehouse->code)
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Warehouse: {{ $warehouse->code }}
         </h2>
-        <p class="nova-page-subtitle">Detailed view of warehouse inventory</p>
+        <p class="nova-page-subtitle">Detailed view من warehouse inventory</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('warehouses.edit', $warehouse) }}" class="nova-btn nova-btn-warning nova-btn-sm">
-            <i class="fas fa-edit"></i> Edit
+            <i class="fas fa-edit"></i> تعديل
         </a>
         <a href="{{ route('warehouses.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back to List
+            <i class="fas fa-arrow-right"></i> رجوع to List
         </a>
     </div>
 </div>
@@ -50,7 +50,7 @@
         <div class="nova-stat-icon accent">
             <i class="fas fa-layers"></i>
         </div>
-        <p class="nova-stat-label">Active Batches</p>
+        <p class="nova-stat-label">نشط Batches</p>
         <p class="nova-stat-value">{{ $totalBatches }}</p>
     </div>
     <div class="nova-stat">
@@ -99,7 +99,7 @@
 </div>
 @endif
 
-{{-- ===== Search Section ===== --}}
+{{-- ===== بحث Section ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body">
         <form method="GET" action="{{ route('warehouses.show', $warehouse) }}" id="searchForm" class="search-form">
@@ -111,12 +111,12 @@
                     </span>
                     <input type="text" name="search" id="searchInput" class="nova-input search-input"
                            placeholder="ابحث باسم المنتج، الكود، رقم الدفعة، العبوة..."
-                           value="{{ request('search') }}" autocomplete="off">
+                           value="{{ request('search') }}" autocomplete="منf">
                 </div>
             </div>
             <div class="search-form-actions">
                 @if(request('search'))
-                    <a href="{{ route('warehouses.show', $warehouse) }}" class="nova-btn nova-btn-outline nova-btn-sm" id="clearSearch">
+                    <a href="{{ route('warehouses.show', $warehouse) }}" class="nova-btn nova-btn-outline nova-btn-sm" id="clearبحث">
                         <i class="fas fa-times"></i> إلغاء الفلتر
                     </a>
                 @endif
@@ -148,23 +148,23 @@
             <i class="fas fa-grid"></i> Products in Warehouse
         </h5>
         <div class="nova-btn-group" role="group">
-            <button type="button" class="nova-btn nova-btn-outline nova-btn-sm nova-btn-active" id="btnCardView">
+            <button type="button" class="nova-btn nova-btn-outline nova-btn-sm nova-btn-active" id="btnCardعرض">
                 <i class="fas fa-th-large"></i> Cards
             </button>
-            <button type="button" class="nova-btn nova-btn-outline nova-btn-sm" id="btnTableView">
+            <button type="button" class="nova-btn nova-btn-outline nova-btn-sm" id="btnTableعرض">
                 <i class="fas fa-list"></i> Table
             </button>
         </div>
     </div>
     <div class="nova-card-body">
-        {{-- ===== Card View ===== --}}
-        <div id="cardView">
+        {{-- ===== Card عرض ===== --}}
+        <div id="cardعرض">
             @if($groupedProducts->count())
                 <div class="products-grid" id="productCardsGrid">
                     @foreach($groupedProducts as $group)
                         <div class="product-card-wrapper" id="card-{{ $group['item_pack_id'] ?? $loop->index }}">
                             <div class="nova-product-card" data-item-pack-id="{{ $group['item_pack_id'] ?? '' }}">
-                                {{-- Image --}}
+                                {{-- الصورة --}}
                                 <div class="nova-product-image">
                                     @if($group['image_url'])
                                         <img src="{{ $group['image_url'] }}" alt="{{ $group['item_name'] }}">
@@ -267,14 +267,14 @@
                     <div class="nova-empty-icon">
                         <i class="fas fa-box-open"></i>
                     </div>
-                    <h3 class="nova-empty-title">No products found</h3>
+                    <h3 class="nova-empty-title">لا products found</h3>
                     <p class="nova-empty-text">Create your first product to get started.</p>
                 </div>
             @endif
         </div>
 
-        {{-- ===== Table View ===== --}}
-        <div id="tableView" style="display: none;">
+        {{-- ===== Table عرض ===== --}}
+        <div id="tableعرض" style="display: none;">
             @if($groupedProducts->count())
                 <div class="nova-table-wrapper">
                     <div class="nova-table-scroll">
@@ -282,17 +282,17 @@
                             <thead>
                                 <tr>
                                     <th class="nova-text-center" style="width: 40px;">
-                                        <input type="checkbox" id="selectAllProducts" class="nova-form-check-input">
+                                        <input type="checkbox" id="selectالكلProducts" class="nova-form-check-input">
                                     </th>
                                     <th>#</th>
-                                    <th style="width: 80px;">Image</th>
+                                    <th style="width: 80px;">الصورة</th>
                                     <th>Product</th>
                                     <th>Pack</th>
                                     <th>Packs Qty</th>
                                     <th>Units</th>
                                     <th>Units/Pack</th>
                                     <th>Batches</th>
-                                    <th>Batch Details</th>
+                                    <th>Batch التفاصيل</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -346,7 +346,7 @@
                                                         type="button" data-bs-toggle="collapse"
                                                         data-bs-target="#tableBatchList{{ $loop->index }}"
                                                         aria-expanded="false">
-                                                    <i class="fas fa-eye me-1"></i> View
+                                                    <i class="fas fa-eye me-1"></i> عرض
                                                 </button>
                                                 <div class="nova-collapse" id="tableBatchList{{ $loop->index }}">
                                                     <ul class="nova-list small">
@@ -384,36 +384,36 @@
                     <div class="nova-empty-icon">
                         <i class="fas fa-box-open"></i>
                     </div>
-                    <h3 class="nova-empty-title">No products found</h3>
-                    <p class="nova-empty-text">No products match the search criteria.</p>
+                    <h3 class="nova-empty-title">لا products found</h3>
+                    <p class="nova-empty-text">لا products match the search criteria.</p>
                 </div>
             @endif
         </div>
     </div>
 </div>
 
-{{-- ===== Delete Confirmation Modal ===== --}}
+{{-- ===== حذف تأكيدation Modal ===== --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
             <p class="nova-delete-modal-text">
                 Are you sure you want to delete warehouse
                 <strong id="deleteName" class="nova-text-danger"></strong>?<br>
-                This action cannot be undone.
+                لا يمكن التراجع عن هذا الإجراء.
             </p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline"
                         onclick="document.getElementById('deleteModal').classList.remove('show')">
-                    Cancel
+                    إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
                 </form>
             </div>
         </div>
@@ -425,7 +425,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     /* ============================================================
-       Warehouse Details Table
+       Warehouse التفاصيل Table
        ============================================================ */
     .warehouse-details-table th {
         background: #f8f9fc;
@@ -494,7 +494,7 @@
     }
 
     /* ============================================================
-       Search Form
+       بحث Form
        ============================================================ */
     .search-form {
         display: grid;
@@ -521,7 +521,7 @@
         padding: 0 0.875rem;
         background: var(--nova-surface-2);
         border: 1.5px solid var(--nova-border);
-        border-right: none;
+        border-end: none;
         border-radius: 10px 0 0 10px;
         color: var(--nova-text-4);
         flex-shrink: 0;
@@ -529,7 +529,7 @@
 
     .search-input {
         border-radius: 0 10px 10px 0 !important;
-        border-left: none !important;
+        border-start: none !important;
         flex: 1;
         min-width: 0;
     }
@@ -581,7 +581,7 @@
         box-shadow: 0 0 0 2px rgba(28, 200, 138, 0.25);
     }
 
-    /* ===== Image - صورة كبيرة تملأ العرض ===== */
+    /* ===== الصورة - صورة كبيرة تملأ العرض ===== */
     .nova-product-image {
         width: 100%;
         height: 200px;
@@ -711,7 +711,7 @@
         margin: 0;
     }
 
-    /* ===== Batches List ===== */
+    /* ===== قائمة الدفعات ===== */
     .nova-product-body .nova-collapse {
         max-height: 180px;
         overflow-y: auto;
@@ -795,29 +795,29 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         /* ============================================================
-           Toggle Card/Table View
+           Toggle Card/Table عرض
            ============================================================ */
-        const cardView = document.getElementById('cardView');
-        const tableView = document.getElementById('tableView');
-        const btnCard = document.getElementById('btnCardView');
-        const btnTable = document.getElementById('btnTableView');
+        const cardعرض = document.getElementById('cardعرض');
+        const tableعرض = document.getElementById('tableعرض');
+        const btnCard = document.getElementById('btnCardعرض');
+        const btnTable = document.getElementById('btnTableعرض');
 
-        function setView(mode) {
+        function setعرض(mode) {
             if (mode === 'card') {
-                cardView.style.display = 'block';
-                tableView.style.display = 'none';
+                cardعرض.style.display = 'block';
+                tableعرض.style.display = 'none';
                 btnCard.classList.add('nova-btn-active');
                 btnTable.classList.remove('nova-btn-active');
             } else {
-                cardView.style.display = 'none';
-                tableView.style.display = 'block';
+                cardعرض.style.display = 'none';
+                tableعرض.style.display = 'block';
                 btnTable.classList.add('nova-btn-active');
                 btnCard.classList.remove('nova-btn-active');
             }
         }
 
-        btnCard.addEventListener('click', function() { setView('card'); });
-        btnTable.addEventListener('click', function() { setView('table'); });
+        btnCard.addEventListener('click', function() { setعرض('card'); });
+        btnTable.addEventListener('click', function() { setعرض('table'); });
 
         /* ============================================================
            Auto-search
@@ -834,10 +834,10 @@
                 }, 400);
             });
 
-            const clearBtn = document.getElementById('clearSearch');
+            const clearBtn = document.getElementById('clearبحث');
             if (clearBtn) {
                 clearBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
+                    e.preventافتراضي();
                     window.location.href = this.href;
                 });
             }
@@ -857,7 +857,7 @@
 
         try {
             const canvas = document.getElementById('packChart');
-            if (canvas && typeof Chart !== 'undefined') {
+            if (canvas && typeمن Chart !== 'undefined') {
                 new Chart(canvas.getContext('2d'), {
                     type: 'doughnut',
                     data: {
@@ -906,8 +906,8 @@
            ============================================================ */
         const transferForm = document.getElementById('transferForm-{{ $warehouse->id }}');
         const selectedItemsContainer = transferForm ? transferForm.querySelector('#selectedItemsContainer') : null;
-        const selectAllCheckbox = document.getElementById('selectAllProducts');
-        const productCheckboxes = document.querySelectorAll('.product-checkbox');
+        const selectالكلCheckbox = document.getElementById('selectالكلProducts');
+        const productCheckboxes = document.querySelectorالكل('.product-checkbox');
 
         function updateSelectedItems() {
             const selectedBatchIds = [];
@@ -960,8 +960,8 @@
             });
         });
 
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', function() {
+        if (selectالكلCheckbox) {
+            selectالكلCheckbox.addEventListener('change', function() {
                 productCheckboxes.forEach(cb => {
                     if (!cb.disabled) {
                         cb.checked = this.checked;
@@ -981,10 +981,10 @@
         const transferBtn = document.getElementById('transferBtn-{{ $warehouse->id }}');
         if (transferBtn && transferForm) {
             transferBtn.addEventListener('click', function(e) {
-                e.preventDefault();
+                e.preventافتراضي();
                 updateSelectedItems();
                 const hiddenInputs = selectedItemsContainer
-                    ? selectedItemsContainer.querySelectorAll('input[name="selected_items[]"]')
+                    ? selectedItemsContainer.querySelectorالكل('input[name="selected_items[]"]')
                     : [];
                 if (hiddenInputs.length === 0) {
                     alert('يرجى اختيار منتجات واحدة على الأقل للنقل.');
@@ -995,9 +995,9 @@
         }
 
         /* ============================================================
-           Delete Confirmation
+           حذف تأكيدation
            ============================================================ */
-        window.confirmDelete = function(id, name) {
+        window.confirmحذف = function(id, name) {
             document.getElementById('deleteName').innerText = name;
             document.getElementById('deleteForm').action = '/warehouses/' + id;
             document.getElementById('deleteModal').classList.add('show');
@@ -1007,7 +1007,7 @@
            Auto-dismiss Alerts
            ============================================================ */
         setTimeout(function() {
-            document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            document.querySelectorالكل('.nova-alert').forEach(function(alert) {
                 alert.style.transition = 'opacity 0.3s, transform 0.3s';
                 alert.style.opacity = '0';
                 alert.style.transform = 'translateY(-10px)';

@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-box" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-box" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Pack Capacities
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة سعات الباكجات (مثال: 500g، 1kg، 250ml)</p>
@@ -65,10 +65,10 @@
                             <td>{{ $capacity->description ?? '-' }}</td>
                             <td class="nova-text-end">
                                 <div class="nova-table-actions">
-                                    <a href="{{ route('pack-capacities.edit', $capacity) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                                    <a href="{{ route('pack-capacities.edit', $capacity) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDeleteCapacity({{ $capacity->id }}, '{{ addslashes($capacity->name_en ?? $capacity->name_ar ?? $capacity->value) }}')">
+                                    <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذفCapacity({{ $capacity->id }}, '{{ addslashes($capacity->name_en ?? $capacity->name_ar ?? $capacity->value) }}')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -96,21 +96,21 @@
 </div>
 @endsection
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteCapacityModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete pack capacity <strong id="deleteCapacityName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete pack capacity <strong id="deleteCapacityName" class="nova-text-danger"></strong>?<br>لا يمكن التراجع عن هذا الإجراء.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteCapacityModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteCapacityModal').classList.remove('show')">إلغاء</button>
                 <form id="deleteCapacityForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
                 </form>
             </div>
         </div>
@@ -122,7 +122,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 });
 
-window.confirmDeleteCapacity = function(id, name) {
+window.confirmحذفCapacity = function(id, name) {
     document.getElementById('deleteCapacityName').innerText = name;
     document.getElementById('deleteCapacityForm').action = '/pack-capacities/' + id;
     document.getElementById('deleteCapacityModal').classList.add('show');

@@ -1,6 +1,6 @@
 <nav class="nova-topnav">
     <div class="nova-topnav-left">
-        <button class="nova-icon-btn nova-mobile-menu-btn" type="button" id="novaMobileMenu" aria-label="Open menu">
+        <button class="nova-icon-btn nova-mobile-menu-btn" type="button" id="novaMobileMenu" aria-label="{{ __('messages.navbar.open_menu') }}">
             <i class="fas fa-bars"></i>
         </button>
 
@@ -12,57 +12,67 @@
 
     <div class="nova-search">
         <i class="fas fa-search"></i>
-        <input type="search" placeholder="Search products, customers, invoices..." aria-label="Search">
+        <input type="search" placeholder="{{ __('messages.navbar.search_placeholder') }}" aria-label="{{ __('messages.navbar.search_placeholder') }}">
         <kbd>⌘K</kbd>
     </div>
 
     <div class="nova-topnav-right">
-        <button class="nova-icon-btn" type="button" id="novaQuickAdd" aria-label="Quick add" title="Quick add">
+        <button class="nova-icon-btn" type="button" id="novaQuickAdd" aria-label="{{ __('messages.navbar.quick_add') }}" title="{{ __('messages.navbar.quick_add') }}">
             <i class="fas fa-plus"></i>
         </button>
 
-        <button class="nova-icon-btn" type="button" aria-label="Notifications" title="Notifications">
+        <button class="nova-icon-btn" type="button" aria-label="{{ __('messages.navbar.notifications') }}" title="{{ __('messages.navbar.notifications') }}">
             <i class="fas fa-bell"></i>
             <span class="nova-badge">3</span>
         </button>
+        <span class="nova-badge" style="background: #22c55e; color: white; padding: 2px 7px; border-radius: 50%; font-size: 0.65rem; font-weight: 700; min-width: 16px; text-align: center;">0</span>
+        <span style="font-size: 0.7rem; font-weight: 600; color: #22c55e; margin-inline-end: 0.25rem; align-self: center;">{{ __('messages.navbar.translation_status') }}</span>
 
-        <button class="nova-theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme" title="Toggle theme">
+        <button class="nova-theme-toggle" type="button" data-theme-toggle aria-label="{{ __('messages.navbar.toggle_theme') }}" title="{{ __('messages.navbar.toggle_theme') }}">
             <i class="fas fa-sun"></i>
             <i class="fas fa-moon"></i>
         </button>
+
+        <a href="/lang/{{ app()->getLocale() == 'ar' ? 'en' : 'ar' }}" class="nova-btn nova-btn-sm" style="margin-inline-start: 0.5rem;" title="{{ __('messages.navbar.toggle_language') }}">
+            @if(app()->getLocale() == 'ar')
+                🇸🇦 العربية
+            @else
+                🇬🇧 English
+            @endif
+        </a>
 
         <div class="nova-divider"></div>
 
         <div class="nova-user-menu">
             <button class="nova-user-trigger" type="button" id="novaUserBtn" aria-haspopup="true">
-                <div class="nova-user-avatar">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</div>
+                <div class="nova-user-avatar">{{ strtoupper(substr(Auth::user()->name ?? '', 0, 1)) }}</div>
                 <div class="nova-user-info">
-                    <span class="nova-user-name">{{ Auth::user()->name ?? 'User' }}</span>
-                    <span class="nova-user-role">Administrator</span>
+                    <span class="nova-user-name">{{ Auth::user()->name ?? __('messages.navbar.user') }}</span>
+                    <span class="nova-user-role">{{ __('messages.navbar.administrator') }}</span>
                 </div>
                 <i class="fas fa-chevron-down nova-user-arrow"></i>
             </button>
             <div class="nova-user-dropdown" id="novaUserDropdown">
                 <div class="nova-dropdown-header">
-                    <div class="nova-user-avatar nova-user-avatar-lg">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</div>
+                    <div class="nova-user-avatar nova-user-avatar-lg">{{ strtoupper(substr(Auth::user()->name ?? '', 0, 1)) }}</div>
                     <div>
-                        <div class="nova-dropdown-name">{{ Auth::user()->name ?? 'User' }}</div>
+                        <div class="nova-dropdown-name">{{ Auth::user()->name ?? __('messages.navbar.user') }}</div>
                         <div class="nova-dropdown-email">{{ Auth::user()->email ?? 'user@maggadit.com' }}</div>
                     </div>
                 </div>
                 <div class="nova-dropdown-divider"></div>
                 <a href="{{ route('profile.show') }}" class="nova-user-dropdown-item">
-                    <i class="fas fa-user"></i> <span>My Profile</span>
+                    <i class="fas fa-user"></i> <span>{{ __('messages.navbar.my_profile') }}</span>
                 </a>
                 <a href="#" class="nova-user-dropdown-item">
-                    <i class="fas fa-cog"></i> <span>Settings</span>
+                    <i class="fas fa-cog"></i> <span>{{ __('messages.navbar.settings') }}</span>
                 </a>
                 <a href="#" class="nova-user-dropdown-item">
-                    <i class="fas fa-life-ring"></i> <span>Help & Support</span>
+                    <i class="fas fa-life-ring"></i> <span>{{ __('messages.navbar.help_support') }}</span>
                 </a>
                 <div class="nova-dropdown-divider"></div>
                 <a href="#" onclick="event.preventDefault(); document.getElementById('nova-logout-form').submit();" class="nova-user-dropdown-item nova-text-danger">
-                    <i class="fas fa-sign-out-alt"></i> <span>Log out</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>{{ __('messages.navbar.log_out') }}</span>
                 </a>
             </div>
         </div>
@@ -71,24 +81,24 @@
 
 <!-- Quick Add Dropdown -->
 <div class="nova-quickadd-menu" id="novaQuickAddMenu">
-    <div class="nova-quickadd-header">Quick Add</div>
+    <div class="nova-quickadd-header">{{ __('messages.navbar.quick_add') }}</div>
     <a href="{{ route('items.create') }}" class="nova-quickadd-item">
-        <i class="fas fa-box"></i> <span>New Product</span>
+        <i class="fas fa-box"></i> <span>{{ __('messages.navbar.new_product') }}</span>
     </a>
     <a href="{{ route('customers.create') }}" class="nova-quickadd-item">
-        <i class="fas fa-user-plus"></i> <span>New Customer</span>
+        <i class="fas fa-user-plus"></i> <span>{{ __('messages.navbar.new_customer') }}</span>
     </a>
     <a href="{{ route('offers.create') }}" class="nova-quickadd-item">
-        <i class="fas fa-tag"></i> <span>New Offer</span>
+        <i class="fas fa-tag"></i> <span>{{ __('messages.navbar.new_offer') }}</span>
     </a>
     <a href="{{ route('invoices.create') }}" class="nova-quickadd-item">
-        <i class="fas fa-file-invoice"></i> <span>New Invoice</span>
+        <i class="fas fa-file-invoice"></i> <span>{{ __('messages.navbar.new_invoice') }}</span>
     </a>
     <a href="{{ route('pack-definitions.create') }}" class="nova-quickadd-item">
-        <i class="fas fa-box-open"></i> <span>New Pack Definition</span>
+        <i class="fas fa-box-open"></i> <span>{{ __('messages.navbar.new_pack_definition') }}</span>
     </a>
     <a href="{{ route('warehouses.create') }}" class="nova-quickadd-item">
-        <i class="fas fa-warehouse"></i> <span>New Warehouse</span>
+        <i class="fas fa-warehouse"></i> <span>{{ __('messages.navbar.new_warehouse') }}</span>
     </a>
 </div>
 

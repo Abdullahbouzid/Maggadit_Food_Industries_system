@@ -1,22 +1,22 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Brand Details: ' . $brand->name)
+@section('title', 'Brand التفاصيل: ' . $brand->name)
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Brand: {{ $brand->name }}
         </h2>
-        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">View complete brand information</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">عرض complete brand information</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('brands.edit', $brand) }}" class="nova-btn nova-btn-warning nova-btn-sm">
-            <i class="fas fa-edit"></i> Edit
+            <i class="fas fa-edit"></i> تعديل
         </a>
         <a href="{{ route('brands.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back to List
+            <i class="fas fa-arrow-right"></i> رجوع to List
         </a>
     </div>
 </div>
@@ -30,7 +30,7 @@
 
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Brand Details</h5>
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Brand التفاصيل</h5>
     </div>
     <div class="nova-card-body">
         <div class="nova-row g-4">
@@ -40,7 +40,7 @@
                 @else
                     <div class="nova-bg-surface-2 rounded p-5 nova-text-muted">
                         <i class="fas fa-image" style="width: 48px; height: 48px;"></i>
-                        <p class="nova-mb-0">No Logo</p>
+                        <p class="nova-mb-0">لا Logo</p>
                     </div>
                 @endif
             </div>
@@ -66,14 +66,14 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Created At</th>
+                            <th>تاريخ الإنشاء</th>
                             <td>
                                 <i class="fas fa-calendar nova-text-muted me-1"></i>
                                 {{ $brand->created_at->format('Y-m-d h:i A') }}
                             </td>
                         </tr>
                         <tr>
-                            <th>Last Updated</th>
+                            <th>الأخير Updated</th>
                             <td>
                                 <i class="fas fa-history nova-text-muted me-1"></i>
                                 {{ $brand->updated_at->format('Y-m-d h:i A') }}
@@ -83,10 +83,10 @@
                 </div>
                 <div class="nova-flex nova-gap-2 nova-mt-4">
                     <a href="{{ route('brands.edit', $brand) }}" class="nova-btn nova-btn-warning">
-                        <i class="fas fa-edit"></i> Edit
+                        <i class="fas fa-edit"></i> تعديل
                     </a>
                     <a href="{{ route('brands.index') }}" class="nova-btn nova-btn-outline">
-                        <i class="fas fa-list"></i> Back to List
+                        <i class="fas fa-list"></i> رجوع to List
                     </a>
                 </div>
             </div>
@@ -99,7 +99,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

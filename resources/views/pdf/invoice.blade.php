@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <title>فاتورة مبيعات - {{ $invoice->invoice_number }}</title>
@@ -94,10 +94,10 @@
         .text-center {
             text-align: center;
         }
-        .text-left {
+        .text-start {
             text-align: left;
         }
-        .text-right {
+        .text-end {
             text-align: right;
         }
         .summary-box {
@@ -208,8 +208,8 @@
                 <th style="width: 45%;">المنتج والعبوة / Item & Packaging</th>
                 <th style="width: 15%;" class="text-center">وحدة القياس / UOM</th>
                 <th style="width: 10%;" class="text-center">الكمية / Qty</th>
-                <th style="width: 12%;" class="text-left">السعر / Price</th>
-                <th style="width: 13%;" class="text-left">المجموع / Total</th>
+                <th style="width: 12%;" class="text-start">السعر / Price</th>
+                <th style="width: 13%;" class="text-start">المجموع / Total</th>
             </tr>
         </thead>
         <tbody>
@@ -237,8 +237,8 @@
                     </td>
                     <td class="text-center">{{ $packLabel }}</td>
                     <td class="text-center">{{ (float)$item->quantity }}</td>
-                    <td class="text-left">{{ number_format($item->unit_price, 2) }} ر.س</td>
-                    <td class="text-left" style="font-weight: bold;">{{ number_format($lineTotal, 2) }} ر.س</td>
+                    <td class="text-start">{{ number_format($item->unit_price, 2) }} ر.س</td>
+                    <td class="text-start" style="font-weight: bold;">{{ number_format($lineTotal, 2) }} ر.س</td>
                 </tr>
             @endforeach
         </tbody>
@@ -249,11 +249,11 @@
         <table class="summary-table">
             <tr>
                 <td class="meta-label">المجموع الفرعي / Subtotal:</td>
-                <td class="text-left">{{ number_format($subtotalCalculated, 2) }} ر.س</td>
+                <td class="text-start">{{ number_format($subtotalCalculated, 2) }} ر.س</td>
             </tr>
             <tr class="summary-total">
                 <td>الإجمالي الكلي / Grand Total:</td>
-                <td class="text-left">{{ number_format($invoice->total_amount, 2) }} ر.س</td>
+                <td class="text-start">{{ number_format($invoice->total_amount, 2) }} ر.س</td>
             </tr>
         </table>
     </div>

@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('title', 'تاريخ الطلبات')
+@section('{{ __('messages.app.page_') }}', 'تاريخ الطلبات')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['title' => 'تاريخ الطلبات'])
+    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'تاريخ الطلبات'])
 
-    <div class="p-4" dir="rtl">
+    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
         <!-- زر الرجوع -->
         <div class="mb-4">
             <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100">
@@ -94,7 +94,7 @@
 
     <!-- مودال تفاصيل الطلب المحسن -->
     <div id="order-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
-        <div class="bg-white rounded-2xl w-11/12 max-w-md p-5 transform scale-95 transition-all duration-300 shadow-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+        <div class="bg-white rounded-2xl w-11/12 max-w-md p-5 transform scale-95 transition-all duration-300 shadow-2xl max-h-[90vh] overflow-y-auto" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
             <div class="text-center mb-3">
                 <div class="w-14 h-14 mx-auto rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-2xl">
                     <i class="fas fa-receipt"></i>
@@ -139,7 +139,7 @@
             </div>
             
             <a id="modal-print-pdf" href="#" target="_blank" class="w-full mt-4 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-2.5 rounded-xl text-center flex items-center justify-center gap-2 shadow-md transition">
-                <i class="fas fa-print"></i> طباعة الفاتورة PDF
+                <i class="fas fa-print"></i> {{ __('messages.app.page__2') }}
             </a>
             <button id="close-order-modal" class="w-full mt-2 bg-gray-100 text-gray-700 font-semibold py-2 rounded-xl">إغلاق</button>
         </div>
@@ -200,7 +200,7 @@
             data.items.forEach(item => {
                 itemsHtml += `<div class="flex justify-between text-xs py-1 border-b border-gray-50">
                                 <span class="font-medium text-gray-800">${item.name} × ${item.qty}</span>
-                                <span class="text-purple-700 font-bold">${item.price * item.qty} ر.س</span>
+                                <span class="text-purple-700 font-bold">{{ __('messages.app.page__1') }}</span>
                             </div>`;
             });
             document.getElementById('modal-order-items').innerHTML = itemsHtml;

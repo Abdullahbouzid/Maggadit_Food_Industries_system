@@ -1,13 +1,13 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'States Management')
+@section('title', 'إدارة الولايات')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-map-pin" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-map-pin" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             States
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
@@ -19,7 +19,7 @@
             <i class="fas fa-plus"></i> Create
         </a>
         <a href="{{ route('states.export', request()->query()) }}" class="nova-btn nova-btn-secondary nova-btn-sm">
-            <i class="fas fa-download"></i> Export Table
+            <i class="fas fa-download"></i> تصدير Table
         </a>
     </div>
 </div>
@@ -41,7 +41,7 @@
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-circle"></i>
         <div>
-            <strong>Import Errors:</strong>
+            <strong>أخطاء الاستيراد:</strong>
             <ul class="nova-mb-0 nova-mt-1">
                 @foreach(session('import_errors') as $error)
                     <li>{{ $error }}</li>
@@ -57,28 +57,28 @@
         <div class="nova-stat-icon primary">
             <i class="fas fa-map-pin"></i>
         </div>
-        <p class="nova-stat-label">Total States</p>
+        <p class="nova-stat-label">إجمالي الولايات</p>
         <p class="nova-stat-value">{{ $total }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon success">
             <i class="fas fa-check-circle"></i>
         </div>
-        <p class="nova-stat-label">Active</p>
+        <p class="nova-stat-label">نشط</p>
         <p class="nova-stat-value">{{ $active }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon accent">
-            <i class="fas fa-eye-off"></i>
+            <i class="fas fa-eye-منf"></i>
         </div>
-        <p class="nova-stat-label">Inactive</p>
+        <p class="nova-stat-label">غير نشط</p>
         <p class="nova-stat-value">{{ $inactive }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon secondary">
             <i class="fas fa-clock"></i>
         </div>
-        <p class="nova-stat-label">Last Updated</p>
+        <p class="nova-stat-label">الأخير Updated</p>
         <p class="nova-stat-value">{{ now()->format('d M Y') }}</p>
     </div>
 </div>
@@ -94,71 +94,71 @@
         <form action="{{ route('states.import') }}" method="POST" enctype="multipart/form-data" class="import-form">
             @csrf
             <div class="nova-form-group import-form-input">
-                <label class="nova-label">Excel File (.xlsx, .xls, .csv)</label>
+                <label class="nova-label">ملف Excel</label>
                 <input type="file" name="import_file" class="nova-input" required>
                 <div class="nova-help-text">
-                    Required columns: <strong>code, name_en, name_ar</strong>.
-                    Optional: description, is_active, sort_order.
+                    الأعمدة المطلوبة.
+                    اختياري: description, is_active, sort_order.
                 </div>
             </div>
             <div class="import-form-actions">
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-upload"></i> Import Data
+                    <i class="fas fa-upload"></i> استيراد البيانات
                 </button>
                 <a href="{{ route('states.template') }}" class="nova-btn nova-btn-outline">
-                    <i class="fas fa-file-text"></i> Download Template
+                    <i class="fas fa-file-text"></i> تحميل القالب
                 </a>
             </div>
         </form>
     </div>
 </div>
 
-{{-- ===== Filter Section ===== --}}
+{{-- ===== فلتر Section ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('states.index') }}" class="filter-form">
-            {{-- Search --}}
+            {{-- بحث --}}
             <div class="nova-form-group filter-item filter-item-search">
-                <label class="nova-label">Search</label>
+                <label class="nova-label">بحث</label>
                 <div class="filter-search-wrapper">
                     <span class="filter-search-icon">
                         <i class="fas fa-search"></i>
                     </span>
                     <input type="text" name="search" class="nova-input filter-search-input"
-                           placeholder="Code, Name (EN/AR)..."
+                           placeholder="Code, Name (E—R)..."
                            value="{{ request('search') }}">
                 </div>
             </div>
 
-            {{-- Status --}}
+            {{-- الحالة --}}
             <div class="nova-form-group filter-item">
-                <label class="nova-label">Status</label>
+                <label class="nova-label">الحالة</label>
                 <select name="status" class="nova-select">
-                    <option value="">All</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="">الكل</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
                 </select>
             </div>
 
-            {{-- Per Page --}}
+            {{-- لكل صفحة --}}
             <div class="nova-form-group filter-item">
-                <label class="nova-label">Per Page</label>
+                <label class="nova-label">لكل صفحة</label>
                 <select name="per_page" class="nova-select">
                     <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
                 </select>
             </div>
 
-            {{-- Actions --}}
+            {{-- إجراءات --}}
             <div class="nova-form-group filter-item filter-item-actions">
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-filter"></i> Filter
+                    <i class="fas fa-filter"></i> فلتر
                 </button>
                 <a href="{{ route('states.index') }}" class="nova-btn nova-btn-outline">
-                    <i class="fas fa-rotate-left"></i> Reset
+                    <i class="fas fa-rotate-left"></i> إعادة تعيين
                 </a>
             </div>
         </form>
@@ -171,7 +171,7 @@
         <div class="nova-toolbar-filters">
             <h3 class="nova-card-title" style="margin: 0;">
                 <i class="fas fa-list"></i>
-                States List
+                قائمة الولايات
             </h3>
         </div>
         <div class="nova-toolbar-actions">
@@ -199,7 +199,7 @@
                 @forelse($states as $state)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($states->currentPage() - 1) * $states->perPage() }}
+                        {{ $loop->iteration + ($states->currentصفحة() - 1) * $states->perصفحة() }}
                     </td>
                     <td>
                         <code class="table-code">{{ $state->code }}</code>
@@ -220,11 +220,11 @@
                     <td>
                         @if($state->is_active)
                             <span class="nova-badge success">
-                                <i class="fas fa-check"></i> Active
+                                <i class="fas fa-check"></i> نشط
                             </span>
                         @else
                             <span class="nova-badge secondary">
-                                <i class="fas fa-x"></i> Inactive
+                                <i class="fas fa-x"></i> غير نشط
                             </span>
                         @endif
                     </td>
@@ -234,17 +234,17 @@
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
                             <a href="{{ route('states.show', $state) }}"
-                               class="nova-icon-btn nova-btn-sm" title="View">
+                               class="nova-icon-btn nova-btn-sm" title="عرض">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a href="{{ route('states.edit', $state) }}"
-                               class="nova-icon-btn nova-btn-sm" title="Edit">
+                               class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button type="button"
                                     class="nova-icon-btn nova-btn-sm nova-text-danger"
-                                    title="Delete"
-                                    onclick="confirmDelete({{ $state->id }}, '{{ addslashes($state->name_en) }}')">
+                                    title="حذف"
+                                    onclick="confirmحذف({{ $state->id }}, '{{ addslashes($state->name_en) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -257,7 +257,7 @@
                             <div class="nova-empty-icon">
                                 <i class="fas fa-map-pin"></i>
                             </div>
-                            <h3 class="nova-empty-title">No states found</h3>
+                            <h3 class="nova-empty-title">لا states found</h3>
                             <p class="nova-empty-text">Create your first state.</p>
                             <a href="{{ route('states.create') }}" class="nova-btn nova-btn-primary">
                                 <i class="fas fa-plus"></i> Create State
@@ -273,7 +273,7 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
-                Showing {{ $states->firstItem() ?? 0 }} to {{ $states->lastItem() ?? 0 }} of {{ $states->total() }} entries
+                عرض {{ $states->firstItem() ?? 0 }} to {{ $states->lastItem() ?? 0 }} من {{ $states->total() }} entries
             </div>
             <div class="nova-pagination">
                 {{ $states->appends(request()->query())->links() }}
@@ -282,28 +282,28 @@
     </div>
 </div>
 
-{{-- ===== Delete Confirmation Modal ===== --}}
-<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+{{-- ===== حذف تأكيدation Modal ===== --}}
+<div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
             <p class="nova-delete-modal-text">
                 Are you sure you want to delete state
                 <strong id="deleteItemName" class="nova-text-danger"></strong>?<br>
-                This action cannot be undone.
+                لا يمكن التراجع عن هذا الإجراء.
             </p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
-                    Cancel
+                        onclick="document.getElementById('globalحذفModal').classList.remove('show')">
+                    إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
                 </form>
             </div>
         </div>
@@ -334,7 +334,7 @@
     }
 
     /* ============================================================
-       Filter Form - Grid Layout
+       فلتر Form - Grid Layout
        ============================================================ */
     .filter-form {
         display: grid;
@@ -348,7 +348,7 @@
         min-width: 0;
     }
 
-    /* Search Input Wrapper */
+    /* بحث Input Wrapper */
     .filter-search-wrapper {
         position: relative;
         display: flex;
@@ -363,7 +363,7 @@
         padding: 0 0.875rem;
         background: var(--nova-surface-2);
         border: 1.5px solid var(--nova-border);
-        border-right: none;
+        border-end: none;
         border-radius: 10px 0 0 10px;
         color: var(--nova-text-4);
         flex-shrink: 0;
@@ -371,12 +371,12 @@
 
     .filter-search-input {
         border-radius: 0 10px 10px 0 !important;
-        border-left: none !important;
+        border-start: none !important;
         flex: 1;
         min-width: 0;
     }
 
-    /* Filter Actions */
+    /* فلتر إجراءات */
     .filter-item-actions {
         display: flex;
         gap: 0.5rem;
@@ -489,27 +489,27 @@
         /* ============================================================
            Auto-submit on per_page change
            ============================================================ */
-        const perPageSelect = document.querySelector('select[name="per_page"]');
-        if (perPageSelect) {
-            perPageSelect.addEventListener('change', () => {
+        const perصفحةSelect = document.querySelector('select[name="per_page"]');
+        if (perصفحةSelect) {
+            perصفحةSelect.addEventListener('change', () => {
                 document.getElementById('filterForm').submit();
             });
         }
 
         /* ============================================================
-           Delete Confirmation
+           حذف تأكيدation
            ============================================================ */
-        window.confirmDelete = function(id, name) {
+        window.confirmحذف = function(id, name) {
             document.getElementById('deleteItemName').innerText = name;
             document.getElementById('deleteForm').action = '/states/' + id;
-            document.getElementById('globalDeleteModal').classList.add('show');
+            document.getElementById('globalحذفModal').classList.add('show');
         };
 
         /* ============================================================
            Auto-dismiss Alerts
            ============================================================ */
         setTimeout(() => {
-            document.querySelectorAll('.nova-alert').forEach(alert => {
+            document.querySelectorالكل('.nova-alert').forEach(alert => {
                 alert.style.transition = 'opacity 0.3s, transform 0.3s';
                 alert.style.opacity = '0';
                 alert.style.transform = 'translateY(-10px)';

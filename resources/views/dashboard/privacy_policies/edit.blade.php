@@ -5,15 +5,15 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            تعديل السياسة: {{ $privacyPolicy->title ?? ($privacyPolicy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة') }}
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            تعديل السياسة: {{ $privacyPolicy->{{ __('messages.app.page_') }} ?? ($privacyPolicy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة') }}
         </h2>
-        <p class="nova-page-subtitle">Modify privacy policy and terms of service</p>
+        <p class="nova-page-sub{{ __('messages.app.page_') }}">{{ __('messages.app.page__2') }}</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('privacy-policies.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back
+            <i class="fas fa-arrow-right"></i> {{ __('messages.app.page__3') }}
         </a>
     </div>
 </div>
@@ -31,7 +31,7 @@
 
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Basic Information</h5>
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> {{ __('messages.app.page__1') }}</h5>
     </div>
     <div class="nova-card-body">
         <form action="{{ route('privacy-policies.update', $privacyPolicy) }}" method="POST">
@@ -54,8 +54,8 @@
                     <div class="nova-form-group">
                         <label class="nova-label">النوع <span class="nova-text-danger">*</span></label>
                         <select name="type" class="nova-select" required>
-                            <option value="privacy_policy" {{ old('type', $privacyPolicy->type) == 'privacy_policy' ? 'selected' : '' }}>سياسة خصوصية</option>
-                            <option value="terms_of_service" {{ old('type', $privacyPolicy->type) == 'terms_of_service' ? 'selected' : '' }}>شروط خدمة</option>
+                            <option value="privacy_policy" {{ old('type', $privacyPolicy->{{ __('messages.app.page__4') }}</option>
+                            <option value="terms_of_service" {{ old('type', $privacyPolicy->{{ __('messages.app.page__5') }}</option>
                         </select>
                     </div>
                 </div>
@@ -63,7 +63,7 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-group">
                         <label class="nova-label">العنوان</label>
-                        <input type="text" name="title" class="nova-input" value="{{ old('title', $privacyPolicy->title) }}" placeholder="مثال: سياسة الخصوصية الرسمية">
+                        <input type="text" name="{{ __('messages.app.page_') }}" class="nova-input" value="{{ old('{{ __('messages.app.page_') }}', $privacyPolicy->{{ __('messages.app.page_') }}) }}" placeholder="مثال: سياسة الخصوصية الرسمية">
                     </div>
                 </div>
 

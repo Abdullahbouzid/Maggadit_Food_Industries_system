@@ -26,7 +26,7 @@
         .nav-item-premium.active .nav-indicator { transform: translateX(-50%) scaleX(1); }
         .nav-item-premium:not(.active):hover { color: #9879b6; transform: translateY(-2px); }
         .nav-item-premium:not(.active):hover .nav-icon { background: rgba(152, 121, 182, 0.06); }
-        [dir="rtl"] .bottom-nav-premium { direction: rtl; }
+        [dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}"] .bottom-nav-premium { direction: rtl; }
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
             .bottom-nav-premium { bottom: calc(16px + env(safe-area-inset-bottom)); }
         }
@@ -60,7 +60,7 @@
 </style>
 <!-- مؤشر السحب للتحديث (يظهر في الأعلى) -->
 <div id="ptr-indicator" class="ptr-indicator">
-    <i class="fas fa-arrow-down mr-1"></i> اسحب لتحديث الصفحة
+    <i class="fas fa-arrow-down start-1"></i> اسحب لتحديث الصفحة
 </div>
 
 <!-- Header with location, language switch, search, and notifications -->
@@ -99,7 +99,7 @@
         <div class="relative">
             <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
             <input type="text" id="search-input" placeholder="ابحث عن منتجات، ماركات، عروض..." 
-                   class="w-full pr-10 pl-10 py-2 border border-gray-200 rounded-full focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm bg-gray-50">
+                   class="w-full end-10 start-10 py-2 border border-gray-200 rounded-full focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm bg-gray-50">
             <button id="close-search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 transition">
                 <i class="fas fa-times"></i>
             </button>
@@ -273,7 +273,7 @@
             pulling = true;
             if (ptrIndicator) {
                 ptrIndicator.style.transform = 'translateY(-100%)';
-                ptrIndicator.innerHTML = '<i class="fas fa-arrow-down mr-1"></i> اسحب لتحديث';
+                ptrIndicator.innerHTML = '<i class="fas fa-arrow-down start-1"></i> اسحب لتحديث';
             }
         }
     }
@@ -288,12 +288,12 @@
             if (ptrIndicator) {
                 if (diff >= refreshThreshold) {
                     ptrIndicator.style.transform = 'translateY(0)';
-                    ptrIndicator.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-1"></i> حرر للتحديث';
+                    ptrIndicator.innerHTML = '<i class="fas fa-sync-alt fa-spin start-1"></i> حرر للتحديث';
                 } else {
                     const percent = diff / refreshThreshold;
                     const translateY = -100 + (percent * 100);
                     ptrIndicator.style.transform = `translateY(${translateY}%)`;
-                    ptrIndicator.innerHTML = '<i class="fas fa-arrow-down mr-1"></i> اسحب لتحديث';
+                    ptrIndicator.innerHTML = '<i class="fas fa-arrow-down start-1"></i> اسحب لتحديث';
                 }
             }
         }
@@ -308,7 +308,7 @@
             refreshing = true;
             if (ptrIndicator) {
                 ptrIndicator.style.transform = 'translateY(0)';
-                ptrIndicator.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-1"></i> جاري التحديث...';
+                ptrIndicator.innerHTML = '<i class="fas fa-sync-alt fa-spin start-1"></i> جاري التحديث...';
             }
             showToast('🔄 جاري تحديث الصفحة...', 'info', 1500);
             setTimeout(() => {

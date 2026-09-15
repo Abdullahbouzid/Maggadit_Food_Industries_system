@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Edit Pack Operation: ' . $packOperation->name_en)
+@section('title', 'تعديل Pack Operation: ' . $packOperation->name_en)
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
-            Edit Pack Operation: {{ $packOperation->name_en }}
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            تعديل Pack Operation: {{ $packOperation->name_en }}
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Update details for {{ $packOperation->name_en }} / {{ $packOperation->name_ar }}</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('pack-operations.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back
+            <i class="fas fa-arrow-right"></i> رجوع
         </a>
     </div>
 </div>
@@ -49,7 +49,7 @@
                 </div>
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
-                        <label class="nova-label">Name (English) <span class="nova-text-danger">*</span></label>
+                        <label class="nova-label">الاسم بالإنجليزي <span class="nova-text-danger">*</span></label>
                         <input type="text" name="name_en" class="nova-input @error('name_en') nova-invalid @enderror" value="{{ old('name_en', $packOperation->name_en) }}" required>
                         @error('name_en')
                             <div class="nova-form-error">{{ $message }}</div>
@@ -58,7 +58,7 @@
                 </div>
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
-                        <label class="nova-label">Name (Arabic) <span class="nova-text-danger">*</span></label>
+                        <label class="nova-label">الاسم بالعربي <span class="nova-text-danger">*</span></label>
                         <input type="text" name="name_ar" class="nova-input @error('name_ar') nova-invalid @enderror" value="{{ old('name_ar', $packOperation->name_ar) }}" required>
                         @error('name_ar')
                             <div class="nova-form-error">{{ $message }}</div>
@@ -67,10 +67,10 @@
                 </div>
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
-                        <label class="nova-label">Status</label>
+                        <label class="nova-label">الحالة</label>
                         <select name="is_active" class="nova-select @error('is_active') nova-invalid @enderror">
-                            <option value="1" {{ old('is_active', $packOperation->is_active) ? 'selected' : '' }}>Active</option>
-                            <option value="0" {{ old('is_active', $packOperation->is_active) ? '' : 'selected' }}>Inactive</option>
+                            <option value="1" {{ old('is_active', $packOperation->is_active) ? 'selected' : '' }}>نشط</option>
+                            <option value="0" {{ old('is_active', $packOperation->is_active) ? '' : 'selected' }}>غير نشط</option>
                         </select>
                         @error('is_active')
                             <div class="nova-form-error">{{ $message }}</div>
@@ -79,7 +79,7 @@
                 </div>
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
-                        <label class="nova-label">Sort Order</label>
+                        <label class="nova-label">ترتيب الفرز</label>
                         <input type="number" name="sort_order" class="nova-input @error('sort_order') nova-invalid @enderror" value="{{ old('sort_order', $packOperation->sort_order) }}">
                         @error('sort_order')
                             <div class="nova-form-error">{{ $message }}</div>
@@ -89,7 +89,7 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('pack-operations.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-x me-1"></i> Cancel
+                            <i class="fas fa-x me-1"></i> إلغاء
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
                             <i class="fas fa-save me-1"></i> Update Operation

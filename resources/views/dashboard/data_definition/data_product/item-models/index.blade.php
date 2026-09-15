@@ -6,17 +6,17 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-microchip" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-microchip" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Item Models
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage product models</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('item-models.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus"></i> Add New
+            <i class="fas fa-plus"></i> إضافة جديد
         </a>
         <a href="{{ route('item-models.export', request()->query()) }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-download"></i> Export
+            <i class="fas fa-download"></i> تصدير
         </a>
     </div>
 </div>
@@ -29,7 +29,7 @@
 @if(session('import_errors'))
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-circle"></i>
-        <ul style="margin: 0; padding-left: 1.25rem;">
+        <ul style="margin: 0; padding-inline-start: 1.25rem;">
             @foreach(session('import_errors') as $err)
                 <li>{{ $err }}</li>
             @endforeach
@@ -49,14 +49,14 @@
         <div class="nova-stat-icon primary">
             <i class="fas fa-check-circle"></i>
         </div>
-        <p class="nova-stat-label">Active</p>
+        <p class="nova-stat-label">نشط</p>
         <p class="nova-stat-value">{{ $active }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon accent">
             <i class="fas fa-circle-pause"></i>
         </div>
-        <p class="nova-stat-label">Inactive</p>
+        <p class="nova-stat-label">غير نشط</p>
         <p class="nova-stat-value">{{ $inactive }}</p>
     </div>
 </div>
@@ -88,28 +88,28 @@
     <div class="nova-card-body">
         <form method="GET" action="{{ route('item-models.index') }}" class="nova-flex nova-flex-wrap nova-gap-3" style="align-items: end;">
             <div class="nova-form-group" style="flex: 1 1 17rem; margin-bottom: 0;">
-                <label class="nova-label">Search</label>
-                <input type="text" name="search" class="nova-input" placeholder="Search..." value="{{ request('search') }}">
+                <label class="nova-label">بحث</label>
+                <input type="text" name="search" class="nova-input" placeholder="بحث..." value="{{ request('search') }}">
             </div>
             <div class="nova-form-group" style="flex: 1 1 11rem; margin-bottom: 0;">
-                <label class="nova-label">Status</label>
+                <label class="nova-label">الحالة</label>
                 <select name="status" class="nova-select">
-                    <option value="">All</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="">الكل</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
                 </select>
             </div>
             <div class="nova-form-group" style="flex: 1 1 10rem; margin-bottom: 0;">
-                <label class="nova-label">Per Page</label>
+                <label class="nova-label">لكل صفحة</label>
                 <select name="per_page" class="nova-select" onchange="this.form.submit()">
                     <option value="10">10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
                 </select>
             </div>
             <div class="nova-form-group" style="flex: 1 1 9rem; margin-bottom: 0;">
-                <button type="submit" class="nova-btn nova-btn-primary nova-w-100">Filter</button>
+                <button type="submit" class="nova-btn nova-btn-primary nova-w-100">فلتر</button>
             </div>
         </form>
     </div>
@@ -119,7 +119,7 @@
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
             <h3 class="nova-card-title" style="margin: 0;">
-                <i class="fas fa-microchip"></i> Item Models List
+                <i class="fas fa-microchip"></i> قائمة نماذج العنصر
             </h3>
         </div>
         <div class="nova-toolbar-actions">
@@ -136,35 +136,35 @@
                     <th>Code</th>
                     <th>Name (EN)</th>
                     <th>Name (AR)</th>
-                    <th>Status</th>
+                    <th>الحالة</th>
                     <th>Sort</th>
-                    <th style="text-align: right;">Actions</th>
+                    <th style="text-align: right;">إجراءات</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($models as $m)
                 <tr>
-                    <td>{{ $loop->iteration + ($models->currentPage() - 1) * $models->perPage() }}</td>
+                    <td>{{ $loop->iteration + ($models->currentصفحة() - 1) * $models->perصفحة() }}</td>
                     <td><code>{{ $m->code }}</code></td>
                     <td>{{ $m->name_en }}</td>
                     <td>{{ $m->name_ar }}</td>
                     <td>
                         @if($m->is_active)
-                            <span class="nova-badge success">Active</span>
+                            <span class="nova-badge success">نشط</span>
                         @else
-                            <span class="nova-badge secondary">Inactive</span>
+                            <span class="nova-badge secondary">غير نشط</span>
                         @endif
                     </td>
                     <td>{{ $m->sort_order ?? '-' }}</td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                <a href="{{ route('item-models.show', $m) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                <a href="{{ route('item-models.show', $m) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
                     <i class="fas fa-eye"></i>
                 </a>
-                <a href="{{ route('item-models.edit', $m) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
+                <a href="{{ route('item-models.edit', $m) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                     <i class="fas fa-edit"></i>
                 </a>
-                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete({{ $m->id }}, '{{ addslashes($m->name_en) }}')">
+                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذف({{ $m->id }}, '{{ addslashes($m->name_en) }}')">
                     <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -177,7 +177,7 @@
                             <div class="nova-empty-icon">
                                 <i class="fas fa-microchip" style="width: 48px; height: 48px;"></i>
                             </div>
-                            <h3 class="nova-empty-title">No records</h3>
+                            <h3 class="nova-empty-title">لا سجل</h3>
                             <p class="nova-empty-text">Add an item model to get started.</p>
                 <a href="{{ route('item-models.create') }}" class="nova-btn nova-btn-primary">
                     <i class="fas fa-plus"></i> Add Model
@@ -201,7 +201,7 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -226,7 +226,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/item-models/' + id;
         document.getElementById('deleteModal').classList.add('show');

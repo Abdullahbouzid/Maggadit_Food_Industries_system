@@ -1,22 +1,22 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Warehouse Type Details')
+@section('title', 'Warehouse Type التفاصيل')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             Warehouse Type: {{ $warehouseType->code }}
         </h2>
-        <p class="nova-page-subtitle">View warehouse classification details</p>
+        <p class="nova-page-subtitle">عرض warehouse classification details</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('warehouse-types.edit', $warehouseType) }}" class="nova-btn nova-btn-warning nova-btn-sm">
-            <i class="fas fa-edit"></i> Edit
+            <i class="fas fa-edit"></i> تعديل
         </a>
         <a href="{{ route('warehouse-types.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> Back to List
+            <i class="fas fa-arrow-right"></i> رجوع to List
         </a>
     </div>
 </div>
@@ -30,7 +30,7 @@
 
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Warehouse Type Details</h5>
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Warehouse Type التفاصيل</h5>
     </div>
     <div class="nova-card-body">
         <div class="nova-table-scroll">
@@ -52,32 +52,32 @@
                     <td>{{ $warehouseType->name_ar ?: '—' }}</td>
                 </tr>
                 <tr>
-                    <th>Description</th>
+                    <th>الوصف</th>
                     <td>{{ $warehouseType->description ?: '—' }}</td>
                 </tr>
                 <tr>
-                    <th>Status</th>
+                    <th>الحالة</th>
                     <td>
                         @if($warehouseType->is_active)
-                            <span class="nova-badge success"><i class="fas fa-check me-1"></i> Active</span>
+                            <span class="nova-badge success"><i class="fas fa-check me-1"></i> نشط</span>
                         @else
-                            <span class="nova-badge secondary"><i class="fas fa-x me-1"></i> Inactive</span>
+                            <span class="nova-badge secondary"><i class="fas fa-x me-1"></i> غير نشط</span>
                         @endif
                     </td>
                 </tr>
                 <tr>
-                    <th>Sort Order</th>
+                    <th>ترتيب الفرز</th>
                     <td>{{ $warehouseType->sort_order ?? 0 }}</td>
                 </tr>
                 <tr>
-                    <th>Created At</th>
+                    <th>تاريخ الإنشاء</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted me-1"></i>
                         {{ $warehouseType->created_at ? $warehouseType->created_at->format('F d, Y h:i A') : '—' }}
                     </td>
                 </tr>
                 <tr>
-                    <th>Last Updated</th>
+                    <th>الأخير Updated</th>
                     <td>
                         <i class="fas fa-history nova-text-muted me-1"></i>
                         {{ $warehouseType->updated_at ? $warehouseType->updated_at->format('F d, Y h:i A') : '—' }}
@@ -89,15 +89,15 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-gap-2">
             <a href="{{ route('warehouse-types.index') }}" class="nova-btn nova-btn-outline">
-                <i class="fas fa-list"></i> Back to List
+                <i class="fas fa-list"></i> رجوع to List
             </a>
             <div class="nova-flex nova-gap-2">
                 <a href="{{ route('warehouse-types.edit', $warehouseType) }}" class="nova-btn nova-btn-warning">
-                    <i class="fas fa-edit"></i> Edit
+                    <i class="fas fa-edit"></i> تعديل
                 </a>
                 <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
-                        onclick="confirmDelete({{ $warehouseType->id }}, '{{ addslashes($warehouseType->name_en) }}')">
-                    <i class="fas fa-trash-alt"></i> Delete
+                        onclick="confirmحذف({{ $warehouseType->id }}, '{{ addslashes($warehouseType->name_en) }}')">
+                    <i class="fas fa-trash-alt"></i> حذف
                 </button>
             </div>
         </div>
@@ -119,7 +119,7 @@
                         <th>Code</th>
                         <th>Name (EN)</th>
                         <th>Organization</th>
-                        <th>Status</th>
+                        <th>الحالة</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -131,9 +131,9 @@
                         <td>{{ $wh->organization?->name ?? '—' }}</td>
                         <td>
                             @if($wh->is_active)
-                                <span class="nova-badge success">Active</span>
+                                <span class="nova-badge success">نشط</span>
                             @else
-                                <span class="nova-badge secondary">Inactive</span>
+                                <span class="nova-badge secondary">غير نشط</span>
                             @endif
                         </td>
                     </tr>
@@ -145,21 +145,21 @@
 </div>
 @endif
 
-{{-- Delete Confirmation Modal (Nova) --}}
+{{-- حذف تأكيدation Modal (لاva) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete warehouse type <strong id="deleteName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete warehouse type <strong id="deleteName" class="nova-text-danger"></strong>?<br>لا يمكن التراجع عن هذا الإجراء.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">إلغاء</button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
                 </form>
             </div>
         </div>
@@ -170,14 +170,14 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
+    window.confirmحذف = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/warehouse-types/' + id;
         document.getElementById('deleteModal').classList.add('show');
     };
 
     setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

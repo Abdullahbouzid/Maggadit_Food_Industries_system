@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-title">
-            <i class="fas fa-message-square" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
+            <i class="fas fa-message-square" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             رسالة من {{ $contactMessage->name }}
         </h2>
-        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
+        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">
             <i class="fas fa-clock"></i> تاريخ الإرسال: {{ $contactMessage->created_at->format('Y-m-d H:i') }}
         </p>
     </div>
@@ -141,7 +141,7 @@
     <div class="nova-card-body">
         <div class="nova-flex nova-gap-2">
             <a href="{{ route('contact-messages.index') }}" class="nova-btn nova-btn-outline">
-                <i class="fas fa-arrow-left"></i> Back to Messages
+                <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__7') }}
             </a>
             <form action="{{ route('contact-messages.forward', $contactMessage) }}" method="POST" class="d-inline">
                 @csrf
@@ -170,14 +170,14 @@
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">{{ __('messages.app.page__1') }}</h4>
             <p class="nova-delete-modal-text">Are you sure you want to delete the message from <strong id="deleteMessageName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteMessageModal').classList.remove('show')">Cancel</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteMessageModal').classList.remove('show')">{{ __('messages.app.page__5') }}</button>
                 <form id="deleteMessageForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.app.page__6') }}</button>
                 </form>
             </div>
         </div>

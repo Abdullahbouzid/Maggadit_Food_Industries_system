@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('title', 'سياسة الخصوصية')
+@section('{{ __('messages.app.page_') }}', 'سياسة الخصوصية')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['title' => 'سياسة الخصوصية'])
+    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'سياسة الخصوصية'])
 
-    <div class="p-4" dir="rtl">
+    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
         <!-- زر الرجوع -->
         <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100 mb-5">
             <i class="fas fa-arrow-right"></i> رجوع
@@ -91,7 +91,7 @@
                     <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
                         <i class="fas fa-cookie-bite"></i>
                     </div>
-                    <h3 class="font-bold text-gray-800 text-base">ملفات تعريف الارتباط (Cookies)</h3>
+                    <h3 class="font-bold text-gray-800 text-base">{{ __('messages.app.page__1') }}</h3>
                 </div>
                 <p class="text-gray-600 text-sm leading-relaxed">نستخدم ملفات تعريف الارتباط لتحسين أداء التطبيق وتذكر تفضيلاتك. يمكنك تعطيلها من إعدادات متصفحك، لكن ذلك قد يؤثر على بعض الوظائف.</p>
             </div>
@@ -112,7 +112,7 @@
         <div class="mt-6 bg-gray-50 rounded-2xl p-4 text-center border border-gray-200">
             <p class="text-sm text-gray-600">إذا كان لديك أي استفسار حول سياسة الخصوصية، يرجى التواصل معنا</p>
             <a href="{{ route('customer.contact') }}" class="inline-block mt-2 text-purple-600 font-semibold text-sm">
-                <i class="fas fa-headset ml-1"></i> صفحة التواصل
+                <i class="fas fa-headset end-1"></i> صفحة التواصل
             </a>
         </div>
         <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
