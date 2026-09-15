@@ -1,6 +1,6 @@
 @extends('dashboard.partials.layout')
 
-@section('title', '{{ __('messages.app.page__1') }}')
+@section('title', __('messages.app.page__1'))
 
 @section('content')
 <div class="nova-actionbar">

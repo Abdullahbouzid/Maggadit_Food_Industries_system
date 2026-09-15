@@ -61,15 +61,11 @@
                     </div>
                 </div>
                 <div class="nova-dropdown-divider"></div>
-                <a href="{{ route('profile.show') }}" class="nova-user-dropdown-item">
+                <a href="{{ route('profile.edit') }}" class="nova-user-dropdown-item">
                     <i class="fas fa-user"></i> <span>{{ __('messages.navbar.my_profile') }}</span>
                 </a>
-                <a href="#" class="nova-user-dropdown-item">
-                    <i class="fas fa-cog"></i> <span>{{ __('messages.navbar.settings') }}</span>
-                </a>
-                <a href="#" class="nova-user-dropdown-item">
-                    <i class="fas fa-life-ring"></i> <span>{{ __('messages.navbar.help_support') }}</span>
-                </a>
+           
+        
                 <div class="nova-dropdown-divider"></div>
                 <a href="#" onclick="event.preventDefault(); document.getElementById('nova-logout-form').submit();" class="nova-user-dropdown-item nova-text-danger">
                     <i class="fas fa-sign-out-alt"></i> <span>{{ __('messages.navbar.log_out') }}</span>
