@@ -11,9 +11,20 @@ use Spatie\Permission\Models\Role;
 class RolePermissionController extends Controller
 {
     // عرض قائمة الأدوار
-    public function index()
-    {
-        $roles = Role::with('permissions')->paginate(10);
+    public function index(Request $request) {
+        $search = $request->get('search', '');
+        $perPage = $request->get('per_page', 20);
+        if ($perPage === 'all') $perPage = 999999;
+
+        $query = Role::with('permissions');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhereHas('permissions', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+        }
+
+        $roles = $query->paginate((int) $perPage);
 
         return view('dashboard.roles.index', compact('roles'));
     }
@@ -80,9 +91,19 @@ class RolePermissionController extends Controller
     }
 
     // عرض قائمة الصلاحيات (للمشاهدة فقط)
-    public function permissionsIndex()
+    public function permissionsIndex(Request $request)
     {
-        $permissions = Permission::paginate(20);
+        $search = $request->get('search', '');
+        $perPage = $request->get('per_page', 20);
+        if ($perPage === 'all') $perPage = 999999;
+
+        $query = Permission::query();
+        if ($request->filled('search')) {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('guard_name', 'like', "%{$search}%");
+        }
+
+        $permissions = $query->paginate((int) $perPage);
 
         return view('dashboard.permissions.index', compact('permissions'));
     }

@@ -10,9 +10,21 @@ class FaqController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $faqs = Faq::orderBy('created_at', 'desc')->paginate(15);
+    public function index(Request $request) {
+        $search = $request->get('search', '');
+        $perPage = $request->get('per_page', 20);
+        if ($perPage === 'all') $perPage = 999999;
+
+        $query = Faq::query();
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('question', 'like', "%{$search}%")
+                    ->orWhere('answer', 'like', "%{$search}%")
+                    ->orWhere('category', 'like', "%{$search}%");
+            });
+        }
+
+        $faqs = $query->orderBy('created_at', 'desc')->paginate((int) $perPage);
 
         return view('dashboard.faqs.index', compact('faqs'));
     }

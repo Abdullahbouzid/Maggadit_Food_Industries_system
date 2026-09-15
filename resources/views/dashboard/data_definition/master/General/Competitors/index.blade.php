@@ -131,12 +131,12 @@
         <form action="{{ route('competitors.export') }}" method="GET" class="nova-row nova-gap-3 nova-items-end">
             <div class="nova-col nova-col-md-4">
                 <label class="nova-label nova-fs-sm nova-fw-semibold">بحث (name/code/GLN)</label>
-                <input type="text" name="search" class="nova-input" placeholder="Enter keyword...">
+                <input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.search') }}"">
             </div>
             <div class="nova-col nova-col-md-3">
                 <label class="nova-label nova-fs-sm nova-fw-semibold">Organization</label>
                 <select name="organization_id" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach($organizationsList ?? [] as $org)
                         <option value="{{ $org->id }}">{{ $org->name }}</option>
                     @endforeach
@@ -145,7 +145,7 @@
             <div class="nova-col nova-col-md-3">
                 <label class="nova-label nova-fs-sm nova-fw-semibold">Competitor Type</label>
                 <select name="competitor_type" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     <option value="direct" {{ request('competitor_type') == 'direct' ? 'selected' : '' }}>Direct Competitor</option>
                     <option value="indirect" {{ request('competitor_type') == 'indirect' ? 'selected' : '' }}>Indirect Competitor</option>
                     <option value="potential" {{ request('competitor_type') == 'potential' ? 'selected' : '' }}>Potential Competitor</option>
@@ -184,7 +184,7 @@
             <div class="nova-form-group filter-item">
                 <label class="nova-label nova-fs-sm nova-fw-semibold">Organization</label>
                 <select name="organization_id" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach($organizationsList ?? [] as $org)
                         <option value="{{ $org->id }}" {{ request('organization_id') == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>
                     @endforeach
@@ -198,7 +198,7 @@
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
                 </select>
             </div>
 

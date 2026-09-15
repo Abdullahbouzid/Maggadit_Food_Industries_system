@@ -35,7 +35,7 @@
                 <div>
                     <label class="form-label text-xs font-semibold text-gray-600 mb-1 block">الفئة</label>
                     <select id="category-filter" class="form-select form-select-sm w-full border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200">
-                        <option value="">كل الفئات</option>
+                        <option value="">{{ __('messages.filter.all') }}</option>
                         @foreach($categories ?? [] as $category)
                             <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
                                 {{ $category->name }}
@@ -48,7 +48,7 @@
                 <div>
                     <label class="form-label text-xs font-semibold text-gray-600 mb-1 block">الماركة</label>
                     <select id="brand-filter" class="form-select form-select-sm w-full border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200">
-                        <option value="">كل الماركات</option>
+                        <option value="">{{ __('messages.filter.all') }}</option>
                         @foreach($brands ?? [] as $brand)
                             <option value="{{ $brand->id }}" {{ request('brand_id') == $brand->id ? 'selected' : '' }}>
                                 {{ $brand->name }}

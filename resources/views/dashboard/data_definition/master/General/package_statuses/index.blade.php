@@ -184,7 +184,7 @@
                 </select>
             </div>
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">عدد السجلات لكل صفحة</label>
+                <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
                 <select name="per_page" class="nova-select">
                     <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
@@ -196,7 +196,7 @@
             <div class="nova-flex nova-gap-2" style="height: fit-content;">
                 <button type="submit" class="nova-btn nova-btn-primary">تطبيق</button>
                 @if(request()->query())
-                    <a href="{{ route('package-statuses.index') }}" class="nova-btn nova-btn-outline">إعادة ضبط</a>
+                    <a href="{{ route('package-statuses.index') }}" class="nova-btn nova-btn-outline">{{ __('messages.filter.reset') }}</a>
                 @endif
             </div>
         </form>

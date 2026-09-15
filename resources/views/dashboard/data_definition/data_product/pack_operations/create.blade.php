@@ -71,8 +71,8 @@
                     <div class="nova-form-group">
                         <label class="nova-label">الحالة</label>
                         <select name="is_active" class="nova-select @error('is_active') nova-invalid @enderror">
-                            <option value="1" {{ old('is_active', true) ? 'selected' : '' }}>نشط</option>
-                            <option value="0" {{ old('is_active') === '0' ? 'selected' : '' }}>غير نشط</option>
+                            <option value="1" {{ old('is_active', true) ? 'selected' : '' }}>{{ __('messages.filter.status_active') }}</option>
+                            <option value="0" {{ old('is_active') === '0' ? 'selected' : '' }}>{{ __('messages.filter.status_inactive') }}</option>
                         </select>
                         @error('is_active')
                             <div class="nova-form-error">{{ $message }}</div>

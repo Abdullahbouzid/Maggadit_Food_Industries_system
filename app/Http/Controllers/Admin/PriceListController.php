@@ -16,11 +16,16 @@ class PriceListController extends Controller
 {
     public function index(Request $request)
     {
+        $search = $request->get('search', '');
+        $perPage = $request->get('per_page', 20);
+        if ($perPage === 'all') $perPage = 999999;
+
         $query = PriceList::query();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', "%{$request->search}%")
-                ->orWhere('description', 'like', "%{$request->search}%");
+            $search = $request->get('search');
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
         }
 
         if ($request->filled('status')) {
@@ -29,7 +34,7 @@ class PriceListController extends Controller
 
         $priceLists = $query->with(['creator', 'versions' => function ($q) {
             $q->orderByDesc('effective_date')->limit(1);
-        }])->latest()->paginate(15);
+        }])->latest()->paginate((int) $perPage);
 
         // Count unique items in latest active version for each price list
         foreach ($priceLists as $priceList) {
@@ -308,7 +313,8 @@ class PriceListController extends Controller
             $query->where('price_list_id', $request->price_list_id);
         }
 
-        $customers = $query->with('priceList')->latest()->paginate(20);
+        $perPage = $request->get('per_page', 20);
+        $customers = $query->with('priceList')->latest()->paginate((int) $perPage);
         $priceLists = PriceList::active()->get();
 
         return view('dashboard.price_lists.customers', compact('customers', 'priceLists'));

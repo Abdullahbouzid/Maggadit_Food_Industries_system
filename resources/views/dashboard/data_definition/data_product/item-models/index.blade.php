@@ -95,8 +95,8 @@
                 <label class="nova-label">الحالة</label>
                 <select name="status" class="nova-select">
                     <option value="">الكل</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('messages.filter.status_active') }}</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>{{ __('messages.filter.status_inactive') }}</option>
                 </select>
             </div>
             <div class="nova-form-group" style="flex: 1 1 10rem; margin-bottom: 0;">

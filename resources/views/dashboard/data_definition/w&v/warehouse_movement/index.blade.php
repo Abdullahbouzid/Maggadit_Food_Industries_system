@@ -73,46 +73,46 @@
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form method="GET" action="{{ route('warehouse-movements.index') }}" class="filter-form">
             <div class="nova-form-group filter-item">
-                <label class="nova-label">نوع الحركة</label>
+                <label class="nova-label">{{ __('messages.filter.movement_type') }}</label>
                 <select name="movement_type" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach($movementTypes as $key => $label)
                         <option value="{{ $key }}" {{ request('movement_type') == $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="nova-form-group filter-item">
-                <label class="nova-label">المخزن المصدر</label>
+                <label class="nova-label">{{ __('messages.filter.from_warehouse') }}</label>
                 <select name="from_warehouse_id" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach($warehouses as $wh)
                         <option value="{{ $wh->id }}" {{ request('from_warehouse_id') == $wh->id ? 'selected' : '' }}>{{ $wh->name_en }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="nova-form-group filter-item">
-                <label class="nova-label">المخزن الهدف</label>
+                <label class="nova-label">{{ __('messages.filter.to_warehouse') }}</label>
                 <select name="to_warehouse_id" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach($warehouses as $wh)
                         <option value="{{ $wh->id }}" {{ request('to_warehouse_id') == $wh->id ? 'selected' : '' }}>{{ $wh->name_en }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="nova-form-group filter-item">
-                <label class="nova-label">منذ تاريخ</label>
+                <label class="nova-label">{{ __('messages.filter.date_from') }}</label>
                 <input type="date" name="date_from" class="nova-input" value="{{ request('date_from') }}">
             </div>
             <div class="nova-form-group filter-item">
-                <label class="nova-label">حتى تاريخ</label>
+                <label class="nova-label">{{ __('messages.filter.date_to') }}</label>
                 <input type="date" name="date_to" class="nova-input" value="{{ request('date_to') }}">
             </div>
             <div class="nova-form-group filter-item filter-item-actions">
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-filter"></i> تصفية
+                    <i class="fas fa-filter"></i> {{ __('messages.filter.apply') }}
                 </button>
                 <a href="{{ route('warehouse-movements.index') }}" class="nova-btn nova-btn-outline">
-                    <i class="fas fa-rotate-left"></i> إعادة ضبط
+                    <i class="fas fa-rotate-left"></i> {{ __('messages.filter.reset') }}
                 </a>
             </div>
         </form>

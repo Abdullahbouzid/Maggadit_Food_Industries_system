@@ -118,40 +118,40 @@
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('devices.index') }}" class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">بحث</label>
+                <label class="nova-label">{{ __('messages.filter.search') }}</label>
                 <input type="text" name="search" class="nova-input" placeholder="الاسم، الشيفرة الخاصة، الماركة..." value="{{ request('search') }}">
             </div>
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">المنظمة</label>
+                <label class="nova-label">{{ __('messages.filter.organization') }}</label>
                 <select name="organization_id" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach($organizations as $org)
                         <option value="{{ $org->id }}" {{ request('organization_id') == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">الحالة</label>
+                <label class="nova-label">{{ __('messages.filter.status') }}</label>
                 <select name="status" class="nova-select">
-                    <option value="">الكل</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('messages.filter.status_active') }}</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>{{ __('messages.filter.status_inactive') }}</option>
                 </select>
             </div>
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">عدد السجلات لكل صفحة</label>
+                <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
                 <select name="per_page" class="nova-select">
                     <option value="10">10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
                 </select>
             </div>
             <div class="nova-flex nova-gap-2" style="height: fit-content;">
-                <button type="submit" class="nova-btn nova-btn-primary">تطبيق</button>
+                <button type="submit" class="nova-btn nova-btn-primary">{{ __('messages.filter.apply') }}</button>
                 @if(request()->query())
-                    <a href="{{ route('devices.index') }}" class="nova-btn nova-btn-outline">إعادة ضبط</a>
+                    <a href="{{ route('devices.index') }}" class="nova-btn nova-btn-outline">{{ __('messages.filter.reset') }}</a>
                 @endif
             </div>
         </form>

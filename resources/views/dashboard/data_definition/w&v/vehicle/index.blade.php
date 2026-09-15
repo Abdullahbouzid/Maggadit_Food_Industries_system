@@ -116,7 +116,7 @@
         <form id="filterForm" method="GET" action="{{ route('vehicles.index') }}" class="filter-form">
             {{-- بحث --}}
             <div class="nova-form-group filter-item filter-item-search">
-                <label class="nova-label">بحث</label>
+                <label class="nova-label">{{ __('messages.filter.search') }}</label>
                 <div class="filter-search-wrapper">
                     <span class="filter-search-icon">
                         <i class="fas fa-search"></i>
@@ -131,7 +131,7 @@
             <div class="nova-form-group filter-item">
                 <label class="nova-label">Organization</label>
                 <select name="organization_id" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach($organizations as $org)
                         <option value="{{ $org->id }}" {{ request('organization_id') == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>
                     @endforeach
@@ -142,7 +142,7 @@
             <div class="nova-form-group filter-item">
                 <label class="nova-label">Vehicle Type</label>
                 <select name="vehicle_type_id" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach($vehicleTypes as $type)
                         <option value="{{ $type->id }}" {{ request('vehicle_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name_en }}</option>
                     @endforeach
@@ -151,23 +151,23 @@
 
             {{-- الحالة --}}
             <div class="nova-form-group filter-item">
-                <label class="nova-label">الحالة</label>
+                <label class="nova-label">{{ __('messages.filter.status') }}</label>
                 <select name="status" class="nova-select">
-                    <option value="">الكل</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('messages.filter.status_active') }}</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>{{ __('messages.filter.status_inactive') }}</option>
                 </select>
             </div>
 
             {{-- لكل صفحة --}}
             <div class="nova-form-group filter-item">
-                <label class="nova-label">لكل صفحة</label>
+                <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
                 <select name="per_page" class="nova-select">
                     <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
                 </select>
             </div>
 

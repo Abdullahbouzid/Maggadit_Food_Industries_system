@@ -26,14 +26,31 @@
                 قائمة سعات الباكجات ({{ $total }})
             </h3>
             <form method="GET" action="{{ route('pack-capacities.index') }}" class="nova-flex nova-gap-2">
-                <input type="text" name="search" class="nova-input" placeholder="بحث بالقيمة، الاسم..." value="{{ request('search') }}" style="width: 200px;">
+                <form method="GET" action="{{ route('pack-capacities.index') }}" id="filterForm"><input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.search') }}" value="{{ request('search') }}" style="width: 200px;">
+                <div class="nova-form-group" style="margin-bottom: 0;">
+                    <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
+                    <select name="per_page" class="nova-select" onchange="document.getElementById('filterForm').submit();">
+                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
+                    </select>
+                </div>
+                <div class="nova-flex nova-gap-2" style="height: fit-content;">
+                    <button type="submit" class="nova-btn nova-btn-primary">{{ __('messages.filter.apply') }}</button>
+                    @if(request('search') || request('per_page'))
+                        <a href="{{ route('pack-capacities.index') }}" class="nova-btn nova-btn-outline">{{ __('messages.filter.reset') }}</a>
+                    @endif
+                </div>
+            </form>
                 <select name="uom_id" class="nova-select" style="width: auto;">
-                    <option value="">كل الوحدات</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach($uoms as $uom)
                         <option value="{{ $uom->id }}" {{ request('uom_id') == $uom->id ? 'selected' : '' }}>{{ $uom->name_en ?? $uom->name_ar }}</option>
                     @endforeach
                 </select>
-                <button type="submit" class="nova-btn nova-btn-primary nova-btn-sm">بحث</button>
+                <button type="submit" class="nova-btn nova-btn-primary nova-btn-sm">{{ __('messages.filter.apply') }}</button>
             </form>
         </div>
     </div>
@@ -90,7 +107,7 @@
             </table>
         </div>
         <div class="nova-text-center nova-py-3">
-            {{ $packCapacities->links() }}
+            {{ $packCapacities->appends(request()->query())->links() }}
         </div>
     </div>
 </div>

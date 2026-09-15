@@ -9,9 +9,20 @@ use Illuminate\Http\Request;
 
 class PrivacyPolicyController extends Controller
 {
-    public function index()
-    {
-        $policies = PrivacyPolicy::with('organization')->latest()->paginate(10);
+    public function index(Request $request) {
+        $search = $request->get('search', '');
+        $perPage = $request->get('per_page', 20);
+        if ($perPage === 'all') $perPage = 999999;
+
+        $query = PrivacyPolicy::with('organization');
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('content', 'like', "%{$search}%");
+            });
+        }
+
+        $policies = $query->latest()->paginate((int) $perPage);
 
         return view('dashboard.privacy_policies.index', compact('policies'));
     }

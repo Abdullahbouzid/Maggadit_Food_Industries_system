@@ -82,8 +82,8 @@
                     <div class="nova-form-group">
                         <label class="nova-label">الحالة</label>
                         <select name="is_active" class="nova-select">
-                            <option value="1" {{ old('is_active', $uom->is_active) ? 'selected' : '' }}>نشط</option>
-                            <option value="0" {{ old('is_active', $uom->is_active) ? '' : 'selected' }}>غير نشط</option>
+                            <option value="1" {{ old('is_active', $uom->is_active) ? 'selected' : '' }}>{{ __('messages.filter.status_active') }}</option>
+                            <option value="0" {{ old('is_active', $uom->is_active) ? '' : 'selected' }}>{{ __('messages.filter.status_inactive') }}</option>
                         </select>
                     </div>
                 </div>

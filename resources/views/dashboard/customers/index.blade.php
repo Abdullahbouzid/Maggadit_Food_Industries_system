@@ -125,12 +125,12 @@
         <form action="{{ route('customers.export') }}" method="GET" class="nova-row cols-3" style="align-items: end;">
             <div class="nova-form-group" style="margin-bottom: 0;">
                 <label class="nova-label">بحث (اسم/اسم مستخدم/بريد)</label>
-                <input type="text" name="search" class="nova-input" placeholder="أدخل كلمة مفتاح...">
+                <input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.search') }}">
             </div>
             <div class="nova-form-group" style="margin-bottom: 0;">
                 <label class="nova-label">المنظمة النشطة</label>
                 <select name="organization_id" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     @foreach(\App\Models\Organization::pluck('name', 'id') as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
                     @endforeach
@@ -151,28 +151,28 @@
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('customers.index') }}" class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">بحث</label>
+                <label class="nova-label">{{ __('messages.filter.search') }}</label>
                 <div class="nova-input-group" style="display: flex; gap: 0;">
                     <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-end: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
                         <i class="fas fa-search"></i>
                     </span>
-                    <input type="text" name="search" class="nova-input" placeholder="الاسم، اسم المستخدم، البريد..." value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-start: none;">
+                    <input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.placeholder_customers') }}" value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-start: none;">
                 </div>
             </div>
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">عدد السجلات لكل صفحة</label>
+                <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
                 <select name="per_page" class="nova-select">
                     <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
                 </select>
             </div>
             <div class="nova-flex nova-gap-2" style="height: fit-content;">
-                <button type="submit" class="nova-btn nova-btn-primary">تطبيق</button>
+                <button type="submit" class="nova-btn nova-btn-primary">{{ __('messages.filter.apply') }}</button>
                 @if(request('search') || request('per_page'))
-                    <a href="{{ route('customers.index') }}" class="nova-btn nova-btn-outline">إعادة ضبط</a>
+                    <a href="{{ route('customers.index') }}" class="nova-btn nova-btn-outline">{{ __('messages.filter.reset') }}</a>
                 @endif
             </div>
         </form>

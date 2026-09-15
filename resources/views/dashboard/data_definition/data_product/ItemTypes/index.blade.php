@@ -122,11 +122,11 @@
                     </div>
                 </div>
                 <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">الحالة</label>
+                    <label class="nova-label">{{ __('messages.filter.status') }}</label>
                     <select name="status" class="nova-select" onchange="document.getElementById('filterForm').submit();">
-                        <option value="">الكل</option>
-                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
+                        <option value="">{{ __('messages.filter.all') }}</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('messages.filter.status_active') }}</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>{{ __('messages.filter.status_inactive') }}</option>
                     </select>
                 </div>
                 <div class="nova-form-group" style="margin-bottom: 0;">
@@ -136,7 +136,7 @@
                         <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                         <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                         <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
+                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
                     </select>
                 </div>
                 <div class="filter-actions">
@@ -250,7 +250,7 @@
                             </p>
                             @if(request()->anyFilled(['search', 'status']))
                                 <a href="{{ route('item-types.index') }}" class="nova-btn nova-btn-outline nova-mt-2">
-                                    <i class="fas fa-times"></i> مسح الفلاتر
+                                    <i class="fas fa-times"></i> {{ __('messages.filter.clear') }}
                                 </a>
                             @else
                                 <a href="{{ route('item-types.create') }}" class="nova-btn nova-btn-primary nova-mt-2">

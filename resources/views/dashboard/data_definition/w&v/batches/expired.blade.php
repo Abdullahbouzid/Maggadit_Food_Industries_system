@@ -51,7 +51,7 @@
             </div>
             <div class="nova-form-group filter-item">
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-filter"></i> تصفية
+                    <i class="fas fa-filter"></i> {{ __('messages.filter.apply') }}
                 </button>
             </div>
         </form>

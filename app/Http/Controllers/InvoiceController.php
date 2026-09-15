@@ -13,9 +13,21 @@ use Illuminate\Support\Facades\DB;
 
 class InvoiceController extends Controller
 {
-    public function index()
-    {
-        $invoices = Invoice::with('customer')->latest()->paginate(10);
+    public function index(Request $request) {
+        $search = $request->get('search', '');
+        $perPage = $request->get('per_page', 20);
+        if ($perPage === 'all') $perPage = 999999;
+
+        $query = Invoice::with('customer');
+        if ($request->filled('search')) {
+            $query->whereHas('customer', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })->orWhere('invoice_number', 'like', "%{$search}%");
+        }
+
+        $invoices = $query->latest()->paginate((int) $perPage);
 
         return view('dashboard.invoices.index', compact('invoices'));
     }

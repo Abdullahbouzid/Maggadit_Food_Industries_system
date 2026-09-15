@@ -58,7 +58,7 @@
         <form id="filterForm" method="GET" action="{{ route('production-batches.index') }}" class="filter-form">
             {{-- بحث --}}
             <div class="nova-form-group filter-item filter-item-search">
-                <label class="nova-label">بحث</label>
+                <label class="nova-label">{{ __('messages.filter.search') }}</label>
                 <div class="filter-search-wrapper">
                     <span class="filter-search-icon">
                         <i class="fas fa-search"></i>
@@ -71,9 +71,9 @@
 
             {{-- الحالة --}}
             <div class="nova-form-group filter-item">
-                <label class="nova-label">الحالة</label>
+                <label class="nova-label">{{ __('messages.filter.status') }}</label>
                 <select name="status" class="nova-select">
-                    <option value="">الكل</option>
+                    <option value="">{{ __('messages.filter.all') }}</option>
                     <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشطة</option>
                     <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>منتهية</option>
                     <option value="consumed" {{ request('status') == 'consumed' ? 'selected' : '' }}>مستهلكة</option>
@@ -87,14 +87,14 @@
                     <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
                 </select>
             </div>
 
             {{-- إجراءات --}}
             <div class="nova-form-group filter-item filter-item-actions">
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-filter"></i> تصفية
+                    <i class="fas fa-filter"></i> {{ __('messages.filter.apply') }}
                 </button>
                 <a href="{{ route('production-batches.index') }}" class="nova-btn nova-btn-outline">
                     <i class="fas fa-rotate-left"></i> إعادة تعيين
