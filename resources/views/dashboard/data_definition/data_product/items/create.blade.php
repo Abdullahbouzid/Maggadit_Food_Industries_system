@@ -205,9 +205,10 @@
                         <h5 class="nova-card-title">
                             <i class="fas fa-boxes me-2"></i> Packs (Pack Definitions)
                         </h5>
-                        <a href="{{ route('pack-definitions.create') }}"
-                           class="nova-btn nova-btn-primary nova-btn-sm" target="_blank">
-                            <i class="fas fa-plus-circle"></i> جديد Pack Definition
+                        <a href="javascript:void(0)"
+                           class="nova-btn nova-btn-primary nova-btn-sm" target="_blank"
+                           data-bs-toggle="tooltip" title="قيد التطوير - سيتوفر قريباً">
+                           <i class="fas fa-plus-circle"></i> جديد Pack Definition
                         </a>
                     </div>
                 </div>
@@ -289,8 +290,9 @@
                         <div class="nova-alert warning">
                             <i class="fas fa-triangle-exclamation"></i>
                             لا pack definitions available.
-                            <a href="{{ route('pack-definitions.create') }}"
-                               class="nova-alert-link" target="_blank">
+                            <a href="javascript:void(0)"
+                               class="nova-alert-link" 
+                               data-bs-toggle="tooltip" title="قيد التطوير - سيتوفر قريباً">
                                 Create a pack definition first
                             </a>.
                         </div>

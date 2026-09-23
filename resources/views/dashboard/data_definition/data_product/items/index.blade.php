@@ -191,7 +191,7 @@
                 @forelse($items as $item)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($items->currentصفحة() - 1) * $items->perصفحة() }}
+                        {{ $loop->iteration + ($items->currentPage() - 1) * $items->perPage() }}
                     </td>
                     <td>
                         @if($item->image)

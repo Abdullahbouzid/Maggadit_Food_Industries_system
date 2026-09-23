@@ -90,9 +90,7 @@
     <a href="{{ route('invoices.create') }}" class="nova-quickadd-item">
         <i class="fas fa-file-invoice"></i> <span>{{ __('messages.navbar.new_invoice') }}</span>
     </a>
-    <a href="{{ route('pack-definitions.create') }}" class="nova-quickadd-item">
-        <i class="fas fa-box-open"></i> <span>{{ __('messages.navbar.new_pack_definition') }}</span>
-    </a>
+
     <a href="{{ route('warehouses.create') }}" class="nova-quickadd-item">
         <i class="fas fa-warehouse"></i> <span>{{ __('messages.navbar.new_warehouse') }}</span>
     </a>

@@ -13,11 +13,12 @@ class Currency extends Model
     use HasFactory, HasRoles;
 
     protected $fillable = [
-        'name', 'code', 'coin_description', 'base_currency',
+        'name', 'code', 'coin_description', 'base_currency', 'exchange_rate_to_base',
     ];
 
     protected $casts = [
         'base_currency' => 'boolean',
+        'exchange_rate_to_base' => 'decimal:6',
     ];
 
     // عند جعل هذه العملة أساسية، نُلغِ الأساسية عن الباقي
@@ -30,5 +31,10 @@ class Currency extends Model
                     ->update(['base_currency' => false]);
             }
         });
+    }
+
+    public function getSymbolAttribute(): string
+    {
+        return $this->code;
     }
 }

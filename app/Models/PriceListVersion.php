@@ -13,6 +13,8 @@ class PriceListVersion extends Model
         'effective_date',
         'is_active',
         'created_by',
+        'currency_id',
+        'exchange_rate',
     ];
 
     protected $casts = [

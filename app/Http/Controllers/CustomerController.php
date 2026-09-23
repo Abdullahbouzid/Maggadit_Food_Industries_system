@@ -22,28 +22,18 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Customer::query();
-
-        // البحث
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
+        $customers = Customer::with(['priceList', 'priceList.currency'])
+            ->withCount(['orders', 'invoices'])
+            ->when(request('search'), function ($q, $search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
-        // عدد السجلات لكل صفحة
-        $perPage = $request->input('per_page', 15);
-        if ($perPage === 'all') {
-            $perPage = 999999; // عدد كبير جداً لعرض الكل مع بقاء pagination
-        }
-
-        $customers = $query->paginate($perPage);
-
-        // الإحصائيات
-        $totalCustomers = Customer::count();
+        $totalCustomers = $customers->total();
         $withAvatar = Customer::whereNotNull('avatar')->count();
         $withActiveOrganization = Customer::whereNotNull('active_organization_id')->count();
         $withoutOrganization = Customer::whereNull('active_organization_id')->count();
@@ -119,7 +109,31 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
-        return view('dashboard.customers.show', compact('customer'));
+        $customer->load([
+            'priceList',
+            'orders' => function ($q) {
+                $q->latest()->limit(10);
+            },
+            'invoices' => function ($q) {
+                $q->latest()->limit(10);
+            },
+        ]);
+
+        try {
+            $customer->load([
+                'wallets.currency',
+                'wallets.transactions' => function ($q) {
+                    $q->latest()->limit(20);
+                },
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+        }
+
+        $allPriceLists = \App\Models\PriceList::where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        return view('dashboard.customers.show', compact('customer', 'allPriceLists'));
     }
 
     /**

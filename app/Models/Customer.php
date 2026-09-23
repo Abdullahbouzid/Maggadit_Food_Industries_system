@@ -21,6 +21,8 @@ class Customer extends Authenticatable
         'fcm_token',
         'active_organization_id',
         'price_list_id',
+        'type',
+        'credit_limit',
     ];
 
     protected $hidden = [
@@ -106,5 +108,25 @@ class Customer extends Authenticatable
     public function priceList()
     {
         return $this->belongsTo(PriceList::class);
+    }
+
+    public function getDefaultCurrencyAttribute()
+    {
+        return $this->priceList?->currency ?? \App\Models\Currency::first();
+    }
+
+    public function wallets()
+    {
+        return $this->hasMany(CustomerWallet::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
     }
 }

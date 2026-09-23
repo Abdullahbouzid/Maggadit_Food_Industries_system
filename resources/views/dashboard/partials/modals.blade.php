@@ -61,7 +61,6 @@
       {"label": "{{ __('messages.modals.pack_groups') }}", "icon": "fas fa-layer-group", "route": "{{ route('pack-groups.index') }}"},
       {"label": "{{ __('messages.modals.pack_types') }}", "icon": "fas fa-layer-group", "route": "{{ route('pack-types.index') }}"},
       {"label": "{{ __('messages.modals.pack_capacities') }}", "icon": "fas fa-cube", "route": "{{ route('pack-capacities.index') }}"},
-      {"label": "{{ __('messages.modals.pack_definitions') }}", "icon": "fas fa-box-open", "route": "{{ route('pack-definitions.index') }}"},
       {"label": "{{ __('messages.dashboard.items') }}", "icon": "fas fa-box", "route": "{{ route('items.index') }}"},
       {"label": "{{ __('messages.dashboard.item_packs') }}", "icon": "fas fa-boxes", "route": "{{ route('item-packs.index') }}"},
       {"label": "{{ __('messages.modals.item_images') }}", "icon": "fas fa-image", "route": "{{ route('item-images.index') }}"},

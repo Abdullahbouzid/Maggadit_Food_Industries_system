@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InvoiceItem extends Model
 {
@@ -52,5 +53,10 @@ class InvoiceItem extends Model
     public function priceHistory()
     {
         return $this->belongsTo(PriceListVersionItem::class, 'price_history_id');
+    }
+
+    public function priceListItem(): BelongsTo
+    {
+        return $this->belongsTo(PriceListItem::class, 'price_list_item_id');
     }
 }

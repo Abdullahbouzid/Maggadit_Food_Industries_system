@@ -11,7 +11,7 @@ class Area extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'code', 'name_en', 'name_ar', 'description', 'state_id', 'is_active', 'sort_order',
+        'code', 'name_en', 'name_ar', 'description', 'state_id', 'city_id', 'is_active', 'sort_order',
     ];
 
     protected $casts = [
@@ -21,6 +21,11 @@ class Area extends Model
     public function state()
     {
         return $this->belongsTo(State::class);
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class);
     }
 
     public function warehouses()

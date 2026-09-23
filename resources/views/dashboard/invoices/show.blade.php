@@ -1,205 +1,470 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'عرض الفاتورة')
+@section('title', __('messages.invoice_page.details'))
+
+@push('styles')
+<style>
+    .nova-progress-bar {
+        height: 0.5rem;
+        border-radius: 9999px;
+        overflow: hidden;
+        background: var(--nova-surface-3);
+    }
+    .nova-progress-fill {
+        height: 100%;
+        background: var(--nova-success);
+        transition: width 0.3s ease;
+    }
+    .nova-timeline-item {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .nova-timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 0.75rem;
+        top: 0;
+        bottom: -0.5rem;
+        width: 2px;
+        background: var(--nova-border-color);
+    }
+    .nova-timeline-dot {
+        position: absolute;
+        left: 0.25rem;
+        top: 0.125rem;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--nova-primary);
+        border: 2px solid var(--nova-surface);
+    }
+</style>
+@endpush
+
+@php
+$invoice = $invoice ?? null;
+$items = $invoice->items ?? collect();
+$order = $invoice->order ?? null;
+$customer = $invoice->customer ?? null;
+$delivery = null;
+try {
+    $delivery = $invoice->deliveries()->latest()->first();
+} catch (\Throwable $e) {
+    $delivery = null;
+}
+$payments = $invoice->payments ?? collect();
+$returnRequests = $invoice->returnRequests ?? collect();
+$invoiceStatus = \App\Enums\InvoiceStatus::tryFrom($invoice->status ?? '');
+$currencySymbol = $invoice->currency->symbol ?? $invoice->currency->code ?? '';
+$progress = $invoice->total_amount > 0 
+    ? ($invoice->paid_amount / $invoice->total_amount) * 100 : 0;
+$deadline = $invoice->payment_deadline_at;
+$daysLeft = $deadline ? now()->diffInDays($deadline, false) : null;
+$remaining = $invoice->total_amount - $invoice->paid_amount;
+@endphp
 
 @section('content')
+
+{{-- ===== Hero Header ===== --}}
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-file-text" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            الفاتورة #{{ $invoice->invoice_number }}
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-file-invoice" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            {{ __('messages.invoice_page.details') }} #{{ $invoice->invoice_number }}
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__2') }}</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
+            {{ $customer->name ?? '—' }} — {{ $invoice->created_at ? \Carbon\Carbon::parse($invoice->created_at)->translatedFormat('Y-m-d') : '—' }}
+        </p>
     </div>
     <div class="nova-actionbar-actions">
-        <a href="{{ route('invoices.edit', $invoice) }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-edit"></i> تعديل
-        </a>
-        <a href="{{ route('invoices.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-list"></i> القائمة
-        </a>
+        <span class="nova-badge {{ $invoiceStatus?->badgeColor() ?? '' }}">
+            {{ $invoiceStatus?->label() ?? '—' }}
+        </span>
+        @if($invoice->payment_type === 'cash')
+            <span class="nova-badge nova-badge-success">{{ __('messages.invoice_page.payment_type_cash') }}</span>
+        @elseif($invoice->payment_type === 'credit')
+            <span class="nova-badge nova-badge-warning">{{ __('messages.invoice_page.payment_type_credit') }}</span>
+        @endif
+        <div style="display: flex; gap: 0.5rem; margin-left: 0.5rem;">
+            <a href="{{ route('invoices.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+                <i class="fas fa-arrow-right"></i> {{ __('messages.invoice_page.print') }}
+            </a>
+            @if($invoiceStatus?->value === 'pending_approval')
+                <a href="javascript:void(0)" class="nova-btn nova-btn-primary nova-btn-sm">
+                    <i class="fas fa-check"></i> {{ __('messages.invoice_page.approve') }}
+                </a>
+            @endif
+            @if(in_array($invoiceStatus?->value, ['approved', 'partially_paid']))
+                <a href="javascript:void(0)" class="nova-btn nova-btn-accent nova-btn-sm">
+                    <i class="fas fa-money-bill-wave"></i> {{ __('messages.invoice_page.record_payment') }}
+                </a>
+            @endif
+        </div>
     </div>
 </div>
 
-@if(session('success'))
-    <div class="nova-alert success">
-        <i class="fas fa-check-circle"></i>
-        {{ session('success') }}
+{{-- ===== Row: Customer Info & Invoice Info ===== --}}
+<div class="nova-row nova-gap-3 nova-mb-4">
+    <div class="nova-col" style="flex: 1;">
+        <div class="nova-card">
+            <div class="nova-card-header">
+                <h5 class="nova-card-title"><i class="fas fa-user" style="margin-inline-end: 0.5rem;"></i> {{ __('messages.invoice_page.customer_info') }}</h5>
+            </div>
+            <div class="nova-card-body">
+                <div class="nova-row nova-gap-3">
+                    <div class="nova-col">
+                        <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.customer_info') }}</p>
+                        <p class="mb-0"><strong>{{ $customer->name ?? '—' }}</strong></p>
+                        <small class="nova-text-muted">{{ $customer->email ?? '' }}</small>
+                    </div>
+                    <div class="nova-col">
+                        <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.print') }}</p>
+                        <p class="mb-0"><strong>{{ $customer->phone ?? '—' }}</strong></p>
+                        <small class="nova-text-muted">{{ $customer->address ?? '—' }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-@endif
-
-<div class="nova-card nova-mb-4">
-    <div class="nova-card-body">
-        <div class="nova-row nova-gap-3">
-            <div class="nova-col">
-                <h6 class="nova-fw-bold nova-text-muted" style="margin-bottom: 0.25rem;">العميل</h6>
-                <p class="mb-0">{{ $invoice->customer->name ?? 'غير محدد' }}</p>
-                <small class="nova-text-muted">{{ $invoice->customer->email ?? '' }}</small>
+    <div class="nova-col" style="flex: 1;">
+        <div class="nova-card">
+            <div class="nova-card-header">
+                <h5 class="nova-card-title"><i class="fas fa-file-invoice" style="margin-inline-end: 0.5rem;"></i> {{ __('messages.invoice_page.invoice_info') }}</h5>
             </div>
-            <div class="nova-col">
-                <h6 class="nova-fw-bold nova-text-muted" style="margin-bottom: 0.25rem;">تاريخ الفاتورة</h6>
-                <p class="mb-0">{{ $invoice->invoice_date->format('Y-m-d') }}</p>
-            </div>
-            <div class="nova-col">
-                <h6 class="nova-fw-bold nova-text-muted" style="margin-bottom: 0.25rem;">الحالة</h6>
-                <span class="nova-badge {{ $invoice->status == 'completed' ? 'success' : ($invoice->status == 'cancelled' ? 'danger' : 'accent') }}">
-                    {{ $invoice->status == 'completed' ? 'مكتملة' : ($invoice->status == 'cancelled' ? 'ملغاة' : 'معلقة') }}
-                </span>
+            <div class="nova-card-body">
+                <div class="nova-row nova-gap-3">
+                    <div class="nova-col">
+                        <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.details') }}</p>
+                        <p class="mb-0"><strong>#{{ $invoice->invoice_number }}</strong></p>
+                        <small class="nova-text-muted">{{ $order ? route('orders.show', $order) : '#' }} {{ $order->order_number ?? $invoice->id }}</small>
+                    </div>
+                    <div class="nova-col">
+                        <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.payment_method') }}</p>
+                        <p class="mb-0"><strong>{{ $invoice->payment_type ?? '—' }}</strong></p>
+                        <small class="nova-text-muted">{{ __('messages.invoice_page.currency') }}: {{ $currencySymbol }}</small>
+                    </div>
+                    <div class="nova-col">
+                        <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.exchange_rate') ?? 'Exchange Rate' }}</p>
+                        <p class="mb-0"><strong>{{ $invoice->exchange_rate ?? '1.000000' }}</strong></p>
+                        <small class="nova-text-muted">{{ __('messages.invoice_page.paid_at') ?? 'Paid At' }}: {{ $invoice->paid_at ? \Carbon\Carbon::parse($invoice->paid_at)->format('Y-m-d') : '—' }}</small>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="nova-card">
+{{-- ===== Card: Items ===== --}}
+<div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-            <h5 class="nova-card-{{ __('messages.app.page_') }}"><i class="fas fa-shopping-bag" style="margin-inline-start: 0.5rem;"></i> تفاصيل الأصناف</h5>
+        <h5 class="nova-card-title"><i class="fas fa-box" style="margin-inline-end: 0.5rem;"></i> {{ __('messages.invoice_page.items') }}</h5>
     </div>
     <div class="nova-card-body p-0">
-        <div class="nova-table-scroll">
+        <div class="nova-table-wrapper">
+            <table class="nova-table nova-table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{{ __('messages.invoice_page.col_item') }}</th>
+                        <th style="text-align: center;">{{ __('messages.invoice_page.col_pack') }}</th>
+                        <th style="text-align: center;">{{ __('messages.invoice_page.col_quantity') }}</th>
+                        <th style="text-align: center;">{{ __('messages.invoice_page.col_unit_price') }}</th>
+                        <th style="text-align: center;">{{ __('messages.invoice_page.col_discount') }}</th>
+                        <th style="text-align: center;">{{ __('messages.invoice_page.col_tax') }}</th>
+                        <th style="text-align: center;">{{ __('messages.invoice_page.col_line_total') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($items as $index => $item)
+                    <tr>
+                        <td class="nova-fw-semibold">{{ $index + 1 }}</td>
+                        <td>
+                            <div class="nova-flex nova-items-center">
+                                <div>
+                                    <span class="nova-fw-bold">{{ $item->item->name_ar ?? $item->item->name_en ?? '—' }}</span>
+                                    <small class="nova-text-muted d-block">{{ $item->item->category->name_ar ?? '' }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="nova-text-center">{{ $item->itemPack?->display_name ?? '—' }}</td>
+                        <td class="nova-text-center">{{ $item->quantity }}</td>
+                        <td class="nova-text-center">{{ $currencySymbol }} {{ number_format($item->unit_price, 2) }}</td>
+                        <td class="nova-text-center">{{ $item->discount_amount ? number_format($item->discount_amount, 2) . '%' : '0' }}</td>
+                        <td class="nova-text-center">{{ $item->tax_amount ?? 0 }}</td>
+                        <td class="nova-text-center">{{ $currencySymbol }} {{ number_format($item->subtotal, 2) }}</td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="nova-text-center" style="padding: 2rem;">
+                            <span class="nova-text-muted">{{ __('messages.invoice_page.no_payments') }}</span>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="nova-card-footer">
+            <div class="nova-flex nova-justify-end">
+                <div class="nova-text-end">
+                    <table class="nova-table nova-table-borderless" style="max-width: 300px;">
+                        <tbody>
+                            <tr>
+                                <td class="nova-text-muted">{{ __('messages.invoice_page.subtotal') }}:</td>
+                                <td class="nova-fw-bold">{{ $currencySymbol }} {{ number_format($items->sum('subtotal'), 2) }}</td>
+                            </tr>
+                            @if($items->sum('discount_amount') > 0)
+                            <tr>
+                                <td class="nova-text-success">{{ __('messages.invoice_page.discount_total') }}:</td>
+                                <td class="nova-fw-bold nova-text-success">- {{ $currencySymbol }} {{ number_format($items->sum('discount_amount'), 2) }}</td>
+                            </tr>
+                            @endif
+                            <tr>
+                                <td class="nova-text-muted">{{ __('messages.invoice_page.tax_total') }}:</td>
+                                <td class="nova-fw-bold">{{ $currencySymbol }} {{ number_format($items->sum('tax_amount'), 2) }}</td>
+                            </tr>
+                            <tr style="border-top: 1px solid var(--nova-border);">
+                                <td class="nova-fw-bold">{{ __('messages.invoice_page.total') }}:</td>
+                                <td class="nova-fw-bold" style="font-size: 1.25rem; color: var(--nova-primary);">{{ $currencySymbol }} {{ number_format($invoice->total_amount, 2) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ===== Row: Payment Summary & Payment Deadline ===== --}}
+<div class="nova-row nova-gap-3 nova-mb-4">
+    <div class="nova-col" style="flex: 1;">
+        <div class="nova-card">
+            <div class="nova-card-header">
+                <h5 class="nova-card-title"><i class="fas fa-coins" style="margin-inline-end: 0.5rem;"></i> {{ __('messages.invoice_page.payment_summary') }}</h5>
+            </div>
+            <div class="nova-card-body">
+                <div class="nova-row nova-gap-3 nova-align-items-center">
+                    <div class="nova-col" style="flex: 2;">
+                        <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.total') }}</p>
+                        <p class="mb-0"><strong>{{ $currencySymbol }} {{ number_format($invoice->total_amount, 2) }}</strong></p>
+                    </div>
+                    <div class="nova-col" style="flex: 2;">
+                        <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.paid_at') }}</p>
+                        <p class="mb-0"><strong>{{ $currencySymbol }} {{ number_format($invoice->paid_amount, 2) }}</strong></p>
+                    </div>
+                    <div class="nova-col" style="flex: 2;">
+                        <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.remaining') }}</p>
+                        <p class="mb-0"><strong class="{{ $remaining <= 0 ? 'nova-text-success' : 'nova-text-danger' }}">{{ $currencySymbol }} {{ number_format($remaining, 2) }}</strong></p>
+                    </div>
+                </div>
+                <div class="nova-mt-3">
+                    <div class="nova-text-muted nova-fs-sm" style="margin-bottom: 0.25rem;">{{ __('messages.invoice_page.payment_method') ?? 'Payment Progress' }}</div>
+                    <div class="nova-progress-bar">
+                        <div class="nova-progress-fill" style="width: {{ $progress }}%"></div>
+                    </div>
+                </div>
+                @if($invoice->payment_method)
+                    <div class="nova-mt-2">
+                        <small class="nova-text-muted">{{ __('messages.invoice_page.payment_method') }}: {{ $invoice->payment_method }}</small>
+                    </div>
+                @endif
+                @if($invoice->paid_at)
+                    <div class="nova-mt-1">
+                        <small class="nova-text-muted">{{ __('messages.invoice_page.paid_at') }}: {{ \Carbon\Carbon::parse($invoice->paid_at)->format('Y-m-d H:i') }}</small>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @if($invoice->payment_type === 'cash')
+    <div class="nova-col" style="flex: 1;">
+        <div class="nova-card">
+            <div class="nova-card-header">
+                <h5 class="nova-card-title"><i class="fas fa-clock" style="margin-inline-end: 0.5rem;"></i> {{ __('messages.invoice_page.details') }}</h5>
+            </div>
+            <div class="nova-card-body">
+                @php
+                $daysLeftFormatted = null;
+                $deadlineClass = 'nova-badge-success';
+                if ($daysLeft === null) {
+                    $daysLeftFormatted = __('messages.invoice_page.no_deadline');
+                } elseif ($daysLeft < 0) {
+                    $daysLeftFormatted = __('messages.invoice_page.overdue');
+                    $deadlineClass = 'nova-badge-danger';
+                } elseif ($daysLeft <= 1) {
+                    $daysLeftFormatted = '< 1 ' . __('messages.invoice_page.days_left');
+                    $deadlineClass = 'nova-badge-danger';
+                } elseif ($daysLeft <= 3) {
+                    $daysLeftFormatted = $daysLeft . ' ' . __('messages.invoice_page.days_left');
+                    $deadlineClass = 'nova-badge-warning';
+                } else {
+                    $daysLeftFormatted = $daysLeft . ' ' . __('messages.invoice_page.days_left');
+                    $deadlineClass = 'nova-badge-accent';
+                }
+                @endphp
+                <div class="nova-row nova-gap-3">
+                    <div class="nova-col">
+                        <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.extend_deadline') }}</p>
+                        <p class="mb-0"><span class="nova-badge {{ $deadlineClass }}">{{ !is_string($daysLeftFormatted) ? $daysLeftFormatted : $daysLeftFormatted }}</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+</div>
+
+{{-- ===== Card: Payments History ===== --}}
+@if($payments->isNotEmpty())
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h5 class="nova-card-title"><i class="fas fa-history" style="margin-inline-end: 0.5rem;"></i> {{ __('messages.invoice_page.payments_history') }}</h5>
+    </div>
+    <div class="nova-card-body">
+        <div class="nova-table-wrapper">
             <table class="nova-table">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>المنتج</th>
-                        <th class="nova-text-center">الكمية</th>
-                        <th class="nova-text-center">سعر الوحدة</th>
-                        <th class="nova-text-center">الخصم</th>
-                        <th class="nova-text-center">المجموع</th>
-                        <th>المخزن المصدر</th>
-                        <th class="nova-text-end">إجراءات</th>
+                        <th>{{ __('messages.invoice_page.total') }}</th>
+                        <th>{{ __('messages.invoice_page.payment_method') }}</th>
+                        <th>{{ __('messages.invoice_page.paid_at') }}</th>
+                        <th>{{ __('messages.invoice_page.customer_info') }}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($invoice->items as $index => $item)
-                        @php
-                            $warehousesRaw = \App\Models\Warehouse::find($item->warehouse_id);
-                            $allWarehouses = \App\Models\Warehouse::where('is_active', true)->orderBy('name_en')->get();
-                        @endphp
-                        <tr>
-                            <td class="nova-fw-semibold">{{ $index + 1 }}</td>
-                            <td>
-                                <div class="nova-flex nova-items-center">
-                                    @if($item->item->images->first())
-                                        <img src="{{ asset('uploads/' . $item->item->images->first()->image_path) }}"
-                                             alt="{{ $item->item->name_ar }}" class="rounded" style="width: 40px; height: 40px; object-fit: cover; margin-inline-start: 0.5rem;">
-                                    @endif
-                                    <div>
-                                        <span class="nova-fw-bold">{{ $item->item->name_ar }}</span>
-                                        <small class="nova-text-muted d-block">{{ $item->item->category->name_ar ?? '' }}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="nova-text-center">{{ $item->quantity }}</td>
-                            <td class="nova-text-center">
-                                {{ number_format($item->unit_price, 2) }} ر.س
-                                @if($item->offer_id && $item->original_unit_price)
-                                    <br><small class="nova-text-muted" style="text-decoration: line-through;">{{ number_format($item->original_unit_price, 2) }}</small>
-                                @endif
-                            </td>
-                            <td class="nova-text-center">
-                                @if($item->offer_id)
-                                    <span class="nova-badge danger">-{{ number_format($item->discount_amount, 2) }} ر.س</span>
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td class="nova-text-center nova-fw-bold">{{ number_format($item->subtotal, 2) }} ر.س</td>
-                            <td>
-                                @if($item->warehouse)
-                                    <span class="nova-badge secondary">{{ $item->warehouse->name }}</span>
-                                    @php
-                                        $availableStock = app(\App\Services\Warehouse\InvoiceService::class)
-                                            ->getAvailableStockForItemInWarehouse($item->item_id, $item->warehouse_id);
-                                    @endphp
-                                    <div class="nova-mt-1">
-                                        <small class="nova-text-muted">المتوفر: {{ number_format($availableStock, 2) }}</small>
-                                    </div>
-                                @else
-                                    <span class="nova-text-muted">غير محدد</span>
-                                @endif
-                            </td>
-                            <td class="nova-text-end">
-                                <button class="nova-btn nova-btn-outline nova-btn-sm" {{ __('messages.app.page_') }}="عرض المواقع"
-                                        onclick="showItemWarehouses({{ $item->item_id }}, '{{ $item->item->name_ar }}')">
-                                    <i class="fas fa-box"></i> المخازن
-                                </button>
-                            </td>
-                        </tr>
+                    @forelse($payments as $payment)
+                    <tr>
+                        <td class="nova-fw-semibold">{{ $payment->payment_number }}</td>
+                        <td>{{ $currencySymbol }} {{ number_format($payment->amount, 2) }}</td>
+                        <td>{{ $payment->method ?? '—' }}</td>
+                        <td>{{ $payment->paid_at ? \Carbon\Carbon::parse($payment->paid_at)->format('Y-m-d H:i') : '—' }}</td>
+                        <td>{{ $payment->receiver?->name ?? '—' }}</td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="7" class="nova-text-center" style="padding: 2rem;">
-                                <span class="nova-text-muted">لا توجد أصناف في هذه الفاتورة.</span>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td colspan="5" class="nova-text-center nova-py-4">
+                            <div class="nova-empty">
+                                <i class="fas fa-invoice" style="font-size: 2rem; color: var(--nova-text-3);"></i>
+                                <p class="nova-text-muted nova-mt-2">{{ __('messages.invoice_page.no_payments') }}</p>
+                            </div>
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
-    <div class="nova-card-footer">
-        <div class="nova-flex nova-justify-end">
-            <div class="nova-text-end">
-                <table class="nova-table nova-table-borderless" style="max-width: 300px;">
-                    <tbody>
-                        <tr>
-                            <td class="nova-text-muted">المجموع الفرعي:</td>
-                            <td class="nova-fw-bold">{{ number_format($invoice->items->sum('subtotal') + $invoice->items->sum('discount_amount'), 2) }} ر.س</td>
-                        </tr>
-                        @php
-                            $totalDiscount = $invoice->items->sum('discount_amount');
-                        @endphp
-                        @if($totalDiscount > 0)
-                            <tr>
-                                <td class="nova-text-success">إجمالي الخصم:</td>
-                                <td class="nova-fw-bold nova-text-success">-{{ number_format($totalDiscount, 2) }} ر.س</td>
-                            </tr>
-                        @endif
-                        <tr style="border-top: 1px solid var(--nova-border);">
-                            <td class="nova-fw-bold">الإجمالي:</td>
-                            <td class="nova-fw-bold" style="font-size: 1.25rem; color: var(--nova-primary);">{{ number_format($invoice->total_amount, 2) }} ر.س</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+</div>
+@endif
+
+{{-- ===== Card: Returns ===== --}}
+@if($returnRequests->isNotEmpty())
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h5 class="nova-card-title"><i class="fas fa-undo" style="margin-inline-end: 0.5rem;"></i> {{ __('messages.invoice_page.returns') }}</h5>
+    </div>
+    <div class="nova-card-body">
+        <div class="nova-table-wrapper">
+            <table class="nova-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{{ __('messages.invoice_page.type') }}</th>
+                        <th>{{ __('messages.invoice_page.remaining') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($returnRequests as $return)
+                    <tr>
+                        <td class="nova-fw-semibold">{{ $return->return_number ?? $return->id }}</td>
+                        <td>{{ $return->type ?? '—' }}</td>
+                        <td>
+                            <span class="nova-badge nova-badge-{{ $return->status === 'completed' ? 'success' : 'warning' }}">
+                                {{ __('messages.return_requests.status_' . $return->status) }}</span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" class="nova-text-center nova-py-4">
+                            <div class="nova-empty">
+                                <i class="fas fa-undo" style="font-size: 2rem; color: var(--nova-text-3);"></i>
+                                <p class="nova-text-muted nova-mt-2">{{ __('messages.invoice_page.no_returns') }}</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-        
+@endif
+
+{{-- ===== Card: Timeline ===== --}}
+<div class="nova-card">
+    <div class="nova-card-header">
+        <h5 class="nova-card-title"><i class="fas fa-clock" style="margin-inline-end: 0.5rem;"></i> {{ __('messages.invoice_page.timeline') }}</h5>
+    </div>
+    <div class="nova-card-body">
+        @if($invoice->created_at || $invoice->approved_at || $invoice->paid_at || $invoice->due_date)
+        <div class="nova-timeline">
+            @if($invoice->created_at)
+            <div class="nova-timeline-item">
+                <div class="nova-timeline-dot"></div>
+                <div>
+                    <span class="nova-fw-bold">{{ \Carbon\Carbon::parse($invoice->created_at)->format('Y-m-d H:i') }}</span>
+                    <p class="nova-text-muted mb-0">{{ __('messages.invoice_page.created_at') ?? 'Created Invoice' }}</p>
+                </div>
+            </div>
+            @endif
+            @if($invoice->approved_at)
+            <div class="nova-timeline-item">
+                <div class="nova-timeline-dot"></div>
+                <div>
+                    <span class="nova-fw-bold">{{ \Carbon\Carbon::parse($invoice->approved_at)->format('Y-m-d H:i') }}</span>
+                    <p class="nova-text-muted mb-0">{{ __('messages.invoice_page.approved_at') ?? 'Approved' }}</p>
+                </div>
+            </div>
+            @endif
+            @if($invoice->paid_at)
+            <div class="nova-timeline-item">
+                <div class="nova-timeline-dot"></div>
+                <div>
+                    <span class="nova-fw-bold">{{ \Carbon\Carbon::parse($invoice->paid_at)->format('Y-m-d H:i') }}</span>
+                    <p class="nova-text-muted mb-0">{{ __('messages.invoice_page.paid_at') }}</p>
+                </div>
+            </div>
+            @endif
+            @if($invoice->due_date)
+            <div class="nova-timeline-item">
+                <div class="nova-timeline-dot"></div>
+                <div>
+                    <span class="nova-fw-bold">{{ \Carbon\Carbon::parse($invoice->due_date)->format('Y-m-d H:i') }}</span>
+                    <p class="nova-text-muted mb-0">{{ __('messages.invoice_page.due_date') ?? 'Due Date' }}</p>
+                </div>
+            </div>
+            @endif
+        </div>
+        @else
+        <p class="nova-text-muted">{{ __('messages.invoice_page.timeline') ?? 'No events recorded' }}</p>
+        @endif
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
-function showItemWarehouses(itemId, itemName) {
-    fetch(`/invoices/get-warehouses/${itemId}`)
-        .then(res => res.json())
-        .then(data => {
-            let html = `<h6 class="nova-fw-bold nova-mb-3">{{ __('messages.app.page__1') }}</h6>`;
-            html += '<div class="nova-table-scroll"><table class="nova-table"><thead><tr><th>المخزن</th><th class="nova-text-end">الكمية المتوفرة</th></tr></thead><tbody>';
-            if (data.length === 0) {
-                html += '<tr><td colspan="2" class="nova-text-center nova-text-muted">لا توفر أي كمية في المخازن</td></tr>';
-            } else {
-                data.forEach(wh => {
-                    html += `<tr><td>{{ __('messages.app.page__3') }}</td><td class="nova-text-end">{{ __('messages.app.page__4') }}</td></tr>`;
-                });
-            }
-            html += '</tbody></table></div>';
-            document.getElementById('warehousesModalBody').innerHTML = html;
-            document.getElementById('warehousesModal').classList.add('show');
-        })
-        .catch(() => alert('خطأ في تحميل المواقع'));
-}
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide alerts
+    setTimeout(function() {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
 </script>
-
-<div class="nova-modal-backdrop" id="warehousesModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-modal-header">
-            <h5 class="nova-modal-{{ __('messages.app.page_') }}">المواقع المتوفرة للمنتج</h5>
-            <button class="nova-modal-close" onclick="document.getElementById('warehousesModal').classList.remove('show')" aria-label="Close">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="nova-modal-body" id="warehousesModalBody">
-        </div>
-    </div>
-</div>
 @endpush

@@ -13,11 +13,22 @@ class PriceListItem extends Model
         'price',
         'effective_date',
         'created_by',
+        'item_pack_id',
+        'min_quantity',
+        'discount_percent',
+        'is_active',
+        'valid_from',
+        'valid_to',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'effective_date' => 'date',
+        'min_quantity' => 'decimal:3',
+        'discount_percent' => 'decimal:2',
+        'is_active' => 'boolean',
+        'valid_from' => 'date',
+        'valid_to' => 'date',
     ];
 
     public function priceList(): BelongsTo
@@ -28,6 +39,11 @@ class PriceListItem extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    public function pack(): BelongsTo
+    {
+        return $this->belongsTo(ItemPack::class, 'item_pack_id');
     }
 
     public function creator(): BelongsTo

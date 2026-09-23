@@ -76,7 +76,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 @else
-                                    <a href="{{ route('price-lists.show', $priceList) }}?version={{ $version->{{ __('messages.app.page__1') }}
+                                    <a href="{{ route('price-lists.show', ['priceList' => $priceList, 'version' => $version->id]) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 @endif
@@ -250,53 +250,14 @@
     </div>
 </div>
 
-@if($latestVersion && $latestVersion->is_active)
-<div class="nova-card nova-mt-4">
-    <div class="nova-card-header">
-        <h5 class="nova-card-title">إضافة منتجات جديدة للإصدار</h5>
-    </div>
-    <div class="nova-card-body">
-        <form id="add-item-form" method="POST" action="{{ route('price-lists.versions.update', [$priceList, $latestVersion]) }}" class="nova-row nova-gap-3">
-            @csrf
-            @method('PUT')
-            <div class="nova-col">
-                <div class="nova-form-group">
-                    <select id="item-select" name="new_items[0][item_id]" class="nova-select" required>
-                        <option value="">اختر المنتج</option>
-                        @foreach($itemsForSelect as $item)
-                            <option value="{{ $item['id'] }}" data-packs="{{ json_encode($item['packs']) }}">
-                                {{ $item['name_ar'] ?: $item['name_en'] }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            <div class="nova-col">
-                <div class="nova-form-group">
-                    <select id="pack-select" name="new_items[0][item_pack_id]" class="nova-select" disabled>
-                        <option value="">اختر الوحدة</option>
-                    </select>
-                </div>
-            </div>
-            <div class="nova-col">
-                <div class="nova-form-group">
-                    <input type="number" name="new_items[0][price]" class="nova-input" placeholder="السعر" step="0.01" min="0" required>
-                </div>
-            </div>
-            <div class="nova-col nova-flex nova-items-end">
-                <button type="submit" class="nova-btn nova-btn-primary">إضافة</button>
-            </div>
-        </form>
-    </div>
-</div>
-@endif
+{{-- ⛔️ تم حذف البطاقة المكررة "إضافة منتجات جديدة للإصدار" من هنا --}}
 
 @endsection
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    const itemSelect = document.getElementById('item-select');
+        const itemSelect = document.getElementById('item-select');
         const packSelect = document.getElementById('pack-select');
 
         if (itemSelect && packSelect) {

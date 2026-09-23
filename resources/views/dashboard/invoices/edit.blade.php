@@ -19,7 +19,6 @@
             <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__3') }}
         </a>
     </div>
-</div>
 
 @if(session('success'))
     <div class="nova-alert success">

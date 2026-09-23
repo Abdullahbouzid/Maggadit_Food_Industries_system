@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\Auth\LoginController;
@@ -35,7 +36,6 @@ use App\Http\Controllers\OrganizationAboutController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PackageStatusController;
 use App\Http\Controllers\PackGroupController;
-use App\Http\Controllers\PackDefinitionController;
 use App\Http\Controllers\PackOperationController;
 use App\Http\Controllers\ProductionBatchController;
 use App\Http\Controllers\ProfileController;
@@ -44,6 +44,7 @@ use App\Http\Controllers\StateController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\UomController;
 use App\Http\Controllers\PackTypeController;
+use App\Http\Controllers\Settings\PrivacyPolicyController;
 use App\Http\Controllers\PackCapacityController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VehicleTypeController;
@@ -595,8 +596,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('pack-groups/import', [PackGroupController::class, 'import'])->name('pack-groups.import');
     Route::get('pack-groups/download-template', [PackGroupController::class, 'downloadTemplate'])->name('pack-groups.template');
 
-    Route::resource('pack-definitions', PackDefinitionController::class);
-    Route::get('pack-definitions/{packDefinition}/show-ajax', [PackDefinitionController::class, 'showAjax'])->name('pack-definitions.show-ajax');
     Route::resource('pack-types', PackTypeController::class);
     Route::resource('pack-capacities', PackCapacityController::class);
 
@@ -690,6 +689,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('invoices', InvoiceController::class);
     Route::get('invoices/get-warehouses/{itemId}', [InvoiceController::class, 'getWarehousesForItem'])->name('invoices.warehouses');
 
+    Route::resource('orders', OrderController::class);
+
     Route::resource('offers', OfferController::class);
 
     Route::resource('price-lists', \App\Http\Controllers\Admin\PriceListController::class);
@@ -712,6 +713,33 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('notifications', NotificationController::class);
     Route::post('notifications/{notification}/resend', [NotificationController::class, 'resend'])->name('notifications.resend');
     Route::get('notifications/export', [NotificationController::class, 'export'])->name('notifications.export');
+
+    Route::get('/deliveries', [\App\Http\Controllers\Admin\DeliveryController::class, 'index'])->name('deliveries.index');
+    Route::get('/returns', [\App\Http\Controllers\Admin\ReturnController::class, 'index'])->name('returns.index');
+    Route::get('/inventory', [\App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('inventory.index');
+    Route::get('/inventory/movements', [\App\Http\Controllers\Admin\InventoryController::class, 'movements'])->name('inventory.movements');
+    Route::get('/wallets', [\App\Http\Controllers\Admin\WalletController::class, 'index'])->name('wallets.index');
+    Route::get('/settings/payment-deadlines', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'index'])->name('payment-deadlines.index');
+
+    Route::resource('privacy-policies', PrivacyPolicyController::class);
+
+    Route::prefix('deliveries')->name('deliveries.')->group(function () {
+        Route::get('create', [\App\Http\Controllers\Admin\DeliveryController::class, 'create'])->name('create');
+    });
+
+    Route::post('inventory/adjust', [\App\Http\Controllers\Admin\InventoryController::class, 'adjust'])->name('inventory.adjust');
+
+    Route::prefix('wallets')->name('wallets.')->group(function () {
+        Route::get('{wallet}', [\App\Http\Controllers\Admin\WalletController::class, 'show'])->name('show');
+        Route::post('{wallet}/deposit', [\App\Http\Controllers\Admin\WalletController::class, 'deposit'])->name('deposit');
+    });
+
+    Route::prefix('settings/payment-deadlines')->name('payment-deadlines.')->group(function () {
+        Route::get('create', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'create'])->name('create');
+        Route::get('{paymentDeadline}/edit', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'edit'])->name('edit');
+        Route::delete('{paymentDeadline}', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'destroy'])->name('destroy');
+        Route::post('{paymentDeadline}/toggle', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'toggle'])->name('toggle');
+    });
 
     Route::middleware('guest')->group(function () {
         Route::get('register', [\App\Http\Controllers\Auth\RegisteredUserController::class, 'create'])->name('register');

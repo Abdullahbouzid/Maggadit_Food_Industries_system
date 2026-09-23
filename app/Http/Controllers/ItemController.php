@@ -81,7 +81,7 @@ class ItemController extends Controller
         $packCapacities = PackCapacity::with('uom')->orderBy('value')->get();
         $packOperations = PackOperation::where('is_active', true)->orderBy('name_en')->get();
         $packGroups = PackGroup::where('is_active', true)->orderBy('name_en')->get();
-        $packDefinitions = \App\Models\PackDefinition::with(['packType', 'packCapacity', 'packCapacity.uom'])->orderBy('sort_order')->orderBy('name_en')->get();
+        $packDefinitions = collect();
 
         return view('dashboard.data_definition.data_product.items.create', compact(
             'itemTypes', 'categories', 'brands', 'models', 'suppliers',
@@ -132,32 +132,25 @@ class ItemController extends Controller
 
         $item = Item::create($validated);
 
-        // Save packs from pack definitions
         if ($request->has('packs')) {
             foreach ($request->packs as $index => $packData) {
-                if (isset($packData['pack_definition_id'])) {
-                    $packDef = \App\Models\PackDefinition::with(['packType', 'packCapacity', 'packOperations', 'packGroups'])->find($packData['pack_definition_id']);
-                    if ($packDef) {
-                        $pack = $item->packs()->create([
-                            'pack_type_id' => $packDef->pack_type_id,
-                            'pack_capacity_id' => $packDef->pack_capacity_id,
-                            'quantity_in_pack' => $packDef->quantity_in_pack,
-                            'barcode' => $packDef->barcode,
-                            'serial_separator' => $packDef->serial_separator,
-                            'equivalency_factor' => $packDef->equivalency_factor,
-                            'height' => $packDef->height,
-                            'width' => $packDef->width,
-                            'depth' => $packDef->depth,
-                            'weight' => $packDef->weight,
-                            'is_weight_priced' => $packDef->is_weight_priced,
-                            'allow_fraction_in_qty' => $packDef->allow_fraction_in_qty,
-                            'is_default_pack' => $packDef->is_default_pack,
-                            'sort_order' => $index,
-                        ]);
-
-                        $pack->packOperations()->sync($packDef->packOperations->pluck('id'));
-                        $pack->packGroups()->sync($packDef->packGroups->pluck('id'));
-                    }
+                if (!empty($packData['pack_type_id']) && !empty($packData['pack_capacity_id'])) {
+                    $item->packs()->create([
+                        'pack_type_id' => $packData['pack_type_id'] ?? null,
+                        'pack_capacity_id' => $packData['pack_capacity_id'] ?? null,
+                        'quantity_in_pack' => $packData['quantity_in_pack'] ?? 1,
+                        'barcode' => $packData['barcode'] ?? null,
+                        'serial_separator' => $packData['serial_separator'] ?? null,
+                        'equivalency_factor' => $packData['equivalency_factor'] ?? null,
+                        'height' => $packData['height'] ?? null,
+                        'width' => $packData['width'] ?? null,
+                        'depth' => $packData['depth'] ?? null,
+                        'weight' => $packData['weight'] ?? null,
+                        'is_weight_priced' => isset($packData['is_weight_priced']) ? 1 : 0,
+                        'allow_fraction_in_qty' => isset($packData['allow_fraction_in_qty']) ? 1 : 0,
+                        'is_default_pack' => isset($packData['is_default_pack']) ? 1 : 0,
+                        'sort_order' => $index,
+                    ]);
                 }
             }
         }
@@ -195,7 +188,7 @@ class ItemController extends Controller
         $packCapacities = PackCapacity::with('uom')->orderBy('value')->get();
         $packOperations = PackOperation::where('is_active', true)->orderBy('name_en')->get();
         $packGroups = PackGroup::where('is_active', true)->orderBy('name_en')->get();
-        $packDefinitions = \App\Models\PackDefinition::with(['packType', 'packCapacity', 'packCapacity.uom'])->orderBy('sort_order')->orderBy('name_en')->get();
+        $packDefinitions = collect();
 
         return view('dashboard.data_definition.data_product.items.edit', compact(
             'item', 'itemTypes', 'categories', 'brands', 'models', 'suppliers',
@@ -259,31 +252,6 @@ class ItemController extends Controller
                 $packCreateData = [
                     'sort_order' => $index,
                 ];
-
-                if (isset($packData['pack_definition_id']) && $packData['pack_definition_id']) {
-                    $packDef = \App\Models\PackDefinition::with(['packType', 'packCapacity', 'packOperations', 'packGroups'])->find($packData['pack_definition_id']);
-                    if ($packDef) {
-                        $packCreateData['pack_definition_id'] = $packDef->id;
-                        $packCreateData['pack_type_id'] = $packDef->pack_type_id;
-                        $packCreateData['pack_capacity_id'] = $packDef->pack_capacity_id;
-                        $packCreateData['quantity_in_pack'] = $packDef->quantity_in_pack;
-                        $packCreateData['barcode'] = $packDef->barcode;
-                        $packCreateData['serial_separator'] = $packDef->serial_separator;
-                        $packCreateData['equivalency_factor'] = $packDef->equivalency_factor;
-                        $packCreateData['height'] = $packDef->height;
-                        $packCreateData['width'] = $packDef->width;
-                        $packCreateData['depth'] = $packDef->depth;
-                        $packCreateData['weight'] = $packDef->weight;
-                        $packCreateData['is_weight_priced'] = $packDef->is_weight_priced;
-                        $packCreateData['allow_fraction_in_qty'] = $packDef->allow_fraction_in_qty;
-                        $packCreateData['is_default_pack'] = $packDef->is_default_pack;
-
-                        $pack = $item->packs()->create($packCreateData);
-                        $pack->packOperations()->sync($packDef->packOperations->pluck('id'));
-                        $pack->packGroups()->sync($packDef->packGroups->pluck('id'));
-                        continue;
-                    }
-                }
 
                 if (!empty($packData['pack_type_id']) && !empty($packData['pack_capacity_id'])) {
                     $packCreateData['pack_type_id'] = $packData['pack_type_id'] ?? null;

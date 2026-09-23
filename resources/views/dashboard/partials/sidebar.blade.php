@@ -69,17 +69,96 @@
                 <i class="fas fa-layer-group"></i>
                 <span>{{ __('messages.dashboard.sidebar.pack_types') ?? 'أنواع الباك' }}</span>
             </a>
-            <a href="{{ route('pack-capacities.index') }}" class="nova-sidebar-link {{ request()->routeIs('pack-capacities.*') ? 'active' : '' }}">
-                <i class="fas fa-cube"></i>
-                <span>{{ __('messages.dashboard.sidebar.pack_capacities') ?? 'سعات الباك' }}</span>
-            </a>
-            <a href="{{ route('pack-definitions.index') }}" class="nova-sidebar-link {{ request()->routeIs('pack-definitions.*') ? 'active' : '' }}">
-                <i class="fas fa-box-open"></i>
-                <span>{{ __('messages.dashboard.sidebar.pack_definitions') ?? 'تعريفات الباك' }}</span>
-            </a>
             <a href="{{ route('price-lists.index') }}" class="nova-sidebar-link {{ request()->routeIs('price-lists.*') ? 'active' : '' }}">
                 <i class="fas fa-dollar-sign"></i>
                 <span>{{ __('messages.dashboard.sidebar.price_lists') ?? 'قوائم الأسعار' }}</span>
+            </a>
+        </div>
+
+        <!-- Orders & Sales -->
+        <div class="nova-sidebar-section">
+            <div class="nova-sidebar-title">{{ __('messages.dashboard.sidebar.sales') }}</div>
+            <a href="{{ route('orders.index') }}" class="nova-sidebar-link {{ request()->routeIs('orders.*') ? 'active' : '' }}">
+                <i class="fas fa-shopping-cart"></i>
+                <span>{{ __('messages.dashboard.sidebar.orders') }}</span>
+            </a>
+            <a href="{{ route('invoices.index') }}" class="nova-sidebar-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>{{ __('messages.dashboard.sidebar.invoices') }}</span>
+            </a>
+            {{-- TODO: Add quotations.index route --}}
+            <a href="#" class="nova-sidebar-link">
+                <i class="fas fa-file-contract"></i>
+                <span>{{ __('messages.dashboard.sidebar.quotations') }}</span>
+            </a>
+            <a href="{{ route('deliveries.index') }}" class="nova-sidebar-link {{ request()->routeIs('deliveries.*') ? 'active' : '' }}">
+                <i class="fas fa-truck"></i>
+                <span>{{ __('messages.dashboard.sidebar.deliveries') }}</span>
+            </a>
+            <a href="{{ route('returns.index') }}" class="nova-sidebar-link {{ request()->routeIs('returns.*') ? 'active' : '' }}">
+                <i class="fas fa-undo"></i>
+                <span>{{ __('messages.dashboard.sidebar.returns') }}</span>
+            </a>
+        </div>
+
+        <!-- Customers & Sales -->
+        <div class="nova-sidebar-section">
+            <div class="nova-sidebar-title">{{ __('messages.dashboard.sidebar.customers_sales') }}</div>
+            <a href="{{ route('customers.index') }}" class="nova-sidebar-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
+                <i class="fas fa-users"></i>
+                <span>{{ __('messages.dashboard.sidebar.customers') }}</span>
+            </a>
+            <a href="{{ route('invoices.index') }}" class="nova-sidebar-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>{{ __('messages.dashboard.sidebar.invoices') }}</span>
+            </a>
+            <a href="{{ route('orders.index') }}" class="nova-sidebar-link {{ request()->routeIs('orders.*') ? 'active' : '' }}">
+                <i class="fas fa-shopping-cart"></i>
+                <span>{{ __('messages.dashboard.sidebar.orders') }}</span>
+            </a>
+            {{-- TODO: Add payments route --}}
+            <a href="#" class="nova-sidebar-link">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>{{ __('messages.dashboard.sidebar.payments') }}</span>
+            </a>
+            <a href="{{ route('returns.index') }}" class="nova-sidebar-link {{ request()->routeIs('returns.*') ? 'active' : '' }}">
+                <i class="fas fa-undo"></i>
+                <span>{{ __('messages.dashboard.sidebar.returns') }}</span>
+            </a>
+        </div>
+
+        <!-- Inventory Management -->
+        <div class="nova-sidebar-section">
+            <div class="nova-sidebar-title">{{ __('messages.dashboard.sidebar.inventory_section') }}</div>
+            <a href="{{ route('inventory.index') }}" class="nova-sidebar-link {{ request()->routeIs('inventory.*') ? 'active' : '' }}">
+                <i class="fas fa-boxes"></i>
+                <span>{{ __('messages.dashboard.sidebar.inventory') }}</span>
+            </a>
+            <a href="{{ route('inventory.movements') }}" class="nova-sidebar-link {{ request()->routeIs('inventory.*') ? 'active' : '' }}">
+                <i class="fas fa-exchange-alt"></i>
+                <span>{{ __('messages.dashboard.sidebar.inventory_movements') }}</span>
+            </a>
+        </div>
+
+        <!-- Finance -->
+        <div class="nova-sidebar-section">
+            <div class="nova-sidebar-title">{{ __('messages.dashboard.sidebar.finance') }}</div>
+            <a href="{{ route('wallets.index') }}" class="nova-sidebar-link {{ request()->routeIs('wallets.*') ? 'active' : '' }}">
+                <i class="fas fa-wallet"></i>
+                <span>{{ __('messages.dashboard.sidebar.wallets') }}</span>
+            </a>
+            <a href="{{ route('price-lists.index') }}" class="nova-sidebar-link {{ request()->routeIs('price-lists.*') ? 'active' : '' }}">
+                <i class="fas fa-tags"></i>
+                <span>{{ __('messages.dashboard.sidebar.price_lists') }}</span>
+            </a>
+        </div>
+
+        <!-- Settings -->
+        <div class="nova-sidebar-section">
+            <div class="nova-sidebar-title">{{ __('messages.dashboard.sidebar.settings') }}</div>
+            <a href="{{ route('payment-deadlines.index') }}" class="nova-sidebar-link {{ request()->routeIs('payment-deadlines.*') ? 'active' : '' }}">
+                <i class="fas fa-clock"></i>
+                <span>{{ __('messages.dashboard.sidebar.payment_deadlines') }}</span>
             </a>
         </div>
 

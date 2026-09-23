@@ -13,6 +13,8 @@ class PriceList extends Model
         'description',
         'status',
         'created_by',
+        'is_default',
+        'currency_id',
     ];
 
     protected $casts = [
@@ -27,6 +29,11 @@ class PriceList extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     public function customers(): HasMany
