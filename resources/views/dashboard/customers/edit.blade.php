@@ -89,6 +89,36 @@
                     @error('email') <div class="nova-form-error">{{ $message }}</div> @enderror
                 </div>
 
+                {{-- Phone --}}
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-phone me-1"></i> رقم الهاتف
+                        </label>
+                        <input type="tel"
+                               class="nova-input @error('phone') nova-invalid @enderror"
+                               name="phone"
+                               value="{{ old('phone', $customer->phone) }}"
+                               placeholder="+218 9X XXX XXXX"
+                               dir="ltr">
+                    </div>
+                    @error('phone') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Address --}}
+                <div class="nova-col nova-col-md-12">
+                    <div class="nova-form-group">
+                        <label class="nova-label">
+                            <i class="fas fa-map-marker-alt me-1"></i> العنوان
+                        </label>
+                        <textarea class="nova-input @error('default_address') nova-invalid @enderror"
+                                  name="default_address"
+                                  rows="3"
+                                  placeholder="أدخل العنوان الكامل...">{{ old('default_address', $customer->default_address) }}</textarea>
+                    </div>
+                    @error('default_address') <div class="nova-form-error">{{ $message }}</div> @enderror
+                </div>
+
                 {{-- Password --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">

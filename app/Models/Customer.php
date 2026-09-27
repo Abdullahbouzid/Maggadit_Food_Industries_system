@@ -23,6 +23,8 @@ class Customer extends Authenticatable
         'price_list_id',
         'type',
         'credit_limit',
+        'default_address',
+        'phone',
     ];
 
     protected $hidden = [

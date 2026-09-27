@@ -8,14 +8,14 @@ class Quotation extends Model
 {
     protected $fillable = [
         'quotation_number', 'customer_id', 'order_id', 'created_by', 'status',
-        'valid_until', 'subtotal', 'discount_amount', 'tax_amount', 'total_amount', 'notes',
+        'valid_until', 'subtotal', 'discount_total', 'tax_total', 'total', 'notes',
     ];
 
     protected $casts = [
         'subtotal' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
-        'tax_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
+        'discount_total' => 'decimal:2',
+        'tax_total' => 'decimal:2',
+        'total' => 'decimal:2',
         'valid_until' => 'date',
         'accepted_at' => 'datetime',
         'rejected_at' => 'datetime',

@@ -204,9 +204,13 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>{{ __('messages.orders.col_order_number') }}</th>
                     <th>{{ __('messages.orders.col_customer') }}</th>
+                    <th>{{ __('messages.orders.col_warehouse') }}</th>
                     <th>{{ __('messages.orders.col_date') }}</th>
-                    <th>{{ __('messages.orders.col_items') }}</th>
+                    <th>{{ __('messages.orders.col_items_count') }}</th>
+                    <th>{{ __('messages.orders.col_total_qty') }}</th>
+                    <th>{{ __('messages.orders.col_currency') }}</th>
                     <th>{{ __('messages.orders.col_total') }}</th>
                     <th>{{ __('messages.orders.col_status') }}</th>
                     <th style="text-align: center;">{{ __('messages.orders.col_actions') }}</th>
@@ -214,12 +218,36 @@
             </thead>
             <tbody>
                 @forelse($orders as $order)
+                @php
+                    $totalQty = $order->items->sum('quantity');
+                    $itemsCount = $order->items->count();
+                @endphp
                 <tr>
-                    <td><span class="nova-fw-semibold">{{ $order->order_number ?? $order->id }}</span></td>
-                    <td>{{ $order->customer->name ?? __('messages.orders.guest') }}</td>
-                    <td>{{ $order->created_at ? \Carbon\Carbon::parse($order->created_at)->translatedFormat('Y-m-d') : '-' }}</td>
-                    <td>{{ $order->items_count ?? 0 }}</td>
+                    <td><span class="nova-fw-semibold">{{ $order->id }}</span></td>
                     <td>
+                        <span class="nova-fw-semibold">{{ $order->order_number }}</span>
+                    </td>
+                    <td>
+                        <div>
+                            <span class="nova-fw-semibold">{{ $order->customer->name ?? __('messages.orders.guest') }}</span>
+                            @if($order->customer?->phone)
+                                <br><small class="nova-text-muted"><i class="fas fa-phone" style="margin-inline-end: 0.25rem;"></i>{{ $order->customer->phone }}</small>
+                            @endif
+                            @if($order->customer?->email)
+                                <br><small class="nova-text-muted"><i class="fas fa-envelope" style="margin-inline-end: 0.25rem;"></i>{{ $order->customer->email }}</small>
+                            @endif
+                        </div>
+                    </td>
+                    <td>
+                        {{ $order->warehouse->name_en ?? $order->warehouse->name_ar ?? $order->warehouse->code ?? '-' }}
+                    </td>
+                    <td>{{ $order->created_at ? \Carbon\Carbon::parse($order->created_at)->translatedFormat('Y-m-d') : '-' }}</td>
+                    <td class="nova-text-center">{{ $itemsCount }}</td>
+                    <td class="nova-text-center">{{ number_format($totalQty, 3) }}</td>
+                    <td>
+                        {{ $order->currency->code ?? '-' }}
+                    </td>
+                    <td class="nova-text-end">
                         {{ number_format($order->total ?? 0, 2) }}
                         {{ $order->currency->symbol ?? $order->currency->code ?? '' }}
                     </td>
@@ -242,7 +270,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7">
+                    <td colspan="11">
                         <div class="nova-empty">
                             <div class="nova-empty-icon">
                                 <i class="fas fa-clipboard-list"></i>

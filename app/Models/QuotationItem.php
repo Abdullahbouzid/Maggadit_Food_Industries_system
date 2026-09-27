@@ -9,6 +9,7 @@ class QuotationItem extends Model
     protected $fillable = [
         'quotation_id', 'item_id', 'item_pack_id', 'warehouse_id',
         'quantity', 'unit_price', 'subtotal', 'discount_amount',
+        'discount_percent', 'tax_percent', 'tax_amount', 'line_total',
         'price_list_id', 'price_history_id',
     ];
 
@@ -17,6 +18,10 @@ class QuotationItem extends Model
         'unit_price' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'discount_amount' => 'decimal:2',
+        'discount_percent' => 'decimal:2',
+        'tax_percent' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'line_total' => 'decimal:2',
     ];
 
     public function quotation()

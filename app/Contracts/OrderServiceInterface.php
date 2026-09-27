@@ -23,5 +23,7 @@ interface OrderServiceInterface
         ?string $deliveryAddress = null,
         ?string $deliveryPhone = null,
         ?Carbon $scheduledDeliveryDate = null,
+        ?int $warehouseId = null,
+        ?int $currencyId = null,
     ): Order;
 }

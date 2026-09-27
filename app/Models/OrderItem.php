@@ -8,15 +8,20 @@ class OrderItem extends Model
 {
     protected $fillable = [
         'order_id', 'item_id', 'item_pack_id', 'warehouse_id',
-        'quantity', 'unit_price', 'subtotal', 'discount_amount',
-        'price_list_id', 'price_history_id',
+        'quantity', 'unit_price', 'discount_percent', 'discount_amount',
+        'tax_percent', 'tax_amount', 'line_total', 'subtotal',
+        'price_source', 'price_list_item_id', 'notes',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
+        'quantity' => 'decimal:3',
         'unit_price' => 'decimal:2',
-        'subtotal' => 'decimal:2',
+        'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
+        'tax_percent' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'line_total' => 'decimal:2',
+        'subtotal' => 'decimal:2',
     ];
 
     public function order()

@@ -60,6 +60,10 @@
                         <td>{{ $customer->phone ?? '<span class="nova-text-muted">—</span>' }}</td>
                     </tr>
                     <tr>
+                        <th>العنوان</th>
+                        <td>{{ $customer->default_address ?? '<span class="nova-text-muted">—</span>' }}</td>
+                    </tr>
+                    <tr>
                         <th>نوع العميل</th>
                         <td>
                             @if($customer->customer_type === 'credit')

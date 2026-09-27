@@ -157,23 +157,27 @@ final class PricingService implements PricingServiceInterface
         );
     }
 
-    public function resolveCustomerPrice(
-        Customer $customer,
+    public function resolveDefaultPriceListPrice(
         Item $item,
         ItemPack $pack,
         float $quantity,
         Carbon $date,
     ): ?array {
-        $priceList = CustomerPriceList::where('customer_id', $customer->id)
-            ->where('is_active', true)
-            ->orderByDesc('assigned_at')
-            ->first();
+        $priceList = PriceList::where('status', 'active')->first();
 
         if (!$priceList) {
             return null;
         }
 
-        $priceItem = $this->findBestPriceItem($priceList->price_list_id, $item, $pack, $quantity, $date);
+        // Get the active version to find the effective price list
+        $activeVersion = $priceList->versions()
+            ->where('is_active', true)
+            ->whereDate('effective_date', '<=', $date)
+            ->latest('effective_date')
+            ->first();
+
+        // Use the price list's items (PriceListItem has tiered pricing fields)
+        $priceItem = $this->findBestPriceItem($priceList->id, $item, $pack, $quantity, $date);
 
         if (!$priceItem) {
             return null;
@@ -186,19 +190,39 @@ final class PricingService implements PricingServiceInterface
         ];
     }
 
-    public function resolveDefaultPriceListPrice(
+    public function resolveCustomerPrice(
+        Customer $customer,
         Item $item,
         ItemPack $pack,
         float $quantity,
         Carbon $date,
     ): ?array {
-        $priceList = PriceList::where('status', 'active')
+        $customerPriceList = CustomerPriceList::where('customer_id', $customer->id)
+            ->where('is_active', true)
+            ->orderByDesc('assigned_at')
             ->first();
 
+        if (!$customerPriceList) {
+            return null;
+        }
+
+        $priceList = $customerPriceList->priceList;
         if (!$priceList) {
             return null;
         }
 
+        // Get the active version
+        $activeVersion = $priceList->versions()
+            ->where('is_active', true)
+            ->whereDate('effective_date', '<=', $date)
+            ->latest('effective_date')
+            ->first();
+
+        if (!$activeVersion) {
+            return null;
+        }
+
+        // Use the price list's items (PriceListItem has tiered pricing fields)
         $priceItem = $this->findBestPriceItem($priceList->id, $item, $pack, $quantity, $date);
 
         if (!$priceItem) {

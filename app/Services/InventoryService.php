@@ -39,24 +39,20 @@ final class InventoryService implements InventoryServiceInterface
             ->where('warehouse_id', $warehouseId)
             ->first();
 
-        if (!$inventory) {
-            return new AvailabilityResult(
-                itemId: $itemId,
-                itemPackId: $packId,
-                warehouseId: $warehouseId,
-                onHand: 0.0,
-                reserved: 0.0,
-                available: 0.0,
-                damaged: 0.0,
-                reorderLevel: 0.0,
-                needsReorder: false,
-            );
-        }
+        // Also check batch item stock for production batches
+        $batchStockQuantity = BatchItemStock::whereHas('batchItem', function ($q) use ($itemId, $packId) {
+            $q->where('item_id', $itemId)
+              ->where('item_pack_id', $packId);
+        })
+        ->where('warehouse_id', $warehouseId)
+        ->where('quantity', '>', 0)
+        ->sum('quantity');
 
-        $onHand = (float) $inventory->quantity_on_hand;
-        $reserved = (float) $inventory->reserved_quantity;
-        $damaged = (float) $inventory->damaged_quantity;
-        $reorderLevel = (float) $inventory->reorder_level;
+        $onHand = $inventory ? (float) $inventory->quantity_on_hand : 0.0;
+        $onHand += $batchStockQuantity;
+        $reserved = $inventory ? (float) $inventory->reserved_quantity : 0.0;
+        $damaged = $inventory ? (float) $inventory->damaged_quantity : 0.0;
+        $reorderLevel = $inventory ? (float) $inventory->reorder_level : 0.0;
 
         return new AvailabilityResult(
             itemId: $itemId,

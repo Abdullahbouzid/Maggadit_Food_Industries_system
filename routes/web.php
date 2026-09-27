@@ -690,6 +690,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/get-warehouses/{itemId}', [InvoiceController::class, 'getWarehousesForItem'])->name('invoices.warehouses');
 
     Route::resource('orders', OrderController::class);
+    Route::get('/warehouse/{warehouse}/products', [OrderController::class, 'warehouseProducts'])->name('orders.warehouse.products');
+    Route::get('/price-list/{priceList}/price', [OrderController::class, 'priceListPrice'])->name('orders.price-list.price');
+    Route::post('/orders/{order}/send-new-quote', [OrderController::class, 'sendNewPriceQuote'])->name('orders.send-new-quote');
 
     Route::resource('offers', OfferController::class);
 

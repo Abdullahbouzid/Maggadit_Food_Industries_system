@@ -95,7 +95,7 @@
 @endpush
 
 @php
-    $statusEnum = \App\Enums\OrderStatus::tryFrom($order->status);
+    $statusEnum = $order->status instanceof \App\Enums\OrderStatus ? $order->status : \App\Enums\OrderStatus::tryFrom($order->status);
     $badgeClass = $statusEnum?->badgeColor() ?? 'secondary';
     $statusLabel = $statusEnum?->label() ?? $order->status;
 @endphp
@@ -141,6 +141,9 @@
             @if($order->customer?->email)
                 <p class="nova-text-muted nova-fs-sm">{{ $order->customer->email }}</p>
             @endif
+            @if($order->customer?->phone)
+                <p class="nova-text-muted nova-fs-sm"><i class="fas fa-phone" style="margin-inline-end: 0.25rem;"></i>{{ $order->customer->phone }}</p>
+            @endif
         </div>
     </div>
 
@@ -154,7 +157,10 @@
                     : '-' }}
             </p>
             @if($order->delivery_address)
-                <p class="nova-text-muted nova-fs-sm">{{ $order->delivery_address }}</p>
+                <p class="nova-text-muted nova-fs-sm"><i class="fas fa-map-marker-alt" style="margin-inline-end: 0.25rem;"></i>{{ $order->delivery_address }}</p>
+            @endif
+            @if($order->delivery_phone)
+                <p class="nova-text-muted nova-fs-sm"><i class="fas fa-phone" style="margin-inline-end: 0.25rem;"></i>{{ $order->delivery_phone }}</p>
             @endif
         </div>
     </div>
@@ -211,7 +217,7 @@
                         </td>
                         <td>
                             <span class="nova-text-muted nova-fs-sm">
-                                {{ $item->pack->name ?? $item->pack->packDefinition->name ?? '-' }}
+                                {{ $item->pack ? $item->pack->getDisplayNameAttribute() : '-' }}
                             </span>
                         </td>
                         <td class="nova-text-center">{{ $item->quantity }}</td>
@@ -420,9 +426,8 @@
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($history->created_at)->format('Y-m-d H:i') }}</td>
                     <td>
-                        @php $historyStatusEnum = \App\Enums\OrderStatus::tryFrom($history->to_status); @endphp
-                        <span class="nova-badge {{ $historyStatusEnum?->badgeColor() ?? 'secondary' }}">
-                            {{ $historyStatusEnum?->label() ?? $history->to_status }}
+                        <span class="nova-badge {{ $history->toStatusBadgeColor }}">
+                            {{ $history->toLabel }}
                         </span>
                     </td>
                     <td>{{ $history->changedBy?->name ?? $history->changed_by ?? '-' }}</td>
