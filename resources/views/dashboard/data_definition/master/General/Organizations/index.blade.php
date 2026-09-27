@@ -222,7 +222,7 @@
             <tbody>
                 @forelse($organizations as $org)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($organizations->currentصفحة() - 1) * $organizations->perصفحة() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($organizations->currentPage() - 1) * $organizations->perPage() }}</td>
                     <td>
                         <div class="nova-flex nova-items-center">
                             <div class="nova-stat-icon primary" style="width: 32px; height: 32px; margin-inline-end: 0.5rem;">

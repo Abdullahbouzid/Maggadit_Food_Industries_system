@@ -132,7 +132,7 @@
                 @forelse($batches as $batch)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $batches instanceمن \Illuminate\Pagination\LengthAwarePaginator ? $loop->iteration + ($batches->currentصفحة() - 1) * $batches->perصفحة() : $loop->iteration }}
+                        {{ $batches instanceof \Illuminate\Pagination\LengthAwarePaginator ? $loop->iteration + ($batches->currentPage() - 1) * $batches->perPage() : $loop->iteration }}
                     </td>
                     <td><code>{{ $batch->batch_number }}</code></td>
                     <td>{{ $batch->batch_items_count }}</td>
@@ -185,7 +185,7 @@
             </tbody>
         </table>
     </div>
-    @if($batches instanceمن \Illuminate\Pagination\LengthAwarePaginator)
+    @if($batches instanceof \Illuminate\Pagination\LengthAwarePaginator)
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">

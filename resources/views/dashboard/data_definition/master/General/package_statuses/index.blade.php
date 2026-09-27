@@ -237,7 +237,7 @@
             <tbody>
                 @forelse($packageStates as $status)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($packageStates->currentصفحة() - 1) * $packageStates->perصفحة() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($packageStates->currentPage() - 1) * $packageStates->perPage() }}</td>
                     <td>{{ $status->status_name }}</td>
                     <td>{{ $status->organization->name ?? '—' }}</td>
                     <td>@if($status->resellable) <span class="nova-badge success">نعم</span> @else <span class="nova-badge secondary">لا</span> @endif</td>

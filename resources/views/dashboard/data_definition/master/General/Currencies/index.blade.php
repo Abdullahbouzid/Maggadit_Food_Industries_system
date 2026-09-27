@@ -207,7 +207,7 @@
             <tbody>
                 @forelse($currencies as $curr)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($currencies->currentصفحة() - 1) * $currencies->perصفحة() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($currencies->currentPage() - 1) * $currencies->perPage() }}</td>
                     <td>{{ $curr->name }}</td>
                     <td><span class="nova-badge secondary">{{ $curr->code }}</span></td>
                     <td>{{ $curr->coin_description ?: '—' }}</td>

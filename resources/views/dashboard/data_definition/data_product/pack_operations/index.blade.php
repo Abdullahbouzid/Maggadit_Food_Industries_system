@@ -195,7 +195,7 @@
                 @forelse($packOperations as $op)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($packOperations->currentصفحة() - 1) * $packOperations->perصفحة() }}
+                        {{ $loop->iteration + ($packOperations->currentPage() - 1) * $packOperations->perPage() }}
                     </td>
                     <td>
                         <code class="table-code">{{ $op->code }}</code>

@@ -199,7 +199,7 @@
                 @forelse($states as $state)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($states->currentصفحة() - 1) * $states->perصفحة() }}
+                        {{ $loop->iteration + ($states->currentPage() - 1) * $states->perPage() }}
                     </td>
                     <td>
                         <code class="table-code">{{ $state->code }}</code>

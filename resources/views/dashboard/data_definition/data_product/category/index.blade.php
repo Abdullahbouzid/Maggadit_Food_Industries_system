@@ -207,7 +207,7 @@
                 @forelse($categoriesPaginated as $cat)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($categoriesPaginated->currentصفحة() - 1) * $categoriesPaginated->perصفحة() }}
+                        {{ $loop->iteration + ($categoriesPaginated->currentPage() - 1) * $categoriesPaginated->perPage() }}
                     </td>
                     <td>
                         <code class="table-code">{{ $cat->code }}</code>

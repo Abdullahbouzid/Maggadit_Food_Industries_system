@@ -40,10 +40,6 @@
                 <i class="fas fa-user-shield"></i>
                 <span>{{ __('messages.dashboard.sidebar.roles') ?? 'Roles' }}</span>
             </a>
-            <a href="{{ route('invoices.index') }}" class="nova-sidebar-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
-                <i class="fas fa-file-invoice"></i>
-                <span>{{ __('messages.dashboard.sidebar.invoices') ?? 'الفواتير' }}</span>
-            </a>
         </div>
 
         <!-- Inventory & Products -->
@@ -108,22 +104,10 @@
                 <i class="fas fa-users"></i>
                 <span>{{ __('messages.dashboard.sidebar.customers') }}</span>
             </a>
-            <a href="{{ route('invoices.index') }}" class="nova-sidebar-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <span>{{ __('messages.dashboard.sidebar.invoices') }}</span>
-            </a>
-            <a href="{{ route('orders.index') }}" class="nova-sidebar-link {{ request()->routeIs('orders.*') ? 'active' : '' }}">
-                <i class="fas fa-shopping-cart"></i>
-                <span>{{ __('messages.dashboard.sidebar.orders') }}</span>
-            </a>
             {{-- TODO: Add payments route --}}
             <a href="#" class="nova-sidebar-link">
                 <i class="fas fa-money-bill-wave"></i>
                 <span>{{ __('messages.dashboard.sidebar.payments') }}</span>
-            </a>
-            <a href="{{ route('returns.index') }}" class="nova-sidebar-link {{ request()->routeIs('returns.*') ? 'active' : '' }}">
-                <i class="fas fa-undo"></i>
-                <span>{{ __('messages.dashboard.sidebar.returns') }}</span>
             </a>
         </div>
 
@@ -146,10 +130,6 @@
             <a href="{{ route('wallets.index') }}" class="nova-sidebar-link {{ request()->routeIs('wallets.*') ? 'active' : '' }}">
                 <i class="fas fa-wallet"></i>
                 <span>{{ __('messages.dashboard.sidebar.wallets') }}</span>
-            </a>
-            <a href="{{ route('price-lists.index') }}" class="nova-sidebar-link {{ request()->routeIs('price-lists.*') ? 'active' : '' }}">
-                <i class="fas fa-tags"></i>
-                <span>{{ __('messages.dashboard.sidebar.price_lists') }}</span>
             </a>
         </div>
 

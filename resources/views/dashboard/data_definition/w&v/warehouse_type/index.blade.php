@@ -205,7 +205,7 @@
                 @forelse($warehouseTypes as $type)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($warehouseTypes->currentصفحة() - 1) * $warehouseTypes->perصفحة() }}
+                        {{ $loop->iteration + ($warehouseTypes->currentPage() - 1) * $warehouseTypes->perPage() }}
                     </td>
                     <td>
                         <code class="table-code">{{ $type->code }}</code>

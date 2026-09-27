@@ -124,7 +124,7 @@
                 @forelse($images as $image)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($images->currentصفحة() - 1) * $images->perصفحة() }}
+                        {{ $loop->iteration + ($images->currentPage() - 1) * $images->perPage() }}
                     </td>
                     <td>{{ $image->item->name_en ?? $image->item->name_ar ?? '—' }}</td>
                     <td>

@@ -190,7 +190,7 @@
             <tbody>
                 @forelse($devices as $device)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($devices->currentصفحة() - 1) * $devices->perصفحة() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($devices->currentPage() - 1) * $devices->perPage() }}</td>
                     <td>{{ $device->name_en }}</td>
                     <td>{{ $device->name_ar }}</td>
                     <td><code>{{ $device->serial }}</code></td>

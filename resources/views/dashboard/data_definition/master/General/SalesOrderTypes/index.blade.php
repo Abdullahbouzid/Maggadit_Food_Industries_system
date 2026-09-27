@@ -215,7 +215,7 @@
             <tbody>
                 @forelse($salesOrderTypes as $type)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($salesOrderTypes->currentصفحة() - 1) * $salesOrderTypes->perصفحة() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($salesOrderTypes->currentPage() - 1) * $salesOrderTypes->perPage() }}</td>
                     <td>{{ $type->name }}</td>
                     <td><span class="nova-badge secondary">{{ $type->code }}</span></td>
                     <td>

@@ -186,7 +186,7 @@
                 @forelse($uoms as $uom)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($uoms->currentصفحة() - 1) * $uoms->perصفحة() }}
+                        {{ $loop->iteration + ($uoms->currentPage() - 1) * $uoms->perPage() }}
                     </td>
                     <td><code class="nova-code">{{ $uom->code }}</code></td>
                     <td><span class="nova-fw-bold">{{ $uom->name_en }}</span></td>

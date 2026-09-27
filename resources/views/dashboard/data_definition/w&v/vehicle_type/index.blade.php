@@ -197,7 +197,7 @@
                 @forelse($vehicleTypes as $vt)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($vehicleTypes->currentصفحة() - 1) * $vehicleTypes->perصفحة() }}
+                        {{ $loop->iteration + ($vehicleTypes->currentPage() - 1) * $vehicleTypes->perPage() }}
                     </td>
                     <td>
                         <code class="table-code">{{ $vt->code }}</code>

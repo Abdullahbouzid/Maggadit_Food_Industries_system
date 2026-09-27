@@ -144,7 +144,7 @@
             <tbody>
                 @forelse($models as $m)
                 <tr>
-                    <td>{{ $loop->iteration + ($models->currentصفحة() - 1) * $models->perصفحة() }}</td>
+                    <td>{{ $loop->iteration + ($models->currentPage() - 1) * $models->perPage() }}</td>
                     <td><code>{{ $m->code }}</code></td>
                     <td>{{ $m->name_en }}</td>
                     <td>{{ $m->name_ar }}</td>

@@ -159,7 +159,7 @@
                 @forelse($brandsPaginated as $brand)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($brandsPaginated->currentصفحة() - 1) * $brandsPaginated->perصفحة() }}
+                        {{ $loop->iteration + ($brandsPaginated->currentPage() - 1) * $brandsPaginated->perPage() }}
                     </td>
                     <td>
                         <span class="nova-fw-semibold">{{ $brand->name }}</span>

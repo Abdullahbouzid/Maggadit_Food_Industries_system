@@ -252,7 +252,7 @@
                 @forelse($competitors as $comp)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($competitors->currentصفحة() - 1) * $competitors->perصفحة() }}
+                        {{ $loop->iteration + ($competitors->currentPage() - 1) * $competitors->perPage() }}
                     </td>
                     <td>
                         <div class="nova-flex nova-items-center">

@@ -139,7 +139,7 @@
             <tbody>
                 @forelse($notificationsPaginated as $notification)
                 <tr>
-                    <td>{{ $loop->iteration + ($notificationsPaginated->currentصفحة() - 1) * $notificationsPaginated->perصفحة() }}</td>
+                    <td>{{ $loop->iteration + ($notificationsPaginated->currentPage() - 1) * $notificationsPaginated->perPage() }}</td>
                     <td>{{ $notification->subject_en }}</td>
                     <td>{{ $notification->subject_ar }}</td>
                     <td><span class="nova-badge primary">{{ strtoupper($notification->channel) }}</span></td>

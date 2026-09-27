@@ -188,7 +188,7 @@
             <tbody>
                 @forelse($models as $model)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($models->currentصفحة() - 1) * $models->perصفحة() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($models->currentPage() - 1) * $models->perPage() }}</td>
                     <td><code>{{ $model->code }}</code></td>
                     <td>{{ $model->name_en }}</td>
                     <td>{{ $model->name_ar }}</td>

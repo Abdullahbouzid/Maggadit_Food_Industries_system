@@ -184,7 +184,7 @@
                 @forelse($itemTypes as $type)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($itemTypes->currentصفحة() - 1) * $itemTypes->perصفحة() }}
+                        {{ $loop->iteration + ($itemTypes->currentPage() - 1) * $itemTypes->perPage() }}
                     </td>
                     <td><code class="nova-code">{{ $type->code }}</code></td>
                     <td><span class="nova-fw-bold">{{ $type->name }}</span></td>

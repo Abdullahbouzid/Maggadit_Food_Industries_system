@@ -142,7 +142,7 @@
                 @forelse($itemPacks as $pack)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($itemPacks->currentصفحة() - 1) * $itemPacks->perصفحة() }}
+                        {{ $loop->iteration + ($itemPacks->currentPage() - 1) * $itemPacks->perPage() }}
                     </td>
                     <td>
                         @if($pack->item)

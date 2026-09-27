@@ -188,7 +188,7 @@
             <tbody>
                 @forelse($vendors as $vendor)
                 <tr class="{{ $vendor->inactive ? 'nova-row-inactive' : '' }}">
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($vendors->currentصفحة() - 1) * $vendors->perصفحة() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($vendors->currentPage() - 1) * $vendors->perPage() }}</td>
                     <td>
                         <div class="nova-flex nova-items-center">
                             <div class="nova-stat-icon primary me-2" style="width: 32px; height: 32px;">

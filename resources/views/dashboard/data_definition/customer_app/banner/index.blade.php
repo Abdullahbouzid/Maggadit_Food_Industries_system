@@ -132,7 +132,7 @@
             <tbody>
                 @forelse($bannersPaginated as $banner)
                 <tr>
-                    <td>{{ $loop->iteration + ($bannersPaginated->currentصفحة() - 1) * $bannersPaginated->perصفحة() }}</td>
+                    <td>{{ $loop->iteration + ($bannersPaginated->currentPage() - 1) * $bannersPaginated->perPage() }}</td>
                     <td>
                         @if($banner->image)
                             <img src="{{ asset('uploads/' . $banner->image) }}" alt="{{ $banner->title }}" width="60" height="60" class="nova-object-fit-cover" style="border-radius: 10px; box-shadow: var(--nova-shadow-sm);">

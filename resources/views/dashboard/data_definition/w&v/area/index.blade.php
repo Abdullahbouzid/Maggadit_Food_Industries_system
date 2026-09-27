@@ -200,7 +200,7 @@
                 @forelse($areas as $area)
                 <tr>
                     <td class="nova-fw-semibold">
-                        {{ $loop->iteration + ($areas->currentصفحة() - 1) * $areas->perصفحة() }}
+                        {{ $loop->iteration + ($areas->currentPage() - 1) * $areas->perPage() }}
                     </td>
                     <td><code>{{ $area->code }}</code></td>
                     <td>{{ $area->name_en }}</td>
