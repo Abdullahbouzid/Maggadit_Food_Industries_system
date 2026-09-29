@@ -14,6 +14,23 @@
             </button>
         </div>
 
+        <!-- عرض السعر (Quotation) — يظهر تلقائياً بعدphase التعديل -->
+        <div id="quotationSection" class="mb-4 hidden">
+            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl shadow-md p-4 border border-purple-100">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-file-contract text-purple-600 text-xl"></i>
+                    <h3 class="font-bold text-gray-800">عرض السعر</h3>
+                    <span id="quotationBadge" class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700"></span>
+                </div>
+                <div id="quotationContent"></div>
+                <div class="mt-4 flex gap-2">
+                    <button id="acceptQuoteBtn" class="flex-1 bg-green-600 text-white py-2 rounded-xl text-sm font-semibold"> aceite / وافقي </button>
+                    <button id="rejectQuoteBtn" class="flex-1 bg-red-500 text-white py-2 rounded-xl text-sm font-semibold"> reject / رفض </button>
+                    <button id="requestChangesBtn" class="flex-1 bg-amber-500 text-white py-2 rounded-xl text-sm font-semibold"> تغييرات / طلب تعديل </button>
+                </div>
+            </div>
+        </div>
+
         @php
             // بيانات تجريبية للطلب حسب الـ id (في الحقيقة ستجلب من قاعدة البيانات)
             $ordersData = [
@@ -192,7 +209,10 @@
                 @if($order['status'] != 'cancelled')
                     <button class="flex-1 bg-purple-600 text-white py-2 rounded-xl text-sm font-semibold">إعادة الطلب</button>
                 @endif
-                <button class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-semibold">اتصل بالدعم</button>
+                <a href="/customer/orders/{{ $order['id'] }}/quotation-pdf" target="_blank" class="flex-1 bg-amber-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5">
+                    <i class="fas fa-file-contract"></i> طباعة العرض
+                </a>
+                <button class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-semibold">اتصل الدعم</button>
             </div>
         @else
             <div class="text-center py-10">
@@ -207,4 +227,109 @@
     </div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <script>
+    (function () {
+        const orderId = '{{ $order->id ?? $orderId ?? "" }}';
+        const orderStatus = '{{ $order->status ?? "pending" }}';
+        const canShowQuotation = ['admin_edited', 'quotation_sent'].includes(orderStatus);
+
+        if (orderId && canShowQuotation) {
+            loadQuotation(orderId);
+        }
+
+        async function loadQuotation(orderId) {
+            try {
+                const token = localStorage.getItem('api_token') || '';
+                const response = await fetch(`/api/customer/orders/${orderId}/quotation`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                const data = await response.json();
+                if (!data.success || !data.quotation) return;
+
+                renderQuotation(data.quotation);
+            } catch (e) {
+                console.error('Failed to load quotation:', e);
+            }
+        }
+
+        function renderQuotation(q) {
+            const section = document.getElementById('quotationSection');
+            const badge = document.getElementById('quotationBadge');
+            const content = document.getElementById('quotationContent');
+
+            const statusLabels = {
+                pending: 'قيد المراجعة',
+                sent: 'تم الإرسال',
+                approved: 'معتمد',
+                rejected: 'مرفض',
+            };
+
+            badge.textContent = statusLabels[q.status] || q.status;
+
+            const itemsHtml = q.items.map(item => `
+                <div class="flex justify-between items-center py-2 border-b border-purple-100 last:border-0">
+                    <div>
+                        <p class="font-semibold text-gray-800 text-sm">${item.item_name_ar || item.item_name_en || 'products'}</p>
+                        <p class="text-xs text-gray-400">${item.pack_name || ''} · الكمية: ${item.quantity}</p>
+                    </div>
+                    <span class="font-bold text-purple-700 text-sm">${Number(item.line_total).toFixed(2)} ر.س</span>
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="space-y-1 text-sm mb-3">
+                    <div class="flex justify-between"><span class="text-gray-500">رقم العرض:</span><span class="font-semibold">${q.quotation_number}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">المجموع الفرعي:</span><span>${Number(q.subtotal).toFixed(2)} ر.س</span></div>
+                    ${q.discount_total > 0 ? `<div class="flex justify-between text-green-600"><span>الخصم:</span><span>- ${Number(q.discount_total).toFixed(2)} ر.س</span></div>` : ''}
+                    <div class="flex justify-between"><span class="text-gray-500">الضرائب:</span><span>${Number(q.tax_total).toFixed(2)} ر.س</span></div>
+                    <div class="flex justify-between font-bold text-purple-700 border-t border-purple-200 pt-2 mt-1">
+                        <span>الإجمالي:</span><span>${Number(q.total).toFixed(2)} ر.س</span>
+                    </div>
+                    ${q.valid_until ? `<div class="flex justify-between text-xs text-gray-400 mt-1"><span>صالح حتى:</span><span>${q.valid_until}</span></div>` : ''}
+                </div>
+                <div class="mb-3">
+                    <p class="text-xs text-gray-500 mb-1">الince products</p>
+                    ${itemsHtml}
+                </div>
+                ${q.notes ? `<p class="text-xs text-gray-500"><i class="fas fa-sticky-note"></i> ${q.notes}</p>` : ''}
+            `;
+
+            section.classList.remove('hidden');
+
+            // Wire up action buttons
+            document.getElementById('acceptQuoteBtn').onclick = () => respondToQuotation(orderId, 'approved');
+            document.getElementById('rejectQuoteBtn').onclick = () => respondToQuotation(orderId, 'rejected');
+            document.getElementById('requestChangesBtn').onclick = () => respondToQuotation(orderId, 'changes_requested');
+        }
+
+        async function respondToQuotation(orderId, response) {
+            const token = localStorage.getItem('api_token') || '';
+            try {
+                const res = await fetch(`/api/customer/orders/${orderId}/quotation/respond`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ response }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'حدث خطأ');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('حدث خطأ في الاتصال');
+            }
+        }
+    })();
+    </script>
 @endsection

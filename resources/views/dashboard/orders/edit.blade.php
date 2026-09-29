@@ -176,19 +176,27 @@ $walletBalance = $customerObj ? $customerObj->wallets->where('is_active', 1)->su
             <a href="{{ route('orders.show', $order->id) }}" class="nova-btn nova-btn-outline nova-btn-sm">
                 <i class="fas fa-eye"></i> {{ __('messages.orders.view') ?? 'عرض' }}
             </a>
+            <a href="{{ route('orders.pdf', $order->id) }}" target="_blank" class="nova-btn nova-btn-outline nova-btn-sm">
+                <i class="fas fa-print"></i> {{ __('messages.orders.print') ?? 'طباعة' }}
+            </a>
+            <a href="{{ route('orders.quotation.pdf', $order->id) }}" target="_blank" class="nova-btn nova-btn-secondary nova-btn-sm">
+                <i class="fas fa-file-contract"></i> {{ __('messages.orders.print_quotation') ?? 'طباعة العرض' }}
+            </a>
             <a href="{{ route('orders.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
                 <i class="fas fa-arrow-right"></i> {{ __('messages.orders.back') }}
             </a>
         </div>
     </div>
 
-    @if($isTerminalStatus)
+@if($isTerminalStatus)
     <div class="nova-status-warning">
         <i class="fas fa-exclamation-triangle"></i>
         <span>{{ __('messages.orders.cannot_edit_terminal_status') }}</span>
     </div>
     @endif
 </div>
+
+@include('dashboard.orders.partials.status-transition', ['order' => $order])
 
 {{-- ==================== Error / Success alerts ==================== --}}
 @if(session('error'))
@@ -493,6 +501,29 @@ $walletBalance = $customerObj ? $customerObj->wallets->where('is_active', 1)->su
     </div>
 
 </form>
+
+{{-- Confirmation Modal for sending price quote (Nova style) --}}
+<div class="nova-modal-backdrop" id="sendQuoteModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">ارسال عرض السعر</h4>
+            <p class="nova-delete-modal-text">
+                هل أنت م确保 من إرسال عرض سعر جديد للعميل؟<br>
+                بعد الإرسال يتم تغيير 상태 الطلبية إلى "تم إرسال العرض" ويظهر العرض في تطبيق العميل.
+            </p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('sendQuoteModal').classList.remove('show')">يلغ</button>
+                <form id="sendQuoteForm" method="POST" action="">
+                    @csrf
+                    <button type="submit" class="nova-btn nova-btn-warning">ارسال العرض</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection
 
@@ -1238,25 +1269,10 @@ function attachEventListeners(row) {
    Send new price quote
    ============================================================ */
 function sendNewPriceQuote() {
-    if (!confirm('هل أنت متأكد من إرسال عرض سعر جديد للعميل؟')) return;
-
-    const form = document.getElementById('orderEditForm');
-    const action = form.action;
-    const methodInput = form.querySelector('input[name="_method"]');
-
-    // Temporarily change to a different action
+    const modal = document.getElementById('sendQuoteModal');
+    const form = document.getElementById('sendQuoteForm');
     form.action = `/orders/${orderId}/send-new-quote`;
-
-    // Submit as POST
-    if (methodInput) methodInput.value = 'POST';
-
-    form.submit();
-
-    // Restore (in case submission fails / page doesn't navigate)
-    setTimeout(() => {
-        form.action = action;
-        if (methodInput) methodInput.value = 'PUT';
-    }, 100);
+    modal.classList.add('show');
 }
 
 /* ============================================================

@@ -478,6 +478,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         })->name('order_details');
         Route::get('/order/{id}/pdf', [CustomerOrderController::class, 'downloadPdf'])->name('order_pdf');
         Route::get('/customer/orders/{id}/pdf', [CustomerOrderController::class, 'downloadPdf'])->name('customer_order_pdf');
+        Route::get('/customer/orders/{id}/quotation-pdf', [CustomerOrderController::class, 'downloadQuotationPdf'])->name('customer_order_quotation_pdf');
         Route::get('/my-info', [CustomerProfileController::class, 'myInfo'])->name('my_info');
         Route::post('/my-info', [CustomerProfileController::class, 'updateInfo'])->name('my_info.update');
     });
@@ -688,11 +689,15 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('invoices', InvoiceController::class);
     Route::get('invoices/get-warehouses/{itemId}', [InvoiceController::class, 'getWarehousesForItem'])->name('invoices.warehouses');
+    Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
 
     Route::resource('orders', OrderController::class);
     Route::get('/warehouse/{warehouse}/products', [OrderController::class, 'warehouseProducts'])->name('orders.warehouse.products');
     Route::get('/price-list/{priceList}/price', [OrderController::class, 'priceListPrice'])->name('orders.price-list.price');
     Route::post('/orders/{order}/send-new-quote', [OrderController::class, 'sendNewPriceQuote'])->name('orders.send-new-quote');
+    Route::post('/orders/{order}/transition', [OrderController::class, 'transitionStatus'])->name('orders.transition');
+    Route::get('/orders/{order}/pdf', [OrderController::class, 'downloadOrderPdf'])->name('orders.pdf');
+    Route::get('/orders/{order}/quotation/pdf', [OrderController::class, 'downloadQuotationPdf'])->name('orders.quotation.pdf');
 
     Route::resource('offers', OfferController::class);
 

@@ -121,4 +121,22 @@ class InvoiceController extends Controller
 
         return response()->json($warehouses);
     }
+
+    /**
+     * Download invoice PDF.
+     */
+    public function downloadPdf(Invoice $invoice, Request $request)
+    {
+        $invoice->load(['customer', 'priceList', 'items.item', 'items.itemPack.uom', 'items.priceList', 'items.priceHistory']);
+
+        $lang = $request->query('lang', 'bilingual');
+
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.invoice', compact('invoice', 'lang'))
+            ->setPaper('a4', 'portrait', [
+                'encoding' => 'UTF-8',
+                'enable-local-file-access' => true,
+            ]);
+
+        return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
+    }
 }

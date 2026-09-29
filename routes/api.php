@@ -50,5 +50,7 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::post('/favorites/toggle', [CustomerApiController::class, 'toggleFavorite']);
         Route::get('/invoices', [CustomerApiController::class, 'invoices']);
         Route::get('/invoices/{id}', [CustomerApiController::class, 'invoiceDetail'])->name('api.customer.invoice.detail');
+        Route::get('/orders/{order}/quotation', [CustomerApiController::class, 'orderQuotation'])->name('api.customer.order.quotation');
+        Route::post('/orders/{order}/quotation/respond', [CustomerApiController::class, 'respondToQuotation'])->name('api.customer.order.quotation.respond');
     });
 });

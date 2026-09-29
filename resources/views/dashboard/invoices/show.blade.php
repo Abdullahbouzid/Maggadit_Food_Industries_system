@@ -87,8 +87,8 @@ $remaining = $invoice->total_amount - $invoice->paid_amount;
             <span class="nova-badge nova-badge-warning">{{ __('messages.invoice_page.payment_type_credit') }}</span>
         @endif
         <div style="display: flex; gap: 0.5rem; margin-left: 0.5rem;">
-            <a href="{{ route('invoices.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-                <i class="fas fa-arrow-right"></i> {{ __('messages.invoice_page.print') }}
+            <a href="{{ route('invoices.pdf', $invoice->id) }}" target="_blank" class="nova-btn nova-btn-outline nova-btn-sm">
+                <i class="fas fa-print"></i> {{ __('messages.invoice_page.print') }}
             </a>
             @if($invoiceStatus?->value === 'pending_approval')
                 <a href="javascript:void(0)" class="nova-btn nova-btn-primary nova-btn-sm">

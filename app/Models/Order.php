@@ -38,7 +38,7 @@ class Order extends Model
 
     public function quotation()
     {
-        return $this->belongsTo(Quotation::class);
+        return $this->hasMany(Quotation::class);
     }
 
     public function createdBy()

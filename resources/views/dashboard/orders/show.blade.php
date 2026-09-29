@@ -122,6 +122,17 @@
             <a href="{{ route('orders.edit', $order->id) }}" class="nova-btn nova-btn-primary nova-btn-sm">
                 <i class="fas fa-edit"></i> {{ __('messages.orders.edit') }}
             </a>
+            <a href="{{ route('orders.pdf', $order->id) }}" target="_blank" class="nova-btn nova-btn-outline nova-btn-sm">
+                <i class="fas fa-print"></i> {{ __('messages.orders.print') ?? 'طباعة' }}
+            </a>
+            <a href="{{ route('orders.quotation.pdf', $order->id) }}" target="_blank" class="nova-btn nova-btn-secondary nova-btn-sm">
+                <i class="fas fa-file-contract"></i> {{ __('messages.orders.print_quotation') ?? 'طباعة العرض' }}
+            </a>
+            <a href="javascript:void(0)"
+               class="nova-btn nova-btn-warning nova-btn-sm"
+               onclick="sendQuoteFromShow({{ $order->id }}, '{{ $order->status }}')">
+                <i class="fas fa-paper-plane"></i> {{ __('messages.orders.send_quote') ?? 'ارسال العرض' }}
+            </a>
             <a href="javascript:void(0)"
                class="nova-btn nova-btn-danger nova-btn-sm"
                onclick="confirmDelete({{ $order->id }}, '{{ __('messages.orders.cancel') }}', '{{ __('messages.orders.cancel') }}')">
@@ -130,6 +141,8 @@
         </div>
     </div>
 </div>
+
+@include('dashboard.orders.partials.status-transition', ['order' => $order])
 
 {{-- ==================== Summary Row: 3 Cards ==================== --}}
 <div class="nova-row cols-3" style="gap: 1rem; margin-bottom: 1.5rem;">
@@ -260,36 +273,40 @@
 </div>
 
 {{-- ==================== Quotation Card ==================== --}}
-@if($order->quotation)
-<div class="nova-card nova-mb-4">
-    <div class="nova-card-header">
-        <h3 class="nova-card-title">
-            <i class="fas fa-file-contract" style="margin-inline-end: 0.5rem;"></i>
-            {{ __('messages.orders.quotation') }}
-        </h3>
-    </div>
-    <div class="nova-card-body">
-        <div class="nova-row nova-gap-3">
-            <div class="nova-col">
-                <p><strong>{{ __('messages.orders.quotation_number') }}:</strong> {{ $order->quotation->quotation_number ?? '-' }}</p>
-                <p><strong>{{ __('messages.orders.created_at') }}:</strong> {{ $order->quotation->created_at ? \Carbon\Carbon::parse($order->quotation->created_at)->format('Y-m-d') : '-' }}</p>
-                <p><strong>{{ __('messages.orders.notes') }}:</strong> {{ $order->quotation->notes ?? '-' }}</p>
-            </div>
-            <div class="nova-col nova-text-end">
-                <p><strong>{{ __('messages.orders.col_total') }}:</strong> {{ number_format($order->quotation->total_amount ?? 0, 2) }}</p>
-                <p><strong>{{ __('messages.orders.status') }}:</strong> {{ $order->quotation->status }}</p>
+@php
+    $latestQuotation = $order->quotation->isEmpty() ? null : $order->quotation->first();
+@endphp
+
+    @if($latestQuotation)
+    <div class="nova-card nova-mb-4">
+        <div class="nova-card-header">
+            <h3 class="nova-card-title">
+                <i class="fas fa-file-contract" style="margin-inline-end: 0.5rem;"></i>
+                {{ __('messages.orders.quotation') }}
+            </h3>
+        </div>
+        <div class="nova-card-body">
+            <div class="nova-row nova-gap-3">
+                <div class="nova-col">
+                    <p><strong>{{ __('messages.orders.quotation_number') }}:</strong> {{ $latestQuotation->quotation_number ?? '-' }}</p>
+                    <p><strong>{{ __('messages.orders.created_at') }}:</strong> {{ $latestQuotation->created_at ? \Carbon\Carbon::parse($latestQuotation->created_at)->format('Y-m-d') : '-' }}</p>
+                    <p><strong>{{ __('messages.orders.notes') }}:</strong> {{ $latestQuotation->notes ?? '-' }}</p>
+                </div>
+                <div class="nova-col nova-text-end">
+                    <p><strong>{{ __('messages.orders.col_total') }}:</strong> {{ number_format($latestQuotation->total ?? 0, 2) }}</p>
+                    <p><strong>{{ __('messages.orders.status') }}:</strong> {{ $latestQuotation->status }}</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
-@else
-<div class="nova-card nova-mb-4">
-    <div class="nova-card-body nova-py-3 nova-text-center">
-        <i class="fas fa-file-contract fa-2x nova-text-muted"></i>
-        <p class="nova-text-muted">{{ __('messages.orders.no_quotation') }}</p>
+    @else
+    <div class="nova-card nova-mb-4">
+        <div class="nova-card-body nova-py-3 nova-text-center">
+            <i class="fas fa-file-contract fa-2x nova-text-muted"></i>
+            <p class="nova-text-muted">{{ __('messages.orders.no_quotation') }}</p>
+        </div>
     </div>
-</div>
-@endif
+    @endif
 
 {{-- ==================== Invoice Card ==================== --}}
 @if($order->invoice)
@@ -462,4 +479,43 @@
 </div>
 @endif
 
+{{-- Confirmation Modal for sending price quote (Nova style) --}}
+<div class="nova-modal-backdrop" id="sendQuoteModalShow" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">ارسال عرض السعر</h4>
+            <p class="nova-delete-modal-text">
+                هل أنت م确保 من إرسال عرض سعر جديد للعميل؟<br>
+                بعد الإرسال يتم تغيير حالة الطلبية إلى "تم إرسال العرض" ويظهر العرض في تطبيق العميل.
+            </p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('sendQuoteModalShow').classList.remove('show')">يلغ</button>
+                <form id="sendQuoteFormShow" method="POST" action="">
+                    @csrf
+                    <button type="submit" class="nova-btn nova-btn-warning">ارسال العرض</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
+
+@push('scripts')
+<script>
+function sendQuoteFromShow(orderId, currentStatus) {
+    const terminal = ['delivered', 'cancelled', 'returned', 'expired', 'rejected'];
+    if (terminal.includes(currentStatus)) {
+        alert('لا يمكن إرسال عرض سعر للطلب في هذه الحالة');
+        return;
+    }
+
+    const form = document.getElementById('sendQuoteFormShow');
+    form.action = `/orders/${orderId}/send-new-quote`;
+    document.getElementById('sendQuoteModalShow').classList.add('show');
+}
+</script>
+@endpush

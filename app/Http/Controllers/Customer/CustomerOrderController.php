@@ -113,11 +113,39 @@ class CustomerOrderController extends Controller
 
         $lang = $request->query('lang', 'bilingual');
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.invoice', compact('invoice', 'lang'))
-            ->setPaper('a4', 'portrait')
-            ->setOption(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.invoice', compact('invoice', 'lang'))
+            ->setPaper('a4', 'portrait', [
+                'encoding' => 'UTF-8',
+                'enable-local-file-access' => true,
+                            ]);
 
         return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
+    }
+
+    /**
+     * Download quotation PDF for a customer order.
+     */
+    public function downloadQuotationPdf($id, Request $request)
+    {
+        $customer = $this->getCustomer($request);
+
+        $quotation = \App\Models\Quotation::where('order_id', $id)
+            ->when($customer, fn ($q) => $q->where('customer_id', $customer->id))
+            ->with(['customer', 'items.item', 'items.pack', 'order'])
+            ->latest()
+            ->first();
+
+        if (! $quotation) {
+            return redirect()->back()->with('error', 'لا توجد عروض أسعار لهذا الطلب');
+        }
+
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.quotation', compact('quotation'))
+            ->setPaper('a4', 'portrait', [
+                'encoding' => 'UTF-8',
+                'enable-local-file-access' => true,
+                            ]);
+
+        return $pdf->download("quotation-{$quotation->quotation_number}.pdf");
     }
 
     public function orderHistory(Request $request)

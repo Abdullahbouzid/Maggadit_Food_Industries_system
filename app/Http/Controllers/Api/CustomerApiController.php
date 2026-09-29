@@ -17,6 +17,8 @@ use App\Models\Offer;
 use App\Models\Organization;
 use App\Models\OrganizationAbout;
 use App\Models\PrivacyPolicy;
+use App\Models\Quotation;
+use App\Models\QuotationItem;
 use App\Models\Survey;
 use App\Models\SurveyAnswer;
 use App\Models\SurveyResponse;
@@ -962,5 +964,108 @@ class CustomerApiController extends Controller
             'count' => $newNotifications->count(),
             'unread_count' => $unreadCount,
         ]);
+    }
+
+    /**
+     * Fetch the quotation for a specific order (customer-facing).
+     */
+    public function orderQuotation(Request $request, $order)
+    {
+        $customer = $request->user();
+
+        $quotation = Quotation::where('order_id', $order)
+            ->where('customer_id', $customer->id)
+            ->with(['items.item', 'items.itemPack'])
+            ->latest()
+            ->first();
+
+        if (! $quotation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا توجد عروض أسعار لهذا الطلب',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'quotation' => [
+                'id' => $quotation->id,
+                'quotation_number' => $quotation->quotation_number,
+                'order_id' => $quotation->order_id,
+                'customer_id' => $quotation->customer_id,
+                'version' => $quotation->version,
+                'status' => $quotation->status,
+                'subtotal' => (float) $quotation->subtotal,
+                'discount_total' => (float) $quotation->discount_total,
+                'tax_total' => (float) $quotation->tax_total,
+                'total' => (float) $quotation->total,
+                'valid_until' => $quotation->valid_until?->format('Y-m-d'),
+                'sent_at' => $quotation->sent_at?->toDateTimeString(),
+                'customer_response' => $quotation->customer_response,
+                'customer_response_at' => $quotation->customer_response_at?->toDateTimeString(),
+                'customer_notes' => $quotation->customer_notes,
+                'notes' => $quotation->notes,
+                'created_at' => $quotation->created_at->toDateTimeString(),
+                'items' => $quotation->items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'item_id' => $item->item_id,
+                        'item_name_ar' => $item->item?->name_ar,
+                        'item_name_en' => $item->item?->name_en,
+                        'item_pack_id' => $item->item_pack_id,
+                        'pack_name' => $item->itemPack?->getDisplayNameAttribute(),
+                        'quantity' => (float) $item->quantity,
+                        'unit_price' => (float) $item->unit_price,
+                        'discount_percent' => (float) $item->discount_percent,
+                        'discount_amount' => (float) $item->discount_amount,
+                        'tax_percent' => (float) $item->tax_percent,
+                        'tax_amount' => (float) $item->tax_amount,
+                        'line_total' => (float) $item->line_total,
+                        'subtotal' => (float) $item->subtotal,
+                    ];
+                }),
+            ],
+        ]);
+    }
+
+    /**
+     * Record customer response to a quotation.
+     */
+    public function respondToQuotation(Request $request, $order)
+    {
+        $customer = $request->user();
+
+        $validated = $request->validate([
+            'response' => 'required|in:approved,rejected,changes_requested',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $quotation = Quotation::where('order_id', $order)
+            ->where('customer_id', $customer->id)
+            ->latest()
+            ->first();
+
+        if (! $quotation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا توجد عروض أسعار لهذا الطلب',
+            ], 404);
+        }
+
+        try {
+            app(\App\Contracts\QuotationServiceInterface::class)
+                ->recordCustomerResponse($quotation, $validated['response'], $validated['notes'] ?? null);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تسجيل الرد بنجاح',
+                'response' => $validated['response'],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 }

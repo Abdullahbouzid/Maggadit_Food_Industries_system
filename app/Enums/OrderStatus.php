@@ -21,6 +21,7 @@ enum OrderStatus: string
     case Cancelled = 'cancelled';
     case Returned = 'returned';
     case Expired = 'expired';
+    case Rejected = 'rejected';
 
     public function label(): string
     {
@@ -40,6 +41,7 @@ enum OrderStatus: string
             self::Cancelled => 'ملغي',
             self::Returned => 'مرتجع',
             self::Expired => 'منتهي الصلاحية',
+            self::Rejected => 'مرفض',
         };
     }
 
@@ -48,7 +50,7 @@ enum OrderStatus: string
         return match ($this) {
             self::New, self::Returned => 'secondary',
             self::PendingReview, self::QuotationSent, self::PendingApproval => 'warning',
-            self::CustomerRejected, self::Cancelled, self::Expired => 'danger',
+            self::CustomerRejected, self::Cancelled, self::Expired, self::Rejected => 'danger',
             self::AdminEdited, self::InvoiceGenerated, self::InDelivery => 'accent',
             self::CustomerApproved, self::Approved, self::Delivered => 'success',
             self::CustomerRequestedChanges => 'info',

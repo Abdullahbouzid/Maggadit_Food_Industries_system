@@ -380,28 +380,96 @@ class OrderController extends Controller
      */
     public function sendNewPriceQuote(Request $request, Order $order)
     {
-        $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
-            'currency_id' => 'required|exists:currencies,id',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required|exists:items,id',
-            'items.*.item_pack_id' => 'nullable|exists:item_packs,id',
-            'items.*.quantity' => 'required|numeric|min:0.001',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
-        ]);
+        $customer = $order->customer;
+
+        if (! $customer) {
+            return redirect()->back()->withErrors(['error' => 'الطلب لا يحتوي على عميل']);
+        }
 
         try {
-            $customer = Customer::findOrFail($request->customer_id);
-
             // Create a new quotation based on the order
             $quotation = $this->orderService->createQuotationFromOrder($order, $customer);
+
+            // Transition order to quotation_sent so the lifecycle advances
+            $lifecycle = app(\App\Contracts\OrderLifecycleServiceInterface::class);
+            if ($lifecycle->canTransitionTo($order, OrderStatus::QuotationSent)) {
+                $lifecycle->transition($order, OrderStatus::QuotationSent, auth()->user(), 'Quotation sent to customer');
+            }
 
             return redirect()->route('orders.show', $order)
                 ->with('success', 'تم إرسال عرض السعر الجديد بنجاح. رقم العرض: ' . $quotation->quotation_number);
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Transition order to a new status via the lifecycle service.
+     */
+    public function transitionStatus(Request $request, Order $order)
+    {
+        $request->validate([
+            'status' => 'required|string',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $status = OrderStatus::tryFrom($request->status);
+        if (! $status) {
+            return redirect()->back()->withErrors(['error' => 'الحالة غير صحيحة']);
+        }
+
+        $lifecycle = app(\App\Contracts\OrderLifecycleServiceInterface::class);
+
+        if (! $lifecycle->canTransitionTo($order, $status)) {
+            return redirect()->back()
+                ->with('error', 'لا يمكن الانتقال من ' . $order->status . ' إلى ' . $status->label());
+        }
+
+        try {
+            $lifecycle->transition($order, $status, auth()->user(), $request->notes);
+
+            return redirect()->route('orders.show', $order)
+                ->with('success', 'تم تغيير الحالة إلى ' . $status->label());
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Download order PDF (طلبية)
+     */
+    public function downloadOrderPdf(Order $order)
+    {
+        $order->load(['customer', 'currency', 'items.item', 'items.pack', 'items.warehouse', 'quotation']);
+
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.order', compact('order'))
+            ->setPaper('a4', 'portrait', [
+                'encoding' => 'UTF-8',
+                'enable-local-file-access' => true,
+                            ]);
+
+        return $pdf->download("order-{$order->order_number}.pdf");
+    }
+
+    /**
+     * Download quotation PDF (عرض سعر)
+     */
+    public function downloadQuotationPdf(Order $order)
+    {
+        $quotation = $order->quotation()->latest()->first();
+
+        if (! $quotation) {
+            return redirect()->back()->with('error', 'لا توجد عروض أسعار لهذا الطلب');
+        }
+
+        $quotation->load(['customer', 'items.item', 'items.pack', 'order']);
+
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.quotation', compact('quotation'))
+            ->setPaper('a4', 'portrait', [
+                'encoding' => 'UTF-8',
+                'enable-local-file-access' => true,
+                            ]);
+
+        return $pdf->download("quotation-{$quotation->quotation_number}.pdf");
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\OrderLifecycleServiceInterface;
+use App\Contracts\QuotationServiceInterface;
 use App\Enums\OrderStatus;
 use App\Events\OrderStatusChanged;
 use App\Exceptions\InvalidTransitionException;
@@ -12,8 +13,11 @@ use App\Helpers\UnitOfWork;
 use App\Contracts\InventoryServiceInterface;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
 
 class OrderLifecycleService implements OrderLifecycleServiceInterface
 {
@@ -74,7 +78,13 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
         bool $fromSystem = false,
     ): Order {
         return DB::transaction(function () use ($order, $newStatus, $user, $notes, $fromSystem) {
-            $currentStatus = OrderStatus::from($order->status);
+            $current = $order->status instanceof OrderStatus ? $order->status : OrderStatus::tryFrom($order->status);
+
+            if (! $current) {
+                throw new InvalidTransitionException(
+                    'Order', $order->status, $newStatus->value, $order->id,
+                );
+            }
 
             if (!$this->canTransitionTo($order, $newStatus)) {
                 throw new InvalidTransitionException(
@@ -86,13 +96,13 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
 
             OrderStatusHistory::create([
                 'order_id' => $order->id,
-                'from_status' => $fromSystem ? null : $currentStatus->value,
+                'from_status' => $fromSystem ? null : $current->value,
                 'to_status' => $newStatus->value,
                 'changed_by' => $user?->id,
                 'notes' => $notes,
             ]);
 
-            $this->performSideEffects($order, $currentStatus, $newStatus, $user, $notes);
+            $this->performSideEffects($order, $current, $newStatus, $user, $notes);
 
             return $order;
         });
@@ -100,7 +110,11 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
 
     public function canTransitionTo(Order $order, OrderStatus $newStatus): bool
     {
-        $current = OrderStatus::from($order->status);
+        $current = $order->status instanceof OrderStatus ? $order->status : OrderStatus::tryFrom($order->status);
+
+        if (! $current) {
+            return false;
+        }
 
         if ($current === $newStatus) {
             return false;
@@ -111,7 +125,11 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
 
     public function getAllowedTransitions(Order $order): array
     {
-        $current = OrderStatus::from($order->status);
+        $current = $order->status instanceof OrderStatus ? $order->status : OrderStatus::tryFrom($order->status);
+
+        if (! $current) {
+            return [];
+        }
 
         return array_map(
             fn (string $status) => OrderStatus::from($status),
@@ -160,6 +178,34 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
                     referenceId: $order->id,
                 );
             }
+
+            // Auto-create quotation so the customer app can display it
+            $quotation = $order->quotation()->first();
+            if (! $quotation) {
+                $quotation = app(QuotationServiceInterface::class)->createFromOrder($order, $user);
+            }
+
+            // Send in-app notification + push to the customer
+            $customer = $order->customer;
+            if ($customer) {
+                $total = (float) ($quotation->total ?? 0);
+                $notification = Notification::create([
+                    'subject_en' => 'New price quote available',
+                    'subject_ar' => 'عرض سعر جديد متاح لطلبك',
+                    'body_en' => 'A new price quote for order #' . $order->order_number . ' is ready. Total: ' . number_format($total, 2),
+                    'body_ar' => 'عرض سعر جديد لطلبية رقم ' . $order->order_number . ' بإجمالي ' . number_format($total, 2) . ' ر.س. يappa في تطبيق العميل.',
+                    'image' => null,
+                    'video' => null,
+                    'group' => 'quotation',
+                    'channel' => 'push',
+                    'icon_type' => 'quote',
+                    'customers' => [$customer->id],
+                    'is_sent' => true,
+                    'scheduled_at' => now(),
+                ]);
+
+                $this->sendFcmPush($notification);
+            }
         }
 
         if (in_array($to, [OrderStatus::CustomerRejected, OrderStatus::CustomerRequestedChanges], true)
@@ -172,6 +218,67 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
             foreach ($reservations as $reservation) {
                 $inventoryService->release($reservation->id);
             }
+        }
+    }
+
+    /**
+     * Send an FCM push notification to the customer.
+     */
+    private function sendFcmPush(\App\Models\Notification $notification): void
+    {
+        try {
+            if (! class_exists(Factory::class)) {
+                \Illuminate\Support\Facades\Log::error('FCM: kreait/firebase-php not installed');
+
+                return;
+            }
+
+            $factory = (new Factory)
+                ->withServiceAccount(storage_path('app/firebase/google-services.json'));
+
+            $messaging = $factory->createMessaging();
+
+            $message = CloudMessage::fromArray([
+                'notification' => [
+                    'title' => $notification->subject_ar,
+                    'body' => $notification->body_ar,
+                    'image' => $notification->image ? asset('uploads/'.$notification->image) : null,
+                ],
+                'data' => [
+                    'id' => (string) $notification->id,
+                    'icon_type' => $notification->icon_type ?? 'notification',
+                    'type' => 'quotation',
+                ],
+                'android' => [
+                    'notification' => [
+                        'sound' => 'default',
+                        'channel_id' => 'maggadit_channel',
+                        'priority' => 'high',
+                    ],
+                ],
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'sound' => 'default',
+                            'badge' => 1,
+                        ],
+                    ],
+                ],
+            ]);
+
+            $customerIds = is_array($notification->customers) ? $notification->customers : json_decode($notification->customers, true);
+            if (is_array($customerIds) && count($customerIds) > 0) {
+                $tokens = \App\Models\Customer::whereIn('id', $customerIds)
+                    ->whereNotNull('fcm_token')
+                    ->pluck('fcm_token')
+                    ->toArray();
+
+                if (count($tokens) > 0) {
+                    $messaging->sendMulticast($message, $tokens);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('FCM Push Error: '.$e->getMessage());
         }
     }
 }

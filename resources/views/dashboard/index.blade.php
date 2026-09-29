@@ -216,9 +216,9 @@
             <tbody>
                 @forelse($stats['recent_orders'] as $order)
                 @php
-                    $statusEnum = \App\Enums\OrderStatus::tryFrom($order->status);
+                    $statusEnum = $order->status instanceof \App\Enums\OrderStatus ? $order->status : \App\Enums\OrderStatus::tryFrom($order->status);
                     $badgeClass = $statusEnum ? $statusEnum->badgeColor() : 'secondary';
-                    $statusLabel = $statusEnum ? $statusEnum->label() : ucfirst($order->status);
+                    $statusLabel = $statusEnum ? $statusEnum->label() : ucfirst((string) $order->status);
                 @endphp
                 <tr>
                     <td>
