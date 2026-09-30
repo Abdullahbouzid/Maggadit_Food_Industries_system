@@ -144,12 +144,15 @@
                             <div class="flex items-start justify-between gap-3 text-xs">
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-circle text-[6px] text-purple-400"></i>
-                                    <span class="text-gray-700">{{ $entry['to'] }}</span>
+                                    <span class="text-gray-700">{{ $entry['to'] ?? '' }}</span>
+                                    @if (! empty($entry['by']))
+                                        <span class="text-gray-400">— {{ $entry['by'] }}</span>
+                                    @endif
                                     @if (! empty($entry['notes']))
-                                        <span class="text-gray-400">— {{ $entry['notes'] }}</span>
+                                        <span class="text-gray-400">({{ $entry['notes'] }})</span>
                                     @endif
                                 </div>
-                                <span class="text-gray-400 shrink-0">{{ $entry['at'] }}</span>
+                                <span class="text-gray-400 shrink-0">{{ $entry['date'] ?? '' }}</span>
                             </div>
                         @endforeach
                     </div>

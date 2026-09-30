@@ -118,7 +118,7 @@
                         $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
                         $isFavorite = is_array($product) ? ($product['favorite'] ?? false) : in_array($productId, $favoriteItemIds ?? []);
                     @endphp
-                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='{{ route('customer.product.show', $productId, false) }}'">
+                    <a href="{{ route('customer.product.show', $productId) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer">
                         @if($packName)
                             <div class="absolute top-2 right-2 z-10">
                                 <span class="bg-purple-600 text-white text-[10px] px-2 py-1 rounded-full font-semibold">
@@ -156,7 +156,7 @@
                                         data-uom-name="">إضافة</button>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 @empty
                     <p class="text-center text-gray-500 col-span-2 py-4">لا توجد منتجات لعرضها</p>
                 @endforelse
@@ -171,7 +171,8 @@
             </div>
             <div id="dash-offers" class="space-y-4">
                 @forelse($offers ?? [] as $offer)
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer" onclick="window.location='{{ route('customer.product.show', $offer->item_id, false) }}'">
+                    @if(!empty($offer->item_id))
+                    <a href="{{ route('customer.product.show', $offer->item_id) }}" class="block bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer">
                         @if($offer->discount_percentage > 0)
                             <div class="offer-badge">
                                 -{{ number_format($offer->discount_percentage, 0) }}%
@@ -201,14 +202,6 @@
                                             @endif
                                         </div>
                                     @endif
-                                    @if(!empty($offer->pack_name))
-                                        <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                                            <span class="bg-purple-100 text-purple-700 text-[11px] px-2 py-0.5 rounded-full font-medium">{{ $offer->pack_name }}</span>
-                                            @if(!empty($offer->pack_quantity))
-                                                <span class="text-[11px] text-gray-500">السعة: {{ (float)$offer->pack_quantity }} قطعة</span>
-                                            @endif
-                                        </div>
-                                    @endif
                                 </div>
                                 <div class="flex justify-between items-center mt-2">
                                     <div class="flex items-center gap-1 text-[11px] text-gray-500">
@@ -221,11 +214,21 @@
                                             data-price="{{ $offer->new_price }}"
                                             data-image="{{ $offer->image ?? '' }}">
                                         إضافة للسلة
-                                    </button>
-                                </div>
+                                </button>
                             </div>
                         </div>
                     </div>
+                    </a>
+                    @else
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100">
+                        @if($offer->discount_percentage > 0)
+                            <div class="offer-badge">-{{ number_format($offer->discount_percentage, 0) }}%</div>
+                        @endif
+                        <div class="p-3">
+                            <h3 class="font-bold text-base text-gray-800">{{ $offer->title ?: ($offer->name ?? 'عرض خاص') }}</h3>
+                        </div>
+                    </div>
+                    @endif
                 @empty
                     <div class="text-center py-8 bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <i class="fas fa-tag text-gray-300 text-4xl mb-3"></i>

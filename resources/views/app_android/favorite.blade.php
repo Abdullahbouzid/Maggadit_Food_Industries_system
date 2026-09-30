@@ -34,6 +34,16 @@
 
     <script>
         let favoriteItems = @json($favoriteItems ?? []);
+        const productUrls = @json(
+            collect($favoriteItems ?? [])
+                ->mapWithKeys(function ($item) {
+                    $id = is_array($item) ? ($item['id'] ?? null) : ($item->id ?? null);
+                    return $id ? [(string) $id => route('customer.product.show', $id)] : [];
+                })
+                ->all()
+        );
+        const favoriteProductBase = @json(rtrim(url('/'), '/'));
+        const productUrlFor = (id) => productUrls[String(id)] || `${favoriteProductBase}/customer/product/${encodeURIComponent(id)}`;
 
         // ========== ترجمة الواجهة ==========
         const translations = {
@@ -165,13 +175,13 @@
 
                 itemCard.innerHTML = `
                     <div class="flex flex-row gap-3.5">
-                        <div class="w-24 h-24 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl flex items-center justify-center text-4xl overflow-hidden border border-purple-100 flex-shrink-0">
+                        <a href="${productUrlFor(item.id)}" class="w-24 h-24 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl flex items-center justify-center text-4xl overflow-hidden border border-purple-100 flex-shrink-0">
                             ${item.image ? `<img src="${item.image}" alt="${currentLang === 'ar' ? item.name_ar : item.name_en}" class="w-full h-full object-cover rounded-xl">` : '📦'}
-                        </div>
+                        </a>
                         <div class="flex-1 text-right flex flex-col justify-between">
                             <div>
                                 <div class="flex justify-between items-start gap-1">
-                                    <h3 class="font-bold text-gray-800 text-sm leading-snug">${currentLang === 'ar' ? item.name_ar : item.name_en}</h3>
+                                    <a href="${productUrlFor(item.id)}" class="font-bold text-gray-800 text-sm leading-snug hover:text-purple-700">${currentLang === 'ar' ? item.name_ar : item.name_en}</a>
                                     <button class="remove-fav text-red-500 hover:text-red-700 text-xs font-medium p-1 transition" data-id="${item.id}" title="${t.remove_btn}">
                                         <i class="fas fa-heart text-red-500 text-base"></i>
                                     </button>
