@@ -11,6 +11,7 @@ use App\Models\Quotation;
 use App\Services\Customer\ImagePathService;
 use App\Services\OrderService;
 use App\Services\OrderStepPresenter;
+use App\Services\PdfGenerator;
 use App\Services\QuotationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -355,13 +356,7 @@ class CustomerOrderController extends Controller
 
         $lang = $request->query('lang', 'bilingual');
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.invoice', compact('invoice', 'lang'))
-            ->setPaper('a4', 'portrait', [
-                'encoding' => 'UTF-8',
-                'enable-local-file-access' => true,
-            ]);
-
-        return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
+        return PdfGenerator::download('pdf.invoice', compact('invoice', 'lang'), "invoice-{$invoice->invoice_number}.pdf");
     }
 
     /**
@@ -384,13 +379,7 @@ class CustomerOrderController extends Controller
             return redirect()->back()->with('error', 'الطلبية غير موجودة');
         }
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.order', compact('order'))
-            ->setPaper('a4', 'portrait', [
-                'encoding' => 'UTF-8',
-                'enable-local-file-access' => true,
-            ]);
-
-        return $pdf->download("order-{$order->order_number}.pdf");
+        return PdfGenerator::download('pdf.order', compact('order'), "order-{$order->order_number}.pdf");
     }
 
     /**
@@ -414,13 +403,7 @@ class CustomerOrderController extends Controller
             return redirect()->back()->with('error', 'لا توجد عروض أسعار لهذا الطلب');
         }
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.quotation', compact('quotation'))
-            ->setPaper('a4', 'portrait', [
-                'encoding' => 'UTF-8',
-                'enable-local-file-access' => true,
-            ]);
-
-        return $pdf->download("quotation-{$quotation->quotation_number}.pdf");
+        return PdfGenerator::download('pdf.quotation', compact('quotation'), "quotation-{$quotation->quotation_number}.pdf");
     }
 
     /**

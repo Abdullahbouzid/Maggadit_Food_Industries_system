@@ -81,7 +81,7 @@
                     $itemFavorite = $itemData['favorite'] ?? false;
                 @endphp
                 @foreach($packs as $pack)
-                    <a href="{{ route('customer.product.show', $itemId, false) }}" class="block">
+                    <a href="{{ route('customer.product.show', $itemId) }}" class="block">
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
                         @if($hasMultiplePacks)
                             <div class="absolute top-2 right-2 z-10">
@@ -256,7 +256,7 @@
         // Dynamic Proxy Fallback Fetcher for Products
         const productsGrid = document.getElementById('products-grid');
         if (productsGrid && productsGrid.children.length <= 1 && productsGrid.querySelector('p')) {
-            fetch('/customer/proxy/products')
+            fetch('{{ route('customer.proxy.products') }}')
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.products) {

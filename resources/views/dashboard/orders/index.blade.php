@@ -111,8 +111,7 @@
 </style>
 @endpush
 
-@php
-    $orders = $orders ?? collect();
+@php($orders = $orders ?? collect();
     $filters = $filters ?? [
         'status' => request('status'),
         'customer_id' => request('customer_id'),
@@ -120,8 +119,7 @@
         'date_to' => request('date_to'),
         'search' => request('search'),
     ];
-    $statusCounts = $statusCounts ?? [];
-@endphp
+    $statusCounts = $statusCounts ?? [];)
 
 @section('content')
 
@@ -218,10 +216,8 @@
             </thead>
             <tbody>
                 @forelse($orders as $order)
-                @php
-                    $totalQty = $order->items->sum('quantity');
-                    $itemsCount = $order->items->count();
-                @endphp
+                @php($totalQty = $order->items->sum('quantity');
+                    $itemsCount = $order->items->count();)
                 <tr>
                     <td><span class="nova-fw-semibold">{{ $order->id }}</span></td>
                     <td>
@@ -258,7 +254,7 @@
                         {{ $order->currency->symbol ?? $order->currency->code ?? '' }}
                     </td>
                     <td>
-                        @php $meta = app(\App\Services\OrderStepPresenter::class)->currentStatusMeta($order); @endphp
+                        @php($meta = app(\App\Services\OrderStepPresenter::class)->currentStatusMeta($order);)
                         <span class="nova-badge {{ $meta['badge'] }}">{{ $meta['label'] }}</span>
                         <div style="width:90px;height:4px;border-radius:999px;background:var(--nova-gray-100);margin-top:0.35rem;overflow:hidden;">
                             <div style="height:100%;width:{{ app(\App\Services\OrderStepPresenter::class)->progress($order) }}%;background:#7c3aed;"></div>

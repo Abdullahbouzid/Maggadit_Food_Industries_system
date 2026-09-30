@@ -107,9 +107,39 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-1">اسم المستخدم</label>
                     <input type="text" name="username" value="{{ old('username', $customer->username) }}" required class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
                 </div>
-                <div>
+<div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">البريد الإلكتروني</label>
-                    <input type="email" name="email" value="{{ old('email', $customer->email) }}" required class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
+                    <input type="email" name="email" value="{{ old('email', $customer->email) }}" required class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:border-purple-200 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">رقم الجوال</label>
+                    <input type="text" name="phone" value="{{ old('phone', $customer->phone) }}" class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:border-purple-200 transition" dir="ltr">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">العنوان الافتراضي</label>
+                    <textarea name="default_address" rows="2" class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:border-purple-200 transition">{{ old('default_address', $customer->default_address) }}</textarea>
+                </div>
+
+                {{-- المحفظة: للعرض فقط — لا يمكن للعميل تعديلها --}}
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                    <p class="text-sm font-bold text-emerald-900 mb-2">
+                        <i class="fas fa-wallet ml-1"></i> المحفظة
+                        <span class="text-xs text-emerald-600 font-normal">(للعرض فقط)</span>
+                    </p>
+                    @if (! empty($wallet))
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-emerald-700">الرصيد</span>
+                            <span class="font-bold text-emerald-900">{{ number_format((float) $wallet->balance, 2) }}</span>
+                        </div>
+                        @if (! empty($wallet->currency?->code))
+                            <div class="flex items-center justify-between text-xs text-emerald-700 mt-1">
+                                <span>العملة</span>
+                                <span>{{ $wallet->currency->code }}</span>
+                            </div>
+                        @endif
+                    @else
+                        <p class="text-xs text-emerald-700">لا توجد محفظة مرتبطة بحسابك حالياً.</p>
+                    @endif
                 </div>
                 <hr class="my-4 border-gray-200">
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
@@ -266,6 +296,8 @@
                         name: this.querySelector('[name="name"]').value,
                         username: this.querySelector('[name="username"]').value,
                         email: this.querySelector('[name="email"]').value,
+                        phone: this.querySelector('[name="phone"]')?.value || '',
+                        default_address: this.querySelector('[name="default_address"]')?.value || '',
                     };
 
                     const fileInput = document.getElementById('avatar-input');

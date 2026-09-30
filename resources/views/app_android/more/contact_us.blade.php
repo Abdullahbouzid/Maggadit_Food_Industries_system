@@ -47,32 +47,32 @@
                     <span>أرسل رسالتك</span>
                 </h3>
                 <p class="text-sm text-gray-500 mb-4">سنقوم بالرد عليك في أقرب وقت ممكن</p>
-                <form id="contact-form" class="space-y-4">
-                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <form id="contact-form" action="{{ route('customer.contact.submit') }}" method="POST" class="space-y-4">
+                    @csrf
                     <div class="grid grid-cols-1 gap-3 mb-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">الاسم الكامل <span class="text-danger">*</span></label>
-                            <input type="text" id="contact-name" placeholder="أدخل اسمك" required
+                            <input type="text" id="contact-name" name="name" placeholder="أدخل اسمك" required
                                    class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">رقم الهاتف</label>
-                            <input type="tel" id="contact-phone-input" placeholder="رقم هاتفك"
+                            <input type="tel" id="contact-phone-input" name="phone" placeholder="رقم هاتفك"
                                    class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">البريد الإلكتروني <span class="text-danger">*</span></label>
-                            <input type="email" id="contact-email-input" placeholder="بريدك الإلكتروني" required
+                            <input type="email" id="contact-email-input" name="email" placeholder="بريدك الإلكتروني" required
                                    class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">الموضوع</label>
-                            <input type="text" id="contact-subject" placeholder="موضوع الرسالة"
+                            <input type="text" id="contact-subject" name="subject" placeholder="موضوع الرسالة"
                                    class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">الرسالة <span class="text-danger">*</span></label>
-                            <textarea id="contact-message" rows="4" placeholder="اكتب رسالتك هنا..." required
+                            <textarea id="contact-message" name="message" rows="4" placeholder="اكتب رسالتك هنا..." required
                                       class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition"></textarea>
                         </div>
                         <button type="submit" id="contact-submit-btn"
@@ -115,7 +115,9 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const orgId = localStorage.getItem('active_organization_id');
-            const url = orgId ? `/customer/contact-info?organization_id=${orgId}` : '/customer/contact-info';
+            const url = orgId
+                ? `{{ route('customer.contact.info') }}?organization_id=${encodeURIComponent(orgId)}`
+                : `{{ route('customer.contact.info') }}`;
             
             fetch(url, {
                 method: 'GET',
@@ -187,7 +189,9 @@
             btnText.innerText = 'جاري الإرسال...';
 
             const orgId = localStorage.getItem('active_organization_id');
-            const contactUrl = orgId ? `/customer/contact-us?organization_id=${orgId}` : '/customer/contact-us';
+            const contactUrl = orgId
+                ? `{{ route('customer.contact.submit') }}?organization_id=${encodeURIComponent(orgId)}`
+                : `{{ route('customer.contact.submit') }}`;
 
             fetch(contactUrl, {
                 method: 'POST',
@@ -195,17 +199,23 @@
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
                 credentials: 'include',
                 body: JSON.stringify({ name, email, phone, subject, message }),
             })
-            .then(r => r.json())
+            .then(r => r.json().catch(() => ({ success: false, message: 'فشل الإرسال (' + r.status + ')' })))
             .then(res => {
                 if (res.success) {
                     showToast('✅ ' + (res.message || 'تم إرسال رسالتك بنجاح'));
                     document.getElementById('contact-form').reset();
                 } else {
-                    showToast('❌ ' + (res.message || 'فشل الإرسال'), true);
+                    let msg = res.message || 'فشل الإرسال';
+                    if (res.errors) {
+                        const first = Object.values(res.errors)[0];
+                        if (Array.isArray(first) && first.length) msg = first[0];
+                    }
+                    showToast('❌ ' + msg, true);
                 }
             })
             .catch(() => showToast('❌ حدث خطأ في الاتصال', true))

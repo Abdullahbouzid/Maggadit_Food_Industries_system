@@ -1,5 +1,4 @@
-@php
-    $item = null;
+@php($item = null;
     foreach ($items as $i) {
         if ($i->id == $itemId) {
             $item = $i;
@@ -8,8 +7,7 @@
     }
     $price = $item ? ($item->price) : $unitPrice;
     $itemNameStr = $itemName ?? ($item->name_ar ?? "Product #{$itemId}");
-    $itemCategory = $item ? ($item->category->name_ar ?? '') : '';
-@endphp
+    $itemCategory = $item ? ($item->category->name_ar ?? '') : '';)
 
 <div class="nova-card nova-mb-3 item-row" style="background: var(--nova-surface-2);">
     <div class="nova-card-body">
@@ -45,7 +43,7 @@
                     <select name="items[{{ $itemIndex }}][warehouse_id]" class="nova-select warehouse-select" required>
                         <option value="">اختر المنتج أولاً</option>
                         @if($selectedWarehouseId)
-                            @php $selectedWarehouse = \App\Models\Warehouse::find($selectedWarehouseId); @endphp
+                            @php($selectedWarehouse = \App\Models\Warehouse::find($selectedWarehouseId);)
                             @if($selectedWarehouse)
                                 <option value="{{ $selectedWarehouse->id }}" selected>
                                     {{ $selectedWarehouse->name }}

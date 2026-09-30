@@ -154,7 +154,7 @@
         const customerProductBase = @json(rtrim(url('/'), '/'));
         const customerProductUrl = (id) => `${customerProductBase}/customer/product/${encodeURIComponent(id)}`;
         if (offersContainer && !offersContainer.querySelector('.offer-card')) {
-            fetch('/customer/proxy/offers')
+            fetch('{{ route('customer.proxy.offers') }}')
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.offers) {
@@ -217,15 +217,6 @@
                                     }
                                     localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
                                     showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
-                                });
-                            });
-                        }
-                    }
-                })
-                .catch(err => console.error("Offers proxy error:", err));
-        }
-                                    localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
-                                    showToast(`✅ تم إضافة "${name}" إلى السلة`);
                                 });
                             });
                         }

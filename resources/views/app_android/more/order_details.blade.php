@@ -76,6 +76,13 @@
                     <textarea id="respond-notes" rows="2" placeholder="ملاحظات (اختياري)"
                               class="mt-2 w-full border border-amber-200 rounded-xl px-3 py-2 text-xs bg-white"></textarea>
                 </div>
+            @elseif (\App\Enums\OrderStatus::tryFrom($order->status instanceof \App\Enums\OrderStatus ? $order->status->value : (string) $order->status) === \App\Enums\OrderStatus::AdminEdited)
+                <div class="bg-sky-50 border border-sky-200 rounded-2xl p-4 mb-4">
+                    <h3 class="font-bold text-sky-900 text-sm mb-1">بانتظار عرض السعر</h3>
+                    <p class="text-xs text-sky-700 leading-relaxed">
+                        تمت مراجعة طلبك من الإدارة. ستظهر أزرار الموافقة هنا فور إرسال عرض السعر، ويمكنك حينها الموافقة أو طلب تعديل أو الرفض.
+                    </p>
+                </div>
             @endif
 
             {{-- تفاصيل المنتجات --}}
@@ -110,7 +117,7 @@
                                 {{ \App\Enums\InvoiceStatus::tryFrom($invoice->status)?->label() ?? $invoice->status }}
                             </div>
                         </div>
-                        <a href="{{ route('customer.order_invoice_pdf', $order->id, false) }}"
+                        <a href="{{ route('customer.order_invoice_pdf', $order->id) }}"
                            class="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-2 rounded-full">
                             <i class="fas fa-file-pdf ml-1"></i>تحميل
                         </a>
@@ -122,12 +129,12 @@
             <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
                 <h3 class="font-bold text-gray-800 text-sm mb-3">المستندات</h3>
                 <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('customer.order_pdf', $order->id, false) }}"
+                    <a href="{{ route('customer.order_pdf', $order->id) }}"
                        class="text-xs font-bold text-gray-700 bg-gray-100 px-3 py-2 rounded-full">
                         <i class="fas fa-file-pdf ml-1"></i>الطلبية
                     </a>
                     @if ($quotation)
-                        <a href="{{ route('customer.order_quotation_pdf', $order->id, false) }}"
+                        <a href="{{ route('customer.order_quotation_pdf', $order->id) }}"
                            class="text-xs font-bold text-gray-700 bg-gray-100 px-3 py-2 rounded-full">
                             <i class="fas fa-file-invoice ml-1"></i>عرض السعر
                         </a>
@@ -167,7 +174,7 @@
 (function () {
     'use strict';
 
-    const respondUrl  = "{{ route('customer.order.quotation.respond', $order?->id ?? 0, false) }}";
+    const respondUrl  = "{{ route('customer.order.quotation.respond', $order?->id ?? 0) }}";
     const csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content
                     || '{{ csrf_token() }}';
 

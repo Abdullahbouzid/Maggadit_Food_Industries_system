@@ -264,7 +264,7 @@
         renderFavorites();
 
         if (favoriteItems.length === 0) {
-            fetch('/customer/proxy/favorites')
+            fetch('{{ route('customer.proxy.favorites') }}')
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {

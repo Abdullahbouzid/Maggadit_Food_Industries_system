@@ -29,7 +29,12 @@ class CustomerProfileController extends Controller
             return redirect()->route('mobile.login');
         }
 
-        return view('app_android.more.my_info', compact('customer'));
+        $wallet = \App\Models\CustomerWallet::with('currency')
+            ->where('customer_id', $customer->id)
+            ->where('is_active', true)
+            ->first();
+
+        return view('app_android.more.my_info', compact('customer', 'wallet'));
     }
 
     public function updateInfo(Request $request)
@@ -48,9 +53,19 @@ class CustomerProfileController extends Controller
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'username' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'default_address' => 'nullable|string|max:500',
             'password' => 'nullable|string|min:6|confirmed',
             'avatar' => 'nullable',
         ]);
+
+        // Fields the customer must never control: price list, credit limit and
+        // account type are administrative. They are dropped explicitly so a
+        // crafted request cannot change them.
+        $request->request->remove('price_list_id');
+        $request->request->remove('credit_limit');
+        $request->request->remove('type');
+        $request->request->remove('balance');
 
         if ($request->filled('name')) {
             $customer->name = $request->name;
@@ -60,6 +75,12 @@ class CustomerProfileController extends Controller
         }
         if ($request->filled('username')) {
             $customer->username = $request->username;
+        }
+        if ($request->has('phone')) {
+            $customer->phone = $request->phone;
+        }
+        if ($request->has('default_address')) {
+            $customer->default_address = $request->default_address;
         }
         if ($request->filled('password')) {
             $customer->password = Hash::make($request->password);

@@ -430,7 +430,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Categories
         const dashCategories = document.getElementById('dash-categories');
         if (dashCategories && dashCategories.children.length <= 1 && dashCategories.innerText.includes('لا توجد')) {
-            fetch('/customer/proxy/categories')
+            fetch('{{ route('customer.proxy.categories') }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.categories && data.categories.length > 0) {
@@ -449,7 +449,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Brands
         const dashBrands = document.getElementById('dash-brands');
         if (dashBrands && dashBrands.children.length <= 1 && dashBrands.innerText.includes('لا توجد')) {
-            fetch('/customer/proxy/brands')
+            fetch('{{ route('customer.proxy.brands') }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.brands && data.brands.length > 0) {
@@ -468,7 +468,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Products
         const dashProducts = document.getElementById('dash-products');
         if (dashProducts && dashProducts.children.length <= 1 && dashProducts.innerText.includes('لا توجد')) {
-            fetch('/customer/proxy/products')
+            fetch('{{ route('customer.proxy.products') }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.products) {
@@ -510,7 +510,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Offers
         const dashOffers = document.getElementById('dash-offers');
         if (dashOffers && dashOffers.children.length <= 1 && dashOffers.innerText.includes('لا توجد')) {
-            fetch('/customer/proxy/offers')
+            fetch('{{ route('customer.proxy.offers') }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.offers) {
@@ -551,7 +551,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Banners
         const adCarousel = document.getElementById('ad-carousel');
         if (adCarousel && adCarousel.querySelector('.bg-gray-200')) {
-            fetch('/customer/proxy/dashboard')
+            fetch('{{ route('customer.proxy.dashboard') }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.banners && data.banners.length > 0) {

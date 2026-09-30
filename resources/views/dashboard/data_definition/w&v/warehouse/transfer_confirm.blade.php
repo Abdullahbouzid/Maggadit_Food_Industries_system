@@ -74,12 +74,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php $totalAvailable = 0; $totalToTransfer = 0; @endphp
+                            @php($totalAvailable = 0; $totalToTransfer = 0;)
                             @foreach($batchItems as $index => $item)
-                                @php
-                                    $available = $item->available_quantity;
-                                    $totalAvailable += $available;
-                                @endphp
+                                @php($available = $item->available_quantity;
+                                    $totalAvailable += $available;)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
 
@@ -97,8 +95,7 @@
 
                                     {{-- Pack Info --}}
                                     <td>
-                                        @php
-                                            $pack = $item->pack;
+                                        @php($pack = $item->pack;
                                             $packType = $pack?->packType;
                                             $packCapacity = $pack?->packCapacity;
                                             $packTypeName = $packType?->name_ar ?? $packType?->name_en;
@@ -118,8 +115,7 @@
                                                 str_contains((string) $packTypeName, 'صندوق') || str_contains((string) $packTypeName, 'BOX') => 'box',
                                                 str_contains((string) $packTypeName, 'قطعة') => 'circle',
                                                 default => 'package',
-                                            };
-                                        @endphp
+                                            };)
 
                                         <div class="pack-info">
                                             <span class="nova-badge {{ $packTypeBadge }} pack-type-badge">
