@@ -226,7 +226,7 @@
                         <i class="fas fa-headset text-3xl mb-2"></i>
                         <h3 class="font-bold text-lg">نحن هنا لخدمتك</h3>
                         <p class="text-sm opacity-90 mt-1">لأي استفسار أو اقتراح، لا تتردد في التواصل مع فريق الدعم</p>
-                        <a href="{{ route('customer.contact') }}" class="inline-block mt-3 bg-white text-purple-600 font-semibold px-5 py-2 rounded-full text-sm shadow-md transition hover:scale-105">
+                        <a href="{{ route('customer.contact', [], false) }}" class="inline-block mt-3 bg-white text-purple-600 font-semibold px-5 py-2 rounded-full text-sm shadow-md transition hover:scale-105">
                             تواصل معنا
                         </a>
                     </div>

@@ -47,7 +47,7 @@
                     <span>أرسل رسالتك</span>
                 </h3>
                 <p class="text-sm text-gray-500 mb-4">سنقوم بالرد عليك في أقرب وقت ممكن</p>
-                <form id="contact-form" action="{{ route('customer.contact.submit') }}" method="POST" class="space-y-4">
+                <form id="contact-form" action="{{ route('customer.contact.submit', [], false) }}" method="POST" class="space-y-4">
                     @csrf
                     <div class="grid grid-cols-1 gap-3 mb-4">
                         <div>
@@ -116,8 +116,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const orgId = localStorage.getItem('active_organization_id');
             const url = orgId
-                ? `{{ route('customer.contact.info') }}?organization_id=${encodeURIComponent(orgId)}`
-                : `{{ route('customer.contact.info') }}`;
+                ? `{{ route('customer.contact.info', [], false) }}?organization_id=${encodeURIComponent(orgId)}`
+                : `{{ route('customer.contact.info', [], false) }}`;
             
             fetch(url, {
                 method: 'GET',
@@ -190,8 +190,8 @@
 
             const orgId = localStorage.getItem('active_organization_id');
             const contactUrl = orgId
-                ? `{{ route('customer.contact.submit') }}?organization_id=${encodeURIComponent(orgId)}`
-                : `{{ route('customer.contact.submit') }}`;
+                ? `{{ route('customer.contact.submit', [], false) }}?organization_id=${encodeURIComponent(orgId)}`
+                : `{{ route('customer.contact.submit', [], false) }}`;
 
             fetch(contactUrl, {
                 method: 'POST',

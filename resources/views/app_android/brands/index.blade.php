@@ -15,7 +15,7 @@
 
         <div class="grid grid-cols-2 gap-4">
             @forelse($brands as $brand)
-                <a href="{{ route('customer.brands.show', $brand->id) }}" class="block bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group">
+                <a href="{{ route('customer.brands.show', $brand->id, false) }}" class="block bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group">
                     <div class="relative h-28 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center overflow-hidden">
                         @if($brand->logo)
                             <img src="{{ $brand->logo }}" alt="{{ $brand->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">

@@ -81,7 +81,7 @@
                     $itemFavorite = $itemData['favorite'] ?? false;
                 @endphp
                 @foreach($packs as $pack)
-                    <a href="{{ route('customer.product.show', $itemId) }}" class="block">
+                    <a href="{{ route('customer.product.show', $itemId, false) }}" class="block">
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
                         @if($hasMultiplePacks)
                             <div class="absolute top-2 right-2 z-10">
@@ -195,7 +195,7 @@
                 const icon = this.querySelector('i');
                 const productId = this.getAttribute('data-id');
                 
-                fetch('{{ route("customer.favorite.toggle") }}', {
+                fetch('{{ route('customer.favorite.toggle', [], false) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -239,11 +239,11 @@
             if (categoryId) params.set('category_id', categoryId);
             if (brandId) params.set('brand_id', brandId);
 
-            window.location.href = '{{ route('customer.products') }}?' + params.toString();
+            window.location.href = '{{ route('customer.products', [], false) }}?' + params.toString();
         });
 
         document.getElementById('reset-filters')?.addEventListener('click', function() {
-            window.location.href = '{{ route('customer.products') }}';
+            window.location.href = '{{ route('customer.products', [], false) }}';
         });
 
         // Allow Enter key on search input
@@ -256,7 +256,7 @@
         // Dynamic Proxy Fallback Fetcher for Products
         const productsGrid = document.getElementById('products-grid');
         if (productsGrid && productsGrid.children.length <= 1 && productsGrid.querySelector('p')) {
-            fetch('{{ route('customer.proxy.products') }}')
+            fetch('{{ route('customer.proxy.products', [], false) }}')
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.products) {

@@ -84,7 +84,7 @@
             </div>
 
             <!-- زر الإشعارات مع عداد -->
-            <div id="notification-bell" class="header-icon-btn lang-switch !p-2 !rounded-full relative" onclick="window.location.href='{{ route('customer.notifications') }}'">
+            <div id="notification-bell" class="header-icon-btn lang-switch !p-2 !rounded-full relative" onclick="window.location.href='{{ route('customer.notifications', [], false) }}'">
                 <i class="far fa-bell text-purple-600 text-lg"></i>
                 <span id="notif-badge" class="notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center {{ (isset($unreadCount) && $unreadCount > 0) ? '' : 'hidden' }}">{{ $unreadCount ?? 0 }}</span>
             </div>

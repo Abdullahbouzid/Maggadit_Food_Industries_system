@@ -13,7 +13,7 @@
             </div>
             <h3 id="empty-title" class="text-xl font-bold text-gray-700 mb-2">سلة التسوق فارغة</h3>
             <p id="empty-message" class="text-gray-400 text-sm mb-6">أضف بعض المنتجات الرائعة إلى سلتك</p>
-            <a href="{{ route('customer.products') }}" id="empty-shop-btn" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
+            <a href="{{ route('customer.products', [], false) }}" id="empty-shop-btn" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
                 استعرض العروض
             </a>
         </div>
@@ -277,7 +277,7 @@
                 headers['Authorization'] = 'Bearer ' + token;
             }
 
-            fetch('{{ route('customer.checkout') }}', {
+            fetch('{{ route('customer.checkout', [], false) }}', {
                 method: 'POST',
                 headers: {
                     ...headers,
@@ -304,7 +304,7 @@
                     renderCart();
                     
                     setTimeout(() => {
-                        window.location.href = '{{ route('customer.order_history') }}';
+                        window.location.href = '{{ route('customer.order_history', [], false) }}';
                     }, 2000);
                 } else {
                     showToastMessage(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء الطلب' : 'Error occurred'), true);
@@ -323,7 +323,7 @@
         // زر استعراض العروض (ارتباط وهمي)
         document.getElementById('empty-shop-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
-            window.location.href = '{{ route('customer.products') }}';
+            window.location.href = '{{ route('customer.products', [], false) }}';
         });
 
         // زر تبديل اللغة (إذا كان موجوداً في الهيدر)

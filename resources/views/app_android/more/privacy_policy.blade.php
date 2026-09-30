@@ -111,7 +111,7 @@
         <!-- رابط التواصل للاستفسارات -->
         <div class="mt-6 bg-gray-50 rounded-2xl p-4 text-center border border-gray-200">
             <p class="text-sm text-gray-600">إذا كان لديك أي استفسار حول سياسة الخصوصية، يرجى التواصل معنا</p>
-            <a href="{{ route('customer.contact') }}" class="inline-block mt-2 text-purple-600 font-semibold text-sm">
+            <a href="{{ route('customer.contact', [], false) }}" class="inline-block mt-2 text-purple-600 font-semibold text-sm">
                 <i class="fas fa-headset ml-1"></i> صفحة التواصل
             </a>
         </div>

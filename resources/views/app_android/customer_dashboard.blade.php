@@ -58,11 +58,11 @@
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">الفئات</h2>
-                <a href="{{ route('customer.categories.index') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
+                <a href="{{ route('customer.categories.index', [], false) }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div id="dash-categories" class="flex overflow-x-auto space-x-3 space-x-reverse pb-2 hide-scrollbar">
                 @forelse($categories as $category)
-                    <div class="flex-shrink-0 text-center w-20 cursor-pointer" onclick="window.location='{{ route('customer.categories.show', $category->id) }}'">
+                    <div class="flex-shrink-0 text-center w-20 cursor-pointer" onclick="window.location='{{ route('customer.categories.show', $category->id, false) }}'">
                         <div class="w-16 h-16 mx-auto rounded-full overflow-hidden shadow-sm transition hover:scale-105 bg-gray-100 flex items-center justify-center border border-gray-100">
                             @if($category->image)
                                 <img src="{{ $category->image }}" alt="{{ $category->name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/64?text=📁';">
@@ -82,11 +82,11 @@
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">ماركات شهيرة</h2>
-                <a href="{{ route('customer.brands') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
+                <a href="{{ route('customer.brands', [], false) }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div id="dash-brands" class="flex overflow-x-auto space-x-3 space-x-reverse pb-2 hide-scrollbar">
                 @forelse($brands as $brand)
-                    <div class="flex-shrink-0 text-center w-24 cursor-pointer" onclick="window.location='{{ route('customer.brands.show', $brand->id) }}'">
+                    <div class="flex-shrink-0 text-center w-24 cursor-pointer" onclick="window.location='{{ route('customer.brands.show', $brand->id, false) }}'">
                         <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition hover:shadow-md bg-gray-100 flex items-center justify-center border border-gray-100">
                             @if($brand->logo)
                                 <img src="{{ $brand->logo }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-2" onerror="this.onerror=null; this.src='https://via.placeholder.com/80?text=🏷️';">
@@ -106,7 +106,7 @@
         <div class="mb-5">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">أفضل المنتجات</h2>
-                <a href="{{ route('customer.products') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
+                <a href="{{ route('customer.products', [], false) }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div id="dash-products" class="grid grid-cols-2 gap-4">
                 @forelse($productCards ?? $products as $product)
@@ -118,7 +118,7 @@
                         $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
                         $isFavorite = is_array($product) ? ($product['favorite'] ?? false) : in_array($productId, $favoriteItemIds ?? []);
                     @endphp
-                    <a href="{{ route('customer.product.show', $productId) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer">
+                    <a href="{{ route('customer.product.show', $productId, false) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer">
                         @if($packName)
                             <div class="absolute top-2 right-2 z-10">
                                 <span class="bg-purple-600 text-white text-[10px] px-2 py-1 rounded-full font-semibold">
@@ -167,12 +167,12 @@
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">عروض حصرية</h2>
-                <a href="{{ route('customer.offers') }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
+                <a href="{{ route('customer.offers', [], false) }}" class="text-xs text-purple-600 font-semibold">عرض الكل</a>
             </div>
             <div id="dash-offers" class="space-y-4">
                 @forelse($offers ?? [] as $offer)
                     @if(!empty($offer->item_id))
-                    <a href="{{ route('customer.product.show', $offer->item_id) }}" class="block bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer">
+                    <a href="{{ route('customer.product.show', $offer->item_id, false) }}" class="block bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer">
                         @if($offer->discount_percentage > 0)
                             <div class="offer-badge">
                                 -{{ number_format($offer->discount_percentage, 0) }}%
@@ -377,9 +377,9 @@
             item.addEventListener('click', function() {
                 const target = this.getAttribute('data-nav');
                 const routes = {
-                    home: "{{ route('customer.dashboard') }}",
-                    offers: "{{ route('customer.offers') }}",
-                    more: "{{ route('customer.more') }}"
+                    home: "{{ route('customer.dashboard', [], false) }}",
+                    offers: "{{ route('customer.offers', [], false) }}",
+                    more: "{{ route('customer.more', [], false) }}"
                 };
                 if (routes[target]) {
                     if (target === 'home') return;
@@ -396,7 +396,7 @@
                 const icon = this.querySelector('i');
                 const productId = this.getAttribute('data-id');
                 
-                fetch('{{ route("customer.favorite.toggle") }}', {
+                fetch('{{ route('customer.favorite.toggle', [], false) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -430,7 +430,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Categories
         const dashCategories = document.getElementById('dash-categories');
         if (dashCategories && dashCategories.children.length <= 1 && dashCategories.innerText.includes('لا توجد')) {
-            fetch('{{ route('customer.proxy.categories') }}')
+            fetch('{{ route('customer.proxy.categories', [], false) }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.categories && data.categories.length > 0) {
@@ -449,7 +449,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Brands
         const dashBrands = document.getElementById('dash-brands');
         if (dashBrands && dashBrands.children.length <= 1 && dashBrands.innerText.includes('لا توجد')) {
-            fetch('{{ route('customer.proxy.brands') }}')
+            fetch('{{ route('customer.proxy.brands', [], false) }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.brands && data.brands.length > 0) {
@@ -468,7 +468,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Products
         const dashProducts = document.getElementById('dash-products');
         if (dashProducts && dashProducts.children.length <= 1 && dashProducts.innerText.includes('لا توجد')) {
-            fetch('{{ route('customer.proxy.products') }}')
+            fetch('{{ route('customer.proxy.products', [], false) }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.products) {
@@ -510,7 +510,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Offers
         const dashOffers = document.getElementById('dash-offers');
         if (dashOffers && dashOffers.children.length <= 1 && dashOffers.innerText.includes('لا توجد')) {
-            fetch('{{ route('customer.proxy.offers') }}')
+            fetch('{{ route('customer.proxy.offers', [], false) }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.offers) {
@@ -551,7 +551,7 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Banners
         const adCarousel = document.getElementById('ad-carousel');
         if (adCarousel && adCarousel.querySelector('.bg-gray-200')) {
-            fetch('{{ route('customer.proxy.dashboard') }}')
+            fetch('{{ route('customer.proxy.dashboard', [], false) }}')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.banners && data.banners.length > 0) {

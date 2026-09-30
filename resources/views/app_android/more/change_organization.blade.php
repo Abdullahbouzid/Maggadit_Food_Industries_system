@@ -51,7 +51,7 @@
         // جلب المنظمات من الـ Proxy (Web Route)
         async function loadOrganizations() {
             try {
-                const response = await fetch('{{ route('customer.proxy.organizations.index') }}', {
+                const response = await fetch('{{ route('customer.proxy.organizations.index', [], false) }}', {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
@@ -147,7 +147,7 @@
             showToast('جاري التبديل...', false);
 
             try {
-                const response = await fetch('{{ route('customer.proxy.organizations.switch') }}', {
+                const response = await fetch('{{ route('customer.proxy.organizations.switch', [], false) }}', {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',

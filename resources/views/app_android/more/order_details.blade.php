@@ -117,7 +117,7 @@
                                 {{ \App\Enums\InvoiceStatus::tryFrom($invoice->status)?->label() ?? $invoice->status }}
                             </div>
                         </div>
-                        <a href="{{ route('customer.order_invoice_pdf', $order->id) }}"
+                        <a href="{{ route('customer.order_invoice_pdf', $order->id, false) }}"
                            class="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-2 rounded-full">
                             <i class="fas fa-file-pdf ml-1"></i>تحميل
                         </a>
@@ -129,12 +129,12 @@
             <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
                 <h3 class="font-bold text-gray-800 text-sm mb-3">المستندات</h3>
                 <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('customer.order_pdf', $order->id) }}"
+                    <a href="{{ route('customer.order_pdf', $order->id, false) }}"
                        class="text-xs font-bold text-gray-700 bg-gray-100 px-3 py-2 rounded-full">
                         <i class="fas fa-file-pdf ml-1"></i>الطلبية
                     </a>
                     @if ($quotation)
-                        <a href="{{ route('customer.order_quotation_pdf', $order->id) }}"
+                        <a href="{{ route('customer.order_quotation_pdf', $order->id, false) }}"
                            class="text-xs font-bold text-gray-700 bg-gray-100 px-3 py-2 rounded-full">
                             <i class="fas fa-file-invoice ml-1"></i>عرض السعر
                         </a>
@@ -174,7 +174,7 @@
 (function () {
     'use strict';
 
-    const respondUrl  = "{{ route('customer.order.quotation.respond', $order?->id ?? 0) }}";
+    const respondUrl  = "{{ route('customer.order.quotation.respond', $order?->id ?? 0, false) }}";
     const csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content
                     || '{{ csrf_token() }}';
 

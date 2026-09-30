@@ -384,9 +384,9 @@
             item.addEventListener('click', function(e) {
                 const target = this.getAttribute('data-nav');
                 const routes = {
-                    home: "{{ route('customer.dashboard') }}",
-                    offers: "{{ route('customer.offers') }}",
-                    more: "{{ route('customer.more') }}"
+                    home: "{{ route('customer.dashboard', [], false) }}",
+                    offers: "{{ route('customer.offers', [], false) }}",
+                    more: "{{ route('customer.more', [], false) }}"
                 };
                 if (routes[target]) {
                     if (target === 'more') return;
@@ -399,34 +399,34 @@
 
         // أحداث القائمة - الآن تنتقل إلى صفحات حقيقية
         document.getElementById('change-org').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.change_organization') }}";
+            window.location.href = "{{ route('customer.change_organization', [], false) }}";
         });
         document.getElementById('financial-stmt').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.financial_statement') }}";
+            window.location.href = "{{ route('customer.financial_statement', [], false) }}";
         });
         document.getElementById('order-history').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.order_history') }}";
+            window.location.href = "{{ route('customer.order_history', [], false) }}";
         });
         document.getElementById('my-info').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.my_info') }}";
+            window.location.href = "{{ route('customer.my_info', [], false) }}";
         });
         document.getElementById('surveys').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.surveys') }}";
+            window.location.href = "{{ route('customer.surveys', [], false) }}";
         });
         document.getElementById('notifications').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.notifications') }}";
+            window.location.href = "{{ route('customer.notifications', [], false) }}";
         });
         document.getElementById('faq').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.faq') }}";
+            window.location.href = "{{ route('customer.faq', [], false) }}";
         });
         document.getElementById('privacy-policy').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.privacy') }}";
+            window.location.href = "{{ route('customer.privacy', [], false) }}";
         });
         document.getElementById('about-us').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.about') }}";
+            window.location.href = "{{ route('customer.about', [], false) }}";
         });
         document.getElementById('contact-us').addEventListener('click', () => {
-            window.location.href = "{{ route('customer.contact') }}";
+            window.location.href = "{{ route('customer.contact', [], false) }}";
         });
 
         // تسجيل الخروج باستخدام المودال الجميل
@@ -440,7 +440,7 @@
             const t = translations[currentLang];
             showLogoutToast(t.logout_toast_msg);
             setTimeout(() => {
-                window.location.href = "{{ route('customer.logout') }}";
+                window.location.href = "{{ route('customer.logout', [], false) }}";
             }, 1200);
         });
 

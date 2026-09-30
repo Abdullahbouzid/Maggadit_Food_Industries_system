@@ -55,7 +55,7 @@
                     <div class="flex justify-between items-center">
                         <span class="text-sm">⏰ حتى {{ \Carbon\Carbon::parse($offer->end_date)->format('d M Y') }}</span>
                     </div>
-                    <h3 class="font-bold text-lg mt-1"><a href="{{ $offer->item_id ? route('customer.product.show', $offer->item_id) : '#' }}" class="hover:underline">{{ $offer->title ?: ($offer->name ?? 'عرض') }}</a></h3>
+                    <h3 class="font-bold text-lg mt-1"><a href="{{ $offer->item_id ? route('customer.product.show', $offer->item_id, false) : '#' }}" class="hover:underline">{{ $offer->title ?: ($offer->name ?? 'عرض') }}</a></h3>
                     @if($offer->description)
                         <p class="text-xs opacity-90">{{ $offer->description }}</p>
                     @endif
@@ -70,7 +70,7 @@
                             @endif
                         </div>
                         <div class="flex-1">
-                            <p class="font-semibold text-sm"><a href="{{ $offer->item_id ? route('customer.product.show', $offer->item_id) : '#' }}" class="hover:underline">{{ $offer->name }}</a></p>
+                            <p class="font-semibold text-sm"><a href="{{ $offer->item_id ? route('customer.product.show', $offer->item_id, false) : '#' }}" class="hover:underline">{{ $offer->name }}</a></p>
                             @if($offer->pack_type)
                                 <small class="text-muted">{{ $offer->pack_type }}</small>
                             @endif
@@ -154,7 +154,7 @@
         const customerProductBase = @json(rtrim(url('/'), '/'));
         const customerProductUrl = (id) => `${customerProductBase}/customer/product/${encodeURIComponent(id)}`;
         if (offersContainer && !offersContainer.querySelector('.offer-card')) {
-            fetch('{{ route('customer.proxy.offers') }}')
+            fetch('{{ route('customer.proxy.offers', [], false) }}')
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.offers) {

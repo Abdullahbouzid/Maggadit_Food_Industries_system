@@ -27,7 +27,7 @@
                     <i class="fas fa-box-open text-sm"></i>
                     <span class="text-sm font-semibold">{{ $brand->products_count ?? ($items->count() ?? 0) }} منتج</span>
                 </div>
-                <a href="{{ route('customer.products', ['brand_id' => $brand->id]) }}"
+                <a href="{{ route('customer.products', ['brand_id' => $brand->id], false) }}"
                    class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition">
                     <i class="fas fa-grip text-sm"></i>
                     <span class="text-sm font-semibold">عرض وتصفية</span>
@@ -47,7 +47,7 @@
                     $itemFavorite = $itemData['favorite'] ?? false;
                 @endphp
                 @foreach($packs as $pack)
-                    <a href="{{ route('customer.product.show', $itemId) }}" class="block">
+                    <a href="{{ route('customer.product.show', $itemId, false) }}" class="block">
                         <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
                             @if($hasMultiplePacks)
                                 <div class="absolute top-2 right-2 z-10">
@@ -163,7 +163,7 @@
                 const icon = this.querySelector('i');
                 const productId = this.getAttribute('data-id');
                 
-                fetch("{{ route('customer.favorite.toggle') }}", {
+                fetch("{{ route('customer.favorite.toggle', [], false) }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

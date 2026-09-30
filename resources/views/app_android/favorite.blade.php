@@ -13,7 +13,7 @@
             </div>
             <h3 id="empty-title" class="text-xl font-bold text-gray-700 mb-2">المفضلة فارغة</h3>
             <p id="empty-message" class="text-gray-400 text-sm mb-6">أضف المنتجات التي تعجبك إلى قائمة مفضلاتك</p>
-            <a href="{{ route('customer.products') }}" id="empty-shop-btn" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
+            <a href="{{ route('customer.products', [], false) }}" id="empty-shop-btn" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
                 استعرض المنتجات
             </a>
         </div>
@@ -38,7 +38,7 @@
             collect($favoriteItems ?? [])
                 ->mapWithKeys(function ($item) {
                     $id = is_array($item) ? ($item['id'] ?? null) : ($item->id ?? null);
-                    return $id ? [(string) $id => route('customer.product.show', $id)] : [];
+                    return $id ? [(string) $id => route('customer.product.show', $id, false)] : [];
                 })
                 ->all()
         );
@@ -126,7 +126,7 @@
         }
 
         function removeFromFav(id) {
-            fetch('{{ route('customer.favorite.toggle') }}', {
+            fetch('{{ route('customer.favorite.toggle', [], false) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -264,7 +264,7 @@
         renderFavorites();
 
         if (favoriteItems.length === 0) {
-            fetch('{{ route('customer.proxy.favorites') }}')
+            fetch('{{ route('customer.proxy.favorites', [], false) }}')
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {

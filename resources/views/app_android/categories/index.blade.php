@@ -15,7 +15,7 @@
 
         <div class="grid grid-cols-2 gap-4">
             @forelse($categories as $category)
-                <a href="{{ route('customer.categories.show', $category->id) }}" class="block bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group">
+                <a href="{{ route('customer.categories.show', $category->id, false) }}" class="block bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group">
                     <div class="relative h-28 bg-gradient-to-br from-purple-50 to-indigo-50 flex items-center justify-center overflow-hidden">
                         @if($category->image)
                             <img src="{{ $category->image }}" alt="{{ $category->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">

@@ -77,7 +77,7 @@
                 <h3 class="text-lg font-bold text-gray-800 mt-2">تعديل المعلومات</h3>
             </div>
 
-            <form id="edit-info-form" action="{{ route('customer.my_info.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <form id="edit-info-form" action="{{ route('customer.my_info.update', [], false) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 
                 <!-- رفع الصورة -->

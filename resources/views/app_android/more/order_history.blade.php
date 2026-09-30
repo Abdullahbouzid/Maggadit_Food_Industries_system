@@ -23,7 +23,7 @@
         </div>
 
         @forelse ($rows as $row)
-            <a href="{{ route('customer.order_details', $row['id']) }}"
+            <a href="{{ route('customer.order_details', $row['id'], false) }}"
                class="block bg-white rounded-2xl shadow-sm p-4 mb-3 transition hover:shadow-md">
                 <div class="flex items-start justify-between gap-3">
                     <div>
@@ -60,7 +60,7 @@
                 <i class="fas fa-box-open text-gray-300 text-5xl mb-4"></i>
                 <h3 class="text-gray-600 font-bold">لا توجد طلبات بعد</h3>
                 <p class="text-gray-400 text-sm mt-1">ابدأ بتصفح المنتجات وأضف طلبك الأول.</p>
-                <a href="{{ route('customer.products') }}"
+                <a href="{{ route('customer.products', [], false) }}"
                    class="inline-block mt-4 text-xs font-bold text-white bg-purple-600 px-4 py-2 rounded-full">
                     تصفّح المنتجات
                 </a>
