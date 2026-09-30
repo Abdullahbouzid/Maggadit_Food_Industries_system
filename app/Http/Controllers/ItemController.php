@@ -17,6 +17,7 @@ use App\Models\PackType;
 use App\Models\Uom;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -121,7 +122,9 @@ class ItemController extends Controller
             'required_by_liter' => 'boolean',
             'required_by_weight' => 'boolean',
             'packs' => 'nullable|array',
-            'packs.*.pack_definition_id' => 'required_with:packs|nullable|exists:pack_definitions,id',
+            'packs.*.id' => 'nullable|integer',
+            'packs.*.pack_type_id' => 'nullable|exists:pack_types,id',
+            'packs.*.pack_capacity_id' => 'nullable|exists:pack_capacities,id',
             'additional_images' => 'nullable|array',
             'additional_images.*' => 'nullable|image|max:2048',
         ]);
@@ -228,7 +231,6 @@ class ItemController extends Controller
             'required_by_liter' => 'boolean',
             'required_by_weight' => 'boolean',
             'packs' => 'nullable|array',
-            'packs.*.pack_definition_id' => 'nullable|exists:pack_definitions,id',
             'additional_images' => 'nullable|array',
             'additional_images.*' => 'nullable|image|max:2048',
             // أضف هذا الحقل إذا أردت السماح بحذف صور معينة
@@ -246,37 +248,90 @@ class ItemController extends Controller
         $item->update($validated);
 
         // === تحديث الحزم ===
-        $item->packs()->delete();
+        // Sync rather than delete-and-recreate. A blanket delete would wipe
+        // every pack on items that still reference them (price lists, stock,
+        // invoices, orders, quotes) and would silently drop all packs when the
+        // form does not submit a "packs" key at all.
         if ($request->has('packs')) {
+            $keptPackIds = [];
+
             foreach ($request->packs as $index => $packData) {
-                $packCreateData = [
+                if (empty($packData['pack_type_id']) || empty($packData['pack_capacity_id'])) {
+                    continue;
+                }
+
+                $packAttrs = [
+                    'pack_type_id' => $packData['pack_type_id'],
+                    'pack_capacity_id' => $packData['pack_capacity_id'],
+                    'quantity_in_pack' => $packData['quantity_in_pack'] ?? 1,
+                    'barcode' => $packData['barcode'] ?? null,
+                    'serial_separator' => $packData['serial_separator'] ?? null,
+                    'equivalency_factor' => $packData['equivalency_factor'] ?? null,
+                    'height' => $packData['height'] ?? null,
+                    'width' => $packData['width'] ?? null,
+                    'depth' => $packData['depth'] ?? null,
+                    'weight' => $packData['weight'] ?? null,
+                    'is_weight_priced' => isset($packData['is_weight_priced']) ? 1 : 0,
+                    'allow_fraction_in_qty' => isset($packData['allow_fraction_in_qty']) ? 1 : 0,
+                    'is_default_pack' => isset($packData['is_default_pack']) ? 1 : 0,
                     'sort_order' => $index,
                 ];
 
-                if (!empty($packData['pack_type_id']) && !empty($packData['pack_capacity_id'])) {
-                    $packCreateData['pack_type_id'] = $packData['pack_type_id'] ?? null;
-                    $packCreateData['pack_capacity_id'] = $packData['pack_capacity_id'] ?? null;
-                    $packCreateData['quantity_in_pack'] = $packData['quantity_in_pack'] ?? 1;
-                    $packCreateData['barcode'] = $packData['barcode'] ?? null;
-                    $packCreateData['serial_separator'] = $packData['serial_separator'] ?? null;
-                    $packCreateData['equivalency_factor'] = $packData['equivalency_factor'] ?? null;
-                    $packCreateData['height'] = $packData['height'] ?? null;
-                    $packCreateData['width'] = $packData['width'] ?? null;
-                    $packCreateData['depth'] = $packData['depth'] ?? null;
-                    $packCreateData['weight'] = $packData['weight'] ?? null;
-                    $packCreateData['is_weight_priced'] = isset($packData['is_weight_priced']) ? 1 : 0;
-                    $packCreateData['allow_fraction_in_qty'] = isset($packData['allow_fraction_in_qty']) ? 1 : 0;
-                    $packCreateData['is_default_pack'] = isset($packData['is_default_pack']) ? 1 : 0;
+                // Update the pack in place when its id was submitted, so the
+                // row keeps its identity for every table referencing it.
+                if (! empty($packData['id'])) {
+                    $pack = $item->packs()->where('id', $packData['id'])->first();
 
-                    $pack = $item->packs()->create($packCreateData);
+                    if (! $pack) {
+                        continue;
+                    }
 
-                    if (!empty($packData['pack_operation_ids'])) {
-                        $pack->packOperations()->sync($packData['pack_operation_ids']);
-                    }
-                    if (!empty($packData['pack_group_ids'])) {
-                        $pack->packGroups()->sync($packData['pack_group_ids']);
-                    }
+                    $pack->update($packAttrs);
+                } else {
+                    $pack = $item->packs()->create($packAttrs);
                 }
+
+                $keptPackIds[] = $pack->id;
+
+                if (array_key_exists('pack_operation_ids', $packData)) {
+                    $pack->packOperations()->sync($packData['pack_operation_ids'] ?? []);
+                }
+                if (array_key_exists('pack_group_ids', $packData)) {
+                    $pack->packGroups()->sync($packData['pack_group_ids'] ?? []);
+                }
+            }
+
+            // Only remove packs the form actually dropped, and only when
+            // nothing references them.
+            $removed = $item->packs()->when(
+                $keptPackIds,
+                fn ($q) => $q->whereNotIn('id', $keptPackIds),
+                fn ($q) => $q->where('id', '!=', 0)
+            )->get();
+
+            foreach ($removed as $pack) {
+                $isReferenced = DB::table('price_list_items')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('inventories')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('invoice_items')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('order_items')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('stock_reservations')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('batch_items')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('quotation_items')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('return_items')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('offers')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('item_pack_pack_operation')->where('item_pack_id', $pack->id)->exists()
+                    || DB::table('item_pack_pack_group')->where('item_pack_id', $pack->id)->exists();
+
+                if ($isReferenced) {
+                    // Keep the row so history stays intact; just detach it.
+                    $pack->packOperations()->detach();
+                    $pack->packGroups()->detach();
+                    $pack->update(['pack_type_id' => null, 'pack_capacity_id' => null]);
+
+                    continue;
+                }
+
+                $pack->delete();
             }
         }
 
