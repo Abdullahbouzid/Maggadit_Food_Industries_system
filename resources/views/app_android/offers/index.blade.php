@@ -1,9 +1,9 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('{{ __('messages.app.page_') }}', 'العروض الحصرية')
+@section('title', 'العروض الحصرية')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'عروض حصرية'])
+    @include('app_android.partials.mobile.header', ['title' => 'عروض حصرية'])
 
     <style>
         .offer-card {
@@ -37,7 +37,7 @@
         }
     </style>
 
-    <div id="offers-container" class="p-4 space-y-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div id="offers-container" class="p-4 space-y-4" dir="rtl">
         <div class="mb-4">
             <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100">
                 <i class="fas fa-arrow-right"></i>
@@ -55,7 +55,7 @@
                     <div class="flex justify-between items-center">
                         <span class="text-sm">⏰ حتى {{ \Carbon\Carbon::parse($offer->end_date)->format('d M Y') }}</span>
                     </div>
-                    <h3 class="font-bold text-lg mt-1">{{ $offer->{{ __('messages.app.page_') }} ?: ($offer->name ?? 'عرض') }}</h3>
+                    <h3 class="font-bold text-lg mt-1">{{ $offer->title ?: ($offer->name ?? 'عرض') }}</h3>
                     @if($offer->description)
                         <p class="text-xs opacity-90">{{ $offer->description }}</p>
                     @endif
@@ -76,7 +76,7 @@
                             @endif
                             <div>
                                 <span class="text-purple-700 font-bold">{{ number_format($offer->new_price, 2) }} ر.س</span>
-                                <span class="text-gray-400 text-xs line-through start-1">{{ number_format($offer->old_price, 2) }} ر.س</span>
+                                <span class="text-gray-400 text-xs line-through mr-1">{{ number_format($offer->old_price, 2) }} ر.س</span>
                             </div>
                         </div>
                         <button class="add-to-cart bg-purple-600 text-white text-xs px-3 py-2 rounded-full flex-shrink-0" 
@@ -166,8 +166,8 @@
                                         <div class="flex justify-between items-center">
                                             <span class="text-sm">⏰ عرض خاص</span>
                                         </div>
-                                        <h3 class="font-bold text-lg mt-1">${offer.{{ __('messages.app.page_') }} || offer.name || 'عرض'}</h3>
-                                        ${offer.description ? `<p class="text-xs opacity-90">{{ __('messages.app.page__2') }}</p>` : ''}
+                                        <h3 class="font-bold text-lg mt-1">${offer.title || offer.name || 'عرض'}</h3>
+                                        ${offer.description ? `<p class="text-xs opacity-90">${offer.description}</p>` : ''}
                                     </div>
                                     <div class="p-3 space-y-3">
                                         <div class="flex items-center gap-3">
@@ -175,15 +175,15 @@
                                                 ${offer.image ? `<img src="${offer.image}" alt="${offer.name || ''}" class="w-full h-full object-cover" onerror="this.outerHTML='<span class=\\'text-4xl\\'>🛍️</span>'">` : '<span class="text-4xl">🛍️</span>'}
                                             </div>
                                             <div class="flex-1">
-                                                <p class="font-semibold text-sm">${offer.name || offer.{{ __('messages.app.page_') }} || 'عرض'}</p>
+                                                <p class="font-semibold text-sm">${offer.name || offer.title || 'عرض'}</p>
                                                 <div>
-                                                    <span class="text-purple-700 font-bold">{{ __('messages.app.page__4') }}</span>
-                                                    ${offer.old_price ? `<span class="text-gray-400 text-xs line-through start-1">{{ __('messages.app.page__5') }}</span>` : ''}
+                                                    <span class="text-purple-700 font-bold">${parseFloat(offer.new_price || 0).toFixed(2)} ر.س</span>
+                                                    ${offer.old_price ? `<span class="text-gray-400 text-xs line-through mr-1">${parseFloat(offer.old_price).toFixed(2)} ر.س</span>` : ''}
                                                 </div>
                                             </div>
                                             <button class="add-to-cart bg-purple-600 text-white text-xs px-3 py-2 rounded-full flex-shrink-0" 
                                                     data-id="${offer.item_id || offer.id}" 
-                                                    data-name="${offer.name || offer.{{ __('messages.app.page_') }} || 'عرض'}" 
+                                                    data-name="${offer.name || offer.title || 'عرض'}" 
                                                     data-price="${offer.new_price || 0}"
                                                     data-image="${offer.image || ''}"
                                                     data-pack-name="${offer.pack_type || ''}"

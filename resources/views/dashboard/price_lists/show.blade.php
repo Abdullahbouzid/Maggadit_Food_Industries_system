@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-dollar-sign" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-dollar-sign" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             {{ $priceList->name }}
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">{{ $priceList->description }}</p>
@@ -20,7 +20,7 @@
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('price-lists.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> {{ __('messages.app.page_') }}
+            <i class="fas fa-arrow-left"></i> Back
         </a>
         <button type="submit" form="create-version-form" class="nova-btn nova-btn-primary nova-btn-sm">
             <i class="fas fa-plus-circle"></i> إنشاء تحديث جديد
@@ -76,7 +76,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 @else
-                                    <a href="{{ route('price-lists.show', ['priceList' => $priceList, 'version' => $version->id]) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
+                                    <a href="{{ route('price-lists.show', $priceList) }}?version={{ $version->id }}" class="nova-icon-btn nova-btn-sm" title="عرض">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 @endif

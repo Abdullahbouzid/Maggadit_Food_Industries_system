@@ -5,7 +5,7 @@
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => __('messages.cart_title')])
 
-    <div class="px-4 py-4 mb-5 space-y-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="px-4 py-4 mb-5 space-y-4" dir="rtl">
         {{-- حالة السلة فارغة --}}
         <div id="empty-cart-state" class="hidden text-center py-10">
             <div class="w-32 h-32 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -157,7 +157,7 @@
                         <div class="w-20 h-20 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 border border-purple-100">
                             ${imageContent}
                         </div>
-                        <div class="flex-1 text-end">
+                        <div class="flex-1 text-right">
                             <div class="flex justify-between items-start">
                                 <h3 class="font-bold text-gray-800 text-sm leading-snug">${currentLang === 'ar' ? (item.name_ar || item.name) : (item.name_en || item.name)}</h3>
                             </div>
@@ -168,13 +168,13 @@
                                     <span class="item-qty w-6 text-center font-bold text-xs text-gray-800" data-index="${index}">${item.quantity}</span>
                                     <button class="increment-qty w-6 h-6 rounded-full bg-white text-gray-600 font-bold text-center leading-6 shadow-sm hover:bg-gray-200 active:scale-95" data-index="${index}">+</button>
                                 </div>
-                                <div class="text-start">
+                                <div class="text-left">
                                     <span class="font-extrabold text-purple-700 text-sm">${formatPrice(item.price)}</span>
                                     ${item.quantity > 1 ? `<span class="text-xs text-gray-400 block font-semibold">${formatPrice(item.price * item.quantity)}</span>` : ''}
                                 </div>
                             </div>
-                            <div class="mt-2 text-start">
-                                <button class="remove-item text-red-500 text-xs font-semibold hover:text-red-700" data-index="${index}"><i class="fas fa-trash-alt end-1"></i> ${t.delete_btn}</button>
+                            <div class="mt-2 text-left">
+                                <button class="remove-item text-red-500 text-xs font-semibold hover:text-red-700" data-index="${index}"><i class="fas fa-trash-alt ml-1"></i> ${t.delete_btn}</button>
                             </div>
                         </div>
                     </div>

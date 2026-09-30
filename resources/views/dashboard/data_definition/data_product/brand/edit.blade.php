@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'تعديل Brand: ' . $brand->name)
+@section('title', 'Edit Brand: ' . $brand->name)
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            تعديل Brand: {{ $brand->name }}
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Brand: {{ $brand->name }}
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Modify brand details</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('brands.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> رجوع
+            <i class="fas fa-arrow-right"></i> Back
         </a>
     </div>
 </div>
@@ -55,9 +55,9 @@
                                 <img src="{{ asset('uploads/' . $brand->logo) }}" alt="{{ $brand->name }}" width="100" style="object-fit: cover; border: 1px solid var(--nova-border); border-radius: 10px; box-shadow: var(--nova-shadow-sm);">
                             </div>
                         @else
-                            <p class="nova-text-muted">لا logo uploaded yet.</p>
+                            <p class="nova-text-muted">No logo uploaded yet.</p>
                         @endif
-                        <label class="nova-label">Change Logo (اختياري)</label>
+                        <label class="nova-label">Change Logo (Optional)</label>
                         <input type="file" name="logo" class="nova-input @error('logo') nova-invalid @enderror" accept="image/*">
                         @error('logo')
                             <div class="nova-form-error">{{ $message }}</div>
@@ -73,7 +73,7 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('brands.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-x me-1"></i> إلغاء
+                            <i class="fas fa-x me-1"></i> Cancel
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
                             <i class="fas fa-save me-1"></i> Update

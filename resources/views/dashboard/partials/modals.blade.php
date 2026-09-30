@@ -1,10 +1,10 @@
-<!-- {{ __('messages.app.page_') }} Modal -->
+<!-- Data Definitions Modal -->
 <div class="nova-modal" id="data-definitions-modal" aria-hidden="true" role="dialog" aria-labelledby="data-definitions-title">
     <div class="nova-modal-backdrop" data-close-modal></div>
     <div class="nova-modal-dialog" role="document">
         <div class="nova-modal-header">
             <h2 class="nova-modal-title" id="data-definitions-title">
-                <i class="fas fa-database"></i> {{ __('messages.app.page_') }}
+                <i class="fas fa-database"></i> التعريفات
             </h2>
             <button type="button" class="nova-modal-close" data-close-modal aria-label="Close">
                 <i class="fas fa-times"></i>
@@ -93,28 +93,28 @@
   }
 }' style="display: none;"></div>
             <div class="nova-modal-grid">
-                <!-- Master {{ __('messages.app.page_') }} -->
+                <!-- Master Data -->
                 <div class="nova-modal-card" data-target="master">
                     <div class="nova-modal-card-icon"><i class="fas fa-database"></i></div>
-                    <div class="nova-modal-card-title">Master {{ __('messages.app.page_') }}</div>
+                    <div class="nova-modal-card-title">بيانات أساسية</div>
                     <div class="nova-modal-card-arrow"><i class="fas fa-chevron-right"></i></div>
                 </div>
-                <!-- Staff {{ __('messages.app.page_') }} -->
+                <!-- Staff -->
                 <div class="nova-modal-card" data-target="staff">
                     <div class="nova-modal-card-icon"><i class="fas fa-users"></i></div>
-                    <div class="nova-modal-card-title">Staff {{ __('messages.app.page_') }}</div>
+                    <div class="nova-modal-card-title">الموظفون</div>
                     <div class="nova-modal-card-arrow"><i class="fas fa-chevron-right"></i></div>
                 </div>
-                <!-- Customer {{ __('messages.app.page_') }} -->
+                <!-- Customer -->
                 <div class="nova-modal-card" data-target="customer">
                     <div class="nova-modal-card-icon"><i class="fas fa-user"></i></div>
-                    <div class="nova-modal-card-title">Customer {{ __('messages.app.page_') }}</div>
+                    <div class="nova-modal-card-title">العملاء</div>
                     <div class="nova-modal-card-arrow"><i class="fas fa-chevron-right"></i></div>
                 </div>
-                <!-- Products {{ __('messages.app.page_') }} -->
+                <!-- Products -->
                 <div class="nova-modal-card" data-target="products">
                     <div class="nova-modal-card-icon"><i class="fas fa-box"></i></div>
-                    <div class="nova-modal-card-title">Products {{ __('messages.app.page_') }}</div>
+                    <div class="nova-modal-card-title">المنتجات</div>
                     <div class="nova-modal-card-arrow"><i class="fas fa-chevron-right"></i></div>
                 </div>
                 <!-- Warehouse & Vehicles -->
@@ -139,7 +139,7 @@
             <div id="subcategories-container" class="nova-subcategories" style="display: none;">
                 <div class="nova-subcategories-header">
                     <button class="nova-subcategories-back" id="back-to-main">
-                        <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__2') }}
+                        <i class="fas fa-arrow-left"></i> رجوع
                     </button>
                     <h4 class="nova-subcategories-title" id="subcategory-title"></h4>
                 </div>
@@ -149,13 +149,13 @@
     </div>
 </div>
 
-<!-- {{ __('messages.app.page__1') }} Modal -->
+<!-- Customer App Modal -->
 <div class="nova-modal" id="customer-app-modal" aria-hidden="true" role="dialog" aria-labelledby="customer-app-title">
     <div class="nova-modal-backdrop" data-close-modal></div>
     <div class="nova-modal-dialog" role="document">
         <div class="nova-modal-header">
             <h2 class="nova-modal-title" id="customer-app-title">
-                <i class="fas fa-mobile-alt"></i> {{ __('messages.app.page__1') }}
+                <i class="fas fa-mobile-alt"></i> تطبيق العميل
             </h2>
             <button type="button" class="nova-modal-close" data-close-modal aria-label="Close">
                 <i class="fas fa-times"></i>
@@ -173,7 +173,7 @@
                 </a>
                 <a href="{{ route('banners.index') }}" class="nova-modal-card">
                     <div class="nova-modal-card-icon"><i class="fas fa-image"></i></div>
-                    <div class="nova-modal-card-title">{{ __('messages.app.page__3') }}</div>
+                    <div class="nova-modal-card-title">البنرات</div>
                 </a>
                 <a href="{{ route('notifications.index') }}" class="nova-modal-card">
                     <div class="nova-modal-card-icon"><i class="fas fa-bell"></i></div>
@@ -181,7 +181,7 @@
                 </a>
                 <a href="{{ route('offers.index') }}" class="nova-modal-card">
                     <div class="nova-modal-card-icon"><i class="fas fa-tag"></i></div>
-                    <div class="nova-modal-card-title">{{ __('messages.app.page__4') }}</div>
+                    <div class="nova-modal-card-title">العروض</div>
                 </a>
                 <a href="{{ route('contact-messages.index') }}" class="nova-modal-card">
                     <div class="nova-modal-card-icon"><i class="fas fa-headset"></i></div>

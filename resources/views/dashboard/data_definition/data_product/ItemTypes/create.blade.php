@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'إضافة جديد نوع العنصر')
+@section('title', 'Add New Item Type')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            إضافة جديد نوع العنصر
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Add New Item Type
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Create a new item type with code, name, and optional image</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('item-types.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> رجوع
+            <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
 </div>
@@ -41,7 +41,7 @@
 
                 <div class="nova-col">
                     <div class="nova-form-group">
-                        <label class="nova-label">الوصف</label>
+                        <label class="nova-label">Description</label>
                         <textarea name="description" class="nova-input" rows="3">{{ old('description') }}</textarea>
                         @error('description') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
@@ -49,26 +49,26 @@
 
                 <div class="nova-col">
                     <div class="nova-form-group">
-                        <label class="nova-label">الصورة</label>
+                        <label class="nova-label">Image</label>
                         <input type="file" name="image" class="nova-input" accept="image/*">
-                        <small class="nova-help-text">الكلowed formats: jpeg, png, jpg, gif (max 2MB)</small>
+                        <small class="nova-help-text">Allowed formats: jpeg, png, jpg, gif (max 2MB)</small>
                         @error('image') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
                 </div>
 
                 <div class="nova-col">
                     <div class="nova-form-group">
-                        <label class="nova-label">الحالة</label>
+                        <label class="nova-label">Status</label>
                         <select name="is_active" class="nova-select">
-                            <option value="1" {{ old('is_active', true) ? 'selected' : '' }}>{{ __('messages.filter.status_active') }}</option>
-                            <option value="0" {{ old('is_active') === '0' ? 'selected' : '' }}>{{ __('messages.filter.status_inactive') }}</option>
+                            <option value="1" {{ old('is_active', true) ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('is_active') === '0' ? 'selected' : '' }}>Inactive</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="nova-col">
                     <div class="nova-form-group">
-                        <label class="nova-label">ترتيب الفرز</label>
+                        <label class="nova-label">Sort Order</label>
                         <input type="number" name="sort_order" class="nova-input" value="{{ old('sort_order') }}">
                         @error('sort_order') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
@@ -77,9 +77,9 @@
                 <div class="nova-col" style="grid-column: 1 / -1;">
                     <div class="nova-flex nova-items-center nova-gap-2">
                         <button type="submit" class="nova-btn nova-btn-primary">
-                            <i class="fas fa-save"></i> حفظ نوع العنصر
+                            <i class="fas fa-save"></i> Save Item Type
                         </button>
-                        <a href="{{ route('item-types.index') }}" class="nova-btn nova-btn-outline">إلغاء</a>
+                        <a href="{{ route('item-types.index') }}" class="nova-btn nova-btn-outline">Cancel</a>
                     </div>
                 </div>
             </div>

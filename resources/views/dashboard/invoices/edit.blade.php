@@ -5,18 +5,18 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             تعديل الفاتورة #{{ $invoice->invoice_number }}
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__1') }}</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Update invoice details and items</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('invoices.show', $invoice) }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-eye"></i> {{ __('messages.app.page__2') }}
+            <i class="fas fa-eye"></i> View
         </a>
         <a href="{{ route('invoices.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__3') }}
+            <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
 
@@ -57,9 +57,9 @@
                     <div class="nova-form-group">
                         <label class="nova-label">الحالة</label>
                         <select name="status" class="nova-select">
-                            <option value="pending" {{ $invoice->{{ __('messages.app.page__4') }}</option>
-                            <option value="completed" {{ $invoice->{{ __('messages.app.page__5') }}</option>
-                            <option value="cancelled" {{ $invoice->{{ __('messages.app.page__6') }}</option>
+                            <option value="pending" {{ $invoice->status == 'pending' ? 'selected' : '' }}>معلقة</option>
+                            <option value="completed" {{ $invoice->status == 'completed' ? 'selected' : '' }}>مكتملة</option>
+                            <option value="cancelled" {{ $invoice->status == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
                         </select>
                     </div>
                 </div>

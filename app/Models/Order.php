@@ -76,6 +76,11 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class, 'order_id')->orderBy('created_at');
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'order_id')->latest('id');
+    }
+
     public function returnRequests()
     {
         return $this->hasMany(ReturnRequest::class, 'order_id');

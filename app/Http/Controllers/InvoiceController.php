@@ -127,7 +127,7 @@ class InvoiceController extends Controller
      */
     public function downloadPdf(Invoice $invoice, Request $request)
     {
-        $invoice->load(['customer', 'priceList', 'items.item', 'items.itemPack.uom', 'items.priceList', 'items.priceHistory']);
+        $invoice->load(['customer', 'priceList', 'items.item', 'items.itemPack.packCapacity.uom', 'items.priceList', 'items.priceHistory']);
 
         $lang = $request->query('lang', 'bilingual');
 

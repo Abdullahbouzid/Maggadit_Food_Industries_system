@@ -175,7 +175,7 @@
 
         <div class="text-center mt-6 text-sm text-gray-500">
             <span id="login-text">Already have an account?</span>
-            <a href="/mobile/login" id="login-link" class="signup-link start-1">Sign In</a>
+            <a href="/mobile/login" id="login-link" class="signup-link mr-1">Sign In</a>
         </div>
     </div>
 

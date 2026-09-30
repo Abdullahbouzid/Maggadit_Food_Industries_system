@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-check-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-check-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             تأكيد نقل المنتجات إلى المخزن: {{ $targetWarehouse->code }}
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
@@ -17,7 +17,7 @@
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('warehouses.transfer.select', $warehouse) }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> رجوع to Selection
+            <i class="fas fa-arrow-right"></i> Back to Selection
         </a>
     </div>
 </div>
@@ -176,7 +176,7 @@
                                         <span class="nova-badge success percentage-display">0%</span>
                                     </td>
 
-                                    {{-- لاtes --}}
+                                    {{-- Notes --}}
                                     <td>
                                         <input type="text"
                                                name="notes[{{ $item->id }}]"
@@ -193,10 +193,10 @@
     </div>
 
     {{-- ============================================================
-         Section 2: Transfer التفاصيل & Summary
+         Section 2: Transfer Details & Summary
          ============================================================ --}}
     <div class="transfer-grid">
-        {{-- Transfer التفاصيل --}}
+        {{-- Transfer Details --}}
         <div class="nova-card">
             <div class="nova-card-header nova-bg-light">
                 <h6 class="nova-fw-bold mb-0">
@@ -278,7 +278,7 @@
     </div>
 
     {{-- ============================================================
-         Form إجراءات
+         Form Actions
          ============================================================ --}}
     <div class="form-actions form-actions-center">
         <button type="submit" class="nova-btn nova-btn-success nova-btn-lg nova-shadow-sm">
@@ -404,7 +404,7 @@
     }
 
     /* ============================================================
-       Transfer Grid (التفاصيل + Summary)
+       Transfer Grid (Details + Summary)
        ============================================================ */
     .transfer-grid {
         display: grid;
@@ -530,7 +530,7 @@
     }
 
     /* ============================================================
-       Form إجراءات
+       Form Actions
        ============================================================ */
     .form-actions {
         display: flex;
@@ -587,7 +587,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const quantityInputs = document.querySelectorالكل('.quantity-input');
+    const quantityInputs = document.querySelectorAll('.quantity-input');
     const totalAvailableDisplay = document.getElementById('totalAvailableDisplay');
     const totalToTransferDisplay = document.getElementById('totalToTransferDisplay');
     const percentageDisplay = document.getElementById('percentageDisplay');
@@ -665,7 +665,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     /* ============================================================
-       Form إرسال Validation
+       Form Submit Validation
        ============================================================ */
     document.getElementById('transferForm').addEventListener('submit', function(e) {
         let hasValidQuantity = false;
@@ -678,7 +678,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (!hasValidQuantity) {
-            e.preventافتراضي();
+            e.preventDefault();
             alert('يرجى تحديد كمية لنقلها على الأقل لمنتج واحد.');
         }
     });

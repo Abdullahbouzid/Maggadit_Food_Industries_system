@@ -12,12 +12,16 @@ class CheckCustomerSession
 {
     public function handle(Request $request, Closure $next)
     {
-        // 1. Check customer or api guard session
-        if (Auth::guard('customer')->check() || Auth::guard('api')->check()) {
+        // 1. جلسة guards (customer / api)
+        if (Auth::guard('customer')->check()) {
             return $next($request);
         }
 
-        // 2. Check Bearer token in request headers
+        if (Auth::guard('api')->check()) {
+            return $next($request);
+        }
+
+        // 2. Bearer token (Sanctum) في ترويسة الطلب
         $bearerToken = $request->bearerToken();
         if ($bearerToken) {
             $tokenInstance = PersonalAccessToken::findToken($bearerToken);
@@ -28,13 +32,10 @@ class CheckCustomerSession
             }
         }
 
-        // 3. Check api_token or customer_id in session
-        if ($request->session()->has('api_token') && ! empty($request->session()->get('api_token'))) {
-            return $next($request);
-        }
-
-        if ($request->session()->has('customer_id')) {
-            $customer = Customer::find($request->session()->get('customer_id'));
+        // 3. customer_id المحفوظ في الجلسة (يضبطه مسار تسجيل الدخول)
+        $customerId = $request->session()->get('customer_id');
+        if ($customerId) {
+            $customer = Customer::find($customerId);
             if ($customer) {
                 Auth::guard('customer')->setUser($customer);
 
@@ -42,12 +43,10 @@ class CheckCustomerSession
             }
         }
 
-        // 4. Mobile WebView fallback if customer exists in DB
-        $fallbackCustomer = Customer::latest('updated_at')->first() ?: Customer::first();
-        if ($fallbackCustomer) {
-            Auth::guard('customer')->setUser($fallbackCustomer);
-
-            return $next($request);
+        // 4. لا يوجد عميل مصادق -> إعادة التوجيه لصفحة الدخول
+        //    لا يتم استخدام أي عميل احتياطي Secara عشوائي لتجنب تسريب بيانات العملاء.
+        if ($request->expectsJson()) {
+            return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
         }
 
         return redirect()->route('mobile.login');

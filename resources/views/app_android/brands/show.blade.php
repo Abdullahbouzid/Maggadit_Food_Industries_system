@@ -5,7 +5,7 @@
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => $brand->name])
 
-    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="p-4" dir="rtl">
         <div class="mb-4">
             <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100">
                 <i class="fas fa-arrow-right"></i>
@@ -22,9 +22,16 @@
                 @endif
             </div>
             <h2 class="text-xl font-bold text-gray-800">{{ $brand->name }}</h2>
-            <div class="mt-2 inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-3 py-1 rounded-full">
-                <i class="fas fa-box-open text-sm"></i>
-                <span class="text-sm font-semibold">{{ $brand->products_count ?? ($items->count() ?? 0) }} منتج</span>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+                <div class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-3 py-1 rounded-full">
+                    <i class="fas fa-box-open text-sm"></i>
+                    <span class="text-sm font-semibold">{{ $brand->products_count ?? ($items->count() ?? 0) }} منتج</span>
+                </div>
+                <a href="{{ route('customer.products', ['brand_id' => $brand->id], false) }}"
+                   class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition">
+                    <i class="fas fa-grip text-sm"></i>
+                    <span class="text-sm font-semibold">عرض وتصفية</span>
+                </a>
             </div>
         </div>
 
@@ -40,7 +47,7 @@
                     $itemFavorite = $itemData['favorite'] ?? false;
                 @endphp
                 @foreach($packs as $pack)
-                    <a href="{{ route('customer.product.show', $itemId) }}" class="block">
+                    <a href="{{ route('customer.product.show', $itemId, false) }}" class="block">
                         <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative">
                             @if($hasMultiplePacks)
                                 <div class="absolute top-2 right-2 z-10">
@@ -76,7 +83,7 @@
                                         data-image="{{ $itemImage ?? '📦' }}"
                                         data-pack-name="{{ $pack['name'] ?? '' }}"
                                         data-uom-name="{{ $pack['uom_name'] ?? '' }}">
-                                    <i class="fas fa-shopping-cart end-1"></i> أضف إلى السلة
+                                    <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
                                 </button>
                             </div>
                         </div>
@@ -156,7 +163,7 @@
                 const icon = this.querySelector('i');
                 const productId = this.getAttribute('data-id');
                 
-                fetch('{{ route("customer.favorite.toggle") }}', {
+                fetch("{{ route('customer.favorite.toggle', [], false) }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

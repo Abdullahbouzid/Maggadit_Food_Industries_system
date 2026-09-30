@@ -226,6 +226,12 @@
                     <td><span class="nova-fw-semibold">{{ $order->id }}</span></td>
                     <td>
                         <span class="nova-fw-semibold">{{ $order->order_number }}</span>
+                        @if($order->created_by === null && $order->customer_id)
+                            <br><small class="nova-badge nova-badge-info" style="font-size:10px;">
+                                <i class="fas fa-mobile-screen" style="margin-inline-end:0.2rem;"></i>
+                                {{ __('messages.orders.from_customer_app') ?? 'من تطبيق العميل' }}
+                            </small>
+                        @endif
                     </td>
                     <td>
                         <div>
@@ -252,7 +258,11 @@
                         {{ $order->currency->symbol ?? $order->currency->code ?? '' }}
                     </td>
                     <td>
-                        <span class="nova-badge {{ $order->status->badgeColor() }}">{{ $order->status->label() }}</span>
+                        @php $meta = app(\App\Services\OrderStepPresenter::class)->currentStatusMeta($order); @endphp
+                        <span class="nova-badge {{ $meta['badge'] }}">{{ $meta['label'] }}</span>
+                        <div style="width:90px;height:4px;border-radius:999px;background:var(--nova-gray-100);margin-top:0.35rem;overflow:hidden;">
+                            <div style="height:100%;width:{{ app(\App\Services\OrderStepPresenter::class)->progress($order) }}%;background:#7c3aed;"></div>
+                        </div>
                     </td>
                     <td style="text-align: center;">
                         <div class="nova-table-actions">

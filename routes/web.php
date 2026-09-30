@@ -12,7 +12,6 @@ use App\Http\Controllers\CompetitorController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CurrencyController;
-use App\Http\Controllers\Customer\CustomerAppController;
 use App\Http\Controllers\Customer\CustomerCatalogController;
 use App\Http\Controllers\Customer\CustomerDashboardController;
 use App\Http\Controllers\Customer\CustomerOrderController;
@@ -114,6 +113,7 @@ Route::post('/mobile/register', function (Request $request) {
             Auth::guard('customer')->login($customer);
             $request->session()->regenerate();
             $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
+            $request->session()->put('customer_id', $customer->id); // ربط الجلسة بالعميل المحلي
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
@@ -170,6 +170,7 @@ Route::post('/mobile/login', function (Request $request) {
             Auth::guard('customer')->login($customer);
             $request->session()->regenerate();
             $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
+            $request->session()->put('customer_id', $customer->id); // ربط الجلسة بالعميل المحلي
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
@@ -222,16 +223,11 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/showoffers', [CustomerCatalogController::class, 'offersIndex'])->name('offer');
 
     // ===================================================================
-    // مسارات APK التي تحمي نفسها عبر JavaScript (getToken + redirect)
-    // لا تحتاج middleware الخادم لأن الـ session cookies قد لا تعمل
-    // بشكل صحيح في WebView عندما يختلف APP_URL عن عنوان الجهاز
+    // مسارات APK العامة التي لا تعرض أي بيانات عميل
     // ===================================================================
     Route::get('/change-organization', function () {
         return view('app_android.more.change_organization');
     })->name('change_organization');
-    Route::get('/surveys', function () {
-        return view('app_android.more.surveys');
-    })->name('surveys');
 
     // ===================================================================
     // مسارات Proxy للـ APK - تستخدم توكن الجلسة للاتصال بالسيرفر الخارجي
@@ -405,7 +401,6 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('dashboard');
     });
-    Route::get('/notifications', [CustomerProfileController::class, 'notificationsIndex'])->name('notifications');
     Route::get('/privacy-policy', function () {
         $policy = PrivacyPolicy::where('type', 'privacy_policy')
             ->where('is_active', true)
@@ -426,21 +421,33 @@ Route::prefix('customer')->name('customer.')->group(function () {
         return view('app_android.more.contact_us');
     })->name('contact');
     Route::post('/contact-us', [CustomerPagesController::class, 'contactUs'])->name('contact.submit');
+    Route::get('/contact-info', [CustomerPagesController::class, 'contactInfo'])->name('contact.info');
+    Route::get('/about', [CustomerPagesController::class, 'aboutUsWeb'])->name('about');
     Route::get('/faq', [CustomerPagesController::class, 'faqIndex'])->name('faq');
 
     // مسارات محمية (تتطلب تسجيل دخول بجلسة PHP)
     Route::middleware('check.customer.session')->group(function () {
         Route::get('/dashboard', [CustomerDashboardController::class, 'dashboard'])->name('dashboard');
 
+        Route::get('/notifications', [CustomerProfileController::class, 'notificationsIndex'])->name('notifications');
+
+        Route::get('/surveys', function () {
+            return view('app_android.more.surveys');
+        })->name('surveys');
+
         Route::get('/more', [CustomerPagesController::class, 'more'])->name('more');
         Route::get('/offers', function () {
-            $offers = \App\Models\Offer::with(['item', 'itemPack.uom'])
+            $offers = \App\Models\Offer::with(['item.packs.packCapacity.uom', 'itemPack.packCapacity.uom'])
                 ->active()
                 ->get()
                 ->map(function ($offer) {
                     $item = $offer->item;
                     $defaultPack = $item ? $item->packs->first() : null;
                     $offerPack = $offer->itemPack;
+
+                    // uom hangs off the pack capacity, not the pack itself.
+                    $offerUom = $offerPack?->packCapacity?->uom;
+                    $defaultUom = $defaultPack?->packCapacity?->uom;
 
                     $data = [
                         'id' => $offer->id,
@@ -449,7 +456,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
                         'item_id' => $offer->item_id,
                         'item_pack_id' => $offer->item_pack_id,
                         'name' => $item ? ($item->name_ar ?: $item->name_en) : 'منتج محذوف',
-                        'pack_type' => $offerPack ? ($offerPack->uom->name_ar ?? $offerPack->uom->name_en ?? '') : ($defaultPack ? ($defaultPack->uom->name_ar ?? $defaultPack->uom->name_en ?? '') : ''),
+                        'pack_type' => $offerUom
+                            ? ($offerUom->name_ar ?: $offerUom->name_en)
+                            : ($defaultUom ? ($defaultUom->name_ar ?: $defaultUom->name_en) : ''),
                         'image' => $offer->display_image ?? ($item ? $item->main_image_url : null),
                         'old_price' => (float) $offer->old_price,
                         'new_price' => (float) $offer->new_price,
@@ -473,12 +482,11 @@ Route::prefix('customer')->name('customer.')->group(function () {
             return view('app_android.more.financial_statement');
         })->name('financial_statement');
         Route::get('/order-history', [CustomerOrderController::class, 'orderHistory'])->name('order_history');
-        Route::get('/order/{id}', function ($id) {
-            return view('app_android.more.order_details', ['orderId' => $id]);
-        })->name('order_details');
-        Route::get('/order/{id}/pdf', [CustomerOrderController::class, 'downloadPdf'])->name('order_pdf');
-        Route::get('/customer/orders/{id}/pdf', [CustomerOrderController::class, 'downloadPdf'])->name('customer_order_pdf');
-        Route::get('/customer/orders/{id}/quotation-pdf', [CustomerOrderController::class, 'downloadQuotationPdf'])->name('customer_order_quotation_pdf');
+        Route::get('/order/{id}', [CustomerOrderController::class, 'orderDetails'])->name('order_details');
+        Route::post('/order/{id}/quotation/respond', [CustomerOrderController::class, 'respondToQuotation'])->name('order.quotation.respond');
+        Route::get('/order/{id}/pdf', [CustomerOrderController::class, 'downloadOrderPdf'])->name('order_pdf');
+        Route::get('/order/{id}/invoice-pdf', [CustomerOrderController::class, 'downloadPdf'])->name('order_invoice_pdf');
+        Route::get('/order/{id}/quotation-pdf', [CustomerOrderController::class, 'downloadQuotationPdf'])->name('order_quotation_pdf');
         Route::get('/my-info', [CustomerProfileController::class, 'myInfo'])->name('my_info');
         Route::post('/my-info', [CustomerProfileController::class, 'updateInfo'])->name('my_info.update');
     });

@@ -13,6 +13,10 @@ class OrderStatusHistory extends Model
         'order_id', 'from_status', 'to_status', 'changed_by', 'notes',
     ];
 
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];
+
     public $timestamps = false;
 
     protected static function booted()

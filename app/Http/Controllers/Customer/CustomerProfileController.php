@@ -48,6 +48,7 @@ class CustomerProfileController extends Controller
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'username' => 'nullable|string|max:255',
+            'password' => 'nullable|string|min:6|confirmed',
             'avatar' => 'nullable',
         ]);
 
@@ -235,10 +236,17 @@ class CustomerProfileController extends Controller
                 'body' => $n->body_ar ?: $n->body_en,
                 'image' => null,
                 'icon_type' => $n->icon_type ?? 'notification',
-                'created_at' => $n->created_at->diffForHumans(),
+                'created_at' => $n->created_at?->diffForHumans(),
+                'is_read' => false,
             ];
         });
-        $unreadCount = count($notifications);
+
+        // Read state is tracked per customer in the pivot table.
+        $readIds = $customer
+            ? $customer->readNotifications()            ->whereNotNull('read_at')->pluck('notification_id')->all()
+            : [];
+
+        $unreadCount = $notifications->reject(fn ($n) => in_array($n->id, $readIds, true))->count();
 
         return view('app_android.more.notifications', compact('notifications', 'unreadCount'));
     }

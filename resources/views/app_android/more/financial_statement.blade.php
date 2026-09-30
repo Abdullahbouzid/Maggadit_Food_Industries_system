@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('{{ __('messages.app.page_') }}', 'كشف حساب مالي')
+@section('title', 'كشف حساب مالي')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'كشف حساب مالي'])
+    @include('app_android.partials.mobile.header', ['title' => 'كشف حساب مالي'])
 
-    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="p-4" dir="rtl">
         <!-- زر الرجوع -->
         <div class="mb-4">
             <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100">
@@ -67,7 +67,7 @@
                         </span>
                     </div>
                     <button class="view-details text-purple-600 text-xs font-semibold mt-2 block" data-desc="{{ $txn['desc'] }}" data-amount="{{ $txn['amount'] }}" data-date="{{ $txn['date'] }}" data-method="{{ $txn['payment_method'] }}" data-ref="{{ $txn['ref'] }}">
-                        عرض التفاصيل <i class="fas fa-chevron-left start-1 text-xs"></i>
+                        عرض التفاصيل <i class="fas fa-chevron-left mr-1 text-xs"></i>
                     </button>
                 </div>
             @endforeach
@@ -79,7 +79,7 @@
 
     <!-- مودال تفاصيل الحركة -->
     <div id="transaction-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
-        <div class="bg-white rounded-2xl w-11/12 max-w-md p-6 transform scale-95 transition-all duration-300 shadow-2xl" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+        <div class="bg-white rounded-2xl w-11/12 max-w-md p-6 transform scale-95 transition-all duration-300 shadow-2xl" dir="rtl">
             <div class="text-center mb-4">
                 <div class="w-14 h-14 mx-auto rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-2xl">
                     <i class="fas fa-receipt"></i>

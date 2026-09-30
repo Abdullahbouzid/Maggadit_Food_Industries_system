@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             إنشاء جهاز جديد
         </h2>
         <p class="nova-page-subtitle">أدخل بيانات الجهاز الجديد</p>
@@ -106,7 +106,7 @@
                     @error('organization_id') <div class="nova-form-error">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Model لا --}}
+                {{-- Model No --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
                         <label class="nova-label">
@@ -160,7 +160,7 @@
                     </div>
                 </div>
 
-                {{-- غير نشط --}}
+                {{-- Inactive --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-check">
                         <input type="hidden" name="is_inactive" value="0">
@@ -183,7 +183,7 @@
                     </div>
                 </div>
 
-                {{-- Form إجراءات --}}
+                {{-- Form Actions --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('devices.index') }}" class="nova-btn nova-btn-outline">

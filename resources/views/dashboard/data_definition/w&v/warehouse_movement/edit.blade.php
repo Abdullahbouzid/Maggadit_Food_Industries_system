@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             تعديل الحركة #{{ $warehouseMovement->id }}
         </h2>
         <p class="nova-page-subtitle">تحديث بيانات حركة المخازن</p>
@@ -19,7 +19,7 @@
     </div>
 </div>
 
-{{-- ===== Validation خطأs ===== --}}
+{{-- ===== Validation Errors ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>

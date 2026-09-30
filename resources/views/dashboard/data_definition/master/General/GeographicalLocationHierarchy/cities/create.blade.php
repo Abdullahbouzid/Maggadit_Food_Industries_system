@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             إضافة مدينة جديدة
         </h2>
         <p class="nova-page-subtitle">أدخل بيانات المدينة وحدد موقعها على الخريطة</p>
@@ -119,7 +119,7 @@
                     </div>
                 </div>
 
-                {{-- Form إجراءات --}}
+                {{-- Form Actions --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('cities.index') }}" class="nova-btn nova-btn-outline">
@@ -150,9 +150,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const defaultLat = 24.774265;
     const defaultLng = 46.738586;
 
-    const map = L.map('mapPicker').setعرض([defaultLat, defaultLng], 5);
+    const map = L.map('mapPicker').setView([defaultLat, defaultLng], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">مفتوحStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
     const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);

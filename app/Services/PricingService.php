@@ -99,8 +99,6 @@ final class PricingService implements PricingServiceInterface
     public function bulkQuote(Customer $customer, array $items): BulkQuoteResult
     {
         $lines = [];
-        $subtotal = 0.0;
-        $taxTotal = 0.0;
         $total = 0.0;
         $currencyId = null;
 
@@ -143,16 +141,13 @@ final class PricingService implements PricingServiceInterface
             );
 
             $lines[] = $quotedLine;
-            $subtotal += $lineSubtotal;
-            $taxTotal += $lineTaxAmount;
             $total += $lineTotal;
         }
 
         return new BulkQuoteResult(
-            lines: $lines,
-            subtotal: $subtotal,
-            taxTotal: $taxTotal,
-            total: $total,
+            lines: collect($lines),
+            totalLines: count($lines),
+            totalAmount: $total,
             currencyId: $currencyId ?? 1,
         );
     }

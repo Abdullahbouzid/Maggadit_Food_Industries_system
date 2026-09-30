@@ -6,14 +6,14 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            إضافة جديد Banner
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Add New Banner
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Create a new banner for the customer app</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('banners.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> رجوع to Banners
+            <i class="fas fa-arrow-left"></i> Back to Banners
         </a>
     </div>
 </div>
@@ -52,7 +52,7 @@
                         </label>
                         <select name="type" class="nova-select">
                             <option value="home" {{ old('type') == 'home' ? 'selected' : '' }}>Home</option>
-                            <option value="category" {{ old('type') == 'category' ? 'selected' : '' }}>الفئة</option>
+                            <option value="category" {{ old('type') == 'category' ? 'selected' : '' }}>Category</option>
                             <option value="product" {{ old('type') == 'product' ? 'selected' : '' }}>Product</option>
                             <option value="promo" {{ old('type') == 'promo' ? 'selected' : '' }}>Promo</option>
                             <option value="custom" {{ old('type') == 'custom' ? 'selected' : '' }}>Custom</option>
@@ -64,7 +64,7 @@
                 <div class="nova-col nova-col-md-12">
                     <div class="nova-form-group">
                         <label class="nova-label">
-                            <i class="fas fa-image me-1"></i> الصورة <span class="nova-text-danger">*</span>
+                            <i class="fas fa-image me-1"></i> Image <span class="nova-text-danger">*</span>
                         </label>
                         <input type="file" name="image" class="nova-input" accept="image/*">
                         @error('image') <div class="nova-form-error">{{ $message }}</div> @enderror
@@ -102,10 +102,10 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('banners.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-times"></i> إلغاء
+                            <i class="fas fa-times"></i> Cancel
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
-                            <i class="fas fa-save"></i> حفظ Banner
+                            <i class="fas fa-save"></i> Save Banner
                         </button>
                     </div>
                 </div>

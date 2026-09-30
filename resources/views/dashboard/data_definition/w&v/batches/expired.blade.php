@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-hourglass-end" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-hourglass-end" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             دفعات منتهية الصلاحية
         </h2>
         <p class="nova-page-subtitle">عرض وإدارة الدفعات التي انتهت صلاحيتها في المخازن</p>
@@ -34,7 +34,7 @@
     </div>
 @endif
 
-{{-- ===== Warehouse فلتر ===== --}}
+{{-- ===== Warehouse Filter ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body">
         <form method="GET" action="{{ route('production-batches.expired') }}" class="filter-form">
@@ -51,7 +51,7 @@
             </div>
             <div class="nova-form-group filter-item">
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-filter"></i> {{ __('messages.filter.apply') }}
+                    <i class="fas fa-filter"></i> تصفية
                 </button>
             </div>
         </form>
@@ -61,7 +61,7 @@
 @if($expiredStocks->count())
 <form action="{{ route('production-batches.return-expired') }}" method="POST">
     @csrf
-    {{-- ===== منتهي Batches Table ===== --}}
+    {{-- ===== Expired Batches Table ===== --}}
     <div class="nova-card nova-mb-4">
         <div class="nova-card-header nova-flex nova-justify-between nova-items-center">
             <h5 class="nova-fw-bold mb-0">
@@ -77,7 +77,7 @@
                     <table class="nova-table">
                         <thead>
                             <tr>
-                                <th><input type="checkbox" id="selectالكل" class="nova-form-check-input"></th>
+                                <th><input type="checkbox" id="selectAll" class="nova-form-check-input"></th>
                                 <th>#</th>
                                 <th>رقم الدفعة</th>
                                 <th>المنتج</th>
@@ -167,7 +167,7 @@
     </div>
 @endif
 
-{{-- ===== رجوع Button ===== --}}
+{{-- ===== Back Button ===== --}}
 <div class="nova-mt-3">
     <a href="{{ route('production-batches.index') }}" class="nova-btn nova-btn-secondary">
         <i class="fas fa-arrow-right"></i> العودة للقائمة
@@ -220,9 +220,9 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Select/Deselect الكل
-        document.getElementById('selectالكل')?.addEventListener('change', function() {
-            document.querySelectorالكل('input[name="stock_ids[]"]').forEach(chk => {
+        // Select/Deselect All
+        document.getElementById('selectAll')?.addEventListener('change', function() {
+            document.querySelectorAll('input[name="stock_ids[]"]').forEach(chk => {
                 chk.checked = this.checked;
             });
         });

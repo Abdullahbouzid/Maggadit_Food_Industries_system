@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-layer-group" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-layer-group" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             Pack Types
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة أنواع الباكجات (صندوق 3×3، قطعة، إلخ)</p>
@@ -26,25 +26,8 @@
                 قائمة أنواع الباكجات ({{ $total }})
             </h3>
             <form method="GET" action="{{ route('pack-types.index') }}" class="nova-flex nova-gap-2">
-                <form method="GET" action="{{ route('pack-types.index') }}" id="filterForm"><input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.search') }}" value="{{ request('search') }}" style="width: 220px;">
-                <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
-                    <select name="per_page" class="nova-select" onchange="document.getElementById('filterForm').submit();">
-                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                        <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
-                    </select>
-                </div>
-                <div class="nova-flex nova-gap-2" style="height: fit-content;">
-                    <button type="submit" class="nova-btn nova-btn-primary">{{ __('messages.filter.apply') }}</button>
-                    @if(request('search') || request('per_page'))
-                        <a href="{{ route('pack-types.index') }}" class="nova-btn nova-btn-outline">{{ __('messages.filter.reset') }}</a>
-                    @endif
-                </div>
-            </form>
-                <button type="submit" class="nova-btn nova-btn-primary nova-btn-sm">{{ __('messages.filter.apply') }}</button>
+                <input type="text" name="search" class="nova-input" placeholder="بحث بالاسم، الكود..." value="{{ request('search') }}" style="width: 220px;">
+                <button type="submit" class="nova-btn nova-btn-primary nova-btn-sm">بحث</button>
             </form>
         </div>
     </div>
@@ -73,10 +56,10 @@
                             <td>{{ $packType->description ?? '-' }}</td>
                             <td class="nova-text-end">
                                 <div class="nova-table-actions">
-                                    <a href="{{ route('pack-types.edit', $packType) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
+                                    <a href="{{ route('pack-types.edit', $packType) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذفPackType({{ $packType->id }}, '{{ addslashes($packType->name_ar ?? $packType->name ?? 'بدون اسم') }}')">
+                                    <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDeletePackType({{ $packType->id }}, '{{ addslashes($packType->name_ar ?? $packType->name ?? 'بدون اسم') }}')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -98,27 +81,27 @@
             </table>
         </div>
         <div class="nova-text-center nova-py-3">
-            {{ $packTypes->appends(request()->query())->links() }}
+            {{ $packTypes->links() }}
         </div>
     </div>
 </div>
 @endsection
 
-{{-- حذف تأكيدation Modal (لاva) --}}
+{{-- Delete Confirmation Modal (Nova) --}}
 <div class="nova-modal-backdrop" id="deletePackTypeModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete pack type <strong id="deletePackTypeName" class="nova-text-danger"></strong>?<br>لا يمكن التراجع عن هذا الإجراء.</p>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
+            <p class="nova-delete-modal-text">Are you sure you want to delete pack type <strong id="deletePackTypeName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePackTypeModal').classList.remove('show')">إلغاء</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePackTypeModal').classList.remove('show')">Cancel</button>
                 <form id="deletePackTypeForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
                 </form>
             </div>
         </div>
@@ -130,7 +113,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 });
 
-window.confirmحذفPackType = function(id, name) {
+window.confirmDeletePackType = function(id, name) {
     document.getElementById('deletePackTypeName').innerText = name;
     document.getElementById('deletePackTypeForm').action = '/pack-types/' + id;
     document.getElementById('deletePackTypeModal').classList.add('show');

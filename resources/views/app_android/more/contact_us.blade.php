@@ -1,9 +1,9 @@
 @extends('app_android.partials.mobile.app_mobile')
-@section('{{ __('messages.app.page_') }}', 'التواصل معنا')
+@section('title', 'التواصل معنا')
 @section('content')
-    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'التواصل معنا'])
+    @include('app_android.partials.mobile.header', ['title' => 'التواصل معنا'])
     
-    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="p-4" dir="rtl">
         <button onclick="window.history.back()" 
                 class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100 mb-5">
             <i class="fas fa-arrow-right"></i> 
@@ -77,7 +77,7 @@
                         </div>
                         <button type="submit" id="contact-submit-btn"
                                 class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fas fa-paper-plane end-2"></i> <span id="contact-btn-text">إرسال الرسالة</span>
+                            <i class="fas fa-paper-plane ml-2"></i> <span id="contact-btn-text">إرسال الرسالة</span>
                         </button>
                     </div>
                 </form>

@@ -185,40 +185,181 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
                 $quotation = app(QuotationServiceInterface::class)->createFromOrder($order, $user);
             }
 
-            // Send in-app notification + push to the customer
-            $customer = $order->customer;
-            if ($customer) {
-                $total = (float) ($quotation->total ?? 0);
-                $notification = Notification::create([
-                    'subject_en' => 'New price quote available',
-                    'subject_ar' => 'عرض سعر جديد متاح لطلبك',
-                    'body_en' => 'A new price quote for order #' . $order->order_number . ' is ready. Total: ' . number_format($total, 2),
-                    'body_ar' => 'عرض سعر جديد لطلبية رقم ' . $order->order_number . ' بإجمالي ' . number_format($total, 2) . ' ر.س. يappa في تطبيق العميل.',
-                    'image' => null,
-                    'video' => null,
-                    'group' => 'quotation',
-                    'channel' => 'push',
-                    'icon_type' => 'quote',
-                    'customers' => [$customer->id],
-                    'is_sent' => true,
-                    'scheduled_at' => now(),
-                ]);
-
-                $this->sendFcmPush($notification);
-            }
+            $this->notifyCustomer(
+                $order,
+                'New price quote available',
+                'عرض سعر جديد متاح لطلبك',
+                'A new price quote for order #'.$order->order_number.' is ready. Total: '.number_format((float) $quotation->total, 2),
+                'عرض سعر جديد لطلبية رقم '.$order->order_number.' بإجمالي '.number_format((float) $quotation->total, 2).' ر.س متاح الآن في تطبيق العميل.',
+                'quotation',
+                'quote',
+            );
         }
 
-        if (in_array($to, [OrderStatus::CustomerRejected, OrderStatus::CustomerRequestedChanges], true)
-            && in_array($from, [OrderStatus::QuotationSent, OrderStatus::Approved, OrderStatus::InDelivery], true)) {
-            $reservations = \App\Models\StockReservation::where('reserved_for_type', Order::class)
-                ->where('reserved_for_id', $order->id)
-                ->where('status', 'active')
-                ->get();
+        // العميل اعتمد عرض السعر -> إنشاء مسودة فاتورة ثم الانتقال التلقائي
+        if ($to === OrderStatus::CustomerApproved) {
+            $this->createInvoiceFromOrder($order);
+            $this->autoTransition($order, OrderStatus::InvoiceGenerated, 'تم إنشاء الفاتورة بعد اعتماد العميل');
+            $this->autoTransition($order, OrderStatus::PendingApproval, 'الفاتورة بانتظار موافقة الإدارة');
+        }
 
-            foreach ($reservations as $reservation) {
+        // العميل رفض العرض -> تحرير المخزون ثم الإلغاء التلقائي
+        if ($to === OrderStatus::CustomerRejected) {
+            $this->releaseInventory($order, $inventoryService);
+            $this->autoTransition($order, OrderStatus::Cancelled, 'تم إلغاء الطلبية بناءً على رفض العميل');
+        }
+
+        // العميل طلب تعديلات -> تحرير المخزون والعودة للإدارة
+        if ($to === OrderStatus::CustomerRequestedChanges) {
+            $this->releaseInventory($order, $inventoryService);
+            $this->autoTransition($order, OrderStatus::AdminEdited, 'طلب العميل تعديلات على عرض السعر');
+        }
+
+        // أي إلغاء -> تحرير المخزون المحجوز
+        if ($to === OrderStatus::Cancelled) {
+            $this->releaseInventory($order, $inventoryService);
+        }
+
+        if ($to === OrderStatus::PendingApproval) {
+            $this->notifyCustomer(
+                $order,
+                'Invoice awaiting approval',
+                'فاتورتك قيد الموافقة',
+                'The invoice for order #'.$order->order_number.' is awaiting approval.',
+                'فاتورة الطلبية رقم '.$order->order_number.' قيد الموافقة من الإدارة.',
+                'invoice',
+                'invoice',
+            );
+        }
+
+        if ($to === OrderStatus::Delivered) {
+            $this->notifyCustomer(
+                $order,
+                'Order delivered',
+                'تم توصيل طلبك',
+                'Order #'.$order->order_number.' has been delivered.',
+                'تم توصيل الطلبية رقم '.$order->order_number.' بنجاح. نرجو تقييم تجربتك معنا.',
+                'order',
+                'delivery',
+            );
+        }
+    }
+
+    /**
+     * Perform a follow-up transition without throwing when it is not allowed.
+     */
+    private function autoTransition(Order $order, OrderStatus $to, string $notes): void
+    {
+        $order->refresh();
+
+        if ($this->canTransitionTo($order, $to)) {
+            $this->transition($order, $to, null, $notes, true);
+        }
+    }
+
+    /**
+     * Release every active stock reservation held for the order.
+     */
+    private function releaseInventory(Order $order, InventoryServiceInterface $inventoryService): void
+    {
+        $reservations = \App\Models\StockReservation::where('reserved_for_type', Order::class)
+            ->where('reserved_for_id', $order->id)
+            ->where('status', 'active')
+            ->get();
+
+        foreach ($reservations as $reservation) {
+            try {
                 $inventoryService->release($reservation->id);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning(
+                    'Failed to release reservation '.$reservation->id.': '.$e->getMessage(),
+                );
             }
         }
+    }
+
+    /**
+     * Create a draft invoice from the latest accepted quotation.
+     */
+    private function createInvoiceFromOrder(Order $order): ?\App\Models\Invoice
+    {
+        $quotation = $order->quotation()->latest('id')->first();
+
+        if ($quotation) {
+            $existing = \App\Models\Invoice::where('quotation_id', $quotation->id)->first();
+            if ($existing) {
+                return $existing;
+            }
+        }
+
+        $sequence = (int) (\App\Models\Invoice::max('id') ?? 0) + 1;
+        $invoice = \App\Models\Invoice::create([
+            'customer_id' => $order->customer_id,
+            'order_id' => $order->id,
+            'quotation_id' => $quotation?->id,
+            'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad((string) $sequence, 5, '0', STR_PAD_LEFT),
+            'invoice_date' => now(),
+            'currency_id' => $order->currency_id,
+            'exchange_rate' => $order->exchange_rate,
+            'subtotal' => (float) ($quotation->subtotal ?? $order->subtotal ?? 0),
+            'discount_total' => (float) ($quotation->discount_total ?? $order->discount_total ?? 0),
+            'tax_total' => (float) ($quotation->tax_total ?? $order->tax_total ?? 0),
+            'total' => (float) ($quotation->total ?? $order->total ?? 0),
+            'total_amount' => (float) ($quotation->total ?? $order->total ?? 0),
+            'status' => \App\Enums\InvoiceStatus::PendingApproval->value,
+            'payment_type' => 'cash',
+            'notes' => 'فاتورة مُنشأة تلقائياً بعد اعتماد عرض السعر للطلبية '.$order->order_number,
+        ]);
+
+        $source = $quotation?->items ?? $order->items;
+
+        foreach ($source as $line) {
+            $invoice->items()->create([
+                'item_id' => $line->item_id,
+                'item_pack_id' => $line->item_pack_id,
+                'warehouse_id' => $order->warehouse_id,
+                'quantity' => (float) $line->quantity,
+                'unit_price' => (float) $line->unit_price,
+                'subtotal' => (float) ($line->line_total ?: $line->subtotal ?: ((float) $line->unit_price * (float) $line->quantity)),
+            ]);
+        }
+
+        return $invoice;
+    }
+
+    /**
+     * Create an in-app notification and push it to the order's customer.
+     */
+    private function notifyCustomer(
+        Order $order,
+        string $subjectEn,
+        string $subjectAr,
+        string $bodyEn,
+        string $bodyAr,
+        string $group,
+        string $iconType,
+    ): void {
+        $customer = $order->customer;
+        if (! $customer) {
+            return;
+        }
+
+        $notification = Notification::create([
+            'subject_en' => $subjectEn,
+            'subject_ar' => $subjectAr,
+            'body_en' => $bodyEn,
+            'body_ar' => $bodyAr,
+            'image' => null,
+            'video' => null,
+            'group' => $group,
+            'channel' => 'push',
+            'icon_type' => $iconType,
+            'customers' => [$customer->id],
+            'is_sent' => true,
+            'scheduled_at' => now(),
+        ]);
+
+        $this->sendFcmPush($notification);
     }
 
     /**

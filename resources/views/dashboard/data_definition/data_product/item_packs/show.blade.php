@@ -1,17 +1,17 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'Item Pack التفاصيل')
+@section('title', 'Item Pack Details')
 
 @section('content')
 {{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            Item Pack التفاصيل
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Item Pack Details
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
-            عرضing packaging information for
+            Viewing packaging information for
             @if($itemPack->barcode)
                 <strong>{{ $itemPack->barcode }}</strong>
             @else
@@ -21,10 +21,10 @@
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('item-packs.edit', $itemPack) }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-edit"></i> تعديل
+            <i class="fas fa-edit"></i> Edit
         </a>
         <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> رجوع to List
+            <i class="fas fa-arrow-left"></i> Back to List
         </a>
     </div>
 </div>
@@ -128,7 +128,7 @@
                 <p class="detail-value">{{ $itemPack->equivalency_factor ?? '—' }}</p>
             </div>
             <div class="detail-item">
-                <label class="detail-label">ترتيب الفرز</label>
+                <label class="detail-label">Sort Order</label>
                 <p class="detail-value">{{ $itemPack->sort_order ?? '—' }}</p>
             </div>
         </div>
@@ -170,9 +170,9 @@
     <div class="nova-card-body">
         @php
             $flags = array_filter([
-                $itemPack->is_default_pack      ? ['label' => 'افتراضي Pack',       'class' => 'success', 'icon' => 'check-circle'] : null,
+                $itemPack->is_default_pack      ? ['label' => 'Default Pack',       'class' => 'success', 'icon' => 'check-circle'] : null,
                 $itemPack->is_weight_priced     ? ['label' => 'Weight Priced',      'class' => 'success', 'icon' => 'weight-hanging'] : null,
-                $itemPack->allow_fraction_in_qty? ['label' => 'الكلow Fraction Qty', 'class' => 'info',    'icon' => 'divide'] : null,
+                $itemPack->allow_fraction_in_qty? ['label' => 'Allow Fraction Qty', 'class' => 'info',    'icon' => 'divide'] : null,
             ]);
         @endphp
 
@@ -185,7 +185,7 @@
                 @endforeach
             </div>
         @else
-            <p class="nova-text-muted mb-0">— لا flags set —</p>
+            <p class="nova-text-muted mb-0">— No flags set —</p>
         @endif
     </div>
 </div>
@@ -214,7 +214,7 @@
                 @endforeach
             </div>
         @else
-            <p class="nova-text-muted mb-0">— لا operations —</p>
+            <p class="nova-text-muted mb-0">— No operations —</p>
         @endif
     </div>
 </div>
@@ -243,52 +243,52 @@
                 @endforeach
             </div>
         @else
-            <p class="nova-text-muted mb-0">— لا groups —</p>
+            <p class="nova-text-muted mb-0">— No groups —</p>
         @endif
     </div>
 </div>
 
-{{-- ===== إجراءات ===== --}}
+{{-- ===== Actions ===== --}}
 <div class="nova-card">
     <div class="nova-card-body">
         <div class="detail-actions">
             <a href="{{ route('item-packs.edit', $itemPack) }}" class="nova-btn nova-btn-primary">
-                <i class="fas fa-edit"></i> تعديل Pack
+                <i class="fas fa-edit"></i> Edit Pack
             </a>
             <a href="{{ route('item-packs.index') }}" class="nova-btn nova-btn-outline">
-                <i class="fas fa-arrow-left"></i> رجوع to List
+                <i class="fas fa-arrow-left"></i> Back to List
             </a>
             <button type="button"
                     class="nova-btn nova-btn-danger"
-                    onclick="confirmحذف({{ $itemPack->id }}, '{{ addslashes($itemPack->barcode ?? 'Item Pack #' . $itemPack->id) }}')">
-                <i class="fas fa-trash-alt"></i> حذف
+                    onclick="confirmDelete({{ $itemPack->id }}, '{{ addslashes($itemPack->barcode ?? 'Item Pack #' . $itemPack->id) }}')">
+                <i class="fas fa-trash-alt"></i> Delete
             </button>
         </div>
     </div>
 </div>
 
-{{-- ===== حذف تأكيدation Modal ===== --}}
+{{-- ===== Delete Confirmation Modal ===== --}}
 <div class="nova-modal-backdrop" id="deleteItemPackModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
             <p class="nova-delete-modal-text">
                 Are you sure you want to delete item pack
                 <strong id="deleteItemPackName" class="nova-text-danger"></strong>?
-                <br>لا يمكن التراجع عن هذا الإجراء.
+                <br>This action cannot be undone.
             </p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="closeحذفModal()">
-                    إلغاء
+                <button type="button" class="nova-btn nova-btn-outline" onclick="closeDeleteModal()">
+                    Cancel
                 </button>
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="nova-btn nova-btn-danger">
-                        <i class="fas fa-trash-alt"></i> الحذف النهائي
+                        <i class="fas fa-trash-alt"></i> Delete Permanently
                     </button>
                 </form>
             </div>
@@ -341,7 +341,7 @@
         border: 1px solid #e3e6f0;
     }
 
-    /* ===== إجراءات ===== */
+    /* ===== Actions ===== */
     .detail-actions {
         display: flex;
         gap: 0.5rem;
@@ -441,37 +441,37 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ===== حذف Modal =====
-    window.confirmحذف = function(id, name) {
+    // ===== Delete Modal =====
+    window.confirmDelete = function(id, name) {
         document.getElementById('deleteItemPackName').innerText = name;
         document.getElementById('deleteForm').action = '/item-packs/' + id;
         document.getElementById('deleteItemPackModal').classList.add('show');
     };
 
-    window.closeحذفModal = function() {
+    window.closeDeleteModal = function() {
         document.getElementById('deleteItemPackModal').classList.remove('show');
     };
 
-    // إغلاق modal on backdrop click
+    // Close modal on backdrop click
     const modal = document.getElementById('deleteItemPackModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
             if (e.target === modal) {
-                closeحذفModal();
+                closeDeleteModal();
             }
         });
     }
 
-    // إغلاق modal on Escape key
+    // Close modal on Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
-            closeحذفModal();
+            closeDeleteModal();
         }
     });
 
     // ===== Auto-dismiss alerts =====
     setTimeout(function() {
-        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
+        document.querySelectorAll('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';

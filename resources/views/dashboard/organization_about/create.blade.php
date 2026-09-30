@@ -5,15 +5,15 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             إضافة نبذة منظمة
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">أدخل بيانات نبذة المنظمة</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">أدخل بيانات نبذة المنظمة</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('organization-about.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__2') }}
+            <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
 </div>
@@ -32,7 +32,7 @@
 <div class="nova-card">
     <div class="nova-card-header">
         <h5 class="nova-fw-bold mb-0">
-            <i class="fas fa-edit"></i> {{ __('messages.app.page__1') }}
+            <i class="fas fa-edit"></i> Offer Details
         </h5>
     </div>
     <div class="nova-card-body">
@@ -62,8 +62,8 @@
                         <label class="nova-label">
                             <i class="fas fa-heading me-1"></i> العنوان الرئيسي
                         </label>
-                        <input type="text" name="{{ __('messages.app.page_') }}" class="nova-input" value="{{ old('{{ __('messages.app.page_') }}') }}" placeholder="مثل: ماجاديت للصناعات الغذائية">
-                        @error('{{ __('messages.app.page_') }}') <div class="nova-form-error">{{ $message }}</div> @enderror
+                        <input type="text" name="title" class="nova-input" value="{{ old('title') }}" placeholder="مثل: ماجاديت للصناعات الغذائية">
+                        @error('title') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
                 </div>
 

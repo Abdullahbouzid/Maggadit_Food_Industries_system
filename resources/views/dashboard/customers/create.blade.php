@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-user-plus" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-user-plus" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             إنشاء عميل جديد
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}">أدخل بيانات العميل الجديد</p>
+        <p class="nova-page-subtitle">أدخل بيانات العميل الجديد</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('customers.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">

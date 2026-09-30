@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-boxes-stacked" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-boxes-stacked" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             دفعات الحركات
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة جميع حركات النقل والتوزيع والاسترجاع</p>
@@ -68,51 +68,51 @@
     </div>
 </div>
 
-{{-- ===== فلتر Section ===== --}}
+{{-- ===== Filter Section ===== --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form method="GET" action="{{ route('warehouse-movements.index') }}" class="filter-form">
             <div class="nova-form-group filter-item">
-                <label class="nova-label">{{ __('messages.filter.movement_type') }}</label>
+                <label class="nova-label">نوع الحركة</label>
                 <select name="movement_type" class="nova-select">
-                    <option value="">{{ __('messages.filter.all') }}</option>
+                    <option value="">الكل</option>
                     @foreach($movementTypes as $key => $label)
                         <option value="{{ $key }}" {{ request('movement_type') == $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="nova-form-group filter-item">
-                <label class="nova-label">{{ __('messages.filter.from_warehouse') }}</label>
+                <label class="nova-label">المخزن المصدر</label>
                 <select name="from_warehouse_id" class="nova-select">
-                    <option value="">{{ __('messages.filter.all') }}</option>
+                    <option value="">الكل</option>
                     @foreach($warehouses as $wh)
                         <option value="{{ $wh->id }}" {{ request('from_warehouse_id') == $wh->id ? 'selected' : '' }}>{{ $wh->name_en }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="nova-form-group filter-item">
-                <label class="nova-label">{{ __('messages.filter.to_warehouse') }}</label>
+                <label class="nova-label">المخزن الهدف</label>
                 <select name="to_warehouse_id" class="nova-select">
-                    <option value="">{{ __('messages.filter.all') }}</option>
+                    <option value="">الكل</option>
                     @foreach($warehouses as $wh)
                         <option value="{{ $wh->id }}" {{ request('to_warehouse_id') == $wh->id ? 'selected' : '' }}>{{ $wh->name_en }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="nova-form-group filter-item">
-                <label class="nova-label">{{ __('messages.filter.date_from') }}</label>
+                <label class="nova-label">منذ تاريخ</label>
                 <input type="date" name="date_from" class="nova-input" value="{{ request('date_from') }}">
             </div>
             <div class="nova-form-group filter-item">
-                <label class="nova-label">{{ __('messages.filter.date_to') }}</label>
+                <label class="nova-label">حتى تاريخ</label>
                 <input type="date" name="date_to" class="nova-input" value="{{ request('date_to') }}">
             </div>
             <div class="nova-form-group filter-item filter-item-actions">
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-filter"></i> {{ __('messages.filter.apply') }}
+                    <i class="fas fa-filter"></i> تصفية
                 </button>
                 <a href="{{ route('warehouse-movements.index') }}" class="nova-btn nova-btn-outline">
-                    <i class="fas fa-rotate-left"></i> {{ __('messages.filter.reset') }}
+                    <i class="fas fa-rotate-left"></i> إعادة ضبط
                 </a>
             </div>
         </form>
@@ -172,7 +172,7 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف"
-                                    onclick="confirmحذف({{ $group->first_movement->id }}, '{{ addslashes($group->batch_number) }}')">
+                                    onclick="confirmDelete({{ $group->first_movement->id }}, '{{ addslashes($group->batch_number) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -209,8 +209,8 @@
     </div>
 </div>
 
-{{-- ===== حذف تأكيدation Modal ===== --}}
-<div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true">
+{{-- ===== Delete Confirmation Modal ===== --}}
+<div class="nova-modal-backdrop" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
             <div class="nova-delete-modal-icon">
@@ -224,7 +224,7 @@
             </p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="document.getElementById('globalحذفModal').classList.remove('show')">
+                        onclick="document.getElementById('globalDeleteModal').classList.remove('show')">
                     إلغاء
                 </button>
                 <form id="deleteForm" method="POST" action="">
@@ -282,10 +282,10 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        window.confirmحذف = function(id, name) {
+        window.confirmDelete = function(id, name) {
             document.getElementById('deleteItemName').innerText = name;
             document.getElementById('deleteForm').action = '/warehouse-movements/' + id;
-            document.getElementById('globalحذفModal').classList.add('show');
+            document.getElementById('globalDeleteModal').classList.add('show');
         };
     });
 </script>

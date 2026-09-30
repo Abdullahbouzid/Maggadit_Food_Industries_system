@@ -5,7 +5,7 @@
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => __('messages.dashboard_title')])
 
-    <div class="px-4 py-4 mb-5 space-y-4" style="direction: {{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }};">
+    <div class="px-4 py-4 mb-5 space-y-4" style="direction: rtl;">
         <!-- User Info Card -->
       <!-- User Info Card -->
         <div class="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-5 shadow-lg">
@@ -177,7 +177,7 @@
     </div>
 
     <!-- ========== مودال التأكيد الجميل ========== -->
-    <div id="confirm-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none" style="direction: {{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }};">
+    <div id="confirm-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none" style="direction: rtl;">
         <div class="bg-white rounded-2xl w-80 max-w-[85%] p-6 transform scale-95 transition-all duration-300 shadow-2xl">
             <div class="text-center">
                 <div class="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">

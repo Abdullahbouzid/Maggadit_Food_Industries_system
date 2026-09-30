@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'إضافة جديد Brand')
+@section('title', 'Add New Brand')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            إضافة جديد Brand
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Add New Brand
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Enter the new brand details</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('brands.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> رجوع
+            <i class="fas fa-arrow-right"></i> Back
         </a>
     </div>
 </div>
@@ -48,7 +48,7 @@
                 </div>
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
-                        <label class="nova-label">Logo (اختياري)</label>
+                        <label class="nova-label">Logo (Optional)</label>
                         <input type="file" name="logo" class="nova-input @error('logo') nova-invalid @enderror" accept="image/*">
                         <div class="nova-help-text">Preferred size 200×200, max 2MB.</div>
                         @error('logo')
@@ -66,10 +66,10 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('brands.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-x me-1"></i> إلغاء
+                            <i class="fas fa-x me-1"></i> Cancel
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
-                            <i class="fas fa-save me-1"></i> حفظ
+                            <i class="fas fa-save me-1"></i> Save
                         </button>
                     </div>
                 </div>

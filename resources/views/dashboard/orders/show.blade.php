@@ -142,6 +142,8 @@
     </div>
 </div>
 
+@include('dashboard.orders.partials.order-steps', ['order' => $order])
+
 @include('dashboard.orders.partials.status-transition', ['order' => $order])
 
 {{-- ==================== Summary Row: 3 Cards ==================== --}}

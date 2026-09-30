@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'تعديل Vehicle')
+@section('title', 'Edit Vehicle')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            تعديل Vehicle: {{ $vehicle->vehicle_code }}
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Vehicle: {{ $vehicle->vehicle_code }}
         </h2>
         <p class="nova-page-subtitle">Update vehicle information.</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('vehicles.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> رجوع
+            <i class="fas fa-arrow-right"></i> Back
         </a>
     </div>
 </div>
@@ -54,7 +54,7 @@
                 </div>
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
-                        <label class="nova-label">Plate لا. <span class="nova-text-danger">*</span></label>
+                        <label class="nova-label">Plate No. <span class="nova-text-danger">*</span></label>
                         <input type="text" name="plate_no" class="nova-input @error('plate_no') nova-invalid @enderror" value="{{ old('plate_no', $vehicle->plate_no) }}" required>
                         @error('plate_no') <div class="nova-form-error">{{ $message }}</div> @enderror
                     </div>
@@ -123,14 +123,14 @@
                 <div class="nova-col nova-col-md-4">
                     <div class="nova-form-check nova-mt-4">
                         <input class="nova-form-check-input" type="checkbox" name="inactive" value="1" id="inactiveSwitch" {{ old('inactive', $vehicle->inactive) ? 'checked' : '' }}>
-                        <label class="nova-form-check-label" for="inactiveSwitch">غير نشط</label>
+                        <label class="nova-form-check-label" for="inactiveSwitch">Inactive</label>
                         <small class="nova-text-muted d-block">Mark as inactive to disable this vehicle.</small>
                     </div>
                 </div>
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('vehicles.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-x me-1"></i> إلغاء
+                            <i class="fas fa-x me-1"></i> Cancel
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
                             <i class="fas fa-save me-1"></i> Update Vehicle

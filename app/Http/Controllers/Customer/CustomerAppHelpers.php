@@ -45,10 +45,6 @@ trait CustomerAppHelpers
             }
         }
 
-        if (! $customer) {
-            $customer = Customer::latest('updated_at')->first() ?: Customer::first();
-        }
-
         return $customer;
     }
 

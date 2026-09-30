@@ -1,12 +1,12 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'تعديل Sales Order Type')
+@section('title', 'Edit Sales Order Type')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             تعديل نوع طلب البيع: {{ $salesOrderType->name }}
         </h2>
         <p class="nova-page-subtitle">تحرير بيانات نوع طلب البيع</p>
@@ -96,7 +96,7 @@
                     </div>
                 </div>
 
-                {{-- Form إجراءات --}}
+                {{-- Form Actions --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('sales-order-types.index') }}" class="nova-btn nova-btn-outline">

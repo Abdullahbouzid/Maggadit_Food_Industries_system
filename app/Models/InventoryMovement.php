@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class InventoryMovement extends Model
 {
+    // The table only carries created_at (no updated_at).
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'inventory_id', 'item_id', 'item_pack_id', 'warehouse_id',
         'type', 'quantity', 'reference_type', 'reference_id',
@@ -14,6 +17,7 @@ class InventoryMovement extends Model
 
     protected $casts = [
         'quantity' => 'decimal:2',
+        'created_at' => 'datetime',
     ];
 
     public function inventory()

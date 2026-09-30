@@ -151,12 +151,12 @@
 
         <!-- عرض رسائل الخطأ من الجلسة (مثلاً بعد فشل تسجيل الدخول) -->
         @if(session('error'))
-            <div id="server-error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4 text-end">
+            <div id="server-error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4 text-right">
                 {{ session('error') }}
             </div>
         @endif
         @if($errors->any())
-            <div id="server-error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4 text-end">
+            <div id="server-error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4 text-right">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -183,7 +183,7 @@
         <!-- رسالة التسجيل -->
         <div class="text-center mt-6 text-sm text-gray-500">
             <span id="signup-text">Are you new user?</span>
-            <a href="/mobile/register" id="signup-link" class="signup-link start-1">Sign Up</a>
+            <a href="/mobile/register" id="signup-link" class="signup-link mr-1">Sign Up</a>
         </div>
     </div>
 

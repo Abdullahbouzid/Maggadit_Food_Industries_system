@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             إنشاء نوع طلب بيع
         </h2>
         <p class="nova-page-subtitle">أدخل بيانات نوع طلب البيع الجديد</p>
@@ -96,7 +96,7 @@
                     </div>
                 </div>
 
-                {{-- Form إجراءات --}}
+                {{-- Form Actions --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('sales-order-types.index') }}" class="nova-btn nova-btn-outline">

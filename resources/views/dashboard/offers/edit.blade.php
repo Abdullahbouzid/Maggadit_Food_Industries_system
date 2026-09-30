@@ -1,13 +1,13 @@
 @extends('dashboard.partials.layout')
 
-@section('title', __('messages.app.page__1'))
+@section('title', 'Edit Offer')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            {{ __('messages.app.page__1') }}
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Offer
         </h2>
     </div>
 </div>
@@ -17,9 +17,9 @@
     @method('PUT')
     <div class="nova-card">
         <div class="nova-card-header">
-            <h2 class="nova-card-{{ __('messages.app.page_') }}">
+            <h2 class="nova-card-title">
                 <i class="fas fa-edit"></i>
-                {{ __('messages.app.page__2') }}
+                Offer Details
             </h2>
         </div>
         <div class="nova-card-body">
@@ -27,7 +27,7 @@
                 <div class="nova-form-group">
                     <label class="nova-label">Product <span class="nova-text-danger">*</span></label>
                     <select name="item_id" id="item-select" class="nova-select" required>
-                        <option value="">{{ __('messages.app.page__17') }}</option>
+                        <option value="">Select product</option>
                         @foreach($items as $item)
                             <option value="{{ $item['id'] }}" 
                                             data-price="{{ $item['price'] }}"
@@ -47,7 +47,7 @@
                 <div class="nova-form-group nova-hidden" id="pack-select-container">
                     <label class="nova-label">Pack <span class="nova-text-danger">*</span></label>
                     <select name="item_pack_id" id="pack-select" class="nova-select">
-                        <option value="">{{ __('messages.app.page__18') }}</option>
+                        <option value="">Select pack</option>
                     </select>
                     <div id="selected-pack-info" class="nova-alert info" style="display: none; margin-top: 0.5rem;">
                         <small class="nova-text-muted">Pack price: <strong id="pack-price">0</strong> SAR</small>
@@ -55,12 +55,12 @@
                     </div>
                 </div>
                 <div class="nova-form-group">
-                    <label class="nova-label">{{ __('messages.app.page__8') }}</label>
-                    <input type="text" name="{{ __('messages.app.page_') }}" class="nova-input" value="{{ old('{{ __('messages.app.page_') }}', $offer->{{ __('messages.app.page_') }}) }}" placeholder="Example: Weekend Discount">
+                    <label class="nova-label">Offer Title</label>
+                    <input type="text" name="title" class="nova-input" value="{{ old('title', $offer->title) }}" placeholder="Example: Weekend Discount">
                 </div>
             </div>
             <div class="nova-form-group">
-                <label class="nova-label">{{ __('messages.app.page__9') }}</label>
+                <label class="nova-label">Description</label>
                 <textarea name="description" rows="3" class="nova-textarea" placeholder="Brief description for the offer...">{{ old('description', $offer->description) }}</textarea>
             </div>
             <div class="nova-row cols-3">
@@ -73,9 +73,9 @@
                     <input type="number" step="0.01" name="new_price" id="new-price" class="nova-input" value="{{ old('new_price', $offer->new_price) }}" required>
                 </div>
                 <div class="nova-form-group">
-                    <label class="nova-label">{{ __('messages.app.page__12') }}</label>
+                    <label class="nova-label">Discount (%)</label>
                     <input type="number" step="0.01" name="discount_percentage" id="discount-percentage" class="nova-input" value="{{ old('discount_percentage', $offer->discount_percentage) }}" readonly>
-                    <div class="nova-form-help">{{ __('messages.dashboard.calculated_automatically') }}</div>
+                    <div class="nova-form-help">Calculated automatically</div>
                 </div>
             </div>
             <div class="nova-row cols-2">
@@ -89,7 +89,7 @@
                 </div>
             </div>
             <div class="nova-form-group">
-                <label class="nova-label">{{ __('messages.app.page__15') }}</label>
+                <label class="nova-label">Offer Image</label>
                 <input type="file" name="image" class="nova-input" accept="image/*">
                 @if($offer->image)
                     <img src="{{ asset('storage/' . $offer->image) }}" alt="Current offer image" class="nova-mt-2 rounded" style="max-height: 150px;">
@@ -97,18 +97,18 @@
             </div>
             <div class="nova-form-group">
                 <label class="nova-switch">
-                    <input type="checkbox" name="is_active" class="nova-switch-input" id="is{{ __('messages.app.page__3') }}" value="1" {{ $offer->is_active ? 'checked' : '' }}>
+                    <input type="checkbox" name="is_active" class="nova-switch-input" id="isActive" value="1" {{ $offer->is_active ? 'checked' : '' }}>
                     <span class="nova-switch-slider"></span>
-                    <span class="nova-fw-semibold">{{ __('messages.app.page__3') }}</span>
+                    <span class="nova-fw-semibold">Active</span>
                 </label>
             </div>
         </div>
         <div class="nova-card-footer">
             <button type="submit" class="nova-btn nova-btn-primary">
-                <i class="fas fa-save"></i> {{ __('messages.app.page__4') }}
+                <i class="fas fa-save"></i> Save Changes
             </button>
             <a href="{{ route('offers.index') }}" class="nova-btn nova-btn-secondary">
-                <i class="fas fa-times"></i> {{ __('messages.app.page__5') }}
+                <i class="fas fa-times"></i> Cancel
             </a>
         </div>
     </div>
@@ -150,9 +150,9 @@
             
             if (packs.length > 0) {
                 const packSelect = $('#pack-select');
-                packSelect.empty().append('<option value="">{{ __('messages.app.page__18') }}</option>');
+                packSelect.empty().append('<option value="">Select pack</option>');
                 packs.forEach(function(p) {
-                    packSelect.append('<option value="' + p.id + '" data-price="' + (p.price || 0) + '" data-quantity="' + (p.quantity || 0) + '">{{ __('messages.app.page__20') }}</option>');
+                    packSelect.append('<option value="' + p.id + '" data-price="' + (p.price || 0) + '" data-quantity="' + (p.quantity || 0) + '">' + (p.name || '') + ' - ' + (p.price || 0) + ' SAR</option>');
                 });
                 $('#pack-select-container').removeClass('nova-hidden');
                 packSelect.val(packs[0].id).trigger('change');

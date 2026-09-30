@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', __('messages.app.page__1'))
+@section('title', 'FAQs')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-question-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            {{ __('messages.app.page__1') }}
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-question-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            FAQs
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__5') }}</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage frequently asked questions</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('faqs.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus"></i> {{ __('messages.app.page__10') }}
+            <i class="fas fa-plus"></i> New Question
         </a>
     </div>
 </div>
@@ -31,53 +31,18 @@
     </div>
 @endif
 
-{{-- ===== Filter Section ===== --}}
-<div class="nova-card nova-mb-4">
-    <div class="nova-card-body">
-        <form method="GET" action="{{ route('faqs.index') }}" id="filterForm">
-            <div class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
-                <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">{{ __('messages.filter.search') }}</label>
-                    <div class="nova-input-group" style="display: flex; gap: 0;">
-                        <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-end: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.placeholder_faqs') }}" value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-start: none;">
-                    </div>
-                </div>
-                <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
-                    <select name="per_page" class="nova-select" onchange="document.getElementById('filterForm').submit();">
-                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                        <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
-                    </select>
-                </div>
-                <div class="nova-flex nova-gap-2" style="height: fit-content;">
-                    <button type="submit" class="nova-btn nova-btn-primary">{{ __('messages.filter.apply') }}</button>
-                    @if(request('search') || request('per_page'))
-                        <a href="{{ route('faqs.index') }}" class="nova-btn nova-btn-outline">{{ __('messages.filter.reset') }}</a>
-                    @endif
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
 <div class="nova-table-wrapper">
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
-            <h3 class="nova-card-{{ __('messages.app.page_') }}" style="margin: 0;">
+            <h3 class="nova-card-title" style="margin: 0;">
                 <i class="fas fa-list"></i>
-                {{ __('messages.app.page__1') }} List
+                FAQs List
             </h3>
         </div>
         <div class="nova-toolbar-search">
             <i class="fas fa-search"></i>
             <form method="GET" action="{{ route('faqs.index') }}" class="nova-search-form">
-                <input type="search" name="search" placeholder="Search {{ __('messages.app.page__1') }}..." value="{{ request('search') }}">
+                <input type="search" name="search" placeholder="Search FAQs..." value="{{ request('search') }}">
             </form>
         </div>
     </div>
@@ -86,9 +51,9 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>{{ __('messages.app.page__13') }}</th>
-                    <th>{{ __('messages.app.page__14') }}</th>
-                    <th class="nova-text-end">{{ __('messages.app.page__15') }}</th>
+                    <th>Category</th>
+                    <th>Question</th>
+                    <th class="nova-text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -99,10 +64,10 @@
                     <td>{{ $faq->question }}</td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                            <a href="{{ route('faqs.edit', $faq->id) }}" class="nova-icon-btn nova-btn-sm" {{ __('messages.app.page_') }}="Edit">
+                            <a href="{{ route('faqs.edit', $faq->id) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" {{ __('messages.app.page_') }}="Delete" onclick="confirmDelete('{{ $faq->id }}', '{{ addslashes($faq->question) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $faq->id }}', '{{ addslashes($faq->question) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -115,10 +80,10 @@
                             <div class="nova-empty-icon">
                                 <i class="fas fa-question-circle"></i>
                             </div>
-                            <h3 class="nova-empty-{{ __('messages.app.page_') }}">No {{ __('messages.app.page__1') }} found</h3>
-                            <p class="nova-empty-text">{{ __('messages.app.page__6') }}</p>
+                            <h3 class="nova-empty-title">No FAQs found</h3>
+                            <p class="nova-empty-text">Click "New Question" to create your first FAQ.</p>
                             <a href="{{ route('faqs.create') }}" class="nova-btn nova-btn-primary">
-                                <i class="fas fa-plus"></i> {{ __('messages.app.page__12') }}
+                                <i class="fas fa-plus"></i> Create FAQ
                             </a>
                         </div>
                     </td>
@@ -133,7 +98,7 @@
                 @if($faqs instanceof \Illuminate\Pagination\LengthAwarePaginator)
                     Showing {{ $faqs->firstItem() }} to {{ $faqs->lastItem() }} of {{ $faqs->total() }} entries
                     <div class="nova-pagination">
-                        {{ $faqs->appends(request()->query())->links() }}
+                        {{ $faqs->links() }}
                     </div>
                 @else
                     Showing {{ $faqs->count() }} entries
@@ -150,14 +115,14 @@
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">{{ __('messages.app.page__4') }}</h4>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
             <p class="nova-delete-modal-text">Are you sure you want to delete FAQ <strong id="deleteFaqName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteFaqModal').classList.remove('show')">{{ __('messages.app.page__8') }}</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteFaqModal').classList.remove('show')">Cancel</button>
                 <form id="deleteFaqForm" method="POST" action="" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.app.page__9') }}</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
                 </form>
             </div>
         </div>

@@ -216,8 +216,8 @@
 			var defaultDate = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate();
 			document.getElementById("datetimepicker-dashboard").flatpickr({
 				inline: true,
-				prevArrow: "<span title=\"Previous month\">{{ __('messages.app.page_') }}</span>",
-				nextArrow: "<span title=\"Next month\">{{ __('messages.app.page__1') }}</span>",
+				prevArrow: "<span title=\"Previous month\">&#10094;</span>",
+				nextArrow: "<span title=\"Next month\">&#10095;</span>",
 				defaultDate: defaultDate
 			});
 		});

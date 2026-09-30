@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-users" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-users" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             العملاء
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">إدارة حسابات العملاء والمنظمات</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">إدارة حسابات العملاء والمنظمات</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('customers.export', request()->query()) }}" class="nova-btn nova-btn-secondary nova-btn-sm">
@@ -43,7 +43,7 @@
 @if(session('import_errors'))
     <div class="nova-alert danger">
         <h6 class="nova-fw-bold" style="margin: 0 0 0.25rem;"><i class="fas fa-exclamation-circle"></i> أخطاء الاستيراد:</h6>
-        <ul style="margin: 0.25rem 0 0; padding-inline-start: 1.25rem;">
+        <ul style="margin: 0.25rem 0 0; padding-left: 1.25rem;">
             @foreach(session('import_errors') as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -86,7 +86,7 @@
 {{-- Import Section --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h2 class="nova-card-{{ __('messages.app.page_') }}" style="margin: 0;">
+        <h2 class="nova-card-title" style="margin: 0;">
             <i class="fas fa-upload"></i>
             استيراد العملاء
         </h2>
@@ -95,7 +95,7 @@
         <form action="{{ route('customers.import') }}" method="POST" enctype="multipart/form-data" class="nova-row cols-3" style="align-items: end;">
             @csrf
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">{{ __('messages.app.page__2') }}</label>
+                <label class="nova-label">ملف إكسل (.xlsx, .xls, .csv)</label>
                 <input type="file" name="import_file" class="nova-input" required>
                 <div class="nova-help-text">العمود المطلوب: <strong>name, username, email</strong> (كلمة المرور اختيارية، الافتراضية "password123").<br>اختياري: <strong>active_organization_name</strong> (يجب أن يكون موجوداً).</div>
             </div>
@@ -116,7 +116,7 @@
 {{-- Export Filter Section --}}
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h2 class="nova-card-{{ __('messages.app.page_') }}" style="margin: 0;">
+        <h2 class="nova-card-title" style="margin: 0;">
             <i class="fas fa-download"></i>
             خيارات التصدير (فلاتر مخصصة)
         </h2>
@@ -125,12 +125,12 @@
         <form action="{{ route('customers.export') }}" method="GET" class="nova-row cols-3" style="align-items: end;">
             <div class="nova-form-group" style="margin-bottom: 0;">
                 <label class="nova-label">بحث (اسم/اسم مستخدم/بريد)</label>
-                <input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.search') }}">
+                <input type="text" name="search" class="nova-input" placeholder="أدخل كلمة مفتاح...">
             </div>
             <div class="nova-form-group" style="margin-bottom: 0;">
                 <label class="nova-label">المنظمة النشطة</label>
                 <select name="organization_id" class="nova-select">
-                    <option value="">{{ __('messages.filter.all') }}</option>
+                    <option value="">الكل</option>
                     @foreach(\App\Models\Organization::pluck('name', 'id') as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
                     @endforeach
@@ -151,28 +151,28 @@
     <div class="nova-card-body" style="padding: 1rem 1.5rem;">
         <form id="filterForm" method="GET" action="{{ route('customers.index') }}" class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">{{ __('messages.filter.search') }}</label>
+                <label class="nova-label">بحث</label>
                 <div class="nova-input-group" style="display: flex; gap: 0;">
-                    <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-end: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
+                    <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-right: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
                         <i class="fas fa-search"></i>
                     </span>
-                    <input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.placeholder_customers') }}" value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-start: none;">
+                    <input type="text" name="search" class="nova-input" placeholder="الاسم، اسم المستخدم، البريد..." value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-left: none;">
                 </div>
             </div>
             <div class="nova-form-group" style="margin-bottom: 0;">
-                <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
+                <label class="nova-label">عدد السجلات لكل صفحة</label>
                 <select name="per_page" class="nova-select">
                     <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                     <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
                 </select>
             </div>
             <div class="nova-flex nova-gap-2" style="height: fit-content;">
-                <button type="submit" class="nova-btn nova-btn-primary">{{ __('messages.filter.apply') }}</button>
+                <button type="submit" class="nova-btn nova-btn-primary">تطبيق</button>
                 @if(request('search') || request('per_page'))
-                    <a href="{{ route('customers.index') }}" class="nova-btn nova-btn-outline">{{ __('messages.filter.reset') }}</a>
+                    <a href="{{ route('customers.index') }}" class="nova-btn nova-btn-outline">إعادة ضبط</a>
                 @endif
             </div>
         </form>
@@ -183,7 +183,7 @@
 <div class="nova-table-wrapper">
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
-            <h3 class="nova-card-{{ __('messages.app.page_') }}" style="margin: 0;">
+            <h3 class="nova-card-title" style="margin: 0;">
                 <i class="fas fa-list"></i> قائمة العملاء
             </h3>
         </div>
@@ -229,13 +229,13 @@
                     </td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                            <a href="{{ route('customers.show', $customer) }}" class="nova-icon-btn nova-btn-sm" {{ __('messages.app.page_') }}="عرض">
+                            <a href="{{ route('customers.show', $customer) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{{ route('customers.edit', $customer) }}" class="nova-icon-btn nova-btn-sm" {{ __('messages.app.page_') }}="تعديل">
+                            <a href="{{ route('customers.edit', $customer) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" {{ __('messages.app.page_') }}="حذف" onclick="confirmDelete({{ $customer->id }}, '{{ addslashes($customer->name) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDelete({{ $customer->id }}, '{{ addslashes($customer->name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -248,7 +248,7 @@
                             <div class="nova-empty-icon">
                                 <i class="fas fa-users"></i>
                             </div>
-                            <h3 class="nova-empty-{{ __('messages.app.page_') }}">لا توجد عملاء</h3>
+                            <h3 class="nova-empty-title">لا توجد عملاء</h3>
                             <p class="nova-empty-text">أنشئ أول عميل الآن.</p>
                             <a href="{{ route('customers.create') }}" class="nova-btn nova-btn-primary">
                                 <i class="fas fa-plus"></i> إنشاء عميل
@@ -279,7 +279,7 @@
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">تأكيد الحذف</h4>
+            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
             <p class="nova-delete-modal-text">هل أنت متأكد أنك تريد حذف العميل <strong id="deleteName" class="nova-text-danger"></strong>؟<br>هذا الإجراء لا يمكن التراجع عنه.</p>
             <div class="nova-delete-modal-actions">
                 <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">إلغاء</button>

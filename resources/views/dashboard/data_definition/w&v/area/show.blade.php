@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             المنطقة: {{ $area->code }}
         </h2>
         <p class="nova-page-subtitle">عرض تفصيلي للمنطقة الجغرافية</p>
@@ -30,7 +30,7 @@
     </div>
 @endif
 
-{{-- ===== Area التفاصيل ===== --}}
+{{-- ===== Area Details ===== --}}
 <div class="nova-card">
     <div class="nova-card-header">
         <h5 class="nova-fw-bold mb-0">

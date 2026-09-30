@@ -5,15 +5,15 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-address-book" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            {{ __('messages.app.page__1') }}
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-address-book" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Contact Information
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__2') }}</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">View organization contact details</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('dashboard') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__3') }}
+            <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
 </div>
@@ -22,7 +22,7 @@
     <div class="nova-col nova-col-12">
         <div class="nova-card">
             <div class="nova-card-header">
-                <h5 class="nova-card-{{ __('messages.app.page_') }}"><i class="fas fa-address-book me-2"></i> تفاصيل التواصل</h5>
+                <h5 class="nova-card-title"><i class="fas fa-address-book me-2"></i> تفاصيل التواصل</h5>
             </div>
             <div class="nova-card-body">
                 <div class="nova-row nova-gap-4">
@@ -77,7 +77,7 @@
     <div class="nova-col nova-col-12">
         <div class="nova-card">
             <div class="nova-card-header">
-                <h5 class="nova-card-{{ __('messages.app.page_') }}"><i class="fas fa-users me-2"></i> عملاء المنظمة</h5>
+                <h5 class="nova-card-title"><i class="fas fa-users me-2"></i> عملاء المنظمة</h5>
             </div>
             <div class="nova-card-body">
                 @if(isset($customers) && $customers->count() > 0)
@@ -118,7 +118,7 @@
                         <div class="nova-empty-icon">
                             <i class="fas fa-users"></i>
                         </div>
-                        <h3 class="nova-empty-{{ __('messages.app.page_') }}">لا توجد عملاء</h3>
+                        <h3 class="nova-empty-title">لا توجد عملاء</h3>
                         <p class="nova-empty-text">لا يوجد عملاء مرتبطين بهذه المنظمة.</p>
                     </div>
                 @endif

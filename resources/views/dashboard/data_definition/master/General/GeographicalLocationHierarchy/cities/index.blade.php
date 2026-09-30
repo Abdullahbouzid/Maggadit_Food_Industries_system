@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-map-marker-alt" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-map-marker-alt" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             جميع المدن
         </h2>
         <p class="nova-page-subtitle">إدارة جميع المدن في النظام</p>
@@ -32,7 +32,7 @@
     <div class="nova-alert warning">
         <i class="fas fa-exclamation-triangle"></i>
         <strong>أخطاء الاستيراد:</strong>
-        <ul style="margin-top: 0.5rem; padding-inline-start: 1.25rem;">
+        <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
             @foreach(session('import_errors') as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -61,7 +61,7 @@
             <i class="fas fa-map-marked-alt"></i>
         </div>
         <p class="nova-stat-label">مع إحداثيات</p>
-        <p class="nova-stat-value">{{ $cities->whereلاtNull('latitude')->count() }}</p>
+        <p class="nova-stat-value">{{ $cities->whereNotNull('latitude')->count() }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon danger">
@@ -73,41 +73,6 @@
 </div>
 
 {{-- Data Table --}}
-{{-- ===== Filter Section ===== --}}
-<div class="nova-card nova-mb-4">
-    <div class="nova-card-body">
-        <form method="GET" action="{{ route('geographical-location-hierarchy.cities') }}" id="filterForm">
-            <div class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
-                <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">{{ __('messages.filter.search') }}</label>
-                    <div class="nova-input-group" style="display: flex; gap: 0;">
-                        <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-end: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.placeholder_organization') }}"" value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-start: none;">
-                    </div>
-                </div>
-                <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
-                    <select name="per_page" class="nova-select" onchange="document.getElementById('filterForm').submit();">
-                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                        <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
-                    </select>
-                </div>
-                <div class="nova-flex nova-gap-2" style="height: fit-content;">
-                    <button type="submit" class="nova-btn nova-btn-primary">{{ __('messages.filter.apply') }}</button>
-                    @if(request('search') || request('per_page'))
-                        <a href="{{ route('geographical-location-hierarchy.cities') }}" class="nova-btn nova-btn-outline">{{ __('messages.filter.reset') }}</a>
-                    @endif
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
 <div class="nova-table-wrapper">
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
@@ -162,7 +127,7 @@
                             <a href="{{ route('cities.edit', $city) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذفCity({{ $city->id }}, '{{ addslashes($city->name) }}')">
+                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDeleteCity({{ $city->id }}, '{{ addslashes($city->name) }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -196,7 +161,7 @@
     </div>
 </div>
 
-{{-- حذف تأكيدation Modal (لاva) --}}
+{{-- Delete Confirmation Modal (Nova) --}}
 <div class="nova-modal-backdrop" id="deleteCityModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -221,7 +186,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmحذفCity = function(id, name) {
+    window.confirmDeleteCity = function(id, name) {
         document.getElementById('deleteCityName').innerText = name;
         document.getElementById('deleteCityForm').action = '/cities/' + id;
         document.getElementById('deleteCityModal').classList.add('show');

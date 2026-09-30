@@ -1,6 +1,6 @@
 @php
     // تحديد العنصر النشط بناءً على اسم الـ route الحالي
-    $activeRoute = request()->route()->getName();
+    $activeRoute = request()->route()?->getName() ?? '';
 @endphp
 
 <div class="bottom-nav-premium">

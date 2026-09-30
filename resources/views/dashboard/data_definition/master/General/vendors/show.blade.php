@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-info-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             تفاصيل المورد
         </h2>
         <p class="nova-page-subtitle">عرض كامل لمعلومات {{ $vendor->vendor_name }}</p>
@@ -114,14 +114,14 @@
                 <i class="fas fa-edit"></i> تعديل
             </a>
             <button type="button" class="nova-btn nova-btn-outline nova-text-danger"
-                    onclick="confirmحذف({{ $vendor->id }}, '{{ addslashes($vendor->vendor_name) }}')">
+                    onclick="confirmDelete({{ $vendor->id }}, '{{ addslashes($vendor->vendor_name) }}')">
                 <i class="fas fa-trash-alt"></i> حذف
             </button>
         </div>
     </div>
 </div>
 
-{{-- حذف تأكيدation Modal (لاva) --}}
+{{-- Delete Confirmation Modal (Nova) --}}
 <div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -146,7 +146,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmحذف = function(id, name) {
+    window.confirmDelete = function(id, name) {
         document.getElementById('deleteName').innerText = name;
         document.getElementById('deleteForm').action = '/vendors/' + id;
         document.getElementById('deleteModal').classList.add('show');

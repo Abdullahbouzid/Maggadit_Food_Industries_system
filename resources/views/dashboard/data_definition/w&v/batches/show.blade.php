@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-box-open" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-box-open" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             تفاصيل الدفعة: {{ $batch->batch_number }}
         </h2>
         <p class="nova-page-subtitle">عرض معلومات الدفعة والمنتجات المرتبطة بها</p>
@@ -320,7 +320,7 @@
 @push('styles')
 <style>
     /* ============================================================
-       Batch التفاصيل Grid
+       Batch Details Grid
        ============================================================ */
     .batch-details-grid {
         display: grid;

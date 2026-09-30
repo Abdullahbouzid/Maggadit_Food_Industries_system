@@ -5,7 +5,7 @@
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => __('messages.dashboard_title')])
 
-    <div class="p-4 space-y-6 mb-5" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="p-4 space-y-6 mb-5" dir="rtl">
     <style>
         .offer-card {
             position: relative;
@@ -118,7 +118,7 @@
                         $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
                         $isFavorite = is_array($product) ? ($product['favorite'] ?? false) : in_array($productId, $favoriteItemIds ?? []);
                     @endphp
-                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='{{ route('customer.product.show', $productId) }}'">
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='{{ route('customer.product.show', $productId, false) }}'">
                         @if($packName)
                             <div class="absolute top-2 right-2 z-10">
                                 <span class="bg-purple-600 text-white text-[10px] px-2 py-1 rounded-full font-semibold">
@@ -171,7 +171,7 @@
             </div>
             <div id="dash-offers" class="space-y-4">
                 @forelse($offers ?? [] as $offer)
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer" onclick="window.location='{{ route('customer.product.show', $offer->item_id) }}'">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer" onclick="window.location='{{ route('customer.product.show', $offer->item_id, false) }}'">
                         @if($offer->discount_percentage > 0)
                             <div class="offer-badge">
                                 -{{ number_format($offer->discount_percentage, 0) }}%
@@ -187,7 +187,7 @@
                                     </div>
                                 @endif
                             </div>
-                            <div class="flex-1 p-3 text-end flex flex-col justify-between">
+                            <div class="flex-1 p-3 text-right flex flex-col justify-between">
                                 <div>
                                     <h3 class="font-bold text-gray-800 text-base leading-tight line-clamp-1">{{ $offer->title ?: ($offer->name ?? 'عرض خاص') }}</h3>
                                     @if($offer->description)
@@ -520,7 +520,7 @@
                                         <div class="relative w-28 h-28 overflow-hidden bg-gray-100 flex-shrink-0">
                                             ${o.image ? `<img src="${o.image}" alt="${o.name || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/112?text=🛍️';">` : '<div class="w-full h-28 bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl">🛍️</div>'}
                                         </div>
-                                        <div class="flex-1 p-3 text-end flex flex-col justify-between">
+                                        <div class="flex-1 p-3 text-right flex flex-col justify-between">
                                             <div>
                                                 <h3 class="font-bold text-gray-800 text-base leading-tight line-clamp-1">${o.title || o.name || 'عرض خاص'}</h3>
                                                 ${o.description ? `<p class="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">${o.description}</p>` : ''}

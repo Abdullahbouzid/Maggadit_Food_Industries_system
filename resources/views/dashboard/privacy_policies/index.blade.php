@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', __('messages.app.page__8'))
+@section('title', 'Privacy Policies')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-shield-alt" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            {{ __('messages.app.page__1') }}
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-shield-alt" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Privacy & Terms
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__5') }}</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage privacy policies and terms of service</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('privacy-policies.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-            <i class="fas fa-plus"></i> {{ __('messages.app.page__17') }}
+            <i class="fas fa-plus"></i> Add Policy
         </a>
     </div>
 </div>
@@ -31,76 +31,41 @@
         <div class="nova-stat-icon primary">
             <i class="fas fa-shield-alt"></i>
         </div>
-        <p class="nova-stat-label">{{ __('messages.app.page__6') }}</p>
+        <p class="nova-stat-label">Total Policies</p>
         <p class="nova-stat-value">{{ $policies->total() }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon secondary">
             <i class="fas fa-file-text"></i>
         </div>
-        <p class="nova-stat-label">{{ __('messages.app.page__7') }}</p>
+        <p class="nova-stat-label">Active Policies</p>
         <p class="nova-stat-value">{{ $policies->where('is_active', true)->count() }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon accent">
             <i class="fas fa-clipboard-check"></i>
         </div>
-        <p class="nova-stat-label">{{ __('messages.app.page__8') }}</p>
+        <p class="nova-stat-label">Privacy Policies</p>
         <p class="nova-stat-value">{{ $policies->where('type', 'privacy_policy')->count() }}</p>
     </div>
 </div>
 
 {{-- Policies Table --}}
-{{-- ===== Filter Section ===== --}}
-<div class="nova-card nova-mb-4">
-    <div class="nova-card-body">
-        <form method="GET" action="{{ route('privacy-policies.index') }}" id="filterForm">
-            <div class="nova-row cols-3" style="align-items: end; gap: 0.75rem;">
-                <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">{{ __('messages.filter.search') }}</label>
-                    <div class="nova-input-group" style="display: flex; gap: 0;">
-                        <span class="nova-input-group-text" style="display: flex; align-items: center; padding: 0 0.875rem; background: var(--nova-surface-2); border: 1.5px solid var(--nova-border); border-end: none; border-radius: 10px 0 0 10px; color: var(--nova-text-4);">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" name="search" class="nova-input" placeholder="{{ __('messages.filter.placeholder_policies') }}" value="{{ request('search') }}" style="border-radius: 0 10px 10px 0; border-start: none;">
-                    </div>
-                </div>
-                <div class="nova-form-group" style="margin-bottom: 0;">
-                    <label class="nova-label">{{ __('messages.filter.per_page') }}</label>
-                    <select name="per_page" class="nova-select" onchange="document.getElementById('filterForm').submit();">
-                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                        <option value="20" {{ request('per_page') == 20 || !request('per_page') ? 'selected' : '' }}>20</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('messages.filter.all') }}</option>
-                    </select>
-                </div>
-                <div class="nova-flex nova-gap-2" style="height: fit-content;">
-                    <button type="submit" class="nova-btn nova-btn-primary">{{ __('messages.filter.apply') }}</button>
-                    @if(request('search') || request('per_page'))
-                        <a href="{{ route('privacy-policies.index') }}" class="nova-btn nova-btn-outline">{{ __('messages.filter.reset') }}</a>
-                    @endif
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
 <div class="nova-table-wrapper">
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
-            <h3 class="nova-card-{{ __('messages.app.page_') }}" style="margin: 0;">
+            <h3 class="nova-card-title" style="margin: 0;">
                 <i class="fas fa-list"></i>
-                {{ __('messages.app.page__2') }}
+                Policies List
             </h3>
         </div>
         <div class="nova-toolbar-search">
             <i class="fas fa-search"></i>
-            <input type="search" placeholder="{{ __('messages.filter.placeholder_policies') }}">
+            <input type="search" placeholder="Search policies...">
         </div>
         <div class="nova-toolbar-actions">
             <a href="{{ route('privacy-policies.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
-                <i class="fas fa-plus"></i> {{ __('messages.app.page__17') }}
+                <i class="fas fa-plus"></i> Add Policy
             </a>
         </div>
     </div>
@@ -109,11 +74,11 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>{{ __('messages.app.page__20') }}</th>
-                    <th>{{ __('messages.app.page__21') }}</th>
-                    <th>{{ __('messages.app.page__22') }}</th>
-                    <th>{{ __('messages.app.page__23') }}</th>
-                    <th style="text-align: right;">{{ __('messages.app.page__24') }}</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Created Date</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -121,32 +86,32 @@
                 <tr>
                     <td>{{ $policy->id }}</td>
                     <td>
-                        <span class="nova-fw-bold">{{ $policy->{{ __('messages.app.page_') }} ?? $policy->type }}</span>
+                        <span class="nova-fw-bold">{{ $policy->title ?? $policy->type }}</span>
                     </td>
                     <td>
                         @if($policy->type == 'privacy_policy')
-                            <span class="nova-badge secondary">{{ __('messages.app.page__11') }}</span>
+                            <span class="nova-badge secondary">Privacy Policy</span>
                         @else
-                            <span class="nova-badge accent">{{ __('messages.app.page__12') }}</span>
+                            <span class="nova-badge accent">Terms of Service</span>
                         @endif
                     </td>
                     <td>
                         @if($policy->is_active)
-                            <span class="nova-badge success">{{ __('messages.app.page__13') }}</span>
+                            <span class="nova-badge success">Active</span>
                         @else
-                            <span class="nova-badge secondary">{{ __('messages.app.page__14') }}</span>
+                            <span class="nova-badge secondary">Inactive</span>
                         @endif
                     </td>
                     <td>{{ $policy->created_at->format('Y-m-d') }}</td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                            <a href="{{ route('privacy-policies.show', $policy) }}" class="nova-icon-btn nova-btn-sm" {{ __('messages.app.page_') }}="View">
+                            <a href="{{ route('privacy-policies.show', $policy) }}" class="nova-icon-btn nova-btn-sm" title="View">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{{ route('privacy-policies.edit', $policy) }}" class="nova-icon-btn nova-btn-sm" {{ __('messages.app.page_') }}="Edit">
+                            <a href="{{ route('privacy-policies.edit', $policy) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                             <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" {{ __('messages.app.page_') }}="Delete" onclick="confirmDelete('{{ $policy->id }}', '{{ addslashes($policy->{{ __('messages.app.page_') }} ?? ($policy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة')) }}')">
+                             <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $policy->id }}', '{{ addslashes($policy->title ?? ($policy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة')) }}')">
                                  <i class="fas fa-trash-alt"></i>
                              </button>
                         </div>
@@ -159,10 +124,10 @@
                             <div class="nova-empty-icon">
                                 <i class="fas fa-shield-alt"></i>
                             </div>
-                            <h3 class="nova-empty-{{ __('messages.app.page_') }}">{{ __('messages.app.page__3') }}</h3>
-                            <p class="nova-empty-text">{{ __('messages.app.page__9') }}</p>
+                            <h3 class="nova-empty-title">No policies found</h3>
+                            <p class="nova-empty-text">Create your first policy to get started.</p>
                             <a href="{{ route('privacy-policies.create') }}" class="nova-btn nova-btn-primary">
-                                <i class="fas fa-plus"></i> {{ __('messages.app.page__17') }}
+                                <i class="fas fa-plus"></i> Add Policy
                             </a>
                         </div>
                     </td>
@@ -186,14 +151,14 @@
             <div class="nova-delete-modal-icon">
                 <i class="fas fa-triangle-exclamation"></i>
             </div>
-            <h4 class="nova-delete-modal-{{ __('messages.app.page_') }}">{{ __('messages.app.page__4') }}</h4>
+            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
             <p class="nova-delete-modal-text">Are you sure you want to delete policy <strong id="deletePolicyName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
             <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePolicyModal').classList.remove('show')">{{ __('messages.app.page__15') }}</button>
+                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePolicyModal').classList.remove('show')">Cancel</button>
                 <form id="deletePolicyForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">{{ __('messages.app.page__16') }}</button>
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
                 </form>
             </div>
         </div>
@@ -219,5 +184,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 5000);
 });
 </script>
-@endpush
 @endpush

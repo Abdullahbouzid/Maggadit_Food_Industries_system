@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             إنشاء استبيان جديد
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">صمّم استبيانك وأضف أسئلتك بحرية</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">صمّم استبيانك وأضف أسئلتك بحرية</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('surveys.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
@@ -46,7 +46,7 @@
                         <label class="nova-label">
                             <i class="fas fa-heading me-1"></i> عنوان الاستبيان <span class="nova-text-danger">*</span>
                         </label>
-                        <input type="text" name="{{ __('messages.app.page_') }}" class="nova-input" value="{{ old('{{ __('messages.app.page_') }}') }}" placeholder="مثال: استبيان رضا العملاء" required>
+                        <input type="text" name="title" class="nova-input" value="{{ old('title') }}" placeholder="مثال: استبيان رضا العملاء" required>
                     </div>
 
                     <div class="nova-form-group">
@@ -105,7 +105,7 @@
                         <div class="nova-empty-icon">
                             <i class="fas fa-question-circle"></i>
                         </div>
-                        <h3 class="nova-empty-{{ __('messages.app.page_') }}">لا توجد أسئلة</h3>
+                        <h3 class="nova-empty-title">لا توجد أسئلة</h3>
                         <p class="nova-empty-text">لم تضف أي أسئلة بعد. اضغط على "إضافة سؤال" للبدء.</p>
                     </div>
                 </div>
@@ -141,11 +141,11 @@ function addQuestion() {
 
     const div = document.createElement('div');
     div.className = 'nova-form-card';
-    div.id = `q-block-{{ __('messages.app.page__1') }}`;
+    div.id = `q-block-${id}`;
     div.innerHTML = `
         <div class="nova-form-card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">
-                <span class="question-number q-num">{{ __('messages.app.page__1') }}</span>
+                <span class="question-number q-num">${id}</span>
                 <span class="fw-semibold text-muted small">سؤال</span>
             </div>
             <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger remove-q">
@@ -157,7 +157,7 @@ function addQuestion() {
                 <label class="nova-label small fw-semibold">
                     <i class="fas fa-heading me-1"></i> نص السؤال <span class="nova-text-danger">*</span>
                 </label>
-                <input type="text" name="questions[{{ __('messages.app.page__1') }}][question_text]"
+                <input type="text" name="questions[${id}][question_text]"
                        class="nova-input nova-input-sm" placeholder="اكتب نص السؤال هنا..." required>
             </div>
             <div class="nova-row g-2 mb-3">
@@ -165,7 +165,7 @@ function addQuestion() {
                     <label class="nova-label small fw-semibold">
                         <i class="fas fa-tag me-1"></i> نوع السؤال
                     </label>
-                    <select name="questions[{{ __('messages.app.page__1') }}][question_type]" class="nova-select nova-input-sm q-type" data-id="{{ __('messages.app.page__1') }}">
+                    <select name="questions[${id}][question_type]" class="nova-select nova-input-sm q-type" data-id="${id}">
                         <option value="choice">اختيار من متعدد</option>
                         <option value="text">إجابة نصية</option>
                         <option value="rating">تقييم (نجوم)</option>
@@ -176,12 +176,12 @@ function addQuestion() {
                 <div class="nova-col nova-col-md-6 d-flex align-items-end">
                     <div class="nova-form-check">
                         <input class="nova-form-check-input" type="checkbox"
-                               name="questions[{{ __('messages.app.page__1') }}][is_required]" value="1" checked>
+                               name="questions[${id}][is_required]" value="1" checked>
                         <label class="nova-form-check-label small">سؤال إجباري</label>
                     </div>
                 </div>
             </div>
-            <div class="options-area" id="opts-{{ __('messages.app.page__1') }}">
+            <div class="options-area" id="opts-${id}">
                 ${renderOptionsArea(id, 'choice')}
             </div>
         </div>
@@ -218,31 +218,31 @@ function renderOptionsArea(id, type) {
         return `<div class="nova-alert info">
                     <i class="fas fa-check-circle"></i> سيُعرض للعميل خيارا "نعم" و"لا".
                 </div>
-                <input type="hidden" name="questions[{{ __('messages.app.page__1') }}][options][]" value="نعم">
-                <input type="hidden" name="questions[{{ __('messages.app.page__1') }}][options][]" value="لا">`;
+                <input type="hidden" name="questions[${id}][options][]" value="نعم">
+                <input type="hidden" name="questions[${id}][options][]" value="لا">`;
     }
     // choice & multiselect
     return `
         <label class="nova-label small fw-semibold">
             <i class="fas fa-list me-1"></i> الخيارات
         </label>
-        <div id="options-list-{{ __('messages.app.page__1') }}">
+        <div id="options-list-${id}">
             <div class="option-item d-flex align-items-center gap-2 mb-2">
                 <span class="nova-badge secondary">1</span>
-                <input type="text" name="questions[{{ __('messages.app.page__1') }}][options][]" class="nova-input nova-input-sm" placeholder="خيار 1" required>
+                <input type="text" name="questions[${id}][options][]" class="nova-input nova-input-sm" placeholder="خيار 1" required>
                 <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger remove-opt">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="option-item d-flex align-items-center gap-2 mb-2">
                 <span class="nova-badge secondary">2</span>
-                <input type="text" name="questions[{{ __('messages.app.page__1') }}][options][]" class="nova-input nova-input-sm" placeholder="خيار 2" required>
+                <input type="text" name="questions[${id}][options][]" class="nova-input nova-input-sm" placeholder="خيار 2" required>
                 <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger remove-opt">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
-        <button type="button" class="nova-btn nova-btn-outline nova-btn-sm mt-2 add-opt" data-qid="{{ __('messages.app.page__1') }}">
+        <button type="button" class="nova-btn nova-btn-outline nova-btn-sm mt-2 add-opt" data-qid="${id}">
             <i class="fas fa-plus"></i> إضافة خيار
         </button>
     `;
@@ -260,8 +260,8 @@ function addOptionListeners(qid) {
             const item = document.createElement('div');
             item.className = 'option-item d-flex align-items-center gap-2 mb-2';
             item.innerHTML = `
-                <span class="nova-badge secondary">{{ __('messages.app.page__2') }}</span>
-                <input type="text" name="questions[${qid}][options][]" class="nova-input nova-input-sm" placeholder="خيار {{ __('messages.app.page__2') }}">
+                <span class="nova-badge secondary">${count}</span>
+                <input type="text" name="questions[${qid}][options][]" class="nova-input nova-input-sm" placeholder="خيار ${count}">
                 <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger remove-opt">
                     <i class="fas fa-times"></i>
                 </button>`;

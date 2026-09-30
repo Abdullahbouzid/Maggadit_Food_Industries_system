@@ -7,7 +7,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             تعديل الدفعة: {{ $batch->batch_number }}
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">تعديل بيانات الدفعة والمنتجات المرتبطة بها</p>
@@ -19,7 +19,7 @@
     </div>
 </div>
 
-{{-- ===== Validation خطأs ===== --}}
+{{-- ===== Validation Errors ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>
@@ -172,7 +172,7 @@
                             @endif
                         </div>
 
-                        {{-- إجراءات --}}
+                        {{-- Actions --}}
                         <div class="nova-form-group nova-form-col-auto">
                             <button type="button"
                                     class="nova-btn nova-btn-outline nova-btn-sm nova-text-danger remove-item-row"
@@ -184,7 +184,7 @@
                 @endforeach
             </div>
 
-            <div id="itemsخطأ" class="nova-alert danger nova-mt-3" style="display: none;">
+            <div id="itemsError" class="nova-alert danger nova-mt-3" style="display: none;">
                 <i class="fas fa-exclamation-triangle"></i>
                 يجب إضافة منتج واحد على الأقل.
             </div>
@@ -192,7 +192,7 @@
     </div>
 
     {{-- ============================================================
-         Form إجراءات
+         Form Actions
          ============================================================ --}}
     <div class="form-actions">
         <button type="submit" class="nova-btn nova-btn-success nova-btn-lg">
@@ -311,7 +311,7 @@
     }
 
     /* ============================================================
-       Dispatch تحذير
+       Dispatch Warning
        ============================================================ */
     .dispatch-warning {
         display: flex;
@@ -332,16 +332,16 @@
     }
 
     /* ============================================================
-       Items خطأ
+       Items Error
        ============================================================ */
-    #itemsخطأ {
+    #itemsError {
         display: none;
         align-items: center;
         gap: 0.5rem;
     }
 
     /* ============================================================
-       Form إجراءات
+       Form Actions
        ============================================================ */
     .form-actions {
         display: flex;
@@ -414,7 +414,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const items = @json($items);
         const itemsContainer = document.getElementById('itemsContainer');
-        const itemsخطأ = document.getElementById('itemsخطأ');
+        const itemsError = document.getElementById('itemsError');
 
         let rowCounter = {{ $batch->batchItems->count() }};
 
@@ -486,11 +486,11 @@
         }
 
         /* ============================================================
-           إضافة عنصر Row
+           Add Item Row
            ============================================================ */
         document.getElementById('addItemRow').addEventListener('click', function() {
             itemsContainer.insertAdjacentHTML('beforeend', createItemRow());
-            itemsخطأ.style.display = 'none';
+            itemsError.style.display = 'none';
         });
 
         /* ============================================================
@@ -512,7 +512,7 @@
 
             row.remove();
 
-            if (document.querySelectorالكل('.item-row').length === 0) {
+            if (document.querySelectorAll('.item-row').length === 0) {
                 itemsContainer.insertAdjacentHTML('beforeend', createItemRow());
             }
         });
@@ -555,14 +555,14 @@
         });
 
         /* ============================================================
-           Form إرسال Validation
+           Form Submit Validation
            ============================================================ */
         document.getElementById('batchForm').addEventListener('submit', function(e) {
-            const rows = document.querySelectorالكل('.item-row');
+            const rows = document.querySelectorAll('.item-row');
             if (rows.length === 0) {
-                e.preventافتراضي();
-                itemsخطأ.style.display = 'flex';
-                itemsخطأ.scrollIntoعرض({ behavior: 'smooth', block: 'center' });
+                e.preventDefault();
+                itemsError.style.display = 'flex';
+                itemsError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
     });

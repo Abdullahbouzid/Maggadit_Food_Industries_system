@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('{{ __('messages.app.page_') }}', 'الأسئلة الشائعة')
+@section('title', 'الأسئلة الشائعة')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'الأسئلة الشائعة'])
+    @include('app_android.partials.mobile.header', ['title' => 'الأسئلة الشائعة'])
 
-    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="p-4" dir="rtl">
         <!-- زر الرجوع -->
         <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100 mb-4">
             <i class="fas fa-arrow-right"></i> رجوع
@@ -15,7 +15,7 @@
         <div class="relative mb-5">
             <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
             <input type="text" id="search-faq" placeholder="ابحث في الأسئلة الشائعة..."
-                   class="w-full end-10 start-4 py-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
+                   class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition text-sm">
         </div>
 
         <!-- تبويب الفئات -->
@@ -225,11 +225,11 @@
                                 div.setAttribute('data-answer', faq.answer);
                                 div.innerHTML = `
                                     <div class="faq-question p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition">
-                                        <h3 class="font-semibold text-gray-800 text-sm">{{ __('messages.app.page__1') }}</h3>
+                                        <h3 class="font-semibold text-gray-800 text-sm">${faq.question}</h3>
                                         <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
                                     </div>
                                     <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 px-4 pb-0">
-                                        <p class="text-gray-600 text-sm leading-relaxed pb-4 border-t border-gray-100 pt-3">{{ __('messages.app.page__2') }}</p>
+                                        <p class="text-gray-600 text-sm leading-relaxed pb-4 border-t border-gray-100 pt-3">${faq.answer}</p>
                                     </div>
                                 `;
                                 container.appendChild(div);

@@ -6,7 +6,7 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             تعديل المورد
         </h2>
         <p class="nova-page-subtitle">تحديث بيانات {{ $vendor->vendor_name }}</p>
@@ -126,7 +126,7 @@
                     </div>
                 </div>
 
-                {{-- غير نشط Toggle --}}
+                {{-- Inactive Toggle --}}
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-check">
                         <input type="checkbox" name="inactive" class="nova-form-check-input" id="inactive" value="1" {{ old('inactive', $vendor->inactive) ? 'checked' : '' }}>
@@ -135,7 +135,7 @@
                     </div>
                 </div>
 
-                {{-- Form إجراءات --}}
+                {{-- Form Actions --}}
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('vendors.index') }}" class="nova-btn nova-btn-outline">

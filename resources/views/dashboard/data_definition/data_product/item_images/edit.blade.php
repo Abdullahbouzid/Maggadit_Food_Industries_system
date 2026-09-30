@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', 'تعديل Item الصورة')
+@section('title', 'Edit Item Image')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-edit" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            تعديل Item الصورة
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Item Image
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Update the image details for this item.</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('item-images.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> رجوع
+            <i class="fas fa-arrow-right"></i> Back
         </a>
     </div>
 </div>
@@ -31,7 +31,7 @@
 
 <div class="nova-card nova-mb-4">
     <div class="nova-card-header">
-        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> الصورة Information</h5>
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Image Information</h5>
     </div>
     <div class="nova-card-body">
         <form action="{{ route('item-images.update', $itemImage) }}" method="POST" enctype="multipart/form-data">
@@ -54,7 +54,7 @@
                 </div>
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
-                        <label class="nova-label">ترتيب الفرز</label>
+                        <label class="nova-label">Sort Order</label>
                         <input type="number" name="sort_order" class="nova-input @error('sort_order') nova-invalid @enderror" value="{{ old('sort_order', $itemImage->sort_order) }}">
                         @error('sort_order')
                             <div class="nova-form-error">{{ $message }}</div>
@@ -63,7 +63,7 @@
                 </div>
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
-                        <label class="nova-label">Current الصورة</label>
+                        <label class="nova-label">Current Image</label>
                         <div class="border rounded nova-py-3 nova-px-2">
                             <img src="{{ $itemImage->url }}" alt="{{ $itemImage->alt_text }}" class="img-fluid" style="max-width: 180px;">
                         </div>
@@ -71,7 +71,7 @@
                 </div>
                 <div class="nova-col nova-col-md-6">
                     <div class="nova-form-group">
-                        <label class="nova-label">Upload جديد الصورة</label>
+                        <label class="nova-label">Upload New Image</label>
                         <input type="file" name="image" class="nova-input @error('image') nova-invalid @enderror" accept="image/*">
                         @error('image')
                             <div class="nova-form-error">{{ $message }}</div>
@@ -90,10 +90,10 @@
                 <div class="nova-col nova-col-12">
                     <div class="nova-form-actions">
                         <a href="{{ route('item-images.index') }}" class="nova-btn nova-btn-outline">
-                            <i class="fas fa-x me-1"></i> إلغاء
+                            <i class="fas fa-x me-1"></i> Cancel
                         </a>
                         <button type="submit" class="nova-btn nova-btn-primary">
-                            <i class="fas fa-save me-1"></i> Update الصورة
+                            <i class="fas fa-save me-1"></i> Update Image
                         </button>
                     </div>
                 </div>

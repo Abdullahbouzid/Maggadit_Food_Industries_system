@@ -7,19 +7,19 @@
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
             Create Warehouse
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Add a new physical storage location</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('warehouses.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-right"></i> رجوع
+            <i class="fas fa-arrow-right"></i> Back
         </a>
     </div>
 </div>
 
-{{-- ===== Validation خطأs ===== --}}
+{{-- ===== Validation Errors ===== --}}
 @if($errors->any())
     <div class="nova-alert danger">
         <i class="fas fa-exclamation-triangle"></i>
@@ -57,7 +57,7 @@
                 </div>
 
                 <div class="nova-form-group">
-                    <label class="nova-label">الاسم بالإنجليزي <span class="nova-text-danger">*</span></label>
+                    <label class="nova-label">Name (English) <span class="nova-text-danger">*</span></label>
                     <input type="text" name="name_en"
                            class="nova-input @error('name_en') nova-invalid @enderror"
                            value="{{ old('name_en') }}" required>
@@ -65,7 +65,7 @@
                 </div>
 
                 <div class="nova-form-group">
-                    <label class="nova-label">الاسم بالعربي <span class="nova-text-danger">*</span></label>
+                    <label class="nova-label">Name (Arabic) <span class="nova-text-danger">*</span></label>
                     <input type="text" name="name_ar"
                            class="nova-input @error('name_ar') nova-invalid @enderror"
                            value="{{ old('name_ar') }}" required>
@@ -256,28 +256,28 @@
     </div>
 
     {{-- ============================================================
-         Section 5: الحالة
+         Section 5: Status
          ============================================================ --}}
     <div class="nova-card nova-mb-4">
         <div class="nova-card-header">
             <h5 class="nova-fw-bold mb-0">
-                <i class="fas fa-toggle-on me-1"></i> الحالة
+                <i class="fas fa-toggle-on me-1"></i> Status
             </h5>
         </div>
         <div class="nova-card-body">
             <div class="form-grid form-grid-2">
                 <div class="nova-form-group">
-                    <label class="nova-label">نشط الحالة</label>
+                    <label class="nova-label">Active Status</label>
                     <div class="nova-form-check status-checkbox-wrapper">
                         <input type="checkbox" name="is_active" value="1"
                                class="nova-form-check-input" id="is_active"
                                {{ old('is_active', true) ? 'checked' : '' }}>
-                        <label class="nova-form-check-label" for="is_active">نشط</label>
+                        <label class="nova-form-check-label" for="is_active">Active</label>
                     </div>
                 </div>
 
                 <div class="nova-form-group">
-                    <label class="nova-label">ترتيب الفرز</label>
+                    <label class="nova-label">Sort Order</label>
                     <input type="number" name="sort_order" class="nova-input"
                            value="{{ old('sort_order', 0) }}">
                 </div>
@@ -286,14 +286,14 @@
     </div>
 
     {{-- ============================================================
-         Form إجراءات
+         Form Actions
          ============================================================ --}}
     <div class="form-actions">
         <button type="submit" class="nova-btn nova-btn-primary">
             <i class="fas fa-save"></i> Create Warehouse
         </button>
         <a href="{{ route('warehouses.index') }}" class="nova-btn nova-btn-outline">
-            <i class="fas fa-times"></i> إلغاء
+            <i class="fas fa-times"></i> Cancel
         </a>
     </div>
 </form>
@@ -353,7 +353,7 @@
     }
 
     /* ============================================================
-       الحالة Checkbox
+       Status Checkbox
        ============================================================ */
     .status-checkbox-wrapper {
         display: flex;
@@ -363,7 +363,7 @@
     }
 
     /* ============================================================
-       Form إجراءات
+       Form Actions
        ============================================================ */
     .form-actions {
         display: flex;
@@ -432,10 +432,10 @@
         let lat = parseFloat(latInput.value) || 24.7136;
         let lng = parseFloat(lngInput.value) || 46.6753;
 
-        map = L.map('map').setعرض([lat, lng], 13);
+        map = L.map('map').setView([lat, lng], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; مفتوحStreetMap contributors'
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
         marker = L.marker([lat, lng], { draggable: true }).addTo(map);
@@ -466,7 +466,7 @@
                 lngInput.value = lng.toFixed(6);
 
                 if (map) {
-                    map.setعرض([lat, lng], 15);
+                    map.setView([lat, lng], 15);
                     marker.setLatLng([lat, lng]);
                 } else {
                     initMap();
@@ -518,7 +518,7 @@
                         loadAreas(selectedStateId, oldAreaId);
                     }
                 })
-                .catch(err => console.error('خطأ loading states:', err));
+                .catch(err => console.error('Error loading states:', err));
         }
 
         /* ============================================================
@@ -539,7 +539,7 @@
                         citySelect.appendChild(option);
                     });
                 })
-                .catch(err => console.error('خطأ loading cities:', err));
+                .catch(err => console.error('Error loading cities:', err));
         }
 
         /* ============================================================
@@ -560,7 +560,7 @@
                         areaSelect.appendChild(option);
                     });
                 })
-                .catch(err => console.error('خطأ loading areas:', err));
+                .catch(err => console.error('Error loading areas:', err));
         }
 
         /* ============================================================

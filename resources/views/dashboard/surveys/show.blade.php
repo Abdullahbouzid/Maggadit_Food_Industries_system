@@ -5,11 +5,11 @@
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-chart-bar" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            نتائج: {{ $survey->{{ __('messages.app.page_') }} }}
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-chart-bar" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            نتائج: {{ $survey->title }}
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
             <i class="fas fa-comments"></i> {{ $survey->responses()->count() }} رد • <i class="fas fa-question-circle"></i> {{ $survey->questions->count() }} سؤال
             <span class="nova-badge {{ $survey->is_active ? 'success' : 'secondary' }} ms-2">
                 {{ $survey->is_active ? 'نشط' : 'غير نشط' }}

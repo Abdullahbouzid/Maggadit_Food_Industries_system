@@ -1,7 +1,8 @@
 @php
-    $statusEnum = $order->status instanceof \App\Enums\OrderStatus ? $order->status : \App\Enums\OrderStatus::tryFrom($order->status);
+    $statusEnum = $order->status instanceof \App\Enums\OrderStatus ? $order->status : \App\Enums\OrderStatus::tryFrom((string) $order->status);
     $allowedTransitions = $statusEnum ? app(\App\Contracts\OrderLifecycleServiceInterface::class)->getAllowedTransitions($order) : [];
     $isTerminal = $statusEnum && in_array($statusEnum->value, ['delivered', 'cancelled', 'returned', 'expired', 'rejected']);
+    $currentMeta = app(\App\Services\OrderStepPresenter::class)->currentStatusMeta($order);
 @endphp
 
 @if(!$isTerminal && count($allowedTransitions) > 0)
@@ -19,7 +20,7 @@
                 <div class="nova-form-group nova-mb-0" style="flex: 1 1 200px;">
                     <label class="nova-label">{{ __('messages.orders.current_status') ?? 'الحالة الحالية' }}</label>
                     <div>
-                        <span class="nova-badge {{ $statusEnum->badgeColor() }}">{{ $statusEnum->label() }}</span>
+                        <span class="nova-badge {{ $currentMeta['badge'] }}">{{ $currentMeta['label'] }}</span>
                     </div>
                 </div>
 

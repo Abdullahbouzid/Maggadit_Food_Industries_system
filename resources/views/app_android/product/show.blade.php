@@ -4,7 +4,7 @@
 
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => $product->name ?? 'تفاصيل المنتج'])
-    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="p-4" dir="rtl">
         <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 p-4">
             <div class="h-64 bg-gray-100 flex items-center justify-center overflow-hidden mb-4">
                 @if($product->image)
@@ -30,8 +30,8 @@
                     <table class="w-full text-sm border-collapse border border-gray-200 rounded-xl overflow-hidden">
                         <thead>
                             <tr class="bg-purple-600 text-white">
-                                <th class="border border-purple-500 px-3 py-2 text-end">العبوة</th>
-                                <th class="border border-purple-500 px-3 py-2 text-end">وحدة القياس</th>
+                                <th class="border border-purple-500 px-3 py-2 text-right">العبوة</th>
+                                <th class="border border-purple-500 px-3 py-2 text-right">وحدة القياس</th>
                                 <th class="border border-purple-500 px-3 py-2 text-center">السعة</th>
                                 <th class="border border-purple-500 px-3 py-2 text-center">السعر</th>
                                 <th class="border border-purple-500 px-3 py-2 text-center">إضافة</th>
@@ -90,7 +90,7 @@
             <button class="toggle-favorite-btn mt-2 w-full flex items-center justify-center py-2.5 rounded-xl border border-gray-300 transition text-sm font-semibold {{ in_array($product->id, $favoriteItemIds ?? []) ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-600 hover:bg-gray-50' }}"
                     data-id="{{ $product->id }}">
                 <i class="{{ in_array($product->id, $favoriteItemIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
-                <span class="start-2">{{ in_array($product->id, $favoriteItemIds ?? []) ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة' }}</span>
+                <span class="mr-2">{{ in_array($product->id, $favoriteItemIds ?? []) ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة' }}</span>
             </button>
         </div>
     </div>

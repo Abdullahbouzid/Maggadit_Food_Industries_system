@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('{{ __('messages.app.page_') }}', 'استبيانات')
+@section('title', 'استبيانات')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'استبيانات'])
+    @include('app_android.partials.mobile.header', ['title' => 'استبيانات'])
 
-    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="p-4" dir="rtl">
         <!-- زر الرجوع -->
         <button onclick="window.history.back()" class="flex items-center gap-2 text-purple-600 bg-purple-50 px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-purple-100 mb-5">
             <i class="fas fa-arrow-right"></i> رجوع
@@ -45,13 +45,13 @@
     <!-- ===== مودال الاستبيان ===== -->
     <div id="survey-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
         <div id="survey-sheet" class="bg-white w-full max-w-lg rounded-t-3xl shadow-2xl transform translate-y-full transition-all duration-400 flex flex-col" 
-             style="max-height:90vh;" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+             style="max-height:90vh;" dir="rtl">
             
             <!-- شريط العنوان -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <div>
                     <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-3 -mt-1"></div>
-                    <h3 id="modal-{{ __('messages.app.page_') }}" class="font-bold text-gray-800 text-base">استبيان</h3>
+                    <h3 id="modal-title" class="font-bold text-gray-800 text-base">استبيان</h3>
                     <p id="modal-desc" class="text-xs text-gray-400 mt-0.5"></p>
                 </div>
                 <button id="close-modal" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
@@ -83,7 +83,7 @@
                         style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
                     <span id="submit-text">إرسال الإجابات</span>
                     <span id="submit-loader" class="hidden">
-                        <i class="fas fa-spinner fa-spin end-1"></i> جاري الإرسال...
+                        <i class="fas fa-spinner fa-spin ml-1"></i> جاري الإرسال...
                     </span>
                 </button>
             </div>
@@ -156,7 +156,7 @@
                     <i class="fas fa-wifi text-red-300 text-4xl mb-3"></i>
                     <p class="text-gray-500 mb-3">تعذّر الاتصال بالخادم</p>
                     <button onclick="loadSurveys()" class="bg-purple-600 text-white px-5 py-2 rounded-full text-sm">
-                        <i class="fas fa-sync-alt end-1"></i> إعادة المحاولة
+                        <i class="fas fa-sync-alt ml-1"></i> إعادة المحاولة
                     </button>
                 </div>`;
         }
@@ -175,22 +175,22 @@
                 <div class="p-4">
                     <div class="flex items-start justify-between gap-2">
                         <div class="flex-1">
-                            <h3 class="font-bold text-gray-800 text-sm leading-tight">${escapeHtml(s.{{ __('messages.app.page_') }})}</h3>
-                            <p class="text-gray-400 text-xs mt-1 leading-relaxed">{{ __('messages.app.page__2') }}</p>
+                            <h3 class="font-bold text-gray-800 text-sm leading-tight">${escapeHtml(s.title)}</h3>
+                            <p class="text-gray-400 text-xs mt-1 leading-relaxed">${escapeHtml(s.description || '')}</p>
                         </div>
                         <span class="bg-purple-50 text-purple-600 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap shrink-0">
-                            {{ __('messages.app.page__4') }}
+                            ${s.questions_count} سؤال
                         </span>
                     </div>
                     <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
                         <div class="flex items-center gap-1 text-gray-400 text-xs">
                             <i class="far fa-clock"></i>
-                            <span>{{ __('messages.app.page__5') }}</span>
+                            <span>${s.estimated_minutes} دقائق</span>
                         </div>
                         ${answered
                             ? `<span class="text-green-600 text-xs font-semibold flex items-center gap-1"><i class="fas fa-check"></i> مكتمل</span>`
                             : `<button class="open-survey bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-full transition active:scale-95"
-                                       data-id="${s.id}" data-{{ __('messages.app.page_') }}="${escapeHtml(s.{{ __('messages.app.page_') }})}" data-desc="{{ __('messages.app.page__2') }}">
+                                       data-id="${s.id}" data-title="${escapeHtml(s.title)}" data-desc="${escapeHtml(s.description || '')}">
                                   ابدأ الاستبيان
                                </button>`
                         }
@@ -207,7 +207,7 @@
             btn.addEventListener('click', () => {
                 openSurvey(
                     btn.getAttribute('data-id'),
-                    btn.getAttribute('data-{{ __('messages.app.page_') }}'),
+                    btn.getAttribute('data-title'),
                     btn.getAttribute('data-desc')
                 );
             });
@@ -215,10 +215,10 @@
     }
 
     // ========== فتح مودال الاستبيان ==========
-    async function openSurvey(id, {{ __('messages.app.page_') }}, desc) {
+    async function openSurvey(id, title, desc) {
 
         // عرض المودال مع loading
-        document.getElementById('modal-{{ __('messages.app.page_') }}').textContent = {{ __('messages.app.page_') }};
+        document.getElementById('modal-title').textContent = title;
         document.getElementById('modal-desc').textContent = desc;
         document.getElementById('questions-wrapper').innerHTML = `
             <div class="text-center py-10">
@@ -259,8 +259,8 @@
             html += `<div class="question-block" data-qid="${q.id}" data-required="${q.is_required}">
                 <div class="flex items-center gap-2 mb-2">
                     <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0" 
-                          style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">{{ __('messages.app.page__6') }}</span>
-                    <p class="text-gray-700 font-semibold text-sm leading-snug">{{ __('messages.app.page__3') }}</p>
+                          style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">${idx + 1}</span>
+                    <p class="text-gray-700 font-semibold text-sm leading-snug">${escapeHtml(q.question_text)}</p>
                     ${q.is_required ? '<span class="text-red-400 text-xs">*</span>' : ''}
                 </div>
                 <div class="question-input">
@@ -282,7 +282,7 @@
         switch(q.question_type) {
             case 'text':
                 return `<textarea name="answer_${q.id}" data-qid="${q.id}" rows="3" 
-                            class="answer-input w-full p-3 border border-gray-200 rounded-xl text-sm text-end focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition resize-none"
+                            class="answer-input w-full p-3 border border-gray-200 rounded-xl text-sm text-right focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition resize-none"
                             placeholder="اكتب إجابتك هنا..."></textarea>`;
             
             case 'rating':
@@ -292,7 +292,7 @@
                             <input type="radio" name="rating_${q.id}" value="${n}" class="answer-radio hidden" data-qid="${q.id}">
                             <span class="star-btn w-12 h-12 rounded-xl border-2 border-gray-200 flex items-center justify-center text-xl transition hover:border-purple-400 hover:bg-purple-50" 
                                   data-val="${n}">
-                                {{ __('messages.app.page__7') }}
+                                ${n === 1 ? '😞' : n === 2 ? '😐' : n === 3 ? '🙂' : n === 4 ? '😊' : '🤩'}
                             </span>
                         </label>`).join('')}
                 </div>
@@ -303,9 +303,9 @@
                 return `<div class="flex gap-3">
                     ${opts.map(opt => `
                         <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="yesno_${q.id}" value="{{ __('messages.app.page__8') }}" class="answer-radio hidden" data-qid="${q.id}">
+                            <input type="radio" name="yesno_${q.id}" value="${escapeHtml(opt)}" class="answer-radio hidden" data-qid="${q.id}">
                             <span class="choice-btn block text-center py-3 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-600 transition hover:border-purple-400 hover:bg-purple-50">
-                                {{ __('messages.app.page__8') }}
+                                ${escapeHtml(opt)}
                             </span>
                         </label>`).join('')}
                 </div>`;
@@ -314,9 +314,9 @@
                 return `<div class="space-y-2">
                     ${(q.options || []).map(opt => `
                         <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-xl cursor-pointer hover:bg-purple-50 transition">
-                            <input type="checkbox" name="multi_${q.id}[]" value="{{ __('messages.app.page__8') }}" 
+                            <input type="checkbox" name="multi_${q.id}[]" value="${escapeHtml(opt)}" 
                                    class="w-4 h-4 text-purple-600 answer-checkbox" data-qid="${q.id}" style="accent-color:#6366f1;">
-                            <span class="text-sm text-gray-700">{{ __('messages.app.page__8') }}</span>
+                            <span class="text-sm text-gray-700">${escapeHtml(opt)}</span>
                         </label>`).join('')}
                 </div>`;
 
@@ -325,10 +325,10 @@
                 return `<div class="space-y-2">
                     ${(q.options || []).map(opt => `
                         <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-xl cursor-pointer hover:bg-purple-50 transition choice-label" data-qid="${q.id}">
-                            <input type="radio" name="choice_${q.id}" value="{{ __('messages.app.page__8') }}" 
+                            <input type="radio" name="choice_${q.id}" value="${escapeHtml(opt)}" 
                                    class="answer-radio hidden" data-qid="${q.id}">
                             <span class="w-4 h-4 rounded-full border-2 border-gray-300 flex items-center justify-center shrink-0 radio-dot"></span>
-                            <span class="text-sm text-gray-700 flex-1">{{ __('messages.app.page__8') }}</span>
+                            <span class="text-sm text-gray-700 flex-1">${escapeHtml(opt)}</span>
                         </label>`).join('')}
                 </div>`;
         }

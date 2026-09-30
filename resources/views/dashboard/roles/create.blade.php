@@ -1,19 +1,19 @@
 @extends('dashboard.partials.layout')
 
-@section('title', __('messages.app.page__3'))
+@section('title', 'Create Role')
 
 @section('content')
 <div class="nova-actionbar">
     <div>
-        <h2 class="nova-actionbar-{{ __('messages.app.page_') }}">
-            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
-            {{ __('messages.app.page__1') }}
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-plus-circle" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Create New Role
         </h2>
-        <p class="nova-page-sub{{ __('messages.app.page_') }}" style="margin: 0.25rem 0 0;">{{ __('messages.app.page__2') }}</p>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Define a new role and assign permissions</p>
     </div>
     <div class="nova-actionbar-actions">
         <a href="{{ route('roles.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
-            <i class="fas fa-arrow-left"></i> {{ __('messages.app.page__4') }}
+            <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
 </div>
@@ -35,7 +35,7 @@
             @csrf
             <div class="nova-form-group">
                 <label class="nova-label" for="name">
-                    <i class="fas fa-tag me-1"></i> {{ __('messages.app.page__6') }}
+                    <i class="fas fa-tag me-1"></i> Role Name
                 </label>
                 <input type="text" name="name" id="name" class="nova-input nova-input-lg @error('name') nova-input-error @enderror" placeholder="e.g., Editor, Viewer, Manager" required>
                 @error('name')
@@ -46,7 +46,7 @@
 
             <div class="nova-form-group mt-4">
                 <label class="nova-label">
-                    <i class="fas fa-key me-1"></i> {{ __('messages.app.page__7') }}
+                    <i class="fas fa-key me-1"></i> Permissions
                 </label>
                 <div class="nova-row cols-3">
                     @php
@@ -78,10 +78,10 @@
 
             <div class="nova-form-actions">
                 <a href="{{ route('roles.index') }}" class="nova-btn nova-btn-outline">
-                    <i class="fas fa-x"></i> {{ __('messages.app.page__5') }}
+                    <i class="fas fa-x"></i> Cancel
                 </a>
                 <button type="submit" class="nova-btn nova-btn-primary">
-                    <i class="fas fa-save"></i> {{ __('messages.app.page__3') }}
+                    <i class="fas fa-save"></i> Create Role
                 </button>
             </div>
         </form>

@@ -1,11 +1,11 @@
 @extends('app_android.partials.mobile.app_mobile')
 
-@section('{{ __('messages.app.page_') }}', 'الإشعارات')
+@section('title', 'الإشعارات')
 
 @push('styles')
 <style>
-    .notif-card { transition: all 0.25s ease; border-end: 4px solid transparent; }
-    .notif-card.unread { border-end-color: #9879b6; background: #faf5ff; }
+    .notif-card { transition: all 0.25s ease; border-right: 4px solid transparent; }
+    .notif-card.unread { border-right-color: #9879b6; background: #faf5ff; }
     .notif-card:active { transform: scale(0.98); }
     .unread-dot { width: 8px; height: 8px; background: #9879b6; border-radius: 50%; flex-shrink: 0; }
     .notif-modal-overlay { backdrop-filter: blur(6px); }
@@ -16,9 +16,9 @@
 @endpush
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['{{ __('messages.app.page_') }}' => 'الإشعارات'])
+    @include('app_android.partials.mobile.header', ['title' => 'الإشعارات'])
 
-    <div class="p-4" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="p-4" dir="rtl">
 
         {{-- رأس الصفحة --}}
         <div class="flex justify-between items-center mb-5">
@@ -34,7 +34,7 @@
             </div>
             <button id="mark-all-btn"
                     class="text-xs text-purple-600 font-semibold bg-purple-50 px-3 py-1.5 rounded-full hover:bg-purple-100 transition hidden">
-                <i class="fas fa-check-double end-1"></i> تحديد الكل مقروء
+                <i class="fas fa-check-double ml-1"></i> تحديد الكل مقروء
             </button>
         </div>
 
@@ -48,8 +48,8 @@
         <div id="filter-tabs" class="hidden flex space-x-2 space-x-reverse mb-4 overflow-x-auto pb-2 scrollbar-hide" style="scrollbar-width: none;">
             <button data-tab="all" class="tab-btn active bg-purple-600 text-white px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors">الكل</button>
             <button data-tab="unread" class="tab-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors">غير مقروءة</button>
-            <button data-tab="starred" class="tab-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors"><i class="fas fa-star text-amber-500 start-1"></i> هامة</button>
-            <button data-tab="archived" class="tab-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors"><i class="fas fa-archive text-gray-500 start-1"></i> مؤرشفة</button>
+            <button data-tab="starred" class="tab-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors"><i class="fas fa-star text-amber-500 mr-1"></i> هامة</button>
+            <button data-tab="archived" class="tab-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors"><i class="fas fa-archive text-gray-500 mr-1"></i> مؤرشفة</button>
         </div>
 
         {{-- حاوية الإشعارات --}}
@@ -71,7 +71,7 @@
     <div id="notif-modal"
          class="notif-modal-overlay fixed inset-0 bg-black/50 flex items-end justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
         <div id="notif-modal-box"
-             class="bg-white w-full max-w-lg rounded-t-3xl p-6 transform translate-y-full transition-all duration-300 shadow-2xl max-h-[85vh] overflow-y-auto" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
+             class="bg-white w-full max-w-lg rounded-t-3xl p-6 transform translate-y-full transition-all duration-300 shadow-2xl max-h-[85vh] overflow-y-auto" dir="rtl">
             <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5"></div>
             <img id="modal-image" src="" alt="صورة الإشعار" class="w-full h-48 object-cover rounded-xl mb-4 hidden">
             <div class="text-center mb-4">
@@ -79,7 +79,7 @@
                      class="w-16 h-16 mx-auto rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-2xl mb-3">
                     <i class="fas fa-bell"></i>
                 </div>
-                <h2 class="text-lg font-bold text-gray-800" id="modal-{{ __('messages.app.page_') }}"></h2>
+                <h2 class="text-lg font-bold text-gray-800" id="modal-title"></h2>
             </div>
             <p class="text-gray-600 text-sm leading-relaxed text-center mb-2" id="modal-body"></p>
             <p class="text-xs text-gray-400 text-center mb-5" id="modal-date"></p>
@@ -125,7 +125,7 @@
     const markAllBtn = document.getElementById('mark-all-btn');
     const modal      = document.getElementById('notif-modal');
     const modalBox   = document.getElementById('notif-modal-box');
-    const modalTitle = document.getElementById('modal-{{ __('messages.app.page_') }}');
+    const modalTitle = document.getElementById('modal-title');
     const modalBody  = document.getElementById('modal-body');
     const modalDate  = document.getElementById('modal-date');
     const modalIcon  = document.getElementById('modal-icon-wrap');
@@ -285,23 +285,23 @@
             </div>
             <div class="flex-1 min-w-0">
                 <div class="flex justify-between items-start gap-2 mb-1">
-                    <h3 class="font-bold text-sm text-gray-800 truncate" onclick="openModal(this.closest('.notif-card').notifData, this.closest('.notif-card'))">${escHtml(notif.subject || notif.{{ __('messages.app.page_') }} || '')}</h3>
+                    <h3 class="font-bold text-sm text-gray-800 truncate" onclick="openModal(this.closest('.notif-card').notifData, this.closest('.notif-card'))">${escHtml(notif.subject || notif.title || '')}</h3>
                     <div class="flex items-center gap-1 flex-shrink-0">
                         <span class="badge-type ${c.labelCls}">${c.label}</span>
                         ${!read ? '<span class="unread-dot"></span>' : ''}
                     </div>
                 </div>
-                <p class="text-gray-500 text-xs leading-relaxed line-clamp-2" onclick="openModal(this.closest('.notif-card').notifData, this.closest('.notif-card'))">{{ __('messages.app.page__1') }}</p>
+                <p class="text-gray-500 text-xs leading-relaxed line-clamp-2" onclick="openModal(this.closest('.notif-card').notifData, this.closest('.notif-card'))">${escHtml(notif.body || notif.message || '')}</p>
                 <div class="flex justify-between items-center mt-2">
-                    <p class="text-gray-400 text-[10px]">{{ __('messages.app.page__2') }}</p>
+                    <p class="text-gray-400 text-[10px]">${escHtml(notif.created_at || notif.date || '')}</p>
                     <div class="flex gap-2">
-                        <button class="toggle-star-btn text-${notif.is_starred ? 'amber-500' : 'gray-300'} hover:text-amber-500 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" {{ __('messages.app.page_') }}="مهم">
+                        <button class="toggle-star-btn text-${notif.is_starred ? 'amber-500' : 'gray-300'} hover:text-amber-500 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" title="مهم">
                             <i class="fas fa-star"></i>
                         </button>
-                        <button class="toggle-archive-btn text-${notif.is_archived ? 'gray-600' : 'gray-300'} hover:text-gray-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" {{ __('messages.app.page_') }}="أرشفة">
+                        <button class="toggle-archive-btn text-${notif.is_archived ? 'gray-600' : 'gray-300'} hover:text-gray-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" title="أرشفة">
                             <i class="fas fa-archive"></i>
                         </button>
-                        <button class="toggle-read-btn text-gray-400 hover:text-purple-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" {{ __('messages.app.page_') }}="تغيير حالة القراءة">
+                        <button class="toggle-read-btn text-gray-400 hover:text-purple-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors" title="تغيير حالة القراءة">
                             <i class="fas ${read ? 'fa-envelope-open-text' : 'fa-envelope'}"></i>
                         </button>
                     </div>
@@ -331,7 +331,7 @@
     // ===== فتح المودال =====
     function openModal(notif, cardEl) {
         const c = cfg(notif.icon_type || notif.type || 'notification');
-        modalTitle.textContent = notif.subject || notif.{{ __('messages.app.page_') }} || '';
+        modalTitle.textContent = notif.subject || notif.title || '';
         modalBody.textContent  = notif.body || notif.message || '';
         modalDate.textContent  = notif.created_at || notif.date || '';
         modalIcon.className    = `w-16 h-16 mx-auto rounded-full ${c.bg} ${c.text} flex items-center justify-center text-2xl mb-3`;
