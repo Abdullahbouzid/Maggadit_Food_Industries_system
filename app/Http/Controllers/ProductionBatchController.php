@@ -336,11 +336,11 @@ class ProductionBatchController extends Controller
                 $sourceWarehouse = $warehouses->firstWhere('id', $sourceWarehouseId);
             }
 
-            return view('dashboard.data_definition.w&v.batches.transfer_confirm', compact('batch', 'warehouses', 'selectedItems', 'step1', 'step2', 'sourceWarehouse'));
+            return view('dashboard.data_definition.w&v.batches.transfer', compact('batch', 'warehouses') + compact('selectedItems', $selectedItems, 'step1', $step1, 'step2', $step2, 'sourceWarehouse', $sourceWarehouse));
         }
 
         // Show step 1: select source warehouse and items
-        return view('dashboard.data_definition.w&v.batches.transfer_select', compact('batch', 'warehouses', 'step1'));
+        return view('dashboard.data_definition.w&v.batches.transfer', compact('batch', 'warehouses', 'step1'));
     }
 
     /**

@@ -62,28 +62,28 @@
             <i class="fas fa-layer-group"></i>
         </div>
         <p class="nova-stat-label">إجمالي الحالات</p>
-        <p class="nova-stat-value">{{ $totalStates ?? $packageStates->total() }}</p>
+        <p class="nova-stat-value">{{ $totalStatuses ?? $packageStatuses->total() }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon success">
             <i class="fas fa-shield-check"></i>
         </div>
         <p class="nova-stat-label">قابلة لإعادة البيع</p>
-        <p class="nova-stat-value">{{ $totalStates ? $packageStates->where('resellable', true)->count() : 0 }}</p>
+        <p class="nova-stat-value">{{ $totalStatuses ? $packageStatuses->where('resellable', true)->count() : 0 }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon danger">
             <i class="fas fa-clock"></i>
         </div>
         <p class="nova-stat-label">منتهية الصلاحية</p>
-        <p class="nova-stat-value">{{ $totalStates ? $packageStates->where('expired', true)->count() : 0 }}</p>
+        <p class="nova-stat-value">{{ $totalStatuses ? $packageStatuses->where('expired', true)->count() : 0 }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon accent">
             <i class="fas fa-star"></i>
         </div>
         <p class="nova-stat-label">الحالة الافتراضية</p>
-        <p class="nova-stat-value">{{ $totalStates ? $packageStates->where('default', true)->count() : 0 }}</p>
+        <p class="nova-stat-value">{{ $totalStatuses ? $packageStatuses->where('default', true)->count() : 0 }}</p>
     </div>
 </div>
 
@@ -235,9 +235,9 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($packageStates as $status)
+                @forelse($packageStatuses as $status)
                 <tr>
-                    <td class="nova-fw-semibold">{{ $loop->iteration + ($packageStates->currentPage() - 1) * $packageStates->perPage() }}</td>
+                    <td class="nova-fw-semibold">{{ $loop->iteration + ($packageStatuses->currentPage() - 1) * $packageStatuses->perPage() }}</td>
                     <td>{{ $status->status_name }}</td>
                     <td>{{ $status->organization->name ?? '—' }}</td>
                     <td>@if($status->resellable) <span class="nova-badge success">نعم</span> @else <span class="nova-badge secondary">لا</span> @endif</td>
@@ -282,10 +282,10 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
-                عرض {{ $packageStates->firstItem() ?? 0 }} إلى {{ $packageStates->lastItem() ?? 0 }} من أصل {{ $packageStates->total() }} سجلاً
+                عرض {{ $packageStatuses->firstItem() ?? 0 }} إلى {{ $packageStatuses->lastItem() ?? 0 }} من أصل {{ $packageStatuses->total() }} سجلاً
             </div>
             <div class="nova-pagination">
-                {{ $packageStates->appends(request()->query())->links() }}
+                {{ $packageStatuses->appends(request()->query())->links() }}
             </div>
         </div>
     </div>

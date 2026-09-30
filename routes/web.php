@@ -605,8 +605,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('pack-groups/import', [PackGroupController::class, 'import'])->name('pack-groups.import');
     Route::get('pack-groups/download-template', [PackGroupController::class, 'downloadTemplate'])->name('pack-groups.template');
 
-    Route::resource('pack-types', PackTypeController::class);
-    Route::resource('pack-capacities', PackCapacityController::class);
+    Route::resource('pack-types', PackTypeController::class)->except(['show']);
+    Route::resource('pack-capacities', PackCapacityController::class)->except(['show']);
 
     Route::resource('items', ItemController::class);
     Route::get('items/export/data', [ItemController::class, 'export'])->name('items.export');
@@ -718,7 +718,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('price-lists/customers', [\App\Http\Controllers\Admin\PriceListController::class, 'customers'])->name('price-lists.customers');
     Route::post('customers/{customer}/price-list', [\App\Http\Controllers\Admin\PriceListController::class, 'updateCustomerPriceList'])->name('customers.price-list.update');
 
-    Route::resource('contact-messages', ContactMessageController::class);
+    // The controller has no create()/edit() actions.
+    Route::resource('contact-messages', ContactMessageController::class)->except(['create', 'edit']);
     Route::post('contact-messages/{contactMessage}/forward', [ContactMessageController::class, 'forward'])->name('contact-messages.forward');
     Route::post('contact-messages/{contactMessage}/close', [ContactMessageController::class, 'close'])->name('contact-messages.close');
     Route::post('contact-messages/{contactMessage}/status', [ContactMessageController::class, 'updateStatus'])->name('contact-messages.status');

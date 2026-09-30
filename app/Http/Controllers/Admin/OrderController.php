@@ -236,8 +236,10 @@ class OrderController extends Controller
     /**
      * Get products available in a warehouse
      */
-    public function warehouseProducts($warehouseId)
+    public function warehouseProducts($warehouse)
     {
+        // The route binds a Warehouse model, but this action only needs the id.
+        $warehouseId = $warehouse instanceof Warehouse ? $warehouse->id : $warehouse;
         $warehouse = Warehouse::findOrFail($warehouseId);
 
         // Get products from BatchItemStock (production batches) - same as warehouse show page
@@ -310,6 +312,10 @@ class OrderController extends Controller
                 'source' => 'batch',
             ];
         })->filter(fn ($p) => $p !== null && $p['available_qty'] > 0)->values();
+
+        // These rows are plain arrays, so force a Support Collection: an
+        // Eloquent Collection would try to treat each row as a model.
+        $batchProducts = collect($batchProducts->all());
 
         // Add inventory products (excluding those already from batches)
         $batchItemPackIds = $batchProducts->pluck('pack_id')->toArray();
