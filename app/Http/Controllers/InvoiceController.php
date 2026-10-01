@@ -320,11 +320,36 @@ class InvoiceController extends Controller
 
         $lang = $request->query('lang', 'bilingual');
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.invoice', compact('invoice', 'lang'))
-            ->setPaper('a4', 'portrait', [
-                'encoding' => 'UTF-8',
-                'enable-local-file-access' => true,
+        // A stale vendor/ directory on the server makes the Snappy facade
+        // unresolvable, which would otherwise surface as an unhandled 500.
+        if (! class_exists(\Barryvdh\Snappy\Facades\SnappyPdf::class)) {
+            return back()->withErrors([
+                'invoice' => 'مكتبة توليد PDF غير مثبتة على الخادم. نفّذ "composer install --no-dev" ثم أعد المحاولة.',
             ]);
+        }
+
+        $binary = (string) config('snappy.pdf.binary');
+
+        if ($binary === '' || ! is_executable($binary)) {
+            return back()->withErrors([
+                'invoice' => 'أداة wkhtmltopdf غير متوفرة على الخادم (المسار: ' . ($binary ?: 'غير محدد') . '). '
+                    . 'ثبّتها أو اضبط WKHTMLTOPDF_BINARY في ملف .env.',
+            ]);
+        }
+
+        try {
+            $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.invoice', compact('invoice', 'lang'))
+                ->setPaper('a4', 'portrait', [
+                    'encoding' => 'UTF-8',
+                    'enable-local-file-access' => true,
+                ]);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->withErrors([
+                'invoice' => 'تعذّر إنشاء ملف PDF: ' . $e->getMessage(),
+            ]);
+        }
 
         return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
     }

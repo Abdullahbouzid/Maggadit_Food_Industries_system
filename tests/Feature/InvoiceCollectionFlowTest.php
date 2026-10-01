@@ -281,6 +281,40 @@ class InvoiceCollectionFlowTest extends TestCase
         }
     }
 
+    public function test_invoice_pdf_endpoint_returns_a_pdf(): void
+    {
+        if (! is_executable((string) config('snappy.pdf.binary'))) {
+            $this->markTestSkipped('wkhtmltopdf is not installed here.');
+        }
+
+        $this->authenticate();
+        $invoice = $this->invoice();
+
+        $response = $this->get(route('invoices.pdf', $invoice->id));
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'application/pdf',
+            (string) $response->headers->get('Content-Type'),
+        );
+    }
+
+    public function test_invoice_pdf_reports_a_clear_error_when_wkhtmltopdf_is_missing(): void
+    {
+        $this->authenticate();
+        $invoice = $this->invoice();
+
+        config(['snappy.pdf.binary' => '/nonexistent/wkhtmltopdf']);
+
+        $response = $this->from(route('invoices.show', $invoice->id))
+            ->get(route('invoices.pdf', $invoice->id));
+
+        $response->assertRedirect(route('invoices.show', $invoice->id));
+        $response->assertSessionHasErrors('invoice');
+
+        $this->assertStringContainsString('wkhtmltopdf', session('errors')->first('invoice'));
+    }
+
     public function test_invoice_show_page_renders_collection_controls(): void
     {
         $this->authenticate();
