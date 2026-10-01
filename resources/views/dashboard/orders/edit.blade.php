@@ -608,19 +608,37 @@ function updateItemSelectsForWarehouse(products) {
         select.innerHTML = '';
         if (firstOption) select.appendChild(firstOption.cloneNode(true));
 
+        // المنتجات المسجلة في هذه الطلبية يجب أن تبقى موجودة في القائمة حتى لو
+        // لم يكن لها رصيد في المخزن المحدد، وإلا اختفى المنتج المسجل من
+        // الـ select عند فتح صفحة التعديل وأصبح السطر بلا منتج.
+        const inStockIds = availableItemIds || [];
         const itemsToShow = availableItemIds
-            ? allItems.filter(item => availableItemIds.includes(item.id))
+            ? allItems.filter(item =>
+                inStockIds.includes(item.id)
+                || (currentValue && parseInt(currentValue, 10) === parseInt(item.id, 10)))
             : allItems;
 
         itemsToShow.forEach(item => {
             const option = document.createElement('option');
             option.value = item.id;
             option.textContent = item.name_ar || item.name_en || item.code;
+
+            // وسم المنتجات غير المتوفرة بدل حذفها
+            if (availableItemIds && !inStockIds.includes(parseInt(item.id, 10))) {
+                option.textContent += ' — غير متوفر في المخزن';
+                option.dataset.noStock = '1';
+            }
+
             select.appendChild(option);
         });
 
-        if (currentValue && (!availableItemIds || availableItemIds.includes(parseInt(currentValue)))) {
-            select.value = currentValue;
+        if (currentValue) {
+            const stillListed = Array.from(select.options).some(o => o.value == currentValue);
+            if (stillListed) {
+                select.value = currentValue;
+            } else {
+                select.value = '';
+            }
         }
     });
 }
