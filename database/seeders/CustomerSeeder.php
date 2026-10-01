@@ -37,6 +37,10 @@ class CustomerSeeder extends Seeder
 
         $cities = City::pluck('id', 'name')->toArray();
 
+        // assigned_by is a FK to users, so it must be a real user id rather
+        // than a hardcoded 1.
+        $assignerId = \App\Models\User::orderBy('id')->value('id');
+
         foreach ($customers as $custData) {
             $creditLimit = ($custData['customer_type'] === 'credit') ? 5000.00 : 0;
 
@@ -60,7 +64,7 @@ class CustomerSeeder extends Seeder
                     'customer_id' => $customer->id,
                     'price_list_id' => $customer->price_list_id,
                     'assigned_at' => now(),
-                    'assigned_by' => 1,
+                    'assigned_by' => $assignerId,
                     'is_active' => true,
                 ]
             );

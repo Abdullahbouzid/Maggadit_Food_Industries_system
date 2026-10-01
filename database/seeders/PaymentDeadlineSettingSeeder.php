@@ -10,7 +10,8 @@ class PaymentDeadlineSettingSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::find(1);
+        // User ids are not guaranteed to start at 1 after a re-seed.
+        $admin = User::orderBy('id')->first();
         $updatedBy = $admin ? $admin->id : 1;
 
         $settings = [

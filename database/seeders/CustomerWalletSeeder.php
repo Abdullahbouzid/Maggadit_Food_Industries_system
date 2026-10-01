@@ -15,8 +15,9 @@ class CustomerWalletSeeder extends Seeder
     public function run(): void
     {
         $currency = Currency::where('code', 'LYD')->first();
-        $admin = User::find(1);
-        $createdBy = $admin ? $admin->id : 1;
+        // created_by is a FK to users; user ids are not guaranteed to start at 1.
+        $admin = User::orderBy('id')->first();
+        $createdBy = $admin?->id;
 
         if (!$currency) {
             $this->command->error('❌ Currency (LYD) not found. Run CurrencySeeder first.');
