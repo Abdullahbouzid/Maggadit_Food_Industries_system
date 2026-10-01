@@ -97,28 +97,11 @@ class Delivery extends Model
      */
     public function nextStage(): ?DeliveryStage
     {
-        $order = [
-            DeliveryStage::Shipping,
-            DeliveryStage::OutForDelivery,
-            DeliveryStage::Unloading,
-            DeliveryStage::Received,
-        ];
-
         $stage = $this->current_stage instanceof DeliveryStage
             ? $this->current_stage
             : DeliveryStage::tryFrom((string) $this->current_stage);
 
-        if ($stage === null) {
-            return null;
-        }
-
-        $index = array_search($stage, $order, true);
-
-        if ($index === false || ! isset($order[$index + 1])) {
-            return null;
-        }
-
-        return $order[$index + 1];
+        return $stage?->next();
     }
 
     public function scopeActive(Builder $query): Builder

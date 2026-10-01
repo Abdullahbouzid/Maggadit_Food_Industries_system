@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Vehicle;
+use Illuminate\Support\Collection;
 
 interface DeliveryServiceInterface
 {
@@ -28,7 +29,7 @@ interface DeliveryServiceInterface
         ?string $photoPath = null,
     ): Delivery;
 
-    public function getTimeline(Invoice|Order $model): array;
+    public function getTimeline(Invoice|Order $model): Collection;
 
-    public function cancel(Invoice $invoice, ?string $reason = null): ?Delivery;
+    public function cancel(Invoice $invoice, ?string $reason = null, ?User $user = null): ?Delivery;
 }

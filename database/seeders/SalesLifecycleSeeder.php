@@ -379,9 +379,19 @@ class SalesLifecycleSeeder extends Seeder
                     'updated_at' => now()->subDays(2),
                 ]);
 
-                $batchItem = DB::table('batch_items')
-                    ->where('item_id', $line->item_id)
-                    ->first();
+                // Stock is only committed once the invoice leaves
+                // pending_approval. Seeding batches for a pending invoice makes
+                // it impossible to approve, because InventoryService::commit()
+                // refuses an invoice that already has batch allocations.
+                $commitsStock = ! in_array($status, [
+                    InvoiceStatus::PendingApproval->value,
+                    InvoiceStatus::Rejected->value,
+                    InvoiceStatus::Draft->value,
+                ], true);
+
+                $batchItem = $commitsStock
+                    ? DB::table('batch_items')->where('item_id', $line->item_id)->first()
+                    : null;
 
                 if ($batchItem) {
                     Stamped::insert('invoice_item_batches', [

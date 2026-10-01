@@ -2,9 +2,15 @@
 <!--
     Runs tests against the real MySQL connection from .env instead of sqlite.
 
-    Only safe for tests that wrap themselves in a rolled-back transaction
-    (see tests/Feature/InvoiceCollectionFlowTest.php). Never point this at a
-    database you are willing to lose.
+    DANGER: this config points at whatever DB_DATABASE says, which in this
+    project is the live production database. Never run it with APP_ENV=testing
+    against a database you are willing to lose.
+
+    The testsuite below lists ONLY tests that are explicitly opt-in via
+    INVOICE_FLOW_TESTS=1 and wrap themselves in a transaction that is always
+    rolled back. It deliberately does NOT glob tests/Feature: ten classes there
+    use RefreshDatabase, which drops and re-migrates every table. Running the
+    directory against this config wiped the production database once already.
 -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
@@ -12,8 +18,11 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="Feature">
-            <directory>tests/Feature</directory>
+        <testsuite name="SafeAgainstConfiguredDatabase">
+            <file>tests/Feature/InvoiceCollectionFlowTest.php</file>
+            <file>tests/Feature/DeliveryIndexTest.php</file>
+            <file>tests/Feature/DeliveryShowTest.php</file>
+            <file>tests/Feature/SchemaRegressionGuardTest.php</file>
         </testsuite>
     </testsuites>
     <php>

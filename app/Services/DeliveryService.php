@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\DeliveryServiceInterface;
 use App\DTOs\TimelineEntry;
 use App\Events\DeliveryCancelled;
+use App\Events\DeliveryStageChanged;
 use App\Models\AuditLog;
 use App\Models\Delivery;
 use App\Models\DeliveryStageLog;
@@ -17,7 +19,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class DeliveryService
+class DeliveryService implements DeliveryServiceInterface
 {
     public function assignDriver(
         Invoice $invoice,

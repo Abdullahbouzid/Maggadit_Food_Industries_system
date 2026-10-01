@@ -755,6 +755,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('deliveries')->name('deliveries.')->group(function () {
         Route::get('create', [\App\Http\Controllers\Admin\DeliveryController::class, 'create'])->name('create');
+        Route::get('{delivery}', [\App\Http\Controllers\Admin\DeliveryController::class, 'show'])->name('show');
+        Route::post('{delivery}/advance-stage', [\App\Http\Controllers\Admin\DeliveryController::class, 'advanceStage'])->name('advance-stage');
     });
 
     Route::post('inventory/adjust', [\App\Http\Controllers\Admin\InventoryController::class, 'adjust'])->name('inventory.adjust');

@@ -27,4 +27,37 @@ enum DeliveryStage: string
     {
         return $this === self::Received || $this === self::Cancelled;
     }
+
+    /**
+     * The stage that follows this one in the shipping flow, or null when the
+     * delivery has reached a closed stage.
+     */
+    public function next(): ?self
+    {
+        $order = self::flow();
+
+        $index = array_search($this, $order, true);
+
+        if ($index === false || ! isset($order[$index + 1])) {
+            return null;
+        }
+
+        return $order[$index + 1];
+    }
+
+    /**
+     * The shipping flow in order. Cancelled is reachable from any open stage
+     * but is not part of the forward progression.
+     *
+     * @return array<int, self>
+     */
+    public static function flow(): array
+    {
+        return [
+            self::Shipping,
+            self::OutForDelivery,
+            self::Unloading,
+            self::Received,
+        ];
+    }
 }

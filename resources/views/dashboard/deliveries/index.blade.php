@@ -139,11 +139,15 @@
                         <td class="nova-text-end">
                             <div class="nova-action-btns" style="display: inline-flex; gap: 0.375rem;">
                                 @if($delivery->canAdvance())
-                                    <a href="javascript:void(0)" class="nova-icon-btn nova-btn-sm" title="{{ __('messages.delivery_page.advance_stage') }}">
+                                    <a href="{{ route('deliveries.show', $delivery->id) }}"
+                                        class="nova-icon-btn nova-btn-sm"
+                                        title="{{ __('messages.delivery_page.advance_stage') }}">
                                         <i class="fas fa-arrow-right"></i>
                                     </a>
                                 @endif
-                                <a href="javascript:void(0)" class="nova-icon-btn nova-btn-sm" title="View">
+                                <a href="{{ route('deliveries.show', $delivery->id) }}"
+                                    class="nova-icon-btn nova-btn-sm"
+                                    title="{{ __('messages.delivery_page.view') }}">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </div>
