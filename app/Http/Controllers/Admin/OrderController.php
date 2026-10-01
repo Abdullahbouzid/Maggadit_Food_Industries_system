@@ -448,13 +448,11 @@ class OrderController extends Controller
     {
         $order->load(['customer', 'currency', 'items.item', 'items.pack', 'items.warehouse', 'quotation']);
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.order', compact('order'))
-            ->setPaper('a4', 'portrait', [
-                'encoding' => 'UTF-8',
-                'enable-local-file-access' => true,
-                            ]);
-
-        return $pdf->download("order-{$order->order_number}.pdf");
+        return \App\Services\PdfGenerator::download(
+            'pdf.order',
+            ['order' => $order],
+            "order-{$order->order_number}.pdf",
+        );
     }
 
     /**
@@ -470,12 +468,10 @@ class OrderController extends Controller
 
         $quotation->load(['customer', 'items.item', 'items.pack', 'order']);
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.quotation', compact('quotation'))
-            ->setPaper('a4', 'portrait', [
-                'encoding' => 'UTF-8',
-                'enable-local-file-access' => true,
-                            ]);
-
-        return $pdf->download("quotation-{$quotation->quotation_number}.pdf");
+        return \App\Services\PdfGenerator::download(
+            'pdf.quotation',
+            ['quotation' => $quotation],
+            "quotation-{$quotation->quotation_number}.pdf",
+        );
     }
 }

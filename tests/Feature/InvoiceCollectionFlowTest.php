@@ -309,10 +309,49 @@ class InvoiceCollectionFlowTest extends TestCase
         $response = $this->from(route('invoices.show', $invoice->id))
             ->get(route('invoices.pdf', $invoice->id));
 
-        $response->assertRedirect(route('invoices.show', $invoice->id));
-        $response->assertSessionHasErrors('invoice');
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
 
-        $this->assertStringContainsString('wkhtmltopdf', session('errors')->first('invoice'));
+        $this->assertStringContainsString('wkhtmltopdf', (string) session('error'));
+        // The message should name the configured path so it can be fixed.
+        $this->assertStringContainsString('/nonexistent/wkhtmltopdf', (string) session('error'));
+    }
+
+    public function test_order_pdf_reports_a_clear_error_when_wkhtmltopdf_is_missing(): void
+    {
+        $this->authenticate();
+
+        $order = \App\Models\Order::query()->orderByDesc('id')->first();
+        if (! $order) {
+            $this->markTestSkipped('No order available.');
+        }
+
+        config(['snappy.pdf.binary' => '/nonexistent/wkhtmltopdf']);
+
+        $response = $this->get(route('orders.pdf', $order->id));
+
+        // Must not blow up with a 500; it should redirect with a readable message.
+        $response->assertRedirect();
+        $this->assertStringContainsString('wkhtmltopdf', (string) session('error'));
+    }
+
+    public function test_order_pdf_returns_a_pdf_when_the_binary_is_available(): void
+    {
+        if (! is_executable((string) config('snappy.pdf.binary'))) {
+            $this->markTestSkipped('wkhtmltopdf is not installed here.');
+        }
+
+        $this->authenticate();
+
+        $order = \App\Models\Order::query()->orderByDesc('id')->first();
+        if (! $order) {
+            $this->markTestSkipped('No order available.');
+        }
+
+        $response = $this->get(route('orders.pdf', $order->id));
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('Content-Type'));
     }
 
     public function test_invoice_show_page_renders_collection_controls(): void

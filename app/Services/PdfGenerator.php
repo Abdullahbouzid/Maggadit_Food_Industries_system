@@ -53,7 +53,9 @@ class PdfGenerator
 
         if (! self::binaryAvailable()) {
             throw new RuntimeException(
-                'تعذر توليد ملف PDF: wkhtmltopdf غير متوفر على الخادم.'
+                'تعذر توليد ملف PDF: أداة wkhtmltopdf غير متوفرة على الخادم'
+                .' (المسار: '.(self::binaryPath() ?: 'غير محدد').'). '
+                .'ثبّتها أو اضبط WKHTMLTOPDF_BINARY في ملف .env.'
             );
         }
 
@@ -66,12 +68,19 @@ class PdfGenerator
 
     private static function binaryAvailable(): bool
     {
-        $binary = config('snappy.pdf.binary');
+        $binary = self::binaryPath();
 
-        if (! is_string($binary) || $binary === '') {
+        if ($binary === '') {
             return false;
         }
 
         return is_file($binary) && is_executable($binary);
+    }
+
+    private static function binaryPath(): string
+    {
+        $binary = config('snappy.pdf.binary');
+
+        return is_string($binary) ? $binary : '';
     }
 }
