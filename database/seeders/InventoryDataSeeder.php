@@ -31,6 +31,7 @@ class InventoryDataSeeder extends Seeder
         $this->inventories($items, $packs, $warehouses, $adminId);
         $this->productionBatches($items);
         $this->batchStockAndMovements($packs, $warehouses, $adminId);
+        $this->backfillBatchStockForAllPacks($warehouses, $adminId);
         $this->reservations($items, $packs, $warehouses);
     }
 
@@ -137,6 +138,90 @@ class InventoryDataSeeder extends Seeder
                         'expiry_date' => now()->addDays(120 + ($offset * 30))->toDateString(),
                     ]);
             }
+        }
+    }
+
+    /**
+     * Guarantee every pack that has an inventories row also has batch stock.
+     *
+     * FEFO allocation (InventoryService::performFefoAllocation) reads
+     * batch_item_stock, while getAvailable() reads inventories. If a pack has
+     * inventory but no batch stock, approving an invoice fails with
+     * "Insufficient stock" even though stock is visibly available.
+     */
+    private function backfillBatchStockForAllPacks($warehouses, $adminId): void
+    {
+        $batchId = DB::table('production_batches')->orderBy('id')->value('id');
+        $warehouseIds = $warehouses->pluck('id')->all();
+
+        if ($batchId === null || $warehouseIds === []) {
+            return;
+        }
+
+        $covered = DB::table('batch_items')
+            ->pluck('item_pack_id')
+            ->flip()
+            ->map(fn () => true);
+
+        $packs = DB::table('item_packs')->orderBy('id')->get()
+            ->filter(fn ($pack) => ! $covered->has($pack->id));
+
+        $created = 0;
+
+        foreach ($packs as $pack) {
+            $stockedWarehouses = DB::table('inventories')
+                ->where('item_pack_id', $pack->id)
+                ->whereNotNull('warehouse_id')
+                ->pluck('warehouse_id')
+                ->filter(fn ($id) => in_array($id, $warehouseIds, true))
+                ->unique()
+                ->values();
+
+            if ($stockedWarehouses->isEmpty()) {
+                $stockedWarehouses = collect([$warehouseIds[0]]);
+            }
+
+            foreach ($stockedWarehouses as $warehouseId) {
+                $batchItemId = Stamped::upsert(
+                    'batch_items',
+                    ['batch_id' => $batchId, 'item_id' => $pack->item_id, 'item_pack_id' => $pack->id],
+                    [
+                        'batch_id' => $batchId,
+                        'item_id' => $pack->item_id,
+                        'item_pack_id' => $pack->id,
+                        'warehouse_id' => $warehouseId,
+                        'quantity' => 100,
+                        'dispatched_quantity' => 0,
+                        'transferred_quantity' => 0,
+                        'expiry_date' => now()->addDays(180)->toDateString(),
+                    ],
+                );
+
+                if ($batchItemId) {
+                    $batchItemId = DB::table('batch_items')
+                        ->where('batch_id', $batchId)
+                        ->where('item_id', $pack->item_id)
+                        ->where('item_pack_id', $pack->id)
+                        ->value('id');
+                }
+
+                Stamped::upsert(
+                    'batch_item_stock',
+                    ['batch_item_id' => $batchItemId, 'warehouse_id' => $warehouseId],
+                    [
+                        'batch_item_id' => $batchItemId,
+                        'warehouse_id' => $warehouseId,
+                        'quantity' => 100,
+                        'reserved_quantity' => 0,
+                    ],
+                );
+
+                $created++;
+            }
+        }
+
+        if ($created > 0) {
+            $this->command?->info("  Backfilled batch stock for {$created} pack/warehouse pairs.");
         }
     }
 

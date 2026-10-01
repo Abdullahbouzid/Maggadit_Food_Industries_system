@@ -119,7 +119,6 @@
                                 $stage = $delivery->current_stage instanceof \App\Enums\DeliveryStage
                                     ? $delivery->current_stage
                                     : \App\Enums\DeliveryStage::tryFrom((string) $delivery->current_stage);
-                                {{-- Nova variants use dot notation, not dashed suffixes. --}}
                                 $badgeClass = match ($stage?->value ?? '') {
                                     'shipping' => 'nova-badge warning',
                                     'out_for_delivery' => 'nova-badge info',
