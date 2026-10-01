@@ -62,6 +62,28 @@ $progress = $invoice->total_amount > 0
 $deadline = $invoice->payment_deadline_at;
 $daysLeft = $deadline ? now()->diffInDays($deadline, false) : null;
 $remaining = $invoice->total_amount - $invoice->paid_amount;
+
+// محفظة العميل (لعرض الرصيد عند الدفع) + حدود السداد المسموح بها
+$wallet = null;
+$walletBalance = 0.0;
+try {
+    $wallet = $invoice->customer?->wallets()->first();
+    $walletBalance = (float) ($wallet?->balance ?? 0);
+} catch (\Throwable $e) {
+    $wallet = null;
+    $walletBalance = 0.0;
+}
+$isCreditCustomer = ($invoice->customer?->type ?? 'cash') === 'credit';
+// العملاء الآجلون يمكنهم تجاوز رصيد المحفظة حتى حدّ الاعتماد (انظر WalletService::debit)
+// عميل بلا محفظة أصلاً لا يُعرض له خيار الدفع بالمحفظة
+$walletAvailable = $wallet
+    ? ($isCreditCustomer
+        ? $walletBalance + (float) ($invoice->customer?->credit_limit ?? 0)
+        : $walletBalance)
+    : null;
+$canApprove = $invoiceStatus === \App\Enums\InvoiceStatus::PendingApproval;
+$canReject = $invoiceStatus === \App\Enums\InvoiceStatus::PendingApproval;
+$canCollect = in_array($invoiceStatus?->value, ['approved', 'partially_paid'], true);
 @endphp
 
 @section('content')
@@ -82,27 +104,43 @@ $remaining = $invoice->total_amount - $invoice->paid_amount;
             {{ $invoiceStatus?->label() ?? '—' }}
         </span>
         @if($invoice->payment_type === 'cash')
-            <span class="nova-badge nova-badge-success">{{ __('messages.invoice_page.payment_type_cash') }}</span>
+            <span class="nova-badge success">{{ __('messages.invoice_page.payment_type_cash') }}</span>
         @elseif($invoice->payment_type === 'credit')
-            <span class="nova-badge nova-badge-warning">{{ __('messages.invoice_page.payment_type_credit') }}</span>
+            <span class="nova-badge warning">{{ __('messages.invoice_page.payment_type_credit') }}</span>
         @endif
         <div style="display: flex; gap: 0.5rem; margin-left: 0.5rem;">
             <a href="{{ route('invoices.pdf', $invoice->id) }}" target="_blank" class="nova-btn nova-btn-outline nova-btn-sm">
                 <i class="fas fa-print"></i> {{ __('messages.invoice_page.print') }}
             </a>
-            @if($invoiceStatus?->value === 'pending_approval')
-                <a href="javascript:void(0)" class="nova-btn nova-btn-primary nova-btn-sm">
+            @if($canApprove)
+                <button type="button" class="nova-btn nova-btn-primary nova-btn-sm" onclick="openInvoiceModal('approveModal')">
                     <i class="fas fa-check"></i> {{ __('messages.invoice_page.approve') }}
-                </a>
+                </button>
+                <button type="button" class="nova-btn nova-btn-danger nova-btn-sm" onclick="openInvoiceModal('rejectModal')">
+                    <i class="fas fa-times"></i> {{ __('messages.invoice_page.reject') }}
+                </button>
             @endif
-            @if(in_array($invoiceStatus?->value, ['approved', 'partially_paid']))
-                <a href="javascript:void(0)" class="nova-btn nova-btn-accent nova-btn-sm">
+            @if($canCollect)
+                <button type="button" class="nova-btn nova-btn-primary nova-btn-sm" onclick="openInvoiceModal('paymentModal')">
                     <i class="fas fa-money-bill-wave"></i> {{ __('messages.invoice_page.record_payment') }}
-                </a>
+                </button>
             @endif
         </div>
     </div>
 </div>
+
+@if(session('success'))
+    <div class="nova-alert success nova-mb-3"><i class="fas fa-circle-check"></i> {{ session('success') }}</div>
+@endif
+@if($errors->any())
+    <div class="nova-alert danger nova-mb-3">
+        <ul style="margin: 0; padding-inline-start: 1.25rem;">
+            @foreach($errors->all() as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
 {{-- ===== Row: Customer Info & Invoice Info ===== --}}
 <div class="nova-row nova-gap-3 nova-mb-4">
@@ -285,21 +323,21 @@ $remaining = $invoice->total_amount - $invoice->paid_amount;
             <div class="nova-card-body">
                 @php
                 $daysLeftFormatted = null;
-                $deadlineClass = 'nova-badge-success';
+                $deadlineClass = 'success';
                 if ($daysLeft === null) {
                     $daysLeftFormatted = __('messages.invoice_page.no_deadline');
                 } elseif ($daysLeft < 0) {
                     $daysLeftFormatted = __('messages.invoice_page.overdue');
-                    $deadlineClass = 'nova-badge-danger';
+                    $deadlineClass = 'danger';
                 } elseif ($daysLeft <= 1) {
                     $daysLeftFormatted = '< 1 ' . __('messages.invoice_page.days_left');
-                    $deadlineClass = 'nova-badge-danger';
+                    $deadlineClass = 'danger';
                 } elseif ($daysLeft <= 3) {
                     $daysLeftFormatted = $daysLeft . ' ' . __('messages.invoice_page.days_left');
-                    $deadlineClass = 'nova-badge-warning';
+                    $deadlineClass = 'warning';
                 } else {
                     $daysLeftFormatted = $daysLeft . ' ' . __('messages.invoice_page.days_left');
-                    $deadlineClass = 'nova-badge-accent';
+                    $deadlineClass = 'info';
                 }
                 @endphp
                 <div class="nova-row nova-gap-3">
@@ -380,7 +418,7 @@ $remaining = $invoice->total_amount - $invoice->paid_amount;
                         <td class="nova-fw-semibold">{{ $return->return_number ?? $return->id }}</td>
                         <td>{{ $return->type ?? '—' }}</td>
                         <td>
-                            <span class="nova-badge nova-badge-{{ $return->status === 'completed' ? 'success' : 'warning' }}">
+                            <span class="nova-badge {{ $return->status === 'completed' ? 'success' : 'warning' }}">
                                 {{ __('messages.return_requests.status_' . $return->status) }}</span>
                         </td>
                     </tr>
@@ -454,17 +492,152 @@ $remaining = $invoice->total_amount - $invoice->paid_amount;
 
 @endsection
 
+{{-- ===== Modals: الموافقة / الرفض / تسجيل الدفعة ===== --}}
+@if($canApprove)
+<div class="nova-modal-backdrop" id="approveModal" onclick="closeInvoiceModal(event,'approveModal')">
+    <div class="nova-modal" onclick="event.stopPropagation()">
+        <div class="nova-modal-header">
+            <h5 class="nova-modal-title"><i class="fas fa-check"></i> {{ __('messages.invoice_page.approve') }}</h5>
+            <button type="button" class="nova-modal-close" onclick="closeInvoiceModal(null,'approveModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('invoices.approve', $invoice->id) }}">
+            @csrf
+            <div class="nova-modal-body">
+                <p class="nova-text-muted mb-0">
+                    سيتم اعتماد الفاتورة <strong>#{{ $invoice->invoice_number }}</strong>
+                    باسم {{ $customer->name ?? '—' }} بمبلغ {{ number_format((float) $invoice->total_amount, 2) }} {{ $currencySymbol }}.
+                </p>
+                <div class="nova-form-group nova-mt-3">
+                    <label class="nova-label">ملاحظات (اختياري)</label>
+                    <textarea name="notes" class="nova-textarea" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="nova-modal-footer">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="closeInvoiceModal(null,'approveModal')">إلغاء</button>
+                <button type="submit" class="nova-btn nova-btn-primary"><i class="fas fa-check"></i> تأكيد الموافقة</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="nova-modal-backdrop" id="rejectModal" onclick="closeInvoiceModal(event,'rejectModal')">
+    <div class="nova-modal" onclick="event.stopPropagation()">
+        <div class="nova-modal-header">
+            <h5 class="nova-modal-title"><i class="fas fa-times"></i> {{ __('messages.invoice_page.reject') }}</h5>
+            <button type="button" class="nova-modal-close" onclick="closeInvoiceModal(null,'rejectModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('invoices.reject', $invoice->id) }}">
+            @csrf
+            <div class="nova-modal-body">
+                <p class="nova-text-muted">سيتم رفض الفاتورة وإلغاؤها.</p>
+                <div class="nova-form-group nova-mt-2">
+                    <label class="nova-label">سبب الرفض <span class="text-danger">*</span></label>
+                    <textarea name="reason" class="nova-textarea" rows="2" required></textarea>
+                </div>
+            </div>
+            <div class="nova-modal-footer">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="closeInvoiceModal(null,'rejectModal')">إلغاء</button>
+                <button type="submit" class="nova-btn nova-btn-danger"><i class="fas fa-times"></i> تأكيد الرفض</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
+@if($canCollect)
+<div class="nova-modal-backdrop" id="paymentModal" onclick="closeInvoiceModal(event,'paymentModal')">
+    <div class="nova-modal" onclick="event.stopPropagation()">
+        <div class="nova-modal-header">
+            <h5 class="nova-modal-title"><i class="fas fa-money-bill-wave"></i> {{ __('messages.invoice_page.record_payment') }}</h5>
+            <button type="button" class="nova-modal-close" onclick="closeInvoiceModal(null,'paymentModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('invoices.payments', $invoice->id) }}">
+            @csrf
+            <div class="nova-modal-body">
+                <div class="nova-alert info nova-mb-3">
+                    <div>الإجمالي: <strong>{{ number_format((float) $invoice->total_amount, 2) }} {{ $currencySymbol }}</strong></div>
+                    <div>المسدّد: <strong>{{ number_format((float) $invoice->paid_amount, 2) }} {{ $currencySymbol }}</strong></div>
+                    <div>المتبقي: <strong>{{ number_format((float) $remaining, 2) }} {{ $currencySymbol }}</strong></div>
+                    @if($walletAvailable !== null)
+                        <div>
+                            رصيد المحفظة: <strong>{{ number_format($walletBalance, 2) }} {{ $currencySymbol }}</strong>
+                            @if($isCreditCustomer)
+                                (حد الاعتماد {{ number_format((float) ($invoice->customer?->credit_limit ?? 0), 2) }})
+                            @endif
+                        </div>
+                    @endif
+                </div>
+
+                <div class="nova-form-group">
+                    <label class="nova-label">المبلغ <span class="text-danger">*</span></label>
+                    <input type="number" name="amount" class="nova-input" step="0.01" min="0.01"
+                           max="{{ (float) $remaining }}" value="{{ (float) $remaining }}" required>
+                </div>
+
+                <div class="nova-form-group">
+                    <label class="nova-label">طريقة الدفع <span class="text-danger">*</span></label>
+                    <select name="method" class="nova-select" required>
+                        @if($walletAvailable !== null)
+                            <option value="wallet">محفظة العميل</option>
+                        @endif
+                        <option value="cash" @if($walletAvailable === null) selected @endif>نقدًا</option>
+                        <option value="bank_transfer">تحويل بنكي</option>
+                        <option value="cheque">شيك</option>
+                        <option value="online">دفع إلكتروني</option>
+                    </select>
+                </div>
+
+                <div class="nova-form-group">
+                    <label class="nova-label">رقم المرجع</label>
+                    <input type="text" name="reference" class="nova-input">
+                </div>
+
+                <div class="nova-form-group">
+                    <label class="nova-label">ملاحظات</label>
+                    <textarea name="notes" class="nova-textarea" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="nova-modal-footer">
+                <button type="button" class="nova-btn nova-btn-outline" onclick="closeInvoiceModal(null,'paymentModal')">إلغاء</button>
+                <button type="submit" class="nova-btn nova-btn-primary"><i class="fas fa-check"></i> تسجيل الدفعة</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
 @push('scripts')
 <script>
+function openInvoiceModal(id) {
+    var el = document.getElementById(id);
+    if (el) { el.classList.add('show'); }
+}
+
+function closeInvoiceModal(e, id) {
+    if (e && e.target !== e.currentTarget) { return; }
+    var el = document.getElementById(id);
+    if (el) { el.classList.remove('show'); }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        ['approveModal', 'rejectModal', 'paymentModal'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) { el.classList.remove('show'); }
+        });
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-hide alerts
+    // Auto-hide flash alerts (but never the informational panel inside the payment modal)
     setTimeout(function() {
         document.querySelectorAll('.nova-alert').forEach(function(alert) {
+            if (alert.closest('.nova-modal')) { return; }
             alert.style.transition = 'opacity 0.3s';
             alert.style.opacity = '0';
             setTimeout(() => alert.remove(), 300);
         });
-    }, 5000);
+    }, 8000);
 });
 </script>
 @endpush

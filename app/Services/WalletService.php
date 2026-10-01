@@ -75,7 +75,7 @@ class WalletService implements WalletServiceInterface
             $wallet = $this->getOrCreateWallet($customer);
             $currentBalance = (float) $wallet->balance;
 
-            if ($currentBalance < $amount && $customer->customer_type !== 'credit') {
+            if ($currentBalance < $amount && $customer->type !== 'credit') {
                 throw new InsufficientBalanceException(
                     required: $amount,
                     available: $currentBalance,
@@ -83,7 +83,7 @@ class WalletService implements WalletServiceInterface
                 );
             }
 
-            if ($customer->customer_type === 'credit' && $currentBalance < $amount) {
+            if ($customer->type === 'credit' && $currentBalance < $amount) {
                 $newBalance = $currentBalance + (float) $customer->credit_limit - $amount;
                 if ($newBalance < 0) {
                     throw new CreditLimitExceededException(
@@ -236,7 +236,7 @@ class WalletService implements WalletServiceInterface
             return true;
         }
 
-        return $customer->customer_type === 'credit'
+        return $customer->type === 'credit'
             && $balance + (float) $customer->credit_limit >= $amount;
     }
 

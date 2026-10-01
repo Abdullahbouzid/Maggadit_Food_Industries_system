@@ -707,6 +707,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/get-warehouses/{itemId}', [InvoiceController::class, 'getWarehousesForItem'])->name('invoices.warehouses');
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
 
+    // دورة الفاتورة: موافقة / رفض / تسجيل دفعة (عبر المحفظة أو نقدًا إلخ)
+    Route::post('invoices/{invoice}/approve', [InvoiceController::class, 'approve'])->name('invoices.approve');
+    Route::post('invoices/{invoice}/reject', [InvoiceController::class, 'reject'])->name('invoices.reject');
+    Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments');
+
     Route::resource('orders', OrderController::class);
     Route::get('/warehouse/{warehouse}/products', [OrderController::class, 'warehouseProducts'])->name('orders.warehouse.products');
     Route::get('/price-list/{priceList}/price', [OrderController::class, 'priceListPrice'])->name('orders.price-list.price');

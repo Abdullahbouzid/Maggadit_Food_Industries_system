@@ -1158,6 +1158,7 @@ return array (
     'all' => 'All',
     'view' => 'View',
     'approve' => 'Approve',
+    'reject' => 'Reject Invoice',
     'record_payment' => 'Record Payment',
     'showing_count' => 'Showing :count invoices',
     'details' => 'Invoice Details',

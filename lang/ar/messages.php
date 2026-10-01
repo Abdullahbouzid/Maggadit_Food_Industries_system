@@ -1146,6 +1146,7 @@ return array (
     'all' => 'الكل',
     'view' => 'عرض',
     'approve' => 'تصديق',
+    'reject' => 'رفض الفاتورة',
     'record_payment' => 'تسجيل الدفع',
     'showing_count' => 'عرض :count فاتورة',
     'details' => 'تفاصيل الفاتورة',

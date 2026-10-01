@@ -60,6 +60,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Contracts\ReturnServiceInterface::class,
             \App\Services\ReturnService::class
         );
+        $this->app->bind(
+            \App\Contracts\PaymentServiceInterface::class,
+            \App\Services\PaymentService::class
+        );
     }
 
     /**

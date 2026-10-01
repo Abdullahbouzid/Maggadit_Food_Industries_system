@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DeliveryStageLog extends Model
 {
+    /**
+     * The table only has created_at. A stage log is an append-only
+     * record, so it is never updated.
+     */
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'delivery_id',
         'stage',

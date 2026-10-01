@@ -55,12 +55,13 @@
                 </div>
                 <div class="nova-col">
                     <div class="nova-form-group">
-                        <label class="nova-label">الحالة</label>
-                        <select name="status" class="nova-select">
-                            <option value="pending" {{ $invoice->status == 'pending' ? 'selected' : '' }}>معلقة</option>
-                            <option value="completed" {{ $invoice->status == 'completed' ? 'selected' : '' }}>مكتملة</option>
-                            <option value="cancelled" {{ $invoice->status == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
-                        </select>
+                        <label class="nova-label">الحالة الحالية</label>
+                        <input type="text" class="nova-input" readonly
+                               value="{{ \App\Enums\InvoiceStatus::tryFrom((string) $invoice->status)?->label() ?? $invoice->status }}">
+                        <small class="nova-text-muted">
+                            تُغيَّر الحالة عبر أزرار إجراءات الفاتورة (الموافقة، الرفض، تسجيل الدفعة)
+                            حتى تُحدَّث المحفظة والمخزون تلقائيًا.
+                        </small>
                     </div>
                 </div>
             </div>

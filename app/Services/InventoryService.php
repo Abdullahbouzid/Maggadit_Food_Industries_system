@@ -642,8 +642,7 @@ final class InventoryService implements InventoryServiceInterface
                 'batch_item_stock.id as batch_stock_id',
                 'batch_item_stock.batch_item_id',
                 'batch_item_stock.quantity',
-                'bi.expiry_date',
-                'bi.unit_cost'
+                'bi.expiry_date'
             );
     }
 
@@ -681,7 +680,9 @@ final class InventoryService implements InventoryServiceInterface
                 batchItemId: (int) $stock->batch_item_id,
                 quantity: $deduct,
                 expiryDate: $stock->expiry_date ? Carbon::parse($stock->expiry_date)->format('Y-m-d') : null,
-                unitCost: $stock->unit_cost ? (float) $stock->unit_cost : null,
+                // batch_items has no unit_cost column; the cost is unknown at this
+                // stage and FefoAllocation treats null as "not known yet".
+                unitCost: null,
             );
         }
 

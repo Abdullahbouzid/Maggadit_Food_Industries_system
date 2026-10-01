@@ -7,13 +7,12 @@ namespace App\DTOs;
 use App\Models\Delivery;
 use App\Models\Invoice;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 
 final readonly class ApprovalResult
 {
     public function __construct(
         public Invoice $invoice,
-        public Collection $committedBatches,
+        public CommitResult $committedBatches,
         public Delivery $delivery,
         public ?Carbon $deadline = null,
     ) {}
