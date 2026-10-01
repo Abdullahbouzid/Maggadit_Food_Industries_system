@@ -118,25 +118,31 @@
                         <td>{{ $return->invoice?->customer->name ?? '—' }}</td>
                         <td>
                             @php
-                                $rtype = \App\Enums\ReturnType::tryFrom($return->return_type);
+                                $rtype = $return->type;
+                                if (is_string($rtype)) {
+                                    $rtype = \App\Enums\ReturnType::tryFrom($rtype);
+                                }
                             @endphp
                             @if($rtype)
                                 <span class="nova-badge">{{ $rtype->label() }}</span>
                             @else
-                                <span class="nova-text-muted">{{ $return->return_type ?? '—' }}</span>
+                                <span class="nova-text-muted">{{ $rtype->value ?? $return->type->value ?? '—' }}</span>
                             @endif
                         </td>
                         <td>{{ $return->reason ?? '—' }}</td>
-                        <td>{{ $return->amount ? number_format($return->amount, 2) : '—' }}</td>
+                        <td>{{ $return->total_refund && $return->total_refund > 0 ? number_format((float) $return->total_refund, 2) : '—' }}</td>
                         <td>
                             @php
-                                $rstatus = \App\Enums\ReturnStatus::tryFrom($return->status);
+                                $rstatus = $return->status;
+                                if (is_string($rstatus)) {
+                                    $rstatus = \App\Enums\ReturnStatus::tryFrom($rstatus);
+                                }
                                 $badgeClass = $rstatus?->badgeColor() ?? 'nova-text-muted';
                             @endphp
                             @if($rstatus)
                                 <span class="nova-badge {{ $badgeClass }}">{{ $rstatus->label() }}</span>
                             @else
-                                <span class="nova-text-muted">{{ $return->status ?? '—' }}</span>
+                                <span class="nova-text-muted">{{ $return->status->value ?? '—' }}</span>
                             @endif
                         </td>
                         <td>{{ $return->created_at ? \Carbon\Carbon::parse($return->created_at)->format('Y-m-d') : '—' }}</td>

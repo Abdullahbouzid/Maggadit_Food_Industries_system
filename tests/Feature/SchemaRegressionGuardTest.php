@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Tests\TestCase;
 
@@ -174,6 +175,112 @@ class SchemaRegressionGuardTest extends TestCase
             "These models omit a NOT NULL timestamp column and will fail on insert:\n"
             .implode("\n", $offenders)
         );
+    }
+
+    public function test_model_fillable_and_casts_only_name_real_columns(): void
+    {
+        $offenders = [];
+
+        foreach ($this->modelFiles() as $file) {
+            $class = 'App\\Models\\' . basename($file, '.php');
+
+            if (! class_exists($class)) {
+                continue;
+            }
+
+            $model = new $class;
+            $table = $model->getTable();
+
+            if (! $this->tableExists($table)) {
+                $offenders[] = "{$class}: table '{$table}' does not exist";
+                continue;
+            }
+
+            $columns = array_flip(\Illuminate\Support\Facades\Schema::getColumnListing($table));
+
+            // getCasts() is [column => type]; only the keys are column names.
+            $referenced = array_unique(array_merge(
+                $model->getFillable(),
+                array_keys($model->getCasts())
+            ));
+
+            foreach ($referenced as $column) {
+                if (! isset($columns[$column])) {
+                    $offenders[] = "{$class} ({$table}): '{$column}' is not a column";
+                }
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $offenders,
+            "These models name columns that do not exist, which silently drops writes:\n"
+            .implode("\n", $offenders)
+        );
+    }
+
+    public function test_every_relation_points_at_an_existing_table(): void
+    {
+        $offenders = [];
+
+        foreach ($this->modelFiles() as $file) {
+            $class = 'App\\Models\\' . basename($file, '.php');
+
+            if (! class_exists($class)) {
+                continue;
+            }
+
+            $reflection = new \ReflectionClass($class);
+
+            foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+                if ($method->getNumberOfParameters() > 0 || $method->isStatic()) {
+                    continue;
+                }
+
+                $returnType = $method->getReturnType();
+
+                if (! $returnType instanceof \ReflectionNamedType || ! $returnType->isBuiltin()) {
+                    continue;
+                }
+
+                if (! in_array($returnType->getName(), [
+                    \Illuminate\Database\Eloquent\Relations\BelongsTo::class,
+                    \Illuminate\Database\Eloquent\Relations\HasMany::class,
+                    \Illuminate\Database\Eloquent\Relations\HasOne::class,
+                    \Illuminate\Database\Eloquent\Relations\MorphTo::class,
+                ], true)) {
+                    continue;
+                }
+
+                $model = new $class;
+
+                // A relation whose target table is missing raises
+                // RelationNotFoundException or a SQL error at request time.
+                foreach (['invoice', 'customer', 'order', 'items'] as $relation) {
+                    if (! $model->relationLoaded($relation)) {
+                        try {
+                            $model->{$relation}();
+                        } catch (\Throwable $e) {
+                            $offenders[] = "{$class}::{$method->getName()}(): " . $e->getMessage();
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        $this->assertSame([], $offenders, "Broken relations:\n" . implode("\n", $offenders));
+    }
+
+    private function tableExists(string $table): bool
+    {
+        $found = DB::select(
+            'SELECT COUNT(*) AS c FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?',
+            [$table]
+        );
+
+        return (int) ($found[0]->c ?? 0) > 0;
     }
 
     /**

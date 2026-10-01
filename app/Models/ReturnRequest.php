@@ -3,21 +3,30 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ReturnRequest extends Model
 {
+    use SoftDeletes;
+
+    /**
+     * Matches the return_requests table. The previous list named columns that
+     * do not exist (final_invoice_id, approved_by, requested_at, approved_at,
+     * rejected_at, completed_at) and omitted the ones that do (invoice_id,
+     * type, requested_by, reviewed_by, reviewed_at), so create() silently
+     * discarded values and dropped real ones on the floor.
+     */
     protected $fillable = [
-        'return_number', 'order_id', 'final_invoice_id', 'customer_id', 'approved_by',
-        'status', 'reason', 'notes', 'total_refund', 'requested_at',
-        'approved_at', 'rejected_at', 'completed_at',
+        'return_number', 'invoice_id', 'order_id', 'customer_id', 'type',
+        'status', 'reason', 'notes', 'total_refund', 'requested_by',
+        'reviewed_by', 'reviewed_at',
     ];
 
     protected $casts = [
-        'approved_at' => 'datetime',
-        'rejected_at' => 'datetime',
-        'completed_at' => 'datetime',
-        'requested_at' => 'datetime',
+        'reviewed_at' => 'datetime',
         'total_refund' => 'decimal:2',
+        'type' => \App\Enums\ReturnType::class,
+        'status' => \App\Enums\ReturnStatus::class,
     ];
 
     public function customer()
@@ -30,9 +39,13 @@ class ReturnRequest extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function finalInvoice()
+    /**
+     * A return is always raised against an invoice. The table has no
+     * final_invoices counterpart, so invoice_id is the only link.
+     */
+    public function invoice()
     {
-        return $this->belongsTo(FinalInvoice::class);
+        return $this->belongsTo(Invoice::class);
     }
 
     public function items()
