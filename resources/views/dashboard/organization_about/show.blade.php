@@ -215,10 +215,10 @@
             <div class="nova-col nova-col-12">
                 <div class="nova-flex nova-justify-between nova-flex-wrap nova-gap-2" style="border-top: 1px solid var(--nova-border-light); padding-top: 1rem;">
                     <small class="nova-text-muted">
-                        <i class="fas fa-clock me-1"></i> تاريخ الإنشاء: {{ $organizationAbout->created_at->format('Y-m-d H:i') }}
+                        <i class="fas fa-clock me-1"></i> تاريخ الإنشاء: {{ $organizationAbout?->created_at?->format('Y-m-d H:i') ?? '—' }}
                     </small>
                     <small class="nova-text-muted">
-                        <i class="fas fa-history me-1"></i> آخر تحديث: {{ $organizationAbout->updated_at->format('Y-m-d H:i') }}
+                        <i class="fas fa-history me-1"></i> آخر تحديث: {{ $organizationAbout?->updated_at?->format('Y-m-d H:i') ?? '—' }}
                     </small>
                 </div>
             </div>

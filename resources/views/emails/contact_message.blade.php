@@ -31,7 +31,7 @@
             @endif
             <tr>
                 <td style="padding: 8px 12px; background: #f8f9fa; font-weight: bold;">التاريخ:</td>
-                <td style="padding: 8px 12px;">{{ $contactMessage->created_at->format('Y-m-d H:i') }}</td>
+                <td style="padding: 8px 12px;">{{ $contactMessage?->created_at?->format('Y-m-d H:i') ?? '—' }}</td>
             </tr>
         </table>
 

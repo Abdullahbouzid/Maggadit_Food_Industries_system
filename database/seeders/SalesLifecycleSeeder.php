@@ -11,6 +11,7 @@ use App\Enums\ReturnType;
 use App\Enums\WalletTransactionType;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Database\Seeders\Support\Stamped;
 
 /**
  * The full sales chain: orders -> quotations -> invoices -> payments ->
@@ -56,6 +57,9 @@ class SalesLifecycleSeeder extends Seeder
             OrderStatus::New->value,
             OrderStatus::Returned->value,
             OrderStatus::Cancelled->value,
+            OrderStatus::InDelivery->value,
+            OrderStatus::InDelivery->value,
+            OrderStatus::Delivered->value,
         ];
 
         $created = [];
@@ -95,6 +99,7 @@ class SalesLifecycleSeeder extends Seeder
         $this->deliveries($created);
         $this->returns($created, $packs, $warehouseId, $currency->id, $adminId);
         $this->creditNotes($currency->id);
+        $this->extraPayments($currency->id, $adminId);
     }
 
     private function createOrder($customer, $items, $packs, $warehouseId, $currencyId, $status, $index, $adminId): ?object
@@ -124,7 +129,7 @@ class SalesLifecycleSeeder extends Seeder
         $isCancelled = $status === OrderStatus::Cancelled->value;
         $total = round($subtotal, 2);
 
-        $orderId = DB::table('orders')->insertGetId([
+        $orderId = Stamped::insertGetId('orders', [
             'order_number' => $number,
             'customer_id' => $customer->id,
             'warehouse_id' => $warehouseId,
@@ -149,7 +154,7 @@ class SalesLifecycleSeeder extends Seeder
         ]);
 
         foreach ($lines as $line) {
-            DB::table('order_items')->insert([
+            Stamped::insert('order_items', [
                 'order_id' => $orderId,
                 'item_id' => $line['item']->id,
                 'item_pack_id' => $line['packId'],
@@ -173,7 +178,7 @@ class SalesLifecycleSeeder extends Seeder
         $path = $this->statusPath($status);
         $from = null;
         foreach ($path as $step) {
-            DB::table('order_status_histories')->insert([
+            Stamped::insert('order_status_histories', [
                 'order_id' => $orderId,
                 'from_status' => $from,
                 'to_status' => $step,
@@ -217,7 +222,7 @@ class SalesLifecycleSeeder extends Seeder
                 continue;
             }
 
-            $quotationId = DB::table('quotations')->insertGetId([
+            $quotationId = Stamped::insertGetId('quotations', [
                 'quotation_number' => $number,
                 'order_id' => $order->id,
                 'customer_id' => $order->customer_id,
@@ -242,7 +247,7 @@ class SalesLifecycleSeeder extends Seeder
             foreach ($orderItems as $line) {
                 $item = DB::table('items')->where('id', $line->item_id)->first();
 
-                DB::table('quotation_items')->insert([
+                Stamped::insert('quotation_items', [
                     'quotation_id' => $quotationId,
                     'item_id' => $line->item_id,
                     'item_pack_id' => $line->item_pack_id,
@@ -317,7 +322,7 @@ class SalesLifecycleSeeder extends Seeder
                 $paid = round($total / 2, 2);
             }
 
-            $invoiceId = DB::table('invoices')->insertGetId([
+            $invoiceId = Stamped::insertGetId('invoices', [
                 'invoice_number' => $number,
                 'customer_id' => $order->customer_id,
                 'order_id' => $order->id,
@@ -353,7 +358,7 @@ class SalesLifecycleSeeder extends Seeder
             $orderItems = DB::table('order_items')->where('order_id', $order->id)->get();
 
             foreach ($orderItems as $line) {
-                $invoiceItemId = DB::table('invoice_items')->insertGetId([
+                $invoiceItemId = Stamped::insertGetId('invoice_items', [
                     'invoice_id' => $invoiceId,
                     'item_id' => $line->item_id,
                     'item_pack_id' => $line->item_pack_id,
@@ -379,7 +384,7 @@ class SalesLifecycleSeeder extends Seeder
                     ->first();
 
                 if ($batchItem) {
-                    DB::table('invoice_item_batches')->insert([
+                    Stamped::insert('invoice_item_batches', [
                         'invoice_item_id' => $invoiceItemId,
                         'batch_item_id' => $batchItem->id,
                         'quantity' => $line->quantity,
@@ -401,7 +406,7 @@ class SalesLifecycleSeeder extends Seeder
         $method = $row['customer']->type === 'credit' ? 'wallet' : 'cash';
         $number = 'PAY-'.now()->format('Ymd').'-'.str_pad((string) $invoiceId, 4, '0', STR_PAD_LEFT);
 
-        $paymentId = DB::table('payments')->insertGetId([
+        $paymentId = Stamped::insertGetId('payments', [
             'payment_number' => $number,
             'invoice_id' => $invoiceId,
             'customer_id' => $customerId,
@@ -430,7 +435,7 @@ class SalesLifecycleSeeder extends Seeder
         $balance = (float) DB::table('customer_wallets')->where('id', $walletId)->value('balance');
         $newBalance = $balance - $paid;
 
-        DB::table('wallet_transactions')->insert([
+        Stamped::insert('wallet_transactions', [
             'wallet_id' => $walletId,
             'type' => WalletTransactionType::Purchase->value,
             'amount' => -$paid,
@@ -474,7 +479,16 @@ class SalesLifecycleSeeder extends Seeder
                 ? DeliveryStage::OutForDelivery->value
                 : DeliveryStage::Received->value;
 
-            $deliveryId = DB::table('deliveries')->insertGetId([
+            // One delivery per invoice: re-running must not duplicate rows.
+            $existingDelivery = \Illuminate\Support\Facades\DB::table('deliveries')
+                ->where('invoice_id', $invoice->id)
+                ->value('id');
+
+            if ($existingDelivery) {
+                continue;
+            }
+
+            $deliveryId = Stamped::insertGetId('deliveries', [
                 'invoice_id' => $invoice->id,
                 'order_id' => $row['order']->id,
                 'customer_id' => $row['order']->customer_id,
@@ -497,7 +511,7 @@ class SalesLifecycleSeeder extends Seeder
                 : [DeliveryStage::Shipping->value, DeliveryStage::OutForDelivery->value];
 
             foreach ($path as $step => $stage) {
-                DB::table('delivery_stage_logs')->insert([
+                Stamped::insert('delivery_stage_logs', [
                     'delivery_id' => $deliveryId,
                     'stage' => $stage,
                     'updated_by' => $row['driver_id'],
@@ -546,7 +560,7 @@ class SalesLifecycleSeeder extends Seeder
             $status = $statuses[$index % count($statuses)];
             $refund = round((float) $invoice->total_amount * 0.25, 2);
 
-            $requestId = DB::table('return_requests')->insertGetId([
+            $requestId = Stamped::insertGetId('return_requests', [
                 'return_number' => $number,
                 'invoice_id' => $invoice->id,
                 'order_id' => $invoice->order_id,
@@ -572,7 +586,7 @@ class SalesLifecycleSeeder extends Seeder
             $quantity = min(2, (int) $line->quantity);
             $refundAmount = round((float) $line->unit_price * $quantity, 2);
 
-            DB::table('return_items')->insert([
+            Stamped::insert('return_items', [
                 'return_request_id' => $requestId,
                 'invoice_item_id' => $line->id,
                 'item_id' => $line->item_id,
@@ -613,7 +627,7 @@ class SalesLifecycleSeeder extends Seeder
             $refund = (float) ($item->refund_amount ?? 0);
             $isProcessed = $return->status === ReturnStatus::Processed->value;
 
-            DB::table('credit_notes')->insert([
+            Stamped::insert('credit_notes', [
                 // Derive the number from the return id so re-runs cannot collide.
                 'credit_note_number' => 'CN-'.now()->format('Ymd').'-'.str_pad((string) $return->id, 4, '0', STR_PAD_LEFT),
                 'return_request_id' => $return->id,
@@ -626,6 +640,57 @@ class SalesLifecycleSeeder extends Seeder
                 'created_at' => now()->subDay(),
                 'updated_at' => now()->subDay(),
             ]);
+        }
+    }
+
+    /**
+     * Guarantee at least five payment rows by settling more invoices, so the
+     * payments list and the cash-flow reports are never near-empty.
+     */
+    private function extraPayments(int $currencyId, ?int $adminId): void
+    {
+        if (\Illuminate\Support\Facades\DB::table('payments')->count() >= 5) {
+            return;
+        }
+
+        $invoices = \Illuminate\Support\Facades\DB::table('invoices')
+            ->whereIn('status', [
+                InvoiceStatus::Approved->value,
+                InvoiceStatus::PartiallyPaid->value,
+            ])
+            ->orderBy('id')
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            if (\Illuminate\Support\Facades\DB::table('payments')->count() >= 5) {
+                return;
+            }
+
+            $outstanding = round(
+                (float) $invoice->total_amount - (float) $invoice->paid_amount,
+                2,
+            );
+
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            \Database\Seeders\Support\Stamped::insert(
+                'payments',
+                [
+                    'payment_number' => 'PAY-'.now()->format('Ymd').'-'.$invoice->id.'-B',
+                    'invoice_id' => $invoice->id,
+                    'customer_id' => $invoice->customer_id,
+                    'amount' => $outstanding,
+                    'currency_id' => $currencyId,
+                    'exchange_rate' => 1,
+                    'method' => 'cash',
+                    'reference' => 'REF-'.$invoice->id.'-B',
+                    'received_by' => $adminId,
+                    'paid_at' => now()->subDays(1),
+                    'notes' => 'دفعة تجريبية',
+                ],
+            );
         }
     }
 }

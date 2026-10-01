@@ -118,7 +118,7 @@
                             <span class="nova-badge secondary">Low</span>
                         @endif
                     </td>
-                    <td>{{ $msg->created_at->format('Y-m-d H:i') }}</td>
+                    <td>{{ $msg?->created_at?->format('Y-m-d H:i') ?? '—' }}</td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
                             <a href="{{ route('contact-messages.show', $msg) }}" class="nova-icon-btn nova-btn-sm" title="View">

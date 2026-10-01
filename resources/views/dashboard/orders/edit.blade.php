@@ -243,7 +243,7 @@ $walletBalance = $customerObj ? $customerObj->wallets->where('is_active', 1)->su
                     <div class="nova-order-info-item">
                         <label class="nova-order-info-label">{{ __('messages.orders.order_date') }}</label>
                         <div class="nova-order-info-value">
-                            {{ $order->created_at ? $order->created_at->format('Y-m-d H:i') : '-' }}
+                            {{ $order->created_at ? $order?->created_at?->format('Y-m-d H:i') ?? '—' : '-' }}
                         </div>
                     </div>
                     <div class="nova-order-info-item">

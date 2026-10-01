@@ -58,8 +58,13 @@ class CustomerSeeder extends Seeder
                 ]
             );
 
+            // The unique key is (customer_id, price_list_id); matching on
+            // customer_id alone makes the update collide with an existing row.
             CustomerPriceList::updateOrCreate(
-                ['customer_id' => $customer->id],
+                [
+                    'customer_id' => $customer->id,
+                    'price_list_id' => $customer->price_list_id,
+                ],
                 [
                     'customer_id' => $customer->id,
                     'price_list_id' => $customer->price_list_id,

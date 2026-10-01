@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Database\Seeders\Support\Stamped;
 
 /**
  * Customer surveys plus the operational/audit tables (audit log, permission
@@ -57,8 +58,8 @@ class OpsDataSeeder extends Seeder
         ];
 
         foreach ($surveys as $surveyIndex => $survey) {
-            $surveyId = DB::table('surveys')->updateOrInsert(
-                ['title' => $survey['title']],
+            $surveyId = Stamped::upsert('surveys', 
+                ['title' => $survey['title']], 
                 [
                     'title' => $survey['title'],
                     'description' => $survey['description'],
@@ -67,15 +68,14 @@ class OpsDataSeeder extends Seeder
                     'starts_at' => now()->subWeek(),
                     'ends_at' => now()->addMonth(),
                     'created_by' => $adminId,
-                ],
-            );
+                ]);
 
             $surveyRecordId = DB::table('surveys')->where('title', $survey['title'])->value('id');
             $questionIds = [];
 
             foreach ($survey['questions'] as $order => $question) {
-                $questionId = DB::table('survey_questions')->updateOrInsert(
-                    ['survey_id' => $surveyRecordId, 'question_text' => $question['question_text']],
+                $questionId = Stamped::upsert('survey_questions', 
+                    ['survey_id' => $surveyRecordId, 'question_text' => $question['question_text']], 
                     [
                         'survey_id' => $surveyRecordId,
                         'question_text' => $question['question_text'],
@@ -83,8 +83,7 @@ class OpsDataSeeder extends Seeder
                         'options' => $question['question_type'] === 'yes_no' ? json_encode(['نعم', 'لا']) : null,
                         'is_required' => $question['is_required'],
                         'sort_order' => $order + 1,
-                    ],
-                );
+                    ]);
 
                 $questionIds[] = DB::table('survey_questions')
                     ->where('survey_id', $surveyRecordId)
@@ -94,14 +93,13 @@ class OpsDataSeeder extends Seeder
 
             // One response per customer, with an answer for each question.
             foreach ($customers as $customerId) {
-                $responseId = DB::table('survey_responses')->updateOrInsert(
-                    ['survey_id' => $surveyRecordId, 'customer_id' => $customerId],
+                $responseId = Stamped::upsert('survey_responses', 
+                    ['survey_id' => $surveyRecordId, 'customer_id' => $customerId], 
                     [
                         'survey_id' => $surveyRecordId,
                         'customer_id' => $customerId,
                         'submitted_at' => now()->subDays($surveyIndex + 1),
-                    ],
-                );
+                    ]);
 
                 $actualResponseId = DB::table('survey_responses')
                     ->where('survey_id', $surveyRecordId)
@@ -115,8 +113,8 @@ class OpsDataSeeder extends Seeder
 
                     $question = DB::table('survey_questions')->where('id', $questionId)->first();
 
-                    DB::table('survey_answers')->updateOrInsert(
-                        ['survey_response_id' => $actualResponseId, 'survey_question_id' => $questionId],
+                    Stamped::upsert('survey_answers', 
+                        ['survey_response_id' => $actualResponseId, 'survey_question_id' => $questionId], 
                         [
                             'survey_response_id' => $actualResponseId,
                             'survey_question_id' => $questionId,
@@ -125,8 +123,7 @@ class OpsDataSeeder extends Seeder
                                 'yes_no' => $customerId % 2 === 0 ? 'نعم' : 'لا',
                                 default => 'ملاحظة من العميل '.$customerId,
                             },
-                        ],
-                    );
+                        ]);
                 }
             }
         }
@@ -155,7 +152,7 @@ class OpsDataSeeder extends Seeder
                 continue;
             }
 
-            DB::table('audit_logs')->insert([
+            Stamped::insert('audit_logs', [
                 'auditable_type' => $event['auditable_type'],
                 'auditable_id' => $event['auditable_id'],
                 'event' => $event['event'],
@@ -181,14 +178,13 @@ class OpsDataSeeder extends Seeder
 
         foreach ($roleIds as $roleId) {
             foreach ($permissionIds as $permissionId) {
-                DB::table('model_has_permissions')->updateOrInsert(
+                Stamped::upsert('model_has_permissions', 
                     [
                         'permission_id' => $permissionId,
                         'model_type' => 'App\\Models\\Role',
                         'model_id' => $roleId,
-                    ],
-                    [],
-                );
+                    ], 
+                    []);
             }
         }
     }
@@ -206,35 +202,32 @@ class OpsDataSeeder extends Seeder
         $past = now()->subHour();
 
         for ($i = 1; $i <= 5; $i++) {
-            DB::table('cache')->updateOrInsert(
-                ['key' => 'seeded:cache:'.$i],
-                ['value' => 'seeded', 'expiration' => $past->getTimestamp()],
-            );
+            Stamped::upsert('cache', 
+                ['key' => 'seeded:cache:'.$i], 
+                ['value' => 'seeded', 'expiration' => $past->getTimestamp()]);
         }
 
         for ($i = 1; $i <= 5; $i++) {
-            DB::table('cache_locks')->updateOrInsert(
-                ['key' => 'seeded:lock:'.$i],
-                ['owner' => 'seeded', 'expiration' => $past->getTimestamp()],
-            );
+            Stamped::upsert('cache_locks', 
+                ['key' => 'seeded:lock:'.$i], 
+                ['owner' => 'seeded', 'expiration' => $past->getTimestamp()]);
         }
 
         for ($i = 1; $i <= 5; $i++) {
-            DB::table('sessions')->updateOrInsert(
-                ['id' => 'seeded-session-'.$i],
+            Stamped::upsert('sessions', 
+                ['id' => 'seeded-session-'.$i], 
                 [
                     'user_id' => null,
                     'ip_address' => '127.0.0.1',
                     'user_agent' => 'seeder',
                     'payload' => base64_encode(serialize([])),
                     'last_activity' => $past->getTimestamp(),
-                ],
-            );
+                ]);
         }
 
         for ($i = 1; $i <= 5; $i++) {
-            DB::table('job_batches')->updateOrInsert(
-                ['id' => 'seeded-batch-'.$i],
+            Stamped::upsert('job_batches', 
+                ['id' => 'seeded-batch-'.$i], 
                 [
                     'name' => 'seeded',
                     'total_jobs' => 0,
@@ -245,21 +238,19 @@ class OpsDataSeeder extends Seeder
                     'cancelled_at' => $past->getTimestamp(),
                     'created_at' => $past->getTimestamp(),
                     'finished_at' => $past->getTimestamp(),
-                ],
-            );
+                ]);
         }
 
         for ($i = 1; $i <= 5; $i++) {
-            DB::table('failed_jobs')->updateOrInsert(
-                ['uuid' => sprintf('00000000-0000-4000-8000-%012d', $i)],
+            Stamped::upsert('failed_jobs', 
+                ['uuid' => sprintf('00000000-0000-4000-8000-%012d', $i)], 
                 [
                     'connection' => 'database',
                     'queue' => 'default',
                     'payload' => json_encode(['seeded' => true]),
                     'exception' => 'Seeded row for demonstration purposes.',
                     'failed_at' => $past,
-                ],
-            );
+                ]);
         }
     }
 }

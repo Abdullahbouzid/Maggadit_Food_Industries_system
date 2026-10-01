@@ -34,6 +34,10 @@ class DatabaseSeeder extends Seeder
             InventoryDataSeeder::class,
             SalesLifecycleSeeder::class,
             OpsDataSeeder::class,
+
+            // Must run last: repairs NULL created_at/updated_at left behind
+            // by any seeder that wrote through DB::table().
+            BackfillTimestampsSeeder::class,
         ]);
     }
 }

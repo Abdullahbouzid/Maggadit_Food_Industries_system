@@ -48,7 +48,7 @@
     </div>
     <div class="nova-stat">
         <div class="nova-stat-value">
-            <i class="fas fa-calendar"></i> {{ $survey->created_at->format('d/m') }}
+            <i class="fas fa-calendar"></i> {{ $survey?->created_at?->format('d/m') ?? '—' }}
         </div>
         <div class="nova-stat-label">تاريخ الإنشاء</div>
     </div>
@@ -145,7 +145,7 @@
                         <td>{{ $response->customer->name ?? 'غير معروف' }}</td>
                         <td class="nova-text-muted small">{{ $response->customer->email ?? '-' }}</td>
                         <td class="small nova-text-muted">
-                            {{ $response->submitted_at?->format('Y-m-d H:i') ?? $response->created_at->format('Y-m-d H:i') }}
+                            {{ $response->submitted_at?->format('Y-m-d H:i') ?? $response?->created_at?->format('Y-m-d H:i') ?? '—' }}
                         </td>
                     </tr>
                     @endforeach

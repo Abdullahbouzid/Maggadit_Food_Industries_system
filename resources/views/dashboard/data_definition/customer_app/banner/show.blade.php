@@ -114,7 +114,7 @@
                             <label class="nova-label text-uppercase small fw-semibold">
                                 <i class="fas fa-clock me-1"></i> Created At
                             </label>
-                            <p class="fw-semibold fs-5 mb-0">{{ $banner->created_at->format('Y-m-d h:i A') }}</p>
+                            <p class="fw-semibold fs-5 mb-0">{{ $banner?->created_at?->format('Y-m-d h:i A') ?? '—' }}</p>
                         </div>
                     </div>
 

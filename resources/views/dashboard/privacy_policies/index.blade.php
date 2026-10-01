@@ -102,7 +102,7 @@
                             <span class="nova-badge secondary">Inactive</span>
                         @endif
                     </td>
-                    <td>{{ $policy->created_at->format('Y-m-d') }}</td>
+                    <td>{{ $policy?->created_at?->format('Y-m-d') ?? '—' }}</td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
                             <a href="{{ route('privacy-policies.show', $policy) }}" class="nova-icon-btn nova-btn-sm" title="View">

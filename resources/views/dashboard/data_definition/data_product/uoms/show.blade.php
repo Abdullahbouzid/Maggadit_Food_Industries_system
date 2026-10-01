@@ -87,14 +87,14 @@
                     <th>Created At</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted me-1"></i>
-                        {{ $uom->created_at ? $uom->created_at->format('F d, Y h:i A') : '—' }}
+                        {{ $uom->created_at ? $uom?->created_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
                 <tr>
                     <th>Last Updated</th>
                     <td>
                         <i class="fas fa-history nova-text-muted me-1"></i>
-                        {{ $uom->updated_at ? $uom->updated_at->format('F d, Y h:i A') : '—' }}
+                        {{ $uom->updated_at ? $uom?->updated_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
             </table>

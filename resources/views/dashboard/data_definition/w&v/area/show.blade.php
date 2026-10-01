@@ -76,11 +76,11 @@
                 </tr>
                 <tr>
                     <th>تاريخ الإنشاء</th>
-                    <td>{{ $area->created_at->format('d M Y, h:i A') }}</td>
+                    <td>{{ $area?->created_at?->format('d M Y, h:i A') ?? '—' }}</td>
                 </tr>
                 <tr>
                     <th>آخر تحديث</th>
-                    <td>{{ $area->updated_at->format('d M Y, h:i A') }}</td>
+                    <td>{{ $area?->updated_at?->format('d M Y, h:i A') ?? '—' }}</td>
                 </tr>
             </tbody>
         </table>

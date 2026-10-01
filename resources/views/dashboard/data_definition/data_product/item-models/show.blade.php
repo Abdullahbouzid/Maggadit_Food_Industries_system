@@ -77,14 +77,14 @@
                     <th>تاريخ الإنشاء</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted me-1"></i>
-                        {{ $itemModel->created_at ? $itemModel->created_at->format('F d, Y h:i A') : '—' }}
+                        {{ $itemModel->created_at ? $itemModel?->created_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
                 <tr>
                     <th>آخر تحديث</th>
                     <td>
                         <i class="fas fa-history nova-text-muted me-1"></i>
-                        {{ $itemModel->updated_at ? $itemModel->updated_at->format('F d, Y h:i A') : '—' }}
+                        {{ $itemModel->updated_at ? $itemModel?->updated_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
             </table>

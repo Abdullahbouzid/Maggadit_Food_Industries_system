@@ -77,14 +77,14 @@
                     <th>Created At</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted me-1"></i>
-                        {{ $state->created_at ? $state->created_at->format('F d, Y h:i A') : '—' }}
+                        {{ $state->created_at ? $state?->created_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
                 <tr>
                     <th>Last Updated</th>
                     <td>
                         <i class="fas fa-history nova-text-muted me-1"></i>
-                        {{ $state->updated_at ? $state->updated_at->format('F d, Y h:i A') : '—' }}
+                        {{ $state->updated_at ? $state?->updated_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
             </table>

@@ -69,7 +69,7 @@
                                 @endif
                             </td>
                             <td><small class="nova-text-muted">{{ $version->creator?->name ?? '—' }}</small></td>
-                            <td><small class="nova-text-muted">{{ $version->created_at->format('Y-m-d H:i') }}</small></td>
+                            <td><small class="nova-text-muted">{{ $version?->created_at?->format('Y-m-d H:i') ?? '—' }}</small></td>
                             <td class="nova-text-end">
                                 @if($version->is_active)
                                     <a href="{{ route('price-lists.versions.edit', [$priceList, $version]) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">

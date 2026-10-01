@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Database\Seeders\Support\Stamped;
 
 /**
  * Customer-facing content: FAQs, banners, about/privacy pages, push
@@ -35,10 +36,9 @@ class ContentDataSeeder extends Seeder
         ];
 
         foreach ($faqs as $faq) {
-            DB::table('faqs')->updateOrInsert(
-                ['question' => $faq['question']],
-                $faq,
-            );
+            Stamped::upsert('faqs', 
+                ['question' => $faq['question']], 
+                $faq);
         }
     }
 
@@ -53,7 +53,7 @@ class ContentDataSeeder extends Seeder
         ];
 
         foreach ($banners as $banner) {
-            DB::table('banners')->updateOrInsert(['title' => $banner['title']], $banner);
+            Stamped::upsert('banners', ['title' => $banner['title']],  $banner);
         }
     }
 
@@ -99,8 +99,8 @@ class ContentDataSeeder extends Seeder
         ];
 
         foreach ($pages as $page) {
-            DB::table('organization_abouts')->updateOrInsert(
-                ['organization_id' => $orgId, 'title' => $page['title']],
+            Stamped::upsert('organization_abouts', 
+                ['organization_id' => $orgId, 'title' => $page['title']], 
                 $page + [
                     'organization_id' => $orgId,
                     // Both `values` and `statistics` have a json_valid() CHECK.
@@ -115,8 +115,7 @@ class ContentDataSeeder extends Seeder
                         'years' => 15,
                     ], JSON_UNESCAPED_UNICODE),
                     'is_active' => true,
-                ],
-            );
+                ]);
         }
     }
 
@@ -137,10 +136,9 @@ class ContentDataSeeder extends Seeder
         ];
 
         foreach ($policies as $policy) {
-            DB::table('privacy_policies')->updateOrInsert(
-                ['organization_id' => $orgId, 'type' => $policy['type']],
-                $policy + ['organization_id' => $orgId, 'is_active' => true],
-            );
+            Stamped::upsert('privacy_policies', 
+                ['organization_id' => $orgId, 'type' => $policy['type']], 
+                $policy + ['organization_id' => $orgId, 'is_active' => true]);
         }
     }
 
@@ -160,7 +158,7 @@ class ContentDataSeeder extends Seeder
             if ($existing) {
                 $id = $existing->id;
             } else {
-                $id = DB::table('notifications')->insertGetId($notification + [
+                $id = Stamped::insertGetId('notifications', $notification + [
                     'icon_type' => 'bell',
                     // `customers` is a json_valid() column.
                     'customers' => json_encode(['all']),
@@ -174,16 +172,15 @@ class ContentDataSeeder extends Seeder
             // Notification read state, one row per notification.
             $customers = DB::table('customers')->orderBy('id')->limit(5)->pluck('id');
             foreach ($customers as $customerId) {
-                DB::table('notification_reads')->updateOrInsert(
-                    ['notification_id' => $id, 'customer_id' => $customerId],
+                Stamped::upsert('notification_reads', 
+                    ['notification_id' => $id, 'customer_id' => $customerId], 
                     [
                         'notification_id' => $id,
                         'customer_id' => $customerId,
                         'read_at' => $customerId % 2 === 0 ? now() : null,
                         'is_starred' => $customerId === 1,
                         'is_archived' => false,
-                    ],
-                );
+                    ]);
             }
         }
     }
@@ -207,8 +204,8 @@ class ContentDataSeeder extends Seeder
         foreach ($offers as $index => $offer) {
             $itemId = $items->get($index % $items->count());
 
-            DB::table('offers')->updateOrInsert(
-                ['item_id' => $itemId, 'title' => $offer['title']],
+            Stamped::upsert('offers', 
+                ['item_id' => $itemId, 'title' => $offer['title']], 
                 $offer + [
                     'item_id' => $itemId,
                     'description' => $offer['title'],
@@ -216,8 +213,7 @@ class ContentDataSeeder extends Seeder
                     'start_date' => now()->subWeek(),
                     'end_date' => now()->addMonth(),
                     'is_active' => true,
-                ],
-            );
+                ]);
         }
     }
 
@@ -230,15 +226,14 @@ class ContentDataSeeder extends Seeder
         }
 
         foreach ($items as $item) {
-            DB::table('item_images')->updateOrInsert(
-                ['item_id' => $item->id, 'image_path' => 'items/'.$item->code.'.jpg'],
+            Stamped::upsert('item_images', 
+                ['item_id' => $item->id, 'image_path' => 'items/'.$item->code.'.jpg'], 
                 [
                     'item_id' => $item->id,
                     'image_path' => 'items/'.$item->code.'.jpg',
                     'alt_text' => $item->name_ar,
                     'sort_order' => 1,
-                ],
-            );
+                ]);
         }
     }
 
@@ -256,15 +251,13 @@ class ContentDataSeeder extends Seeder
         $operationList = $operations->values();
 
         foreach ($packs as $packId) {
-            DB::table('item_pack_pack_group')->updateOrInsert(
-                ['item_pack_id' => $packId, 'pack_group_id' => $groupList->get($packId % $groupList->count())],
-                [],
-            );
+            Stamped::upsert('item_pack_pack_group', 
+                ['item_pack_id' => $packId, 'pack_group_id' => $groupList->get($packId % $groupList->count())], 
+                []);
 
-            DB::table('item_pack_pack_operation')->updateOrInsert(
-                ['item_pack_id' => $packId, 'pack_operation_id' => $operationList->get($packId % $operationList->count())],
-                [],
-            );
+            Stamped::upsert('item_pack_pack_operation', 
+                ['item_pack_id' => $packId, 'pack_operation_id' => $operationList->get($packId % $operationList->count())], 
+                []);
         }
     }
 }

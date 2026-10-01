@@ -48,7 +48,7 @@
     <div class="nova-alert info" style="display: flex; align-items: center; gap: 0.5rem;">
         <i class="fas fa-clock"></i>
         آخر تحديث: {{ $item->updated_at->diffForHumans() }}
-        <span class="nova-text-muted">({{ $item->updated_at->format('Y-m-d H:i') }})</span>
+        <span class="nova-text-muted">({{ $item?->updated_at?->format('Y-m-d H:i') ?? '—' }})</span>
     </div>
 @endif
 

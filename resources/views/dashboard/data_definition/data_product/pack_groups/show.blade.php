@@ -70,14 +70,14 @@
                     <th>Created At</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted me-1"></i>
-                        {{ $packGroup->created_at ? $packGroup->created_at->format('F d, Y h:i A') : '—' }}
+                        {{ $packGroup->created_at ? $packGroup?->created_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
                 <tr>
                     <th>Last Updated</th>
                     <td>
                         <i class="fas fa-history nova-text-muted me-1"></i>
-                        {{ $packGroup->updated_at ? $packGroup->updated_at->format('F d, Y h:i A') : '—' }}
+                        {{ $packGroup->updated_at ? $packGroup?->updated_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
             </table>

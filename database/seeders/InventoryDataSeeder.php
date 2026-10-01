@@ -6,6 +6,7 @@ use App\Enums\InventoryMovementType;
 use App\Enums\StockReservationStatus;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Database\Seeders\Support\Stamped;
 
 /**
  * Stock side of the system: production batches and their batch items, the
@@ -42,8 +43,8 @@ class InventoryDataSeeder extends Seeder
             foreach ($warehouses as $index => $warehouse) {
                 $quantity = 100 + ($index * 25);
 
-                $inventoryId = DB::table('inventories')->updateOrInsert(
-                    ['item_id' => $item->id, 'warehouse_id' => $warehouse->id],
+                $inventoryId = Stamped::upsert('inventories', 
+                    ['item_id' => $item->id, 'warehouse_id' => $warehouse->id], 
                     [
                         'item_id' => $item->id,
                         'item_pack_id' => $packId,
@@ -53,8 +54,7 @@ class InventoryDataSeeder extends Seeder
                         'damaged_quantity' => $index === 0 ? 2 : 0,
                         'reorder_level' => 10,
                         'last_counted_at' => now()->subDays(7),
-                    ],
-                );
+                    ]);
 
                 // Ledger rows for this inventory row.
                 $moves = [
@@ -76,7 +76,7 @@ class InventoryDataSeeder extends Seeder
                 foreach ($moves as $moveIndex => [$type, $qty, $note]) {
                     $balance += $qty;
 
-                    DB::table('inventory_movements')->insert([
+                    Stamped::insert('inventory_movements', [
                         'inventory_id' => DB::table('inventories')
                             ->where('item_id', $item->id)
                             ->where('warehouse_id', $warehouse->id)
@@ -107,10 +107,9 @@ class InventoryDataSeeder extends Seeder
         ];
 
         foreach ($batches as $batch) {
-            DB::table('production_batches')->updateOrInsert(
-                ['batch_number' => $batch['batch_number']],
-                $batch + ['notes' => 'دفعة إنتاج تجريبية'],
-            );
+            Stamped::upsert('production_batches', 
+                ['batch_number' => $batch['batch_number']], 
+                $batch + ['notes' => 'دفعة إنتاج تجريبية']);
         }
 
         $batchIds = DB::table('production_batches')->orderBy('id')->pluck('id');
@@ -125,8 +124,8 @@ class InventoryDataSeeder extends Seeder
             for ($offset = 0; $offset < 3; $offset++) {
                 $pack = $packs->get(($index + $offset) % $packs->count());
 
-                DB::table('batch_items')->updateOrInsert(
-                    ['batch_id' => $batchId, 'item_id' => $pack->item_id, 'item_pack_id' => $pack->id],
+                Stamped::upsert('batch_items', 
+                    ['batch_id' => $batchId, 'item_id' => $pack->item_id, 'item_pack_id' => $pack->id], 
                     [
                         'batch_id' => $batchId,
                         'item_id' => $pack->item_id,
@@ -136,8 +135,7 @@ class InventoryDataSeeder extends Seeder
                         'dispatched_quantity' => 0,
                         'transferred_quantity' => 0,
                         'expiry_date' => now()->addDays(120 + ($offset * 30))->toDateString(),
-                    ],
-                );
+                    ]);
             }
         }
     }
@@ -152,24 +150,23 @@ class InventoryDataSeeder extends Seeder
         }
 
         foreach ($batchItems as $index => $batchItem) {
-            DB::table('batch_item_stock')->updateOrInsert(
-                ['batch_item_id' => $batchItem->id, 'warehouse_id' => $batchItem->warehouse_id ?: $warehouseIds->first()],
+            Stamped::upsert('batch_item_stock', 
+                ['batch_item_id' => $batchItem->id, 'warehouse_id' => $batchItem->warehouse_id ?: $warehouseIds->first()], 
                 [
                     'batch_item_id' => $batchItem->id,
                     'warehouse_id' => $batchItem->warehouse_id ?: $warehouseIds->first(),
                     'quantity' => (int) $batchItem->quantity,
                     'reserved_quantity' => 0,
-                ],
-            );
+                ]);
 
             if ($index % 2 === 0 && $warehouseIds->count() > 1) {
-                DB::table('batch_movements')->updateOrInsert(
+                Stamped::upsert('batch_movements', 
                     [
                         'batch_item_id' => $batchItem->id,
                         'from_warehouse_id' => $batchItem->warehouse_id ?: $warehouseIds->first(),
                         'to_warehouse_id' => $warehouseIds->get(1),
                         'movement_date' => now()->subDays($index)->toDateString(),
-                    ],
+                    ], 
                     [
                         'batch_item_id' => $batchItem->id,
                         'from_warehouse_id' => $batchItem->warehouse_id ?: $warehouseIds->first(),
@@ -178,8 +175,7 @@ class InventoryDataSeeder extends Seeder
                         'quantity' => 5,
                         'movement_date' => now()->subDays($index)->toDateString(),
                         'notes' => 'تحويل بين المخازن',
-                    ],
-                );
+                    ]);
             }
         }
     }
@@ -199,14 +195,14 @@ class InventoryDataSeeder extends Seeder
             $packId = $itemPacks->isNotEmpty() ? $itemPacks->first()->id : null;
             $status = $statuses[$index % count($statuses)];
 
-            DB::table('stock_reservations')->updateOrInsert(
+            Stamped::upsert('stock_reservations', 
                 [
                     'item_id' => $item->id,
                     'warehouse_id' => $warehouses->get($index % $warehouses->count())->id,
                     'reserved_for_type' => 'order',
                     'reserved_for_id' => 0,
                     'status' => $status,
-                ],
+                ], 
                 [
                     'item_id' => $item->id,
                     'item_pack_id' => $packId,
@@ -220,8 +216,7 @@ class InventoryDataSeeder extends Seeder
                         StockReservationStatus::Released->value,
                     ], true) ? now()->subDay() : now()->addDays(3),
                     'released_at' => $status === StockReservationStatus::Released->value ? now()->subDay() : null,
-                ],
-            );
+                ]);
         }
     }
 }

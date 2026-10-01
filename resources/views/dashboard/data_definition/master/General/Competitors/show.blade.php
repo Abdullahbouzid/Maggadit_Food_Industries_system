@@ -89,14 +89,14 @@
                     <th>Created At</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted nova-me-1"></i>
-                        {{ $competitor->created_at ? $competitor->created_at->format('F d, Y h:i A') : '—' }}
+                        {{ $competitor->created_at ? $competitor?->created_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
                 <tr>
                     <th>Last Updated</th>
                     <td>
                         <i class="fas fa-history nova-text-muted nova-me-1"></i>
-                        {{ $competitor->updated_at ? $competitor->updated_at->format('F d, Y h:i A') : '—' }}
+                        {{ $competitor->updated_at ? $competitor?->updated_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
             </table>

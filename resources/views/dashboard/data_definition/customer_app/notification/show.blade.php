@@ -142,7 +142,7 @@
                                     <label class="nova-label text-uppercase small fw-semibold">
                                         <i class="fas fa-clock me-1"></i> Created At
                                     </label>
-                                    <p>{{ $notification->created_at->format('F d, Y \a\t h:i A') }}</p>
+                                    <p>{{ $notification?->created_at?->format('F d, Y \a\t h:i A') ?? '—' }}</p>
                                 </div>
                             </div>
 
@@ -151,7 +151,7 @@
                                     <label class="nova-label text-uppercase small fw-semibold">
                                         <i class="fas fa-history me-1"></i> Last Updated
                                     </label>
-                                    <p>{{ $notification->updated_at->format('F d, Y \a\t h:i A') }}</p>
+                                    <p>{{ $notification?->updated_at?->format('F d, Y \a\t h:i A') ?? '—' }}</p>
                                 </div>
                             </div>
                         </div>

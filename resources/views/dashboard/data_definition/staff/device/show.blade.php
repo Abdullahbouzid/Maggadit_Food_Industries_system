@@ -108,14 +108,14 @@
                     <th>تاريخ الإنشاء</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted me-1"></i>
-                        {{ $device->created_at ? $device->created_at->format('d M Y, h:i A') : '—' }}
+                        {{ $device->created_at ? $device?->created_at?->format('d M Y, h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
                 <tr>
                     <th>آخر تحديث</th>
                     <td>
                         <i class="fas fa-history nova-text-muted me-1"></i>
-                        {{ $device->updated_at ? $device->updated_at->format('d M Y, h:i A') : '—' }}
+                        {{ $device->updated_at ? $device?->updated_at?->format('d M Y, h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
             </table>

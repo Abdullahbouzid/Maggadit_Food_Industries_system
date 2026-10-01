@@ -28,7 +28,7 @@
                 </button>
             </div>
             <h2 class="text-xl font-bold text-gray-800 mt-2">{{ $customer->name ?? 'مستخدم' }}</h2>
-            <p class="text-xs text-gray-400">عضو منذ {{ $customer->created_at ? $customer->created_at->format('Y') : date('Y') }}</p>
+            <p class="text-xs text-gray-400">عضو منذ {{ $customer->created_at ? $customer?->created_at?->format('Y') ?? '—' : date('Y') }}</p>
         </div>
 
         <!-- بطاقات البيانات الشخصية -->

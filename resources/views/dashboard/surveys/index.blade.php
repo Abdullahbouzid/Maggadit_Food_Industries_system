@@ -98,7 +98,7 @@
             </div>
         </div>
         <div class="nova-card-footer" style="border-top: 1px solid var(--nova-border-light); background: var(--nova-surface-2);">
-            <small class="nova-text-muted"><i class="fas fa-clock"></i> Created {{ $survey->created_at->format('Y/m/d H:i') }}</small>
+            <small class="nova-text-muted"><i class="fas fa-clock"></i> Created {{ $survey?->created_at?->format('Y/m/d H:i') ?? '—' }}</small>
         </div>
     </div>
     @empty

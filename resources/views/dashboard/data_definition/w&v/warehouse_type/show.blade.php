@@ -73,14 +73,14 @@
                     <th>Created At</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted me-1"></i>
-                        {{ $warehouseType->created_at ? $warehouseType->created_at->format('F d, Y h:i A') : '—' }}
+                        {{ $warehouseType->created_at ? $warehouseType?->created_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
                 <tr>
                     <th>Last Updated</th>
                     <td>
                         <i class="fas fa-history nova-text-muted me-1"></i>
-                        {{ $warehouseType->updated_at ? $warehouseType->updated_at->format('F d, Y h:i A') : '—' }}
+                        {{ $warehouseType->updated_at ? $warehouseType?->updated_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
             </table>

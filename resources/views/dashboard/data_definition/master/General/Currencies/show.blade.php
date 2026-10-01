@@ -78,14 +78,14 @@
                     <th>تاريخ الإنشاء</th>
                     <td>
                         <i class="fas fa-calendar nova-text-muted me-1"></i>
-                        {{ $currency->created_at ? $currency->created_at->format('F d, Y h:i A') : '—' }}
+                        {{ $currency->created_at ? $currency?->created_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
                 <tr>
                     <th>آخر تحديث</th>
                     <td>
                         <i class="fas fa-history nova-text-muted me-1"></i>
-                        {{ $currency->updated_at ? $currency->updated_at->format('F d, Y h:i A') : '—' }}
+                        {{ $currency->updated_at ? $currency?->updated_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                     </td>
                 </tr>
             </table>

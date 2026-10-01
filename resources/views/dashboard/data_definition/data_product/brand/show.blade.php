@@ -69,14 +69,14 @@
                             <th>Created At</th>
                             <td>
                                 <i class="fas fa-calendar nova-text-muted me-1"></i>
-                                {{ $brand->created_at->format('Y-m-d h:i A') }}
+                                {{ $brand?->created_at?->format('Y-m-d h:i A') ?? '—' }}
                             </td>
                         </tr>
                         <tr>
                             <th>Last Updated</th>
                             <td>
                                 <i class="fas fa-history nova-text-muted me-1"></i>
-                                {{ $brand->updated_at->format('Y-m-d h:i A') }}
+                                {{ $brand?->updated_at?->format('Y-m-d h:i A') ?? '—' }}
                             </td>
                         </tr>
                     </table>

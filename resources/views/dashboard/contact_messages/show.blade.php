@@ -10,7 +10,7 @@
             رسالة من {{ $contactMessage->name }}
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">
-            <i class="fas fa-clock"></i> تاريخ الإرسال: {{ $contactMessage->created_at->format('Y-m-d H:i') }}
+            <i class="fas fa-clock"></i> تاريخ الإرسال: {{ $contactMessage?->created_at?->format('Y-m-d H:i') ?? '—' }}
         </p>
     </div>
     <div class="nova-actionbar-actions">

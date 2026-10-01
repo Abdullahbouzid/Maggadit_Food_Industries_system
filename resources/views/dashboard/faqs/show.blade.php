@@ -37,7 +37,7 @@
         <small class="nova-text-muted">
             أُنشئ في {{ $faq->created_at?->format('Y-m-d H:i') }}
             @if ($faq->updated_at)
-                · آخر تعديل {{ $faq->updated_at->format('Y-m-d H:i') }}
+                · آخر تعديل {{ $faq?->updated_at?->format('Y-m-d H:i') ?? '—' }}
             @endif
         </small>
     </div>

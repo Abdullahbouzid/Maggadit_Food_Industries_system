@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Database\Seeders\Support\Stamped;
 
 /**
  * Tops up customers and the CRM tables around them (wallets, favorites,
@@ -16,7 +17,7 @@ class CrmDataSeeder extends Seeder
     {
         $this->customers();
         $this->customerOrganization();
-        $this->customerPriceLists();
+        // customer_price_lists is owned by CustomerSeeder.
         $this->wallets();
         $this->favorites();
         $this->vendors();
@@ -48,8 +49,8 @@ class CrmDataSeeder extends Seeder
         foreach ($customers as $index => $customer) {
             $cityName = $cities->keys()->get($index % max(1, $cities->count()));
 
-            DB::table('customers')->updateOrInsert(
-                ['username' => $customer['username']],
+            Stamped::upsert('customers', 
+                ['username' => $customer['username']], 
                 [
                     'name' => $customer['name'],
                     'email' => $customer['username'].'@example.com',
@@ -62,8 +63,7 @@ class CrmDataSeeder extends Seeder
                     'price_list_id' => $defaultPriceList,
                     'created_at' => now(),
                     'updated_at' => now(),
-                ],
-            );
+                ]);
         }
     }
 
@@ -77,38 +77,9 @@ class CrmDataSeeder extends Seeder
         }
 
         foreach ($customers as $customerId) {
-            DB::table('customer_organization')->updateOrInsert(
-                ['customer_id' => $customerId, 'organization_id' => $orgId],
-                ['customer_id' => $customerId, 'organization_id' => $orgId, 'is_active' => true],
-            );
-        }
-    }
-
-    private function customerPriceLists(): void
-    {
-        $priceLists = DB::table('price_lists')->pluck('id', 'name');
-        $customers = DB::table('customers')->orderBy('id')->get();
-
-        if ($priceLists->isEmpty()) {
-            return;
-        }
-
-        $names = $priceLists->keys()->values();
-        $adminId = DB::table('users')->orderBy('id')->value('id');
-
-        foreach ($customers as $customer) {
-            $listId = $priceLists->get($names->get($customer->id % $names->count()));
-
-            DB::table('customer_price_lists')->updateOrInsert(
-                ['customer_id' => $customer->id, 'price_list_id' => $listId],
-                [
-                    'customer_id' => $customer->id,
-                    'price_list_id' => $listId,
-                    'assigned_at' => now(),
-                    'assigned_by' => $adminId,
-                    'is_active' => true,
-                ],
-            );
+            Stamped::upsert('customer_organization', 
+                ['customer_id' => $customerId, 'organization_id' => $orgId], 
+                ['customer_id' => $customerId, 'organization_id' => $orgId, 'is_active' => true]);
         }
     }
 
@@ -133,8 +104,8 @@ class CrmDataSeeder extends Seeder
         foreach ($customers as $customer) {
             $balance = (float) ($balances[$customer->username] ?? 500);
 
-            DB::table('customer_wallets')->updateOrInsert(
-                ['customer_id' => $customer->id, 'currency_id' => $currency->id],
+            Stamped::upsert('customer_wallets', 
+                ['customer_id' => $customer->id, 'currency_id' => $currency->id], 
                 [
                     'customer_id' => $customer->id,
                     'currency_id' => $currency->id,
@@ -142,8 +113,7 @@ class CrmDataSeeder extends Seeder
                     'total_deposited' => $balance,
                     'total_spent' => 0,
                     'is_active' => true,
-                ],
-            );
+                ]);
 
             // Give every wallet a short movement history so the ledger view
             // has something to display.
@@ -166,7 +136,7 @@ class CrmDataSeeder extends Seeder
             foreach ($deposits as $index => $amount) {
                 $running += $amount;
 
-                DB::table('wallet_transactions')->insert([
+                Stamped::insert('wallet_transactions', [
                     'wallet_id' => $walletId,
                     'type' => 'deposit',
                     'amount' => $amount,
@@ -196,10 +166,9 @@ class CrmDataSeeder extends Seeder
             $picks = [$items->get(0), $items->get(1 % $items->count())];
 
             foreach (array_unique($picks) as $itemId) {
-                DB::table('customer_favorites')->updateOrInsert(
-                    ['customer_id' => $customerId, 'item_id' => $itemId],
-                    ['customer_id' => $customerId, 'item_id' => $itemId],
-                );
+                Stamped::upsert('customer_favorites', 
+                    ['customer_id' => $customerId, 'item_id' => $itemId], 
+                    ['customer_id' => $customerId, 'item_id' => $itemId]);
             }
         }
     }
@@ -215,7 +184,7 @@ class CrmDataSeeder extends Seeder
         ];
 
         foreach ($vendors as $vendor) {
-            DB::table('vendors')->updateOrInsert(['code' => $vendor['code']], $vendor);
+            Stamped::upsert('vendors', ['code' => $vendor['code']],  $vendor);
         }
     }
 
@@ -236,16 +205,15 @@ class CrmDataSeeder extends Seeder
         ];
 
         foreach ($competitors as $competitor) {
-            DB::table('competitors')->updateOrInsert(
-                ['code' => $competitor['code']],
+            Stamped::upsert('competitors', 
+                ['code' => $competitor['code']], 
                 $competitor + [
                     'organization_id' => $orgId,
                     'contact_person' => 'مدير المبيعات',
                     'phone' => '091' . random_int(100000, 999999),
                     'email' => strtolower($competitor['code']).'@example.com',
                     'address' => 'طرابلس، ليبيا',
-                ],
-            );
+                ]);
         }
     }
 
@@ -267,7 +235,7 @@ class CrmDataSeeder extends Seeder
         ];
 
         foreach ($messages as $index => $message) {
-            DB::table('contact_messages')->insertOrIgnore([
+            Stamped::insertOrIgnore('contact_messages', [
                 'organization_id' => $orgId,
                 'name' => 'عميل'.($index + 1),
                 'email' => 'client'.($index + 1).'@example.com',
@@ -299,15 +267,14 @@ class CrmDataSeeder extends Seeder
         ];
 
         foreach ($devices as $device) {
-            DB::table('devices')->updateOrInsert(
-                ['serial' => $device['serial']],
+            Stamped::upsert('devices', 
+                ['serial' => $device['serial']], 
                 $device + [
                     'organization_id' => $orgId,
                     'purchase_date' => now()->subYear()->toDateString(),
                     'warranty_expiry' => now()->addYear()->toDateString(),
                     'is_inactive' => false,
-                ],
-            );
+                ]);
         }
     }
 }

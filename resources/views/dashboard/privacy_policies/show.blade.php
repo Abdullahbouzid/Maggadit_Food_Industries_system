@@ -87,14 +87,14 @@
                         <th>Created At</th>
                         <td>
                             <i class="fas fa-calendar nova-text-muted me-1"></i>
-                            {{ $privacyPolicy->created_at ? $privacyPolicy->created_at->format('F d, Y h:i A') : '—' }}
+                            {{ $privacyPolicy->created_at ? $privacyPolicy?->created_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                         </td>
                     </tr>
                     <tr>
                         <th>Last Updated</th>
                         <td>
                             <i class="fas fa-history nova-text-muted me-1"></i>
-                            {{ $privacyPolicy->updated_at ? $privacyPolicy->updated_at->format('F d, Y h:i A') : '—' }}
+                            {{ $privacyPolicy->updated_at ? $privacyPolicy?->updated_at?->format('F d, Y h:i A') ?? '—' : '—' }}
                         </td>
                     </tr>
                 </tbody>

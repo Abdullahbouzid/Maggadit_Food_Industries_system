@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Database\Seeders\Support\Stamped;
 
 /**
  * Tops up the shared reference tables so each one holds at least 5 rows.
@@ -20,6 +21,10 @@ class ReferenceDataSeeder extends Seeder
         $this->packCatalog();
         $this->warehouseAndVehicleTypes();
         $this->currencies();
+        $this->organizations();
+        $this->warehouses();
+        $this->vehicles();
+        $this->priceLists();
         $this->brands();
         $this->categories();
         $this->packageStatuses();
@@ -39,7 +44,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($countries as $country) {
-            DB::table('countries')->updateOrInsert(['code' => $country['code']], $country);
+            Stamped::upsert('countries', ['code' => $country['code']],  $country);
         }
 
         // Some city/state/area tables key off country; make sure the lookups
@@ -58,10 +63,9 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($states as $name => $code) {
-            DB::table('states')->updateOrInsert(
-                ['country_id' => $libya->id, 'name_ar' => $name],
-                ['country_id' => $libya->id, 'name_ar' => $name, 'name_en' => $name, 'code' => $code, 'is_active' => true, 'sort_order' => 1],
-            );
+            Stamped::upsert('states', 
+                ['country_id' => $libya->id, 'name_ar' => $name], 
+                ['country_id' => $libya->id, 'name_ar' => $name, 'name_en' => $name, 'code' => $code, 'is_active' => true, 'sort_order' => 1]);
         }
 
         $cities = [
@@ -78,8 +82,9 @@ class ReferenceDataSeeder extends Seeder
                 continue;
             }
 
-            DB::table('cities')->updateOrInsert(
-                // The unique key is (country_id, name), not (state_id, name).
+            // The unique key is (country_id, name), not (state_id, name).
+            Stamped::upsert(
+                'cities',
                 ['country_id' => $libya->id, 'name' => $city['name']],
                 $city + [
                     'country_id' => $libya->id,
@@ -107,7 +112,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($types as $type) {
-            DB::table('item_types')->updateOrInsert(['code' => $type['code']], $type);
+            Stamped::upsert('item_types', ['code' => $type['code']],  $type);
         }
     }
 
@@ -122,7 +127,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($packTypes as $row) {
-            DB::table('pack_types')->updateOrInsert(['code' => $row['code']], $row);
+            Stamped::upsert('pack_types', ['code' => $row['code']],  $row);
         }
 
         $packGroups = [
@@ -134,7 +139,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($packGroups as $row) {
-            DB::table('pack_groups')->updateOrInsert(['code' => $row['code']], $row);
+            Stamped::upsert('pack_groups', ['code' => $row['code']],  $row);
         }
 
         $packOperations = [
@@ -146,7 +151,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($packOperations as $row) {
-            DB::table('pack_operations')->updateOrInsert(['code' => $row['code']], $row);
+            Stamped::upsert('pack_operations', ['code' => $row['code']],  $row);
         }
 
         $uom = DB::table('uoms')->value('id');
@@ -164,10 +169,9 @@ class ReferenceDataSeeder extends Seeder
         }
 
         foreach ($capacities as $row) {
-            DB::table('pack_capacities')->updateOrInsert(
-                ['value' => $row['value'], 'uom_id' => $uom],
-                $row + ['uom_id' => $uom],
-            );
+            Stamped::upsert('pack_capacities', 
+                ['value' => $row['value'], 'uom_id' => $uom], 
+                $row + ['uom_id' => $uom]);
         }
     }
 
@@ -182,7 +186,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($warehouseTypes as $row) {
-            DB::table('warehouse_types')->updateOrInsert(['code' => $row['code']], $row);
+            Stamped::upsert('warehouse_types', ['code' => $row['code']],  $row);
         }
 
         $vehicleTypes = [
@@ -194,7 +198,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($vehicleTypes as $row) {
-            DB::table('vehicle_types')->updateOrInsert(['code' => $row['code']], $row);
+            Stamped::upsert('vehicle_types', ['code' => $row['code']],  $row);
         }
     }
 
@@ -209,7 +213,143 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($currencies as $row) {
-            DB::table('currencies')->updateOrInsert(['code' => $row['code']], $row);
+            Stamped::upsert('currencies', ['code' => $row['code']],  $row);
+        }
+    }
+
+    private function organizations(): void
+    {
+        $organizations = [
+            ['name' => 'شركة مجديت للصناعات الغذائية', 'code' => 'MAGGADIT', 'organization_type' => 'company', 'phone' => '0210000000', 'email' => 'info@maggadit.com'],
+            ['name' => 'فرع طرابلس', 'code' => 'MAGGADIT-TB', 'organization_type' => 'branch', 'phone' => '0211111111', 'email' => 'tripoli@maggadit.com'],
+            ['name' => 'فرع بنغازي', 'code' => 'MAGGADIT-BG', 'organization_type' => 'branch', 'phone' => '0222222222', 'email' => 'benghazi@maggadit.com'],
+            ['name' => 'فرع مصراتة', 'code' => 'MAGGADIT-MS', 'organization_type' => 'branch', 'phone' => '0233333333', 'email' => 'misrata@maggadit.com'],
+            ['name' => 'فرع سبها', 'code' => 'MAGGADIT-SH', 'organization_type' => 'branch', 'phone' => '0244444444', 'email' => 'sabha@maggadit.com'],
+        ];
+
+        foreach ($organizations as $organization) {
+            Stamped::upsert(
+                'organizations',
+                ['code' => $organization['code']],
+                $organization + [
+                    'parent_id' => null,
+                    'whatsapp' => $organization['phone'],
+                    'website' => 'https://maggadit.com',
+                    'address' => 'ليبيا',
+                    'forward_contact_messages_to_email' => true,
+                    'contact_email_recipient' => $organization['email'],
+                ],
+            );
+        }
+    }
+
+    private function warehouses(): void
+    {
+        $typeId = \App\Models\WarehouseType::orderBy('id')->value('id');
+        $orgId = \App\Models\Organization::orderBy('id')->value('id');
+        $cityId = \App\Models\City::orderBy('id')->value('id');
+
+        if (! $typeId || ! $orgId) {
+            return;
+        }
+
+        $warehouses = [
+            ['code' => 'WH-TR-01', 'name_en' => 'Main Warehouse Tripoli', 'name_ar' => 'المستودع الرئيسي طرابلس'],
+            ['code' => 'WH-BN-01', 'name_en' => 'Warehouse Benghazi', 'name_ar' => 'مستودع بنغازي'],
+            ['code' => 'WH-MS-01', 'name_en' => 'Warehouse Misrata', 'name_ar' => 'مستودع مصراتة'],
+            ['code' => 'WH-ZW-01', 'name_en' => 'Warehouse Zawiya', 'name_ar' => 'مستودع الزاوية'],
+            ['code' => 'WH-SH-01', 'name_en' => 'Warehouse Sabha', 'name_ar' => 'مستودع سبها'],
+        ];
+
+        foreach ($warehouses as $index => $warehouse) {
+            Stamped::upsert(
+                'warehouses',
+                ['code' => $warehouse['code']],
+                $warehouse + [
+                    'warehouse_type_id' => $typeId,
+                    'organization_id' => $orgId,
+                    'phone' => '021' . str_pad((string) ($index + 1), 7, '0', STR_PAD_LEFT),
+                    'address_ar' => 'ليبيا',
+                    'city_id' => $cityId,
+                    'is_active' => true,
+                    'sort_order' => $index + 1,
+                ],
+            );
+        }
+    }
+
+    private function vehicles(): void
+    {
+        $typeId = \App\Models\VehicleType::orderBy('id')->value('id');
+        $orgId = \App\Models\Organization::orderBy('id')->value('id');
+
+        if (! $typeId || ! $orgId) {
+            return;
+        }
+
+        $vehicles = [
+            ['vehicle_code' => 'VH-001', 'vehicle_name' => 'شاحنة 1', 'plate_no' => '12-3456-1'],
+            ['vehicle_code' => 'VH-002', 'vehicle_name' => 'شاحنة 2', 'plate_no' => '12-3456-2'],
+            ['vehicle_code' => 'VH-003', 'vehicle_name' => 'سيارة توصيل 1', 'plate_no' => '12-3456-3'],
+            ['vehicle_code' => 'VH-004', 'vehicle_name' => 'سيارة توصيل 2', 'plate_no' => '12-3456-4'],
+            ['vehicle_code' => 'VH-005', 'vehicle_name' => 'شاحنة مبردة', 'plate_no' => '12-3456-5'],
+        ];
+
+        foreach ($vehicles as $index => $vehicle) {
+            Stamped::upsert(
+                'vehicles',
+                ['vehicle_code' => $vehicle['vehicle_code']],
+                $vehicle + [
+                    'organization_id' => $orgId,
+                    'vehicle_type_id' => $typeId,
+                    'odometer' => 10000 + ($index * 5000),
+                    'capacity' => 1000 + ($index * 250),
+                    'volume' => 5 + $index,
+                    'inactive' => false,
+                ],
+            );
+        }
+    }
+
+    private function priceLists(): void
+    {
+        $currencyId = \App\Models\Currency::where('code', 'LYD')->value('id');
+        $adminId = \App\Models\User::orderBy('id')->value('id');
+        $lists = \App\Models\PriceList::orderBy('id')->get();
+
+        $extra = [
+            ['name' => 'قائمة المباني', 'description' => 'أسعار خاصة بالمباني', 'multiplier' => 0.75],
+            ['name' => 'قائمة الفنادق', 'description' => 'أسعار خاصة بالفنادق', 'multiplier' => 0.8],
+            ['name' => 'قائمة التصدير', 'description' => 'أسعار التصدير', 'multiplier' => 0.95],
+        ];
+
+        foreach ($extra as $row) {
+            $priceList = \App\Models\PriceList::updateOrCreate(
+                ['name' => $row['name']],
+                [
+                    'description' => $row['description'],
+                    'status' => 'active',
+                    'currency_id' => $currencyId,
+                    'created_by' => $adminId,
+                    'is_default' => false,
+                ],
+            );
+
+            Stamped::upsert(
+                'price_list_versions',
+                [
+                    'price_list_id' => $priceList->id,
+                    'effective_date' => '2026-01-01',
+                ],
+                [
+                    'price_list_id' => $priceList->id,
+                    'effective_date' => '2026-01-01',
+                    'is_active' => true,
+                    'created_by' => $adminId,
+                    'currency_id' => $currencyId,
+                    'exchange_rate' => 1,
+                ],
+            );
         }
     }
 
@@ -225,7 +365,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($brands as $row) {
-            DB::table('brands')->updateOrInsert(['name' => $row['name']], $row);
+            Stamped::upsert('brands', ['name' => $row['name']],  $row);
         }
     }
 
@@ -241,7 +381,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($categories as $row) {
-            DB::table('categories')->updateOrInsert(['code' => $row['code']], $row);
+            Stamped::upsert('categories', ['code' => $row['code']],  $row);
         }
     }
 
@@ -261,10 +401,9 @@ class ReferenceDataSeeder extends Seeder
             if (! $orgId) {
                 return;
             }
-            DB::table('package_statuses')->updateOrInsert(
-                ['organization_id' => $orgId, 'status_name' => $row['status_name']],
-                $row + ['organization_id' => $orgId],
-            );
+            Stamped::upsert('package_statuses', 
+                ['organization_id' => $orgId, 'status_name' => $row['status_name']], 
+                $row + ['organization_id' => $orgId]);
         }
     }
 
@@ -279,7 +418,7 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($types as $row) {
-            DB::table('sales_order_types')->updateOrInsert(['code' => $row['code']], $row);
+            Stamped::upsert('sales_order_types', ['code' => $row['code']],  $row);
         }
     }
 
@@ -294,10 +433,9 @@ class ReferenceDataSeeder extends Seeder
         ];
 
         foreach ($settings as $row) {
-            DB::table('payment_deadline_settings')->updateOrInsert(
-                ['payment_type' => $row['payment_type'], 'hours_limit' => $row['hours_limit'], 'applies_to' => $row['applies_to']],
-                $row,
-            );
+            Stamped::upsert('payment_deadline_settings', 
+                ['payment_type' => $row['payment_type'], 'hours_limit' => $row['hours_limit'], 'applies_to' => $row['applies_to']], 
+                $row);
         }
     }
 }

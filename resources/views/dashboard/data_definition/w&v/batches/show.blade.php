@@ -115,7 +115,7 @@
                     </span>
                     <span class="info-value">
                         <i class="fas fa-calendar nova-text-muted"></i>
-                        {{ $batch->created_at->format('Y-m-d H:i') }}
+                        {{ $batch->created_at ? $batch?->created_at?->format('Y-m-d H:i') ?? '—' : '—' }}
                     </span>
                 </div>
 
@@ -126,7 +126,7 @@
                     </span>
                     <span class="info-value">
                         <i class="fas fa-calendar nova-text-muted"></i>
-                        {{ $batch->updated_at->format('Y-m-d H:i') }}
+                        {{ $batch->updated_at ? $batch?->updated_at?->format('Y-m-d H:i') ?? '—' : '—' }}
                     </span>
                 </div>
             </div>
@@ -286,7 +286,7 @@
                                     <td>
                                         <span class="movement-date">
                                             <i class="fas fa-calendar nova-text-muted"></i>
-                                            {{ $movement->movement_date ? $movement->movement_date->format('Y-m-d') : $movement->created_at->format('Y-m-d') }}
+                                            {{ $movement->movement_date ? $movement->movement_date->format('Y-m-d') : ($movement->created_at ? $movement?->created_at?->format('Y-m-d') ?? '—' : '—') }}
                                         </span>
                                     </td>
                                     <td>
