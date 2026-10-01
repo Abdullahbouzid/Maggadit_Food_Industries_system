@@ -23,8 +23,9 @@
         </div>
 
         @forelse ($rows as $row)
-            <a href="{{ route('customer.order_details', $row['id'], false) }}"
-               class="block bg-white rounded-2xl shadow-sm p-4 mb-3 transition hover:shadow-md">
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-3 transition hover:shadow-md">
+
+                <a href="{{ route('customer.order_details', $row['id'], false) }}" class="block">
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <div class="text-sm font-bold text-gray-800">{{ $row['number'] }}</div>
@@ -54,7 +55,48 @@
                         <i class="fas fa-chevron-left text-gray-300 text-xs"></i>
                     </div>
                 </div>
-            </a>
+                </a>
+
+                {{-- أزرار الرد على عرض السعر: موافق / طلب تعديل / مرفوض --}}
+                @if ($row['can_respond'])
+                    <div class="mt-3 pt-3 border-t border-gray-100 respond-panel"
+                         data-respond-url="{{ route('customer.order.quotation.respond', $row['id'], false) }}"
+                         data-order-number="{{ $row['number'] }}">
+
+                        <p class="text-[11px] font-bold text-amber-800 mb-2">
+                            <i class="fas fa-file-invoice-dollar ml-1"></i>
+                            عرض السعر {{ $row['quotation_number'] }} جاهز للمراجعة
+                        </p>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" class="respond-btn bg-emerald-600 text-white text-[11px] font-bold py-2 rounded-xl"
+                                    data-response="approved">
+                                <i class="fas fa-check ml-1"></i> موافق
+                            </button>
+                            <button type="button" class="respond-btn bg-purple-600 text-white text-[11px] font-bold py-2 rounded-xl"
+                                    data-response="changes_requested">
+                                <i class="fas fa-pen-to-square ml-1"></i> طلب تعديل
+                            </button>
+                            <button type="button" class="respond-btn bg-red-500 text-white text-[11px] font-bold py-2 rounded-xl"
+                                    data-response="rejected">
+                                <i class="fas fa-xmark ml-1"></i> مرفوض
+                            </button>
+                        </div>
+
+                        {{-- حقل الملاحظات يظهر فقط عند اختيار "طلب تعديل" --}}
+                        <div class="respond-notes-wrap hidden mt-2">
+                            <label class="block text-[11px] font-bold text-gray-600 mb-1">
+                                تفاصيل التعديل المطلوب <span class="text-red-500">*</span>
+                            </label>
+                            <textarea rows="3" class="respond-notes w-full border border-gray-300 rounded-xl px-3 py-2 text-xs bg-white"
+                                      placeholder="اكتب التعديلات التي تريدها على العرض..."></textarea>
+                            <p class="respond-notes-error hidden text-[10px] text-red-600 mt-1">
+                                                يرجى كتابة تفاصيل التعديل المطلوب.
+                                            </p>
+                        </div>
+                    </div>
+                @endif
+            </div>
         @empty
             <div class="text-center py-16">
                 <i class="fas fa-box-open text-gray-300 text-5xl mb-4"></i>
@@ -68,3 +110,86 @@
         @endforelse
     </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    'use strict';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+                    || '{{ csrf_token() }}';
+
+    function toast(message, isError) {
+        if (typeof showToast === 'function') { showToast(message, isError ? 'error' : 'success'); return; }
+        if (isError) { alert(message); }
+    }
+
+    // لكل لوحة رد: إظهار حقل الملاحظات عند اختيار "طلب تعديل" فقط.
+    document.querySelectorAll('.respond-panel').forEach(function (panel) {
+        const wrap = panel.querySelector('.respond-notes-wrap');
+        const textarea = panel.querySelector('.respond-notes');
+        const error = panel.querySelector('.respond-notes-error');
+
+        panel.querySelectorAll('.respond-btn').forEach(function (btn) {
+            btn.addEventListener('click', async function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const response = this.dataset.response;
+
+                // طلب التعديل يتطلب ملاحظات
+                if (response === 'changes_requested') {
+                    if (wrap && wrap.classList.contains('hidden')) {
+                        wrap.classList.remove('hidden');
+                        if (textarea) { textarea.focus(); return; }
+                    }
+                    const value = (textarea?.value || '').trim();
+                    if (!value) {
+                        error?.classList.remove('hidden');
+                        textarea?.focus();
+                        toast('يرجى كتابة تفاصيل التعديل المطلوب.', true);
+                        return;
+                    }
+                }
+
+                const notes = response === 'changes_requested' ? (textarea?.value || '').trim() : '';
+                const buttons = panel.querySelectorAll('.respond-btn');
+                buttons.forEach(function (b) { b.disabled = true; });
+                error?.classList.add('hidden');
+
+                const labels = {
+                    approved: 'تم اعتماد عرض السعر وسيتم إصدار الفاتورة.',
+                    rejected: 'تم رفض عرض السعر.',
+                    changes_requested: 'تم إرسال طلب التعديلات إلى الإدارة.'
+                };
+
+                try {
+                    const resp = await fetch(panel.dataset.respondUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ response: response, notes: notes })
+                    });
+                    const data = await resp.json();
+
+                    if (resp.ok && data.success) {
+                        toast(data.message || labels[response], false);
+                        setTimeout(function () { window.location.reload(); }, 900);
+                    } else {
+                        toast(data.message || 'تعذّر إرسال الرد', true);
+                        buttons.forEach(function (b) { b.disabled = false; });
+                    }
+                } catch (e) {
+                    toast('حدث خطأ في الاتصال', true);
+                    buttons.forEach(function (b) { b.disabled = false; });
+                }
+            });
+        });
+    });
+})();
+</script>
+@endpush

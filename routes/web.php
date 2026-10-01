@@ -431,6 +431,14 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
         Route::get('/notifications', [CustomerProfileController::class, 'notificationsIndex'])->name('notifications');
 
+        // محرّك الإشعارات داخل التطبيق: يعمل بجلسة العميل لأن تطبيق العميل
+        // لا يملك Sanctum token (يعمل داخل WebView على 127.0.0.1).
+        Route::post('/notifications/check-new', [CustomerProfileController::class, 'notificationsCheckNew'])->name('notifications.check_new');
+        Route::post('/notifications/{id}/read', [CustomerProfileController::class, 'notificationMarkRead'])->name('notifications.read');
+        Route::post('/notifications/{id}/toggle-read', [CustomerProfileController::class, 'notificationToggleRead'])->name('notifications.toggle_read');
+        Route::post('/notifications/{id}/toggle-star', [CustomerProfileController::class, 'notificationToggleStar'])->name('notifications.toggle_star');
+        Route::post('/notifications/{id}/toggle-archive', [CustomerProfileController::class, 'notificationToggleArchive'])->name('notifications.toggle_archive');
+
         Route::get('/surveys', function () {
             return view('app_android.more.surveys');
         })->name('surveys');

@@ -42,13 +42,13 @@
 (function() {
     'use strict';
 
-    const API_BASE    = window.location.origin + '/api/customer';
-    const API_TOKEN   = '{{ session("api_token") }}';
+    const CHECK_NEW_URL = '{{ route("customer.notifications.check_new", [], false) }}';
     const POLL_INTERVAL = 10000; // 10 ثواني
     const LS_LAST_ID  = 'mgd_last_notif_id';
     const LS_UNREAD   = 'mgd_unread_count';
 
-    if (!API_TOKEN) return; // لا تشغّل المحرك إذا لم يكن المستخدم مسجلاً
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+                    || '{{ csrf_token() }}';
 
     // --- أدوات مساعدة ---
     function getLastId()     { return parseInt(localStorage.getItem(LS_LAST_ID) || '0', 10); }
@@ -90,35 +90,37 @@
     async function checkNewNotifications() {
         try {
             const lastId = getLastId();
-            const resp = await fetch(`${API_BASE}/notifications/check-new`, {
+            const resp = await fetch(CHECK_NEW_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + API_TOKEN,
                     'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({ last_id: lastId })
             });
+
+            // 401 يعني أن الجلسة انتهت: أوقف الاستطلاع بصمت.
+            if (resp.status === 401) return;
             if (!resp.ok) return;
             const data = await resp.json();
             if (!data.success) return;
 
             const newNotifs = data.new_notifications || [];
+
+            // تحديث الشارة دائماً من عدّاد السيرفر، حتى بلا إشعارات جديدة،
+            // وإلا بقي عدد قديم ظاهر على الجرس بعد قراءة الإشعارات.
+            if (data.unread_count !== undefined) {
+                updateNotificationBadge(data.unread_count);
+            }
+
             if (newNotifs.length === 0) return;
 
             // تحديث آخر ID معروف
             const maxId = Math.max(...newNotifs.map(n => n.id));
             setLastId(maxId);
-
-            // تحديث عداد الإشعارات غير المقروءة من السيرفر
-            if (data.unread_count !== undefined) {
-                updateNotificationBadge(data.unread_count);
-            } else {
-                const currentUnread = getUnread();
-                const newUnread = currentUnread + newNotifs.length;
-                updateNotificationBadge(newUnread);
-            }
 
             // عرض Toast لكل إشعار جديد (أو للأول فقط إذا كانت أكثر)
             if (newNotifs.length === 1) {

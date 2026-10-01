@@ -125,6 +125,28 @@ class CustomerOrderController extends Controller
     /**
      * Customer order history: orders + their invoices.
      */
+    /**
+     * True when the order is in "quotation_sent" AND a quotation is still
+     * awaiting the customer's decision.
+     *
+     * The status alone is not enough: a quote may already carry a customer
+     * response, in which case the buttons must not be shown again.
+     */
+    private function canRespondToQuotation(Order $order): bool
+    {
+        if (! $this->stepPresenter->canCustomerRespond($order)) {
+            return false;
+        }
+
+        return $order->quotation()
+            ->where('status', 'sent')
+            ->where(function ($query) {
+                $query->whereNull('customer_response')
+                    ->orWhere('customer_response', 'pending');
+            })
+            ->exists();
+    }
+
     public function orderHistory(Request $request)
     {
         $customer = $this->getCustomer($request);
@@ -161,7 +183,7 @@ class CustomerOrderController extends Controller
                 'has_invoice' => (bool) $invoice,
                 'invoice_number' => $invoice?->invoice_number,
                 'quotation_number' => $quotation?->quotation_number,
-                'can_respond' => $this->stepPresenter->canCustomerRespond($order),
+                'can_respond' => $this->canRespondToQuotation($order),
                 'items' => $order->items->map(fn ($item) => [
                     'name' => $item->item?->name_ar ?: ($item->item?->name_en ?: 'منتج'),
                     'qty' => (float) $item->quantity,
@@ -266,7 +288,7 @@ class CustomerOrderController extends Controller
             'invoice' => $invoice,
             'statusMeta' => $this->stepPresenter->currentStatusMeta($order),
             'progress' => $this->stepPresenter->progress($order),
-            'canRespond' => $this->stepPresenter->canCustomerRespond($order),
+            'canRespond' => $this->canRespondToQuotation($order),
         ]);
     }
 
@@ -288,19 +310,38 @@ class CustomerOrderController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
+        // Target the quotation that is actually awaiting a decision. Selecting
+        // the highest version regardless of its response blocks the customer
+        // permanently once an older quote keeps a higher version.
         $quotation = Quotation::where('order_id', $id)
             ->where('customer_id', $customer->id)
+            ->where('status', 'sent')
+            ->where(function ($query) {
+                $query->whereNull('customer_response')
+                    ->orWhere('customer_response', 'pending');
+            })
             ->latest('version')
             ->first();
 
         if (! $quotation) {
-            return response()->json(['success' => false, 'message' => 'لا يوجد عرض سعر لهذه الطلبية'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يوجد عرض سعر بانتظار ردك لهذه الطلبية.',
+            ], 404);
         }
 
         if (! $this->stepPresenter->canCustomerRespond($quotation->order)) {
             return response()->json([
                 'success' => false,
                 'message' => 'لا يمكن الرد على هذا العرض في الوقت الحالي.',
+            ], 422);
+        }
+
+        // طلب التعديل يتطلب كتابة الملاحظات
+        if ($validated['response'] === 'changes_requested' && blank($validated['notes'] ?? null)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'يرجى كتابة تفاصيل التعديل المطلوب.',
             ], 422);
         }
 

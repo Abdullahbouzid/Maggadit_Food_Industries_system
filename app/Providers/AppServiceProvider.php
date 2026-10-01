@@ -91,6 +91,24 @@ class AppServiceProvider extends ServiceProvider
             $view->with('markers', $markers);
         });
 
+        // شارة الإشعارات في تطبيق العميل: تُحسب لكل صفحة من customer's guard
+        // حتى لا تبقى صفراً في كل الصفحات عدا صفحة الإشعارات.
+        //
+        // ملاحظة: الت composers يوضع على الـ header نفسه وليس على الـ layout،
+        // لأن محتوى @section يُقيَّم قبل أن يُرسم الـ layout (وبالتالي قبل أن
+        // يعمل composer الخاص به).
+        View::composer('app_android.partials.mobile.header', function ($view) {
+            if (array_key_exists('unreadCount', $view->getData())) {
+                return;
+            }
+
+            $customer = Auth::guard('customer')->user();
+
+            $view->with('unreadCount', $customer
+                ? app(\App\Services\CustomerNotificationService::class)->unreadCount($customer)
+                : 0);
+        });
+
         $this->configureSchedule();
     }
 

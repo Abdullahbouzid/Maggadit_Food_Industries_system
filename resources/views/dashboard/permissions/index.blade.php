@@ -42,7 +42,11 @@
         </div>
         <p class="nova-stat-label">Assigned Roles</p>
         <p class="nova-stat-value">
-            @php($count = 0; foreach($permissions as $p) { $count += $p->roles->count(); } echo $count;)>
+            @php
+                $count = 0;
+                foreach($permissions as $p) { $count += $p->roles->count(); }
+                echo $count;
+            @endphp
         </p>
     </div>
 </div>
@@ -92,7 +96,7 @@
                         </div>
                     </td>
                     <td>
-                        @php($rolesList = $perm->roles->pluck('name')->take(3)->join(', ');)
+                        @php($rolesList = $perm->roles->pluck('name')->take(3)->join(', '))
                         @if($rolesList)
                             <span class="nova-badge secondary">{{ $rolesList }}</span>
                             @if($perm->roles->count() > 3) <span class="nova-text-muted">...</span> @endif

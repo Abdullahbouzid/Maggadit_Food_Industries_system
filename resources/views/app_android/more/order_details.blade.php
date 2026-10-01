@@ -66,15 +66,31 @@
 
                     <div class="grid grid-cols-3 gap-2">
                         <button type="button" class="respond-btn bg-emerald-600 text-white text-xs font-bold py-2 rounded-xl"
-                                data-response="approved">موافق</button>
+                                data-response="approved">
+                            <i class="fas fa-check ml-1"></i> موافق
+                        </button>
                         <button type="button" class="respond-btn bg-purple-600 text-white text-xs font-bold py-2 rounded-xl"
-                                data-response="changes_requested">طلب تعديل</button>
+                                data-response="changes_requested">
+                            <i class="fas fa-pen-to-square ml-1"></i> طلب تعديل
+                        </button>
                         <button type="button" class="respond-btn bg-red-500 text-white text-xs font-bold py-2 rounded-xl"
-                                data-response="rejected">رفض</button>
+                                data-response="rejected">
+                            <i class="fas fa-xmark ml-1"></i> مرفوض
+                        </button>
                     </div>
 
-                    <textarea id="respond-notes" rows="2" placeholder="ملاحظات (اختياري)"
-                              class="mt-2 w-full border border-amber-200 rounded-xl px-3 py-2 text-xs bg-white"></textarea>
+                    {{-- حقل الملاحظات يظهر فقط عند اختيار "طلب تعديل" --}}
+                    <div class="respond-notes-wrap hidden mt-2">
+                        <label class="block text-[11px] font-bold text-amber-900 mb-1">
+                            تفاصيل التعديل المطلوب <span class="text-red-500">*</span>
+                        </label>
+                        <textarea id="respond-notes" rows="3"
+                                  placeholder="اكتب التعديلات التي تريدها على العرض..."
+                                  class="w-full border border-amber-200 rounded-xl px-3 py-2 text-xs bg-white"></textarea>
+                        <p class="respond-notes-error hidden text-[10px] text-red-600 mt-1">
+                            يرجى كتابة تفاصيل التعديل المطلوب.
+                        </p>
+                    </div>
                 </div>
             @elseif (\App\Enums\OrderStatus::tryFrom($order->status instanceof \App\Enums\OrderStatus ? $order->status->value : (string) $order->status) === \App\Enums\OrderStatus::AdminEdited)
                 <div class="bg-sky-50 border border-sky-200 rounded-2xl p-4 mb-4">
@@ -184,11 +200,33 @@
     }
 
     document.querySelectorAll('.respond-btn').forEach(function (btn) {
-        btn.addEventListener('click', async function () {
+        btn.addEventListener('click', async function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
             const response = this.dataset.response;
-            const notes = document.getElementById('respond-notes')?.value || '';
+            const notesWrap = document.querySelector('.respond-notes-wrap');
+            const textarea = document.getElementById('respond-notes');
+            const notesError = document.querySelector('.respond-notes-error');
+
+            // طلب التعديل يتطلب كتابة الملاحظات
+            if (response === 'changes_requested') {
+                if (notesWrap && notesWrap.classList.contains('hidden')) {
+                    notesWrap.classList.remove('hidden');
+                    if (textarea) { textarea.focus(); return; }
+                }
+                if (!((textarea?.value || '').trim())) {
+                    notesError?.classList.remove('hidden');
+                    textarea?.focus();
+                    toast('يرجى كتابة تفاصيل التعديل المطلوب.', true);
+                    return;
+                }
+            }
+
+            const notes = response === 'changes_requested' ? (textarea?.value || '').trim() : '';
             const buttons = document.querySelectorAll('.respond-btn');
             buttons.forEach(b => b.disabled = true);
+            notesError?.classList.add('hidden');
 
             try {
                 const resp = await fetch(respondUrl, {

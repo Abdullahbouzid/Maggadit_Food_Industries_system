@@ -14,8 +14,10 @@ use App\Contracts\InventoryServiceInterface;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Models\Notification;
+use App\Models\Quotation;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 
@@ -168,22 +170,29 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
         $inventoryService = app(InventoryServiceInterface::class);
 
         if ($to === OrderStatus::QuotationSent) {
+            // Reserving stock is a best-effort side effect. A quotation must be
+            // deliverable to the customer even when the warehouse has no stock
+            // record or not enough quantity, otherwise the whole transaction
+            // rolls back and the order silently stays in its previous status.
             foreach ($order->items as $item) {
-                $inventoryService->reserve(
-                    itemId: $item->item_id,
-                    itemPackId: $item->item_pack_id,
-                    warehouseId: $order->warehouse_id,
-                    quantity: (float) $item->quantity,
-                    referenceType: Order::class,
-                    referenceId: $order->id,
-                );
+                try {
+                    $inventoryService->reserve(
+                        itemId: $item->item_id,
+                        itemPackId: $item->item_pack_id,
+                        warehouseId: $order->warehouse_id,
+                        quantity: (float) $item->quantity,
+                        referenceType: Order::class,
+                        referenceId: $order->id,
+                    );
+                } catch (\Throwable $e) {
+                    Log::warning('Stock reservation skipped on order '.$order->id.' (item '.$item->item_id.'): '.$e->getMessage());
+                }
             }
 
-            // Auto-create quotation so the customer app can display it
-            $quotation = $order->quotation()->first();
-            if (! $quotation) {
-                $quotation = app(QuotationServiceInterface::class)->createFromOrder($order, $user);
-            }
+            // Create the quotation the customer will actually respond to. Any
+            // existing draft quotation is promoted to "sent" so the customer
+            // sees a real quote instead of a draft with no sent_at.
+            $quotation = $this->ensureSentQuotation($order, $user);
 
             $this->notifyCustomer(
                 $order,
@@ -243,6 +252,40 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
                 'delivery',
             );
         }
+    }
+
+    /**
+     * Return a quotation the customer can respond to, creating or promoting one
+     * as needed.
+     *
+     * The admin "send new quote" action creates a draft quotation up front. That
+     * draft must be promoted to "sent" (not left as-is), otherwise the customer
+     * app shows a quote that was never sent and cannot be responded to.
+     */
+    private function ensureSentQuotation(Order $order, ?User $user): Quotation
+    {
+        $quotation = $order->quotation()
+            ->where('status', 'draft')
+            ->where(function ($query) {
+                $query->whereNull('customer_response')
+                    ->orWhere('customer_response', 'pending');
+            })
+            ->orderByDesc('version')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $quotation) {
+            return app(QuotationServiceInterface::class)->createFromOrder($order, $user);
+        }
+
+        $quotation->update([
+            'status' => 'sent',
+            'sent_at' => $quotation->sent_at ?? now(),
+            'customer_response' => 'pending',
+            'valid_until' => $quotation->valid_until ?? now()->addDays(7),
+        ]);
+
+        return $quotation->refresh();
     }
 
     /**

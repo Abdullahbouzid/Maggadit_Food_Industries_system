@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Notification;
 use App\Services\Customer\ImagePathService;
+use App\Services\CustomerNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -234,41 +235,109 @@ class CustomerProfileController extends Controller
     public function notificationsIndex()
     {
         $customer = Auth::guard('customer')->user();
-        $customerId = $customer?->id;
 
-        $dbNotifs = \App\Models\Notification::where(function ($query) use ($customerId) {
-            $query->whereJsonContains('customers', 'all')
-                ->orWhere('channel', 'all');
-            if ($customerId) {
-                $query->orWhere(function ($q) use ($customerId) {
-                    $q->whereJsonContains('customers', (string) $customerId)
-                        ->orWhereJsonContains('customers', $customerId);
-                });
-            }
-        })
-            ->where('is_sent', true)
-            ->latest()
-            ->get();
+        if (! $customer) {
+            return redirect()->route('mobile.login');
+        }
 
-        $notifications = $dbNotifs->map(function ($n) {
-            return (object) [
-                'id' => $n->id,
-                'subject' => $n->subject_ar ?: $n->subject_en,
-                'body' => $n->body_ar ?: $n->body_en,
-                'image' => null,
-                'icon_type' => $n->icon_type ?? 'notification',
-                'created_at' => $n->created_at?->diffForHumans(),
-                'is_read' => false,
-            ];
-        });
+        $service = app(CustomerNotificationService::class);
+        $pivots = $service->readRowsFor($customer);
 
-        // Read state is tracked per customer in the pivot table.
-        $readIds = $customer
-            ? $customer->readNotifications()            ->whereNotNull('read_at')->pluck('notification_id')->all()
-            : [];
+        $notifications = $service->allFor($customer)
+            ->map(fn ($n) => (object) $service->toPayload($n, $pivots->get($n->id)))
+            ->values();
 
-        $unreadCount = $notifications->reject(fn ($n) => in_array($n->id, $readIds, true))->count();
+        $unreadCount = $service->unreadCount($customer);
 
         return view('app_android.more.notifications', compact('notifications', 'unreadCount'));
+    }
+
+    /**
+     * Polling endpoint for the in-app notification engine.
+     *
+     * The mobile app runs inside a WebView at http://127.0.0.1 and has no
+     * Sanctum token, so it polls this session-authenticated route instead of
+     * /api/customer/notifications/check-new.
+     */
+    public function notificationsCheckNew(Request $request)
+    {
+        $customer = $this->getCustomer($request);
+
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
+        }
+
+        $lastId = (int) $request->input('last_id', 0);
+
+        return response()->json(
+            app(CustomerNotificationService::class)->checkNew($customer, $lastId)
+        );
+    }
+
+    public function notificationMarkRead(Request $request, $id)
+    {
+        return $this->mutateNotification($request, $id, function ($service, $customer, $notification) use ($request) {
+            $service->markRead($customer, $notification, (bool) $request->input('is_read', true));
+        });
+    }
+
+    public function notificationToggleRead(Request $request, $id)
+    {
+        return $this->mutateNotification($request, $id, function ($service, $customer, $notification) {
+            $isRead = $notification->pivot?->read_at !== null;
+            $service->markRead($customer, $notification, ! $isRead);
+
+            // Return the new state so the client does not have to guess it.
+            return ! $isRead;
+        });
+    }
+
+    public function notificationToggleStar(Request $request, $id)
+    {
+        return $this->mutateNotification($request, $id, function ($service, $customer, $notification) {
+            return $service->toggleStar($customer, $notification);
+        });
+    }
+
+    public function notificationToggleArchive(Request $request, $id)
+    {
+        return $this->mutateNotification($request, $id, function ($service, $customer, $notification) {
+            return $service->toggleArchive($customer, $notification);
+        });
+    }
+
+    /**
+     * Shared guard + responder for the notification mutation endpoints.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function mutateNotification(Request $request, $id, callable $callback)
+    {
+        $customer = $this->getCustomer($request);
+
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
+        }
+
+        $service = app(CustomerNotificationService::class);
+
+        $notification = $service->queryFor($customer)->where('id', $id)->first();
+
+        if (! $notification) {
+            return response()->json(['success' => false, 'message' => 'الإشعار غير موجود'], 404);
+        }
+
+        $notification->setRelation(
+            'pivot',
+            $service->readRowsFor($customer)->get($notification->id)?->pivot
+        );
+
+        $result = $callback($service, $customer, $notification);
+
+        return response()->json([
+            'success' => true,
+            'result' => $result,
+            'unread_count' => $service->unreadCount($customer),
+        ]);
     }
 }

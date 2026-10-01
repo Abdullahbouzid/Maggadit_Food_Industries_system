@@ -81,7 +81,7 @@
             </div>
             <div class="nova-form-card-body">
                 @if(isset($stat['breakdown']) && count($stat['breakdown']) > 0)
-                    @php($maxCount = max($stat['breakdown']);)
+                    @php($maxCount = max($stat['breakdown']))
                     @foreach($stat['breakdown'] as $option => $count)
                     <div class="mb-3">
                         <div class="d-flex justify-content-between small mb-1">

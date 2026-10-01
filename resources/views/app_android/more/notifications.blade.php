@@ -93,13 +93,19 @@
 
 @push('scripts')
 @php
-    // تجهيز بيانات الـ Fallback مسبقاً (بدون fn() داخل JS لتجنب أخطاء Blade)
-    $fallbackNotifications = $notifications->map(function($n) {
+    // بيانات الإشعارات محقونة من قاعدة البيانات المحلية (المصدر الموثوق).
+    // لا حاجة لجلبها من الـ API الخارجي لأن التطبيق يعمل على 127.0.0.1.
+    $fallbackNotifications = $notifications->map(function ($n) {
         return [
             'id'         => $n->id,
             'subject'    => $n->subject,
             'body'       => $n->body,
+            'image'      => $n->image ?? null,
             'icon_type'  => $n->icon_type ?? 'notification',
+            'group'      => $n->group ?? null,
+            'is_read'    => (bool) ($n->is_read ?? false),
+            'is_starred' => (bool) ($n->is_starred ?? false),
+            'is_archived'=> (bool) ($n->is_archived ?? false),
             'created_at' => $n->created_at,
         ];
     })->values()->toArray();
@@ -109,11 +115,35 @@
     'use strict';
 
     // ===== إعدادات =====
-    const API_BASE  = 'https://blue-beaver-923812.hostingersite.com/api/customer';
-    const API_TOKEN = '{{ session("api_token") }}';
+    const ROUTES = {
+        read:        id => `{{ route('customer.notifications.read', '__ID__', false) }}`.replace('__ID__', id),
+        toggleRead:  id => `{{ route('customer.notifications.toggle_read', '__ID__', false) }}`.replace('__ID__', id),
+        toggleStar:  id => `{{ route('customer.notifications.toggle_star', '__ID__', false) }}`.replace('__ID__', id),
+        toggleArchive: id => `{{ route('customer.notifications.toggle_archive', '__ID__', false) }}`.replace('__ID__', id),
+    };
+    const CSRF     = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
     const LS_LAST   = 'mgd_last_notif_id';
     const LS_READ   = 'mgd_read_ids';      // قائمة IDs المقروءة
     const LS_UNREAD = 'mgd_unread_count';
+
+    // طلب JSON محمي بجلسة العميل (لا Bearer token داخل الـ WebView)
+    async function postJson(url, body) {
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: body ? JSON.stringify(body) : undefined
+        });
+
+        let data = {};
+        try { data = await resp.json(); } catch (e) { /* استجابة غير JSON */ }
+        return { ok: resp.ok, status: resp.status, data };
+    }
 
     // ===== عناصر DOM =====
     const listEl     = document.getElementById('notifications-list');
@@ -152,73 +182,51 @@
     // ===== LocalStorage helpers =====
     function getReadIds()  { try { return new Set(JSON.parse(localStorage.getItem(LS_READ) || '[]')); } catch { return new Set(); } }
     function saveReadIds(s){ localStorage.setItem(LS_READ, JSON.stringify([...s])); }
-    function markRead(id)  { 
-        const s = getReadIds(); s.add(parseInt(id)); saveReadIds(s); 
-        
-        // Sync with server if logged in
-        if (API_TOKEN) {
-            fetch(`${API_BASE}/notifications/${id}/read`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + API_TOKEN,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            }).catch(console.error);
-        }
+    function markRead(id)  {
+        const s = getReadIds(); s.add(parseInt(id)); saveReadIds(s);
+
+        postJson(ROUTES.read(id), null)
+            .then(({ ok, data }) => { if (ok && data.unread_count !== undefined) refreshUnreadBadge(); })
+            .catch(() => {});
     }
     function isRead(id)    { return getReadIds().has(parseInt(id)); }
     
     // ===== تبديل حالة القراءة يدوياً =====
     async function toggleReadStatus(id, cardEl, notifObj) {
-        if (!API_TOKEN) return;
-        
         try {
-            const resp = await fetch(`${API_BASE}/notifications/${id}/toggle-read`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + API_TOKEN,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            const data = await resp.json();
-            if (data.success) {
-                // Update local object
-                notifObj.is_read = data.is_read;
-                
-                // Update local storage
-                const s = getReadIds();
-                if (data.is_read) s.add(parseInt(id));
-                else s.delete(parseInt(id));
-                saveReadIds(s);
-                
-                // Update UI
-                const dot = cardEl.querySelector('.unread-dot');
-                if (data.is_read) {
-                    cardEl.classList.remove('unread');
-                    if (dot) dot.remove();
-                } else {
-                    cardEl.classList.add('unread');
-                    if (!dot) {
-                        const badgeContainer = cardEl.querySelector('.flex.items-center.gap-1.flex-shrink-0');
-                        if (badgeContainer) badgeContainer.innerHTML += '<span class="unread-dot"></span>';
-                    }
-                }
-                
-                // Update button icon
-                const toggleBtnIcon = cardEl.querySelector('.toggle-read-btn i');
-                if (toggleBtnIcon) {
-                    toggleBtnIcon.className = data.is_read ? 'fas fa-envelope-open-text' : 'fas fa-envelope';
-                }
-                
-                refreshUnreadBadge();
-                if (typeof showToast === 'function') {
-                    showToast(data.message, 'success', 2000);
+            const { ok, data } = await postJson(ROUTES.toggleRead(id), null);
+            if (!ok || !data.success) return;
+
+            // الخادم يعيد النتيجة الجديدة كـ result
+            const nowRead = !!data.result;
+            notifObj.is_read = nowRead;
+
+            // Update local storage
+            const s = getReadIds();
+            if (nowRead) s.add(parseInt(id));
+            else s.delete(parseInt(id));
+            saveReadIds(s);
+
+            // Update UI
+            const dot = cardEl.querySelector('.unread-dot');
+            if (nowRead) {
+                cardEl.classList.remove('unread');
+                if (dot) dot.remove();
+            } else {
+                cardEl.classList.add('unread');
+                if (!dot) {
+                    const badgeContainer = cardEl.querySelector('.flex.items-center.gap-1.flex-shrink-0');
+                    if (badgeContainer) badgeContainer.innerHTML += '<span class="unread-dot"></span>';
                 }
             }
+
+            // Update button icon
+            const toggleBtnIcon = cardEl.querySelector('.toggle-read-btn i');
+            if (toggleBtnIcon) {
+                toggleBtnIcon.className = nowRead ? 'fas fa-envelope-open-text' : 'fas fa-envelope';
+            }
+
+            refreshUnreadBadge();
         } catch (e) {
             console.error(e);
         }
@@ -226,16 +234,11 @@
     
     // ===== تبديل النجمة يدوياً =====
     async function toggleStarStatus(id, btnEl, notifObj) {
-        if (!API_TOKEN) return;
         try {
-            const resp = await fetch(`${API_BASE}/notifications/${id}/toggle-star`, {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + API_TOKEN, 'Accept': 'application/json' }
-            });
-            const data = await resp.json();
-            if (data.success) {
-                notifObj.is_starred = data.is_starred;
-                btnEl.className = `toggle-star-btn text-${data.is_starred ? 'amber-500' : 'gray-300'} hover:text-amber-500 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors`;
+            const { ok, data } = await postJson(ROUTES.toggleStar(id), null);
+            if (ok && data.success) {
+                notifObj.is_starred = !!data.result;
+                btnEl.className = `toggle-star-btn text-${notifObj.is_starred ? 'amber-500' : 'gray-300'} hover:text-amber-500 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors`;
                 if(currentTab === 'starred') renderList();
             }
         } catch(e) { console.error(e); }
@@ -243,19 +246,14 @@
 
     // ===== تبديل الأرشفة يدوياً =====
     async function toggleArchiveStatus(id, btnEl, notifObj) {
-        if (!API_TOKEN) return;
         try {
-            const resp = await fetch(`${API_BASE}/notifications/${id}/toggle-archive`, {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + API_TOKEN, 'Accept': 'application/json' }
-            });
-            const data = await resp.json();
-            if (data.success) {
-                notifObj.is_archived = data.is_archived;
-                btnEl.className = `toggle-archive-btn text-${data.is_archived ? 'gray-600' : 'gray-300'} hover:text-gray-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors`;
+            const { ok, data } = await postJson(ROUTES.toggleArchive(id), null);
+            if (ok && data.success) {
+                notifObj.is_archived = !!data.result;
+                btnEl.className = `toggle-archive-btn text-${notifObj.is_archived ? 'gray-600' : 'gray-300'} hover:text-gray-600 focus:outline-none p-1 rounded-full bg-gray-50 transition-colors`;
                 if(currentTab === 'archived' || currentTab === 'all' || currentTab === 'unread') renderList();
                 if (typeof showToast === 'function') {
-                    showToast(data.is_archived ? 'تمت الأرشفة' : 'تم الإلغاء', 'info', 2000);
+                    showToast(notifObj.is_archived ? 'تمت الأرشفة' : 'تم الإلغاء', 'info', 2000);
                 }
             }
         } catch(e) { console.error(e); }
@@ -398,58 +396,30 @@
 
     // ===== تحميل الإشعارات =====
     async function loadNotifications() {
-        if (!API_TOKEN) {
-            loadingEl.classList.add('hidden');
+        // البيانات محقونة من السيرفر (قاعدة البيانات المحلية) في Blade،
+        // فهي أسرع وأضمن من استدعاء الـ API الذي لا يعمل داخل الـ WebView.
+        const serverData = {!! json_encode($fallbackNotifications) !!};
+
+        loadingEl.classList.add('hidden');
+
+        if (!serverData || serverData.length === 0) {
             emptyEl.classList.remove('hidden');
+            filterTabs.classList.add('hidden');
+            countLabel.textContent = 'لا توجد إشعارات';
             return;
         }
-        try {
-            const resp = await fetch(`${API_BASE}/notifications`, {
-                headers: {
-                    'Authorization': 'Bearer ' + API_TOKEN,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            const data = await resp.json();
-            loadingEl.classList.add('hidden');
 
-            if (!data.success || !data.notifications || data.notifications.length === 0) {
-                emptyEl.classList.remove('hidden');
-                filterTabs.classList.add('hidden');
-                countLabel.textContent = 'لا توجد إشعارات';
-                return;
-            }
+        allNotifications = serverData;
 
-            allNotifications = data.notifications;
-            
-            // حفّظ آخر ID لمحرك الـ Polling
-            if (allNotifications.length > 0) {
-                const maxId = Math.max(...allNotifications.map(n => parseInt(n.id)));
-                const savedLast = parseInt(localStorage.getItem(LS_LAST) || '0');
-                if (maxId > savedLast) localStorage.setItem(LS_LAST, maxId);
-            }
-
-            filterTabs.classList.remove('hidden');
-            renderList();
-            
-        } catch (e) {
-            loadingEl.classList.add('hidden');
-
-            // Fallback: استخدام البيانات المحقونة من السيرفر (Blade)
-            const serverData = {!! json_encode($fallbackNotifications) !!};
-
-            if (serverData.length === 0) {
-                emptyEl.classList.remove('hidden');
-                filterTabs.classList.add('hidden');
-                countLabel.textContent = 'لا توجد إشعارات';
-                return;
-            }
-            
-            allNotifications = serverData;
-            filterTabs.classList.remove('hidden');
-            renderList();
+        // حفّظ آخر ID لمحرك الـ Polling حتى لا يُعيد عرض الإشعارات القديمة
+        const maxId = Math.max(...allNotifications.map(n => parseInt(n.id, 10) || 0));
+        if (maxId > 0) {
+            const savedLast = parseInt(localStorage.getItem(LS_LAST) || '0', 10);
+            if (maxId > savedLast) localStorage.setItem(LS_LAST, maxId);
         }
+
+        filterTabs.classList.remove('hidden');
+        renderList();
     }
     
     function renderList() {
