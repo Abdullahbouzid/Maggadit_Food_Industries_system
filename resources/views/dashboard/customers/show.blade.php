@@ -161,11 +161,22 @@
     @empty
         <div class="nova-card">
             <div class="nova-card-body">
+                @if ($errors->has('wallet'))
+                    <div class="nova-alert nova-alert-error nova-mb-3">
+                        <i class="fas fa-circle-xmark"></i> {{ $errors->first('wallet') }}
+                    </div>
+                @endif
+
                 <p class="nova-text-muted">
                     <i class="fas fa-info-circle"></i>
-                    لا توجد محفظة.
-                    <a href="#" onclick="alert('إنشاء المحفظة غير متاحة في هذه النسخة')">إنشاء محفظة</a>
+                    لا توجد محفظة لهذا العميل.
                 </p>
+
+                <button type="button" class="nova-btn nova-btn-primary"
+                        onclick="document.getElementById('createWalletModal').classList.add('show')">
+                    <i class="fas fa-wallet" style="margin-inline-end: 0.5rem;"></i>
+                    إنشاء محفظة
+                </button>
             </div>
         </div>
     @endforelse
@@ -271,12 +282,93 @@
         </div>
     </div>
 </div>
+{{-- ===== Modal: إنشاء محفظة للعميل (محفظة واحدة لكل عميل) ===== --}}
+@if(($customer->wallets ?? collect())->isEmpty())
+<div class="nova-modal-backdrop" id="createWalletModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-card" style="width: 100%; max-width: 460px;">
+            <div class="nova-card-header">
+                <h3 class="nova-card-title">
+                    <i class="fas fa-wallet" style="margin-inline-end: 0.5rem;"></i>
+                    إنشاء محفظة للعميل {{ $customer->name }}
+                </h3>
+            </div>
+            <form method="POST" action="{{ route('wallets.store') }}">
+                @csrf
+                <input type="hidden" name="customer_id" value="{{ $customer->id }}">
+
+                <div class="nova-card-body">
+                    @if ($errors->any())
+                        <div class="nova-alert nova-alert-error nova-mb-3">
+                            <i class="fas fa-circle-xmark"></i>
+                            <ul class="nova-mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <div class="nova-form-group nova-mb-3">
+                        <label class="nova-label" for="walletCurrency">العملة</label>
+                        <select name="currency_id" id="walletCurrency" class="nova-select" required>
+                            @foreach ($currencies as $currency)
+                                <option value="{{ $currency->id }}"
+                                    {{ (int) $currency->id === (int) $defaultCurrencyId ? 'selected' : '' }}>
+                                    {{ $currency->code }}{{ $currency->symbol ? ' — ' . $currency->symbol : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="nova-form-group nova-mb-3">
+                        <label class="nova-label" for="walletOpeningBalance">
+                            الرصيد الافتتاحي <span class="nova-text-muted">(اختياري)</span>
+                        </label>
+                        <input type="number" name="opening_balance" id="walletOpeningBalance"
+                               class="nova-input" step="0.01" min="0" value="0"
+                               placeholder="0.00">
+                        <small class="nova-text-muted">
+                            إذا أدخلت مبلغاً فسيُسجَّل كإيداع في سجل حركات المحفظة.
+                        </small>
+                    </div>
+
+                    <div class="nova-form-group nova-mb-0">
+                        <label class="nova-label" for="walletNotes">
+                            ملاحظات <span class="nova-text-muted">(اختياري)</span>
+                        </label>
+                        <input type="text" name="notes" id="walletNotes" class="nova-input"
+                               maxlength="255" placeholder="سبب إنشاء المحفظة">
+                    </div>
+                </div>
+
+                <div class="nova-card-header" style="border-top: 1px solid var(--nova-gray-200); border-bottom: none;">
+                    <div class="nova-flex nova-justify-end nova-gap-2" style="width: 100%;">
+                        <button type="button" class="nova-btn nova-btn-outline"
+                                onclick="document.getElementById('createWalletModal').classList.remove('show')">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-check" style="margin-inline-end: 0.5rem;"></i>
+                            إنشاء المحفظة
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 @endsection
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Customer detail page loaded');
+    // إعادة فتح النافذة تلقائياً عند وجود خطأ في التحقق
+    @if ($errors->any())
+        document.getElementById('createWalletModal')?.classList.add('show');
+    @endif
 });
 </script>
 @endpush

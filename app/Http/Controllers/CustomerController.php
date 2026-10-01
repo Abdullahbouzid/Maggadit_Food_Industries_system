@@ -133,7 +133,17 @@ class CustomerController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('dashboard.customers.show', compact('customer', 'allPriceLists'));
+        // عملات متاحة لإنشاء محفظة للعميل (محفظة واحدة لكل عميل)
+        $currencies = \App\Models\Currency::orderBy('code')->get();
+        $defaultCurrencyId = $currencies->firstWhere('base_currency', true)?->id
+            ?? $currencies->first()?->id;
+
+        return view('dashboard.customers.show', compact(
+            'customer',
+            'allPriceLists',
+            'currencies',
+            'defaultCurrencyId'
+        ));
     }
 
     /**

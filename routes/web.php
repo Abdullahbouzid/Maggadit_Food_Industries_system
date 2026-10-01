@@ -755,6 +755,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('inventory/adjust', [\App\Http\Controllers\Admin\InventoryController::class, 'adjust'])->name('inventory.adjust');
 
     Route::prefix('wallets')->name('wallets.')->group(function () {
+        Route::post('/', [\App\Http\Controllers\Admin\WalletController::class, 'store'])->name('store');
         Route::get('{wallet}', [\App\Http\Controllers\Admin\WalletController::class, 'show'])->name('show');
         Route::post('{wallet}/deposit', [\App\Http\Controllers\Admin\WalletController::class, 'deposit'])->name('deposit');
     });
