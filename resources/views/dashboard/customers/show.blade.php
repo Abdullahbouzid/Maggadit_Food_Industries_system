@@ -141,6 +141,16 @@
 
                 <form method="POST" action="{{ route('wallets.deposit', $wallet) }}" class="nova-mt-2">
                     @csrf
+                    @if ($errors->any())
+                        <div class="nova-alert nova-alert-error nova-mb-3">
+                            <i class="fas fa-circle-xmark"></i>
+                            <ul class="nova-mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <div class="nova-row cols-2">
                         <input type="number" step="0.01" min="0.01"
                                name="amount" class="nova-input"
@@ -154,6 +164,8 @@
                     </div>
                     <input type="text" name="reference_number"
                            class="nova-input nova-mt-2" placeholder="رقم المرجع (اختياري)">
+                    <input type="text" name="notes"
+                           class="nova-input nova-mt-2" placeholder="ملاحظات (اختياري)">
                     <button class="nova-btn nova-btn-success nova-mt-2">إيداع</button>
                 </form>
             </div>

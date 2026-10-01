@@ -64,10 +64,14 @@ class WalletController extends Controller
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],
             'opening_balance' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:255'],
-        ], [], [
-            'customer_id' => 'العميل',
-            'currency_id' => 'العملة',
-            'opening_balance' => 'الرصيد الافتتاحي',
+        ], [
+            'customer_id.required' => 'يرجى اختيار العميل.',
+            'customer_id.exists' => 'العميل المحدد غير موجود.',
+            'currency_id.required' => 'يرجى اختيار العملة.',
+            'currency_id.exists' => 'العملة المحددة غير موجودة.',
+            'opening_balance.numeric' => 'الرصيد الافتتاحي يجب أن يكون رقمًا.',
+            'opening_balance.min' => 'الرصيد الافتتاحي لا يمكن أن يكون سالبًا.',
+            'notes.max' => 'الملاحظات يجب أن تكون 255 حرفًا كحد أقصى.',
         ]);
 
         $customer = \App\Models\Customer::findOrFail($validated['customer_id']);
@@ -114,18 +118,39 @@ class WalletController extends Controller
             'method' => 'required|in:cash,bank_transfer,cheque,online',
             'reference_number' => 'nullable|string|max:120',
             'notes' => 'nullable|string',
+        ], [
+            'amount.required' => 'يرجى إدخال المبلغ.',
+            'amount.numeric' => 'المبلغ يجب أن يكون رقمًا.',
+            'amount.min' => 'المبلغ يجب أن يكون 0.01 على الأقل.',
+            'method.required' => 'يرجى اختيار طريقة الإيداع.',
+            'method.in' => 'طريقة الإيداع غير صحيحة.',
+            'reference_number.max' => 'رقم المرجع يجب أن يكون 120 حرفًا كحد أقصى.',
+            'notes.string' => 'الملاحظات يجب أن تكون نصًا.',
         ]);
 
-        $service = app(\App\Contracts\WalletServiceInterface::class);
-        $service->deposit(
-            $wallet->customer,
-            (float) $validated['amount'],
-            $validated['method'],
-            $validated['reference_number'] ?? null,
-            auth()->id(),
-            $validated['notes'] ?? null,
-        );
+        try {
+            $transaction = app(\App\Contracts\WalletServiceInterface::class)->deposit(
+                $wallet->customer,
+                (float) $validated['amount'],
+                $validated['method'],
+                $validated['reference_number'] ?? null,
+                auth()->id(),
+                $validated['notes'] ?? null,
+            );
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            report($e);
 
-        return redirect()->route('wallets.index')->with('success', 'تم إيداع الرصيد');
+            return redirect()
+                ->route('customers.show', $wallet->customer)
+                ->withErrors(['wallet' => 'تعذّر تسجيل حركة الإيداع: ' . $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('customers.show', $wallet->customer)
+            ->with('success', 'تم تسجيل إيداع بمبلغ ' . number_format((float) $transaction->amount, 2)
+                . ' — رقم الحركة #' . $transaction->id
+                . ' — الرصيد بعد الإيداع: ' . number_format((float) $transaction->balance_after, 2) . '.');
     }
 }

@@ -131,9 +131,8 @@
                                 <a href="{{ route('wallets.show', $wallet->id) }}" class="nova-icon-btn nova-btn-sm" title="{{ __('messages.wallet_page.view') }}">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <button type="button" class="nova-icon-btn nova-btn-sm nova-btn-primary" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#depositModal{{ $wallet->id }}"
+                                <button type="button" class="nova-icon-btn nova-btn-sm nova-btn-primary js-open-wallet-modal"
+                                    data-modal="depositModal{{ $wallet->id }}"
                                     title="{{ __('messages.wallet_page.deposit') }}">
                                     <i class="fas fa-plus"></i>
                                 </button>
@@ -177,7 +176,7 @@
                 <h5 class="nova-modal-title" id="depositModalLabel{{ $wallet->id }}">
                     {{ __('messages.wallet_page.deposit') }} - {{ $wallet->customer->name ?? '—' }}
                 </h5>
-                <button type="button" class="nova-modal-close" data-bs-dismiss="modal" aria-label="Close">
+                <button type="button" class="nova-modal-close js-close-wallet-modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -205,7 +204,7 @@
                     </div>
                     <div class="nova-form-group">
                         <label class="nova-label">{{ __('messages.wallet_page.deposit_reference') }}</label>
-                        <input type="text" name="reference" class="nova-input">
+                        <input type="text" name="reference_number" class="nova-input">
                     </div>
                     <div class="nova-form-group">
                         <label class="nova-label">{{ __('messages.wallet_page.deposit_notes') }}</label>
@@ -213,7 +212,7 @@
                     </div>
                 </div>
                 <div class="nova-modal-footer">
-                    <button type="button" class="nova-btn nova-btn-outline" data-bs-dismiss="modal">{{ __('messages.wallet_page.cancel') }}</button>
+                    <button type="button" class="nova-btn nova-btn-outline js-close-wallet-modal">{{ __('messages.wallet_page.cancel') }}</button>
                     <button type="submit" class="nova-btn nova-btn-primary">{{ __('messages.wallet_page.deposit_submit') }}</button>
                 </div>
             </form>
@@ -223,3 +222,50 @@
 @endforeach
 
 @endsection
+@push('scripts')
+<script>
+(function () {
+    'use strict';
+
+    // النمط Nova: نافذة الإيداع تُفتح بإضافة كلاس show، لأن المشروع لا يحمّل Bootstrap.
+    document.addEventListener('click', function (event) {
+        const opener = event.target.closest('.js-open-wallet-modal');
+        if (opener) {
+            const modal = document.getElementById(opener.dataset.modal);
+            if (modal) {
+                modal.classList.add('show');
+                modal.setAttribute('aria-hidden', 'false');
+                const amount = modal.querySelector('input[name="amount"]');
+                if (amount) { amount.focus(); }
+            }
+            return;
+        }
+
+        const closer = event.target.closest('.js-close-wallet-modal');
+        if (closer) {
+            const modal = closer.closest('.nova-modal-backdrop');
+            if (modal) {
+                modal.classList.remove('show');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+            return;
+        }
+
+        // النقر على الخلفية يغلق النافذة
+        if (event.target.classList && event.target.classList.contains('nova-modal-backdrop')) {
+            event.target.classList.remove('show');
+            event.target.setAttribute('aria-hidden', 'true');
+        }
+    });
+
+    // إغلاق بالمفتاح Escape
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        document.querySelectorAll('.nova-modal-backdrop.show').forEach(function (modal) {
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+        });
+    });
+})();
+</script>
+@endpush
