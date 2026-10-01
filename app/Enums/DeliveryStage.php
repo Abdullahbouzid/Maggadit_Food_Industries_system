@@ -9,6 +9,8 @@ enum DeliveryStage: string
     case OutForDelivery = 'out_for_delivery';
     case Unloading = 'unloading';
     case Received = 'received';
+    // Written by DeliveryService::cancel(), so it must exist in the enum too.
+    case Cancelled = 'cancelled';
 
     public function label(): string
     {
@@ -17,6 +19,12 @@ enum DeliveryStage: string
             self::OutForDelivery => 'جاري التوصيل',
             self::Unloading => 'جاري التنزيل',
             self::Received => 'تم الاستلام',
+            self::Cancelled => 'ملغاة',
         };
+    }
+
+    public function isClosed(): bool
+    {
+        return $this === self::Received || $this === self::Cancelled;
     }
 }

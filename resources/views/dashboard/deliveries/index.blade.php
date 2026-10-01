@@ -73,7 +73,7 @@
     <a href="{{ route('deliveries.index', array_merge(request()->except(['stage', 'page']), ['stage' => null])) }}"
        class="nova-status-tab {{ empty(request('stage')) ? 'active' : '' }}">
         {{ __('messages.delivery_page.stage_all') }}
-        <span class="nova-badge">{{ $stageCounts->total ?? $deliveries->count() }}</span>
+        <span class="nova-badge">{{ $stageCounts['total'] ?? $deliveries->count() }}</span>
     </a>
     @foreach(\App\Enums\DeliveryStage::cases() as $stage)
         <a href="{{ route('deliveries.index', array_merge(request()->except(['stage', 'page']), ['stage' => $stage->value])) }}"
@@ -116,12 +116,16 @@
                         </td>
                         <td>
                             @php
-                                $stage = \App\Enums\DeliveryStage::tryFrom($delivery->current_stage);
+                                $stage = $delivery->current_stage instanceof \App\Enums\DeliveryStage
+                                    ? $delivery->current_stage
+                                    : \App\Enums\DeliveryStage::tryFrom((string) $delivery->current_stage);
+                                {{-- Nova variants use dot notation, not dashed suffixes. --}}
                                 $badgeClass = match ($stage?->value ?? '') {
-                                    'shipping' => 'nova-badge-warning',
-                                    'out_for_delivery' => 'nova-badge-accent',
-                                    'unloading' => 'nova-badge-info',
-                                    'received' => 'nova-badge-success',
+                                    'shipping' => 'nova-badge warning',
+                                    'out_for_delivery' => 'nova-badge info',
+                                    'unloading' => 'nova-badge info',
+                                    'received' => 'nova-badge success',
+                                    'cancelled' => 'nova-badge danger',
                                     default => 'nova-text-muted',
                                 };
                             @endphp
