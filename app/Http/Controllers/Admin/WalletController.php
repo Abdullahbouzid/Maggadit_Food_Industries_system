@@ -41,11 +41,57 @@ class WalletController extends Controller
         return view('dashboard.wallets.index', compact('wallets', 'currencies', 'totals'));
     }
 
-    public function show(\App\Models\CustomerWallet $wallet)
+    /**
+     * Wallet details: the customer's wallet summary plus the full transaction
+     * history, filterable by type, method and date range. Transactions are
+     * paginated rather than capped, so a long-lived wallet stays navigable.
+     */
+    public function show(Request $request, \App\Models\CustomerWallet $wallet)
     {
-        $wallet->load(['customer', 'currency', 'transactions' => fn ($q) => $q->latest()->limit(20)]);
+        $wallet->load(['customer', 'currency']);
 
-        return view('dashboard.wallets.show', compact('wallet'));
+        $filters = [
+            'type' => $request->string('type')->toString() ?: null,
+            'method' => $request->string('method')->toString() ?: null,
+            'from' => $request->string('from')->toString() ?: null,
+            'to' => $request->string('to')->toString() ?: null,
+        ];
+
+        $query = $wallet->transactions()->with(['createdBy', 'reference']);
+
+        if ($filters['type']) {
+            $query->where('type', $filters['type']);
+        }
+
+        if ($filters['method']) {
+            $query->where('method', $filters['method']);
+        }
+
+        if ($filters['from']) {
+            $query->whereDate('created_at', '>=', $filters['from']);
+        }
+
+        if ($filters['to']) {
+            $query->whereDate('created_at', '<=', $filters['to']);
+        }
+
+        // Totals come from the wallet itself, not the filtered page, so the
+        // summary keeps describing the wallet as a whole.
+        $stats = [
+            'count' => $wallet->transactions()->count(),
+            'deposits' => (float) $wallet->transactions()->where('type', 'deposit')->sum('amount'),
+            'withdrawals' => (float) $wallet->transactions()->where('type', 'withdrawal')->sum('amount'),
+            'purchases' => (float) $wallet->transactions()->where('type', 'purchase')->sum('amount'),
+        ];
+
+        return view('dashboard.wallets.show', [
+            'wallet' => $wallet,
+            'transactions' => $query->latest('id')->paginate(25)->withQueryString(),
+            'filters' => $filters,
+            'stats' => $stats,
+            'types' => \App\Enums\WalletTransactionType::cases(),
+            'methods' => $wallet->transactions()->whereNotNull('method')->distinct()->pluck('method'),
+        ]);
     }
 
     /**
@@ -118,6 +164,7 @@ class WalletController extends Controller
             'method' => 'required|in:cash,bank_transfer,cheque,online',
             'reference_number' => 'nullable|string|max:120',
             'notes' => 'nullable|string',
+            'return_to' => 'nullable|in:wallet',
         ], [
             'amount.required' => 'يرجى إدخال المبلغ.',
             'amount.numeric' => 'المبلغ يجب أن يكون رقمًا.',
@@ -147,8 +194,14 @@ class WalletController extends Controller
                 ->withErrors(['wallet' => 'تعذّر تسجيل حركة الإيداع: ' . $e->getMessage()]);
         }
 
+        // Deposits made from the wallet page stay on the wallet page; those made
+        // from the customer page go back to the customer.
+        $destination = ($validated['return_to'] ?? null) === 'wallet'
+            ? route('wallets.show', $wallet)
+            : route('customers.show', $wallet->customer);
+
         return redirect()
-            ->route('customers.show', $wallet->customer)
+            ->to($destination)
             ->with('success', 'تم تسجيل إيداع بمبلغ ' . number_format((float) $transaction->amount, 2)
                 . ' — رقم الحركة #' . $transaction->id
                 . ' — الرصيد بعد الإيداع: ' . number_format((float) $transaction->balance_after, 2) . '.');

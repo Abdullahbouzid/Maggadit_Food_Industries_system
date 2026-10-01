@@ -138,6 +138,11 @@
                             <i class="fas fa-file-pdf ml-1"></i>تحميل
                         </a>
                     </div>
+
+                    <a href="{{ route('customer.returns.create', $invoice->id, false) }}"
+                       class="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs font-bold text-amber-700">
+                        <i class="fas fa-undo"></i>استرجاع كميات من هذه الفاتورة
+                    </a>
                 </div>
             @endif
 

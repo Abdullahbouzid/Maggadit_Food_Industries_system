@@ -118,6 +118,10 @@
                 <i class="fas fa-boxes"></i>
                 <span>{{ __('messages.dashboard.sidebar.inventory') }}</span>
             </a>
+            <a href="{{ route('inventory.alerts') }}" class="nova-sidebar-link {{ request()->routeIs('inventory.alerts') ? 'active' : '' }}">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span>{{ __('messages.inventory_page.alerts_title') }}</span>
+            </a>
             <a href="{{ route('inventory.movements') }}" class="nova-sidebar-link {{ request()->routeIs('inventory.*') ? 'active' : '' }}">
                 <i class="fas fa-exchange-alt"></i>
                 <span>{{ __('messages.dashboard.sidebar.inventory_movements') }}</span>
@@ -139,6 +143,10 @@
             <a href="{{ route('payment-deadlines.index') }}" class="nova-sidebar-link {{ request()->routeIs('payment-deadlines.*') ? 'active' : '' }}">
                 <i class="fas fa-clock"></i>
                 <span>{{ __('messages.dashboard.sidebar.payment_deadlines') }}</span>
+            </a>
+            <a href="{{ route('cancellation-deadlines.index') }}" class="nova-sidebar-link {{ request()->routeIs('cancellation-deadlines.*') ? 'active' : '' }}">
+                <i class="fas fa-clock-rotate-left"></i>
+                <span>{{ __('messages.cancellation_deadline.title') }}</span>
             </a>
         </div>
 

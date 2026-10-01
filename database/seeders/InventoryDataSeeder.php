@@ -213,6 +213,7 @@ class InventoryDataSeeder extends Seeder
                         'warehouse_id' => $warehouseId,
                         'quantity' => 100,
                         'reserved_quantity' => 0,
+                        'low_stock_threshold' => 10,
                     ],
                 );
 
@@ -223,6 +224,15 @@ class InventoryDataSeeder extends Seeder
         if ($created > 0) {
             $this->command?->info("  Backfilled batch stock for {$created} pack/warehouse pairs.");
         }
+    }
+
+    /**
+     * Minimum stock per batch position. Every fourth row is pushed above its
+     * own quantity so the low-stock page and notifications have real data.
+     */
+    private function thresholdFor(int $index): int
+    {
+        return $index % 4 === 0 ? 500 : 10;
     }
 
     private function batchStockAndMovements($packs, $warehouses, $adminId): void
@@ -242,6 +252,7 @@ class InventoryDataSeeder extends Seeder
                     'warehouse_id' => $batchItem->warehouse_id ?: $warehouseIds->first(),
                     'quantity' => (int) $batchItem->quantity,
                     'reserved_quantity' => 0,
+                    'low_stock_threshold' => $this->thresholdFor($index),
                 ]);
 
             if ($index % 2 === 0 && $warehouseIds->count() > 1) {

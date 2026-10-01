@@ -6,19 +6,37 @@ use Illuminate\Database\Eloquent\Model;
 
 class Inventory extends Model
 {
+    /**
+     * Matches the inventories table: quantity_on_hand, reserved_quantity,
+     * damaged_quantity, reorder_level, last_counted_at. available_quantity is
+     * derived and is exposed as an accessor below.
+     */
     protected $fillable = [
         'item_id', 'item_pack_id', 'warehouse_id',
-        'quantity', 'reserved_quantity', 'available_quantity',
-        'low_stock_threshold', 'is_active',
+        'quantity_on_hand', 'reserved_quantity', 'damaged_quantity',
+        'reorder_level', 'last_counted_at',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
+        'quantity_on_hand' => 'decimal:2',
         'reserved_quantity' => 'decimal:2',
-        'available_quantity' => 'decimal:2',
-        'low_stock_threshold' => 'decimal:2',
-        'is_active' => 'boolean',
+        'damaged_quantity' => 'decimal:2',
+        'reorder_level' => 'decimal:2',
+        'last_counted_at' => 'datetime',
     ];
+
+    /**
+     * Sellable stock: on hand minus what is already reserved.
+     */
+    public function getAvailableQuantityAttribute(): float
+    {
+        return (float) $this->quantity_on_hand - (float) $this->reserved_quantity;
+    }
+
+    public function getLowStockThresholdAttribute(): float
+    {
+        return (float) $this->reorder_level;
+    }
 
     public function item()
     {
@@ -37,11 +55,11 @@ class Inventory extends Model
 
     public function scopeLowStock($query)
     {
-        return $query->whereRaw('available_quantity <= low_stock_threshold');
+        return $query->whereColumn('quantity_on_hand', '<=', 'reorder_level');
     }
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('quantity_on_hand', '>', 0);
     }
 }

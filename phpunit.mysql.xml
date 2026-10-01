@@ -23,6 +23,9 @@
             <file>tests/Feature/DeliveryIndexTest.php</file>
             <file>tests/Feature/DeliveryShowTest.php</file>
             <file>tests/Feature/SchemaRegressionGuardTest.php</file>
+            <file>tests/Feature/ReturnsIndexTest.php</file>
+            <file>tests/Feature/CustomerReturnsTest.php</file>
+            <file>tests/Feature/InvSmokeTest.php</file>
         </testsuite>
     </testsuites>
     <php>

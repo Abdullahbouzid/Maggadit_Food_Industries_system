@@ -6,17 +6,29 @@ use Illuminate\Database\Eloquent\Model;
 
 class CustomerPriceList extends Model
 {
+    /**
+     * Matches the customer_price_lists table, whose unique key is
+     * (customer_id, price_list_id). There is no per-row price override or
+     * validity window; assignment is tracked with assigned_at/unassigned_at.
+     */
     protected $fillable = [
-        'customer_id', 'price_list_id', 'price_override',
-        'is_default', 'valid_from', 'valid_until',
+        'customer_id', 'price_list_id',
+        'assigned_at', 'assigned_by', 'unassigned_at', 'is_active',
     ];
 
     protected $casts = [
-        'price_override' => 'decimal:2',
-        'is_default' => 'boolean',
-        'valid_from' => 'date',
-        'valid_until' => 'date',
+        'is_active' => 'boolean',
+        'assigned_at' => 'datetime',
+        'unassigned_at' => 'datetime',
     ];
+
+    /**
+     * Only rows that are active and not yet unassigned are in force.
+     */
+    public function scopeInForce($query)
+    {
+        return $query->where('is_active', true)->whereNull('unassigned_at');
+    }
 
     public function customer()
     {

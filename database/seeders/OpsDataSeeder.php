@@ -18,6 +18,7 @@ class OpsDataSeeder extends Seeder
         $this->auditLogs();
         $this->modelHasPermissions();
         $this->runtimeRows();
+        $this->cancellationDeadlines();
     }
 
     private function surveys(): void
@@ -251,6 +252,61 @@ class OpsDataSeeder extends Seeder
                     'exception' => 'Seeded row for demonstration purposes.',
                     'failed_at' => $past,
                 ]);
+        }
+    }
+
+    /**
+     * Default stage-to-stage cancellation windows, plus the status history the
+     * deadlines are measured against.
+     */
+    private function cancellationDeadlines(): void
+    {
+        $rules = [
+            ['from_stage' => 'pending_approval', 'to_stage' => 'cancelled', 'hours_limit' => 48,
+                'notes' => 'مسموح بالإلغاء خلال 48 ساعة قبل الموافقة'],
+            ['from_stage' => 'approved', 'to_stage' => 'cancelled', 'hours_limit' => 72,
+                'notes' => 'مسموح بالإلغاء خلال 72 ساعة من الموافقة'],
+            ['from_stage' => 'partially_paid', 'to_stage' => 'rejected', 'hours_limit' => 24,
+                'notes' => 'مسموح بالرفض خلال 24 ساعة من الدفع الجزئي'],
+        ];
+
+        $adminId = DB::table('users')->orderBy('id')->value('id');
+
+        foreach ($rules as $rule) {
+            Stamped::upsert(
+                'invoice_cancellation_deadlines',
+                ['from_stage' => $rule['from_stage'], 'to_stage' => $rule['to_stage']],
+                $rule + ['is_active' => true, 'updated_by' => $adminId]
+            );
+        }
+
+        $this->invoiceStatusHistory();
+    }
+
+    /**
+     * Backfill when each invoice entered its current stage, so deadlines are
+     * measurable for invoices that predate the history table.
+     */
+    private function invoiceStatusHistory(): void
+    {
+        $invoices = DB::table('invoices')->orderBy('id')->get();
+
+        foreach ($invoices as $invoice) {
+            $exists = DB::table('invoice_status_histories')
+                ->where('invoice_id', $invoice->id)
+                ->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            DB::table('invoice_status_histories')->insert([
+                'invoice_id' => $invoice->id,
+                'from_status' => null,
+                'to_status' => $invoice->status,
+                'changed_by' => $invoice->approved_by,
+                'created_at' => $invoice->approved_at ?? $invoice->created_at,
+            ]);
         }
     }
 }

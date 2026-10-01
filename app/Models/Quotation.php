@@ -20,8 +20,8 @@ class Quotation extends Model
         'tax_total' => 'decimal:2',
         'total' => 'decimal:2',
         'valid_until' => 'date',
-        'accepted_at' => 'datetime',
-        'rejected_at' => 'datetime',
+        'sent_at' => 'datetime',
+        'customer_response_at' => 'datetime',
     ];
 
     public function customer()

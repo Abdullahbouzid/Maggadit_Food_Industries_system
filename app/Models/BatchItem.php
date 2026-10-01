@@ -18,7 +18,6 @@ class BatchItem extends Model
         'quantity',
         'dispatched_quantity',
         'transferred_quantity',
-        'remaining_quantity',
     ];
 
     // حساب الكمية المتبقية تلقائياً

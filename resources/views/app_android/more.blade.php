@@ -65,6 +65,32 @@
                 </div>
                 <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
             </div>
+
+            <div id="returns" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                        <i class="fas fa-undo text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800">استرجاعاتي</h3>
+                        <p class="text-xs text-gray-400">سجل طلبات الاسترجاع الخاصة بك</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+            </div>
+
+            <div id="my-products" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                        <i class="fas fa-box text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800">منتجاتي وكل باتش</h3>
+                        <p class="text-xs text-gray-400">الكميات المستلمة من كل دفعة إنتاج</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-left text-gray-300 text-sm"></i>
+            </div>
         </div>
 
         <!-- باقي العناصر (معلوماتي، استبيانات، إشعارات، إلخ) -->
@@ -406,6 +432,12 @@
         });
         document.getElementById('order-history').addEventListener('click', () => {
             window.location.href = "{{ route('customer.order_history', [], false) }}";
+        });
+        document.getElementById('returns').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.returns', [], false) }}";
+        });
+        document.getElementById('my-products').addEventListener('click', () => {
+            window.location.href = "{{ route('customer.my_products', [], false) }}";
         });
         document.getElementById('my-info').addEventListener('click', () => {
             window.location.href = "{{ route('customer.my_info', [], false) }}";

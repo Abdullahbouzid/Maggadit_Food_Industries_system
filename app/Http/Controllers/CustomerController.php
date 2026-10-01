@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Organization;
 use App\Models\PriceList;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -138,11 +139,27 @@ class CustomerController extends Controller
         $defaultCurrencyId = $currencies->firstWhere('base_currency', true)?->id
             ?? $currencies->first()?->id;
 
+        // سجل الدفعات، سجل الاسترجاعات، و trace لكل باتش
+        $payments = DB::table('payments')
+            ->join('invoices', 'invoices.id', '=', 'payments.invoice_id')
+            ->where('invoices.customer_id', $customer->id)
+            ->orderByDesc('payments.paid_at')
+            ->orderByDesc('payments.id')
+            ->limit(50)
+            ->get();
+
+        $trace = app(\App\Services\CustomerBatchTraceService::class);
+        $returns = $trace->returnsFor($customer);
+        $batchTrace = $trace->forCustomer($customer);
+
         return view('dashboard.customers.show', compact(
             'customer',
             'allPriceLists',
             'currencies',
-            'defaultCurrencyId'
+            'defaultCurrencyId',
+            'payments',
+            'returns',
+            'batchTrace'
         ));
     }
 

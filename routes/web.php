@@ -15,6 +15,8 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\Customer\CustomerCatalogController;
 use App\Http\Controllers\Customer\CustomerDashboardController;
 use App\Http\Controllers\Customer\CustomerOrderController;
+use App\Http\Controllers\Customer\CustomerReturnController;
+use App\Http\Controllers\Customer\CustomerStatementController;
 use App\Http\Controllers\Customer\CustomerPagesController;
 use App\Http\Controllers\Customer\CustomerProfileController;
 use App\Http\Controllers\CustomerController;
@@ -486,9 +488,11 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::post('/checkout', [CustomerOrderController::class, 'checkout'])->name('checkout');
         Route::get('/favorite', [CustomerProfileController::class, 'favorites'])->name('favorite');
         Route::post('/favorite/toggle', [CustomerProfileController::class, 'toggleFavorite'])->name('favorite.toggle');
-        Route::get('/financial-statement', function () {
-            return view('app_android.more.financial_statement');
-        })->name('financial_statement');
+        Route::get('/financial-statement', [CustomerStatementController::class, 'index'])->name('financial_statement');
+        Route::get('/returns', [CustomerReturnController::class, 'index'])->name('returns');
+        Route::get('/returns/create/{invoiceId}', [CustomerReturnController::class, 'create'])->name('returns.create');
+        Route::post('/returns/{invoiceId}', [CustomerReturnController::class, 'store'])->name('returns.store');
+        Route::get('/my-products', [CustomerReturnController::class, 'products'])->name('my_products');
         Route::get('/order-history', [CustomerOrderController::class, 'orderHistory'])->name('order_history');
         Route::get('/order/{id}', [CustomerOrderController::class, 'orderDetails'])->name('order_details');
         Route::post('/order/{id}/quotation/respond', [CustomerOrderController::class, 'respondToQuotation'])->name('order.quotation.respond');
@@ -729,6 +733,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('price-lists/{priceList}/versions/{version}', [\App\Http\Controllers\Admin\PriceListController::class, 'updateVersion'])->name('price-lists.versions.update');
     Route::delete('price-lists/{priceList}/versions/{version}', [\App\Http\Controllers\Admin\PriceListController::class, 'destroyVersion'])->name('price-lists.versions.destroy');
     Route::get('price-lists/customers', [\App\Http\Controllers\Admin\PriceListController::class, 'customers'])->name('price-lists.customers');
+    Route::get('customers/{customer}/returns/{invoice}/create', [\App\Http\Controllers\Admin\CustomerReturnRecordController::class, 'create'])->name('customers.returns.create');
+    Route::post('customers/{customer}/returns/{invoice}', [\App\Http\Controllers\Admin\CustomerReturnRecordController::class, 'store'])->name('customers.returns.store');
     Route::post('customers/{customer}/price-list', [\App\Http\Controllers\Admin\PriceListController::class, 'updateCustomerPriceList'])->name('customers.price-list.update');
 
     // The controller has no create()/edit() actions.
@@ -748,6 +754,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/returns', [\App\Http\Controllers\Admin\ReturnController::class, 'index'])->name('returns.index');
     Route::get('/inventory', [\App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('inventory.index');
     Route::get('/inventory/movements', [\App\Http\Controllers\Admin\InventoryController::class, 'movements'])->name('inventory.movements');
+    Route::get('/inventory/alerts', [\App\Http\Controllers\Admin\InventoryController::class, 'alerts'])->name('inventory.alerts');
+    Route::post('/inventory/alerts/notify', [\App\Http\Controllers\Admin\InventoryController::class, 'notifyAlerts'])->name('inventory.alerts.notify');
+    Route::get('/inventory/transfers', [\App\Http\Controllers\Admin\WarehouseTransferController::class, 'index'])->name('inventory.transfers');
+    Route::post('/inventory/transfers', [\App\Http\Controllers\Admin\WarehouseTransferController::class, 'store'])->name('inventory.transfers.store');
     Route::get('/wallets', [\App\Http\Controllers\Admin\WalletController::class, 'index'])->name('wallets.index');
     Route::get('/settings/payment-deadlines', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'index'])->name('payment-deadlines.index');
 
@@ -757,6 +767,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('create', [\App\Http\Controllers\Admin\DeliveryController::class, 'create'])->name('create');
         Route::get('{delivery}', [\App\Http\Controllers\Admin\DeliveryController::class, 'show'])->name('show');
         Route::post('{delivery}/advance-stage', [\App\Http\Controllers\Admin\DeliveryController::class, 'advanceStage'])->name('advance-stage');
+    });
+
+    Route::prefix('settings/cancellation-deadlines')->name('cancellation-deadlines.')->group(function () {
+        $controller = \App\Http\Controllers\Admin\CancellationDeadlineController::class;
+
+        Route::get('/', [$controller, 'index'])->name('index');
+        Route::post('/', [$controller, 'store'])->name('store');
+        Route::put('{cancellationDeadline}', [$controller, 'update'])->name('update');
+        Route::post('{cancellationDeadline}/toggle', [$controller, 'toggle'])->name('toggle');
+        Route::delete('{cancellationDeadline}', [$controller, 'destroy'])->name('destroy');
     });
 
     Route::post('inventory/adjust', [\App\Http\Controllers\Admin\InventoryController::class, 'adjust'])->name('inventory.adjust');
@@ -769,7 +789,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('settings/payment-deadlines')->name('payment-deadlines.')->group(function () {
         Route::get('create', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'store'])->name('store');
         Route::get('{paymentDeadline}/edit', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'edit'])->name('edit');
+        Route::put('{paymentDeadline}', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'update'])->name('update');
         Route::delete('{paymentDeadline}', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'destroy'])->name('destroy');
         Route::post('{paymentDeadline}/toggle', [\App\Http\Controllers\Admin\PaymentDeadlineController::class, 'toggle'])->name('toggle');
     });

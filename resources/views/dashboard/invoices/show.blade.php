@@ -414,12 +414,21 @@ $canCollect = in_array($invoiceStatus?->value, ['approved', 'partially_paid'], t
                 </thead>
                 <tbody>
                     @forelse($returnRequests as $return)
+                    @php
+                        $rStatus = $return->status instanceof \App\Enums\ReturnStatus
+                            ? $return->status
+                            : \App\Enums\ReturnStatus::tryFrom((string) ($return->status->value ?? $return->status));
+                        $rType = $return->type instanceof \App\Enums\ReturnType
+                            ? $return->type
+                            : \App\Enums\ReturnType::tryFrom((string) ($return->type->value ?? $return->type));
+                    @endphp
                     <tr>
                         <td class="nova-fw-semibold">{{ $return->return_number ?? $return->id }}</td>
-                        <td>{{ $return->type ?? '—' }}</td>
+                        <td>{{ $rType?->label() ?? '—' }}</td>
                         <td>
-                            <span class="nova-badge {{ $return->status === 'completed' ? 'success' : 'warning' }}">
-                                {{ __('messages.return_requests.status_' . $return->status) }}</span>
+                            <span class="nova-badge {{ $rStatus?->badgeColor() ?? 'nova-text-muted' }}">
+                                {{ $rStatus?->label() ?? '—' }}
+                            </span>
                         </td>
                     </tr>
                     @empty

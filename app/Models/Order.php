@@ -6,12 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
+    /**
+     * Matches the orders table. Totals are discount_total/tax_total; the
+     * per-line discount_amount/tax_amount live on order_items, and
+     * quotation_id lives on invoices. Listing them here made create() discard
+     * values silently.
+     */
     protected $fillable = [
         'order_number', 'customer_id', 'warehouse_id', 'currency_id',
-        'price_list_snapshot_id', 'quotation_id', 'created_by', 'status',
-        'exchange_rate', 'delivery_address', 'delivery_phone', 'delivery_notes',
-        'scheduled_delivery_date', 'subtotal', 'discount_total', 'discount_amount',
-        'tax_total', 'tax_amount', 'shipping_fee', 'total', 'total_amount',
+        'price_list_snapshot_id', 'created_by', 'status',
+        'exchange_rate', 'delivery_address', 'delivery_phone',
+        'scheduled_delivery_date', 'subtotal', 'discount_total',
+        'tax_total', 'shipping_fee', 'total', 'total_amount',
         'cancelled_at', 'confirmed_at', 'notes',
     ];
 
@@ -19,9 +25,7 @@ class Order extends Model
         'exchange_rate' => 'decimal:6',
         'subtotal' => 'decimal:2',
         'discount_total' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
         'tax_total' => 'decimal:2',
-        'tax_amount' => 'decimal:2',
         'shipping_fee' => 'decimal:2',
         'total' => 'decimal:2',
         'total_amount' => 'decimal:2',
@@ -84,11 +88,6 @@ class Order extends Model
     public function returnRequests()
     {
         return $this->hasMany(ReturnRequest::class, 'order_id');
-    }
-
-    public function finalInvoices()
-    {
-        return $this->hasMany(FinalInvoice::class, 'order_id');
     }
 
     public function scopeActive($query)

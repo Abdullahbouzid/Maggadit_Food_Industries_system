@@ -15,7 +15,7 @@ class ItemPack extends Model
     protected $table = 'item_packs';
 
     protected $fillable = [
-        'item_id', 'pack_definition_id', 'warehouse_id', 'pack_type_id', 'pack_capacity_id', 'quantity_in_pack',
+        'item_id', 'warehouse_id', 'pack_type_id', 'pack_capacity_id', 'quantity_in_pack',
         'barcode', 'serial_separator', 'equivalency_factor', 'height', 'width',
         'depth', 'weight', 'is_weight_priced', 'allow_fraction_in_qty',
         'is_default_pack', 'sort_order', 'price',
