@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Maggadit - Sign In</title>
     @vite(['resources/css/app.css'])
-    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- Tailwind is compiled into app.css via Vite. Loading cdn.tailwindcss.com
+         on top of it duplicated the framework and left every screen unstyled
+         whenever the packaged app had no network access. --}}
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
         * {

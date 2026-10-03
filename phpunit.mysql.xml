@@ -26,6 +26,7 @@
             <file>tests/Feature/ReturnsIndexTest.php</file>
             <file>tests/Feature/CustomerReturnsTest.php</file>
             <file>tests/Feature/InvSmokeTest.php</file>
+            <file>tests/Feature/AndroidAppSmokeTest.php</file>
         </testsuite>
     </testsuites>
     <php>
