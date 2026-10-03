@@ -383,12 +383,25 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
         Route::get('/faqs', function () use ($baseUrl) {
             try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/faqs");
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/faq");
                 return response()->json($response->json(), $response->status());
             } catch (Exception $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
             }
         })->name('faqs');
+
+        Route::get('/notifications', function () use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/notifications");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('notifications');
 
         Route::get('/dashboard', function () use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();

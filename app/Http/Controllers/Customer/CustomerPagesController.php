@@ -106,9 +106,21 @@ class CustomerPagesController extends Controller
         ]);
     }
 
-    public function faqIndex()
+    public function faqIndex(Request $request)
     {
         $faqs = Faq::all();
+
+        // If local DB is empty, fetch from external API (for APK)
+        if ($faqs->isEmpty()) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData('customer/faq', $token);
+                if ($remoteData && isset($remoteData['faq'])) {
+                    $faqs = collect($remoteData['faq']);
+                }
+            }
+        }
+
         $faqsByCategory = $faqs->groupBy('category');
 
         return view('app_android.more.faq', compact('faqsByCategory'));

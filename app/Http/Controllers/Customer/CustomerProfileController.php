@@ -232,7 +232,7 @@ class CustomerProfileController extends Controller
         }
     }
 
-    public function notificationsIndex()
+    public function notificationsIndex(Request $request)
     {
         $customer = Auth::guard('customer')->user();
 
@@ -248,6 +248,32 @@ class CustomerProfileController extends Controller
             ->values();
 
         $unreadCount = $service->unreadCount($customer);
+
+        // If local DB is empty, fetch from external API (for APK)
+        if ($notifications->isEmpty()) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData('customer/notifications', $token);
+                if ($remoteData && isset($remoteData['notifications'])) {
+                    // Transform external API format to match local view expectations
+                    $notifications = collect($remoteData['notifications'])->map(function ($n) {
+                        return (object) [
+                            'id'         => $n['id'],
+                            'subject'    => $n['subject'],
+                            'body'       => $n['body'],
+                            'image'      => $n['image'] ?? null,
+                            'icon_type'  => $n['icon_type'] ?? 'notification',
+                            'group'      => $n['group'] ?? null,
+                            'is_read'    => (bool) ($n['is_read'] ?? false),
+                            'is_starred' => (bool) ($n['is_starred'] ?? false),
+                            'is_archived'=> (bool) ($n['is_archived'] ?? false),
+                            'created_at' => $n['created_at'] ?? now()->toDateTimeString(),
+                        ];
+                    })->values();
+                    $unreadCount = $remoteData['unread_count'] ?? 0;
+                }
+            }
+        }
 
         return view('app_android.more.notifications', compact('notifications', 'unreadCount'));
     }
