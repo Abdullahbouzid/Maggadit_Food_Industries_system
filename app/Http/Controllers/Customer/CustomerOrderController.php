@@ -450,17 +450,47 @@ class CustomerOrderController extends Controller
     private function getRemoteSteps($order): array
     {
         $status = $order->status ?? 'pending';
+        
+        // Determine current step index (matching API logic)
+        $stepStatuses = [
+            'new' => 0,
+            'pending_review' => 1,
+            'admin_edited' => 2,
+            'quotation_sent' => 2,
+            'customer_approved' => 3,
+            'approved' => 3,
+            'delivered' => 4,
+            'cancelled' => 5,
+            'rejected' => 5,
+            'returned' => 5,
+            'expired' => 5,
+            'customer_rejected' => 5,
+        ];
+        
+        $currentStepIndex = $stepStatuses[$status] ?? 0;
+        $isTerminal = in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected']);
+
         $steps = [
-            ['key' => 'submitted', 'label' => 'تم إرسال الطلب', 'icon' => 'fa-send', 'color' => 'purple', 'completed' => true],
-            ['key' => 'review', 'label' => 'قيد المراجعة', 'icon' => 'fa-magnifying-glass', 'color' => 'blue', 'completed' => in_array($status, ['admin_edited', 'quotation_sent', 'customer_approved', 'approved', 'delivered'])],
-            ['key' => 'quotation', 'label' => 'عرض السعر', 'icon' => 'fa-file-invoice-dollar', 'color' => 'indigo', 'completed' => in_array($status, ['customer_approved', 'approved', 'delivered'])],
-            ['key' => 'approval', 'label' => 'موافقة العميل', 'icon' => 'fa-user-check', 'color' => 'emerald', 'completed' => in_array($status, ['approved', 'delivered'])],
-            ['key' => 'delivery', 'label' => 'التسليم', 'icon' => 'fa-truck', 'color' => 'green', 'completed' => $status === 'delivered'],
+            ['key' => 'submitted', 'label' => 'تم إرسال الطلب', 'icon' => 'fa-send', 'color' => 'purple'],
+            ['key' => 'review', 'label' => 'قيد المراجعة', 'icon' => 'fa-magnifying-glass', 'color' => 'blue'],
+            ['key' => 'quotation', 'label' => 'عرض السعر', 'icon' => 'fa-file-invoice-dollar', 'color' => 'indigo'],
+            ['key' => 'approval', 'label' => 'موافقة العميل', 'icon' => 'fa-user-check', 'color' => 'emerald'],
+            ['key' => 'delivery', 'label' => 'التسليم', 'icon' => 'fa-truck', 'color' => 'green'],
         ];
 
-        // Add terminal negative states
-        if (in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
-            $steps[] = ['key' => 'cancelled', 'label' => 'ملغي/مرفوض', 'icon' => 'fa-ban', 'color' => 'red', 'completed' => true];
+        if ($isTerminal) {
+            $steps[] = ['key' => 'cancelled', 'label' => 'ملغي/مرفوض', 'icon' => 'fa-ban', 'color' => 'red'];
+        }
+
+        // Add state to each step (matching API format)
+        foreach ($steps as $index => &$step) {
+            if ($index < $currentStepIndex) {
+                $step['state'] = 'done';
+            } elseif ($index === $currentStepIndex) {
+                $step['state'] = $isTerminal ? 'rejected' : 'current';
+            } else {
+                $step['state'] = 'pending';
+            }
         }
 
         return $steps;
