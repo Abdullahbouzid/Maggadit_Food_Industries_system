@@ -330,7 +330,7 @@ class CustomerCatalogController extends Controller
                     
                     // Add packs array (view expects this structure)
                     $packPrice = $itemObj->price;
-                    if ($itemObj->packs && is_array($itemObj->packs) && count($itemObj->packs) > 0) {
+                    if (isset($itemObj->packs) && is_array($itemObj->packs) && count($itemObj->packs) > 0) {
                         $itemObj->packs = array_map(function ($pack) use ($packPrice) {
                             return [
                                 'id' => $pack['id'] ?? null,
