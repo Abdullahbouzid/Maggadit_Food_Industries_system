@@ -32,7 +32,9 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
 
         Route::get('/dashboard', [CustomerApiController::class, 'dashboard']);
         Route::get('/financial-statement', [CustomerApiController::class, 'financialStatement']);
-        Route::get('/orders', [CustomerApiController::class, 'orderHistory']);
+        Route::get('/orders', [CustomerApiController::class, 'ordersIndex']);
+        Route::get('/orders/{id}', [CustomerApiController::class, 'orderDetails']);
+        Route::get('/order-history', [CustomerApiController::class, 'orderHistory']);
         Route::get('/surveys', [CustomerApiController::class, 'surveys']);
         Route::get('/surveys/{id}', [CustomerApiController::class, 'getSurvey']);
         Route::post('/surveys/{id}/respond', [CustomerApiController::class, 'submitSurvey']);

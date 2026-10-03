@@ -251,26 +251,94 @@ class CustomerApiController extends Controller
 
     public function financialStatement(Request $request)
     {
-        return response()->json(['success' => true, 'statement' => []]);
-    }
-
-    public function orderHistory(Request $request)
-    {
         $customer = $request->user();
 
-        $invoices = Invoice::where('customer_id', $customer->id)
-            ->with(['items.item' => function ($q) {
-                $q->select('id', 'name_ar', 'name_en');
-            }])
-            ->orderBy('invoice_date', 'desc')
-            ->get()->map(function ($invoice) {
+        // Get wallet and transactions
+        $wallet = \App\Models\CustomerWallet::where('customer_id', $customer->id)->first();
+        
+        $transactions = $wallet
+            ? \App\Models\WalletTransaction::with(['reference'])
+                ->where('wallet_id', $wallet->id)
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->limit(200)
+                ->get()
+            : collect();
+
+        $invoices = Invoice::with(['items'])
+            ->where('customer_id', $customer->id)
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get();
+
+        // Format transactions
+        $statement = $transactions->map(function ($transaction) use ($invoices) {
+            $amount = (float) $transaction->amount;
+            $direction = $amount < 0 ? 'debit' : 'credit';
+
+            $invoice = null;
+            if ($transaction->reference_type) {
+                $short = class_basename($transaction->reference_type);
+                if ($short === 'Invoice' && $transaction->reference_id) {
+                    $invoice = $invoices->firstWhere('id', $transaction->reference_id)
+                        ?? Invoice::find($transaction->reference_id);
+                } elseif ($short === 'Payment' && $transaction->reference_id) {
+                    $payment = \App\Models\Payment::find($transaction->reference_id);
+                    $invoice = $payment ? Invoice::with('items')->find($payment->invoice_id) : null;
+                }
+            }
+
+            return [
+                'id' => $transaction->id,
+                'date' => $transaction->created_at?->format('Y-m-d'),
+                'type' => (string) $transaction->type,
+                'label' => match ((string) $transaction->type) {
+                    'deposit' => 'إيداع',
+                    'purchase' => $direction === 'debit' ? 'دفع فاتورة' : 'استرداد',
+                    'withdrawal' => 'سحب',
+                    'refund' => 'استرداد',
+                    default => (string) $transaction->type,
+                },
+                'amount' => abs($amount),
+                'direction' => $direction,
+                'signed' => $direction === 'debit' ? -abs($amount) : abs($amount),
+                'balance_after' => (float) $transaction->balance_after,
+                'method' => match ($transaction->method) {
+                    'cash' => 'نقداً',
+                    'bank_transfer' => 'تحويل بنكي',
+                    'card' => 'بطاقة',
+                    'online' => 'دفع إلكتروني',
+                    'wallet' => 'محفظة',
+                    'check' => 'شيك',
+                    default => $transaction->method ?: '—',
+                },
+                'reference' => $transaction->reference_number ?: ('#' . $transaction->id),
+                'notes' => $transaction->notes,
+                'invoice_id' => $invoice?->id,
+                'invoice_number' => $invoice?->invoice_number,
+            ];
+        })->values();
+
+        $totals = [
+            'deposits' => (float) $statement->where('direction', 'credit')->sum('amount'),
+            'debits' => abs((float) $statement->where('direction', 'debit')->sum('amount')),
+            'balance' => (float) ($wallet->balance ?? 0),
+            'invoiced' => (float) $invoices->sum('total_amount'),
+            'paid' => (float) $invoices->sum('paid_amount'),
+        ];
+        $totals['outstanding'] = round($totals['invoiced'] - $totals['paid'], 2);
+
+        return response()->json([
+            'success' => true,
+            'statement' => $statement,
+            'invoices' => $invoices->map(function ($invoice) {
                 return [
                     'id' => $invoice->id,
                     'invoice_number' => $invoice->invoice_number,
-                    'date' => $invoice->invoice_date->format('Y-m-d'),
-                    'total_amount' => $invoice->total_amount,
+                    'invoice_date' => $invoice->invoice_date?->format('Y-m-d'),
+                    'total_amount' => (float) $invoice->total_amount,
+                    'paid_amount' => (float) $invoice->paid_amount,
                     'status' => $invoice->status,
-                    'items_count' => $invoice->items->count(),
                     'items' => $invoice->items->map(function ($item) {
                         return [
                             'name' => $item->item->name_ar ?? $item->item->name_en ?? 'Product',
@@ -280,12 +348,282 @@ class CustomerApiController extends Controller
                         ];
                     }),
                 ];
-            });
+            }),
+            'totals' => $totals,
+        ]);
+    }
+
+    /**
+     * Get order details for customer (for APK order details page)
+     */
+    public function orderDetails(Request $request, $id)
+    {
+        $customer = $request->user();
+
+        $order = \App\Models\Order::where('customer_id', $customer->id)
+            ->where(function ($q) use ($id) {
+                $q->where('id', $id);
+                if (is_numeric($id)) {
+                    $q->orWhere('order_number', $id);
+                }
+            })
+            ->with([
+                'items.item',
+                'items.pack.packType',
+                'items.pack.packCapacity.uom',
+                'items.warehouse',
+                'quotation.items.item',
+                'quotation.items.pack',
+                'invoices',
+            ])
+            ->first();
+
+        if (! $order) {
+            return response()->json(['success' => false, 'message' => 'الطلبية غير موجودة'], 404);
+        }
+
+        $quotation = $order->quotation->sortByDesc('version')->first();
+        $invoice = $order->invoices->first();
+
+        $orderItems = $order->items->map(function ($item) {
+            $packLabel = 'وحدة';
+            if ($item->pack) {
+                $uom = $item->pack->packCapacity?->uom;
+                $packLabel = $item->pack->packType?->name
+                    ?: ($uom?->name_ar ?: $uom?->name_en ?: ('عبوة '.(float) $item->pack->quantity_in_pack));
+            }
+
+            return [
+                'name' => $item->item?->name_ar ?: ($item->item?->name_en ?: 'منتج'),
+                'code' => $item->item?->code ?: '—',
+                'pack' => $packLabel,
+                'quantity' => (float) $item->quantity,
+                'unit_price' => (float) $item->unit_price,
+                'line_total' => (float) ($item->line_total ?: $item->subtotal ?: ((float) $item->unit_price * (float) $item->quantity)),
+                'warehouse' => $item->warehouse?->name_ar ?: ($item->warehouse?->name_en ?: 'غير محدد'),
+            ];
+        })->values();
+
+        $quotationItems = $quotation
+            ? $quotation->items->map(function ($item) {
+                return [
+                    'name' => $item->item_name_snapshot ?: ($item->item?->name_ar ?: ($item->item?->name_en ?: 'منتج')),
+                    'quantity' => (float) $item->quantity,
+                    'unit_price' => (float) $item->unit_price,
+                    'discount' => (float) $item->discount_percent,
+                    'line_total' => (float) ($item->line_total ?: $item->subtotal ?: 0),
+                ];
+            })->values()
+            : [];
+
+        // Build steps and timeline similar to OrderStepPresenter
+        $steps = $this->buildOrderSteps($order);
+        $timeline = $this->buildOrderTimeline($order);
+
+        $statusMeta = $this->getOrderStatusMeta($order);
+        $progress = $this->calculateProgress($order);
+        $canRespond = $this->canCustomerRespond($order, $quotation);
 
         return response()->json([
             'success' => true,
-            'orders' => $invoices,
+            'order' => [
+                'id' => $order->id,
+                'order_number' => $order->order_number,
+                'date' => $order->created_at?->format('Y-m-d'),
+                'total' => (float) $order->total,
+                'status' => $this->getOrderStatusValue($order),
+                'status_text' => $statusMeta['label'],
+                'status_class' => $statusMeta['class'],
+                'progress' => $progress,
+                'items_count' => $order->items->count(),
+                'has_quotation' => (bool) $quotation,
+                'has_invoice' => (bool) $invoice,
+                'invoice_number' => $invoice?->invoice_number,
+                'quotation_number' => $quotation?->quotation_number,
+                'can_respond' => $canRespond,
+                'delivery_address' => $order->delivery_address,
+                'delivery_phone' => $order->delivery_phone,
+                'customer_name' => $order->customer?->name,
+                'items' => $orderItems,
+                'quotation' => $quotation ? [
+                    'id' => $quotation->id,
+                    'quotation_number' => $quotation->quotation_number,
+                    'status' => $quotation->status,
+                    'customer_response' => $quotation->customer_response,
+                    'total' => (float) $quotation->total,
+                    'items' => $quotationItems,
+                ] : null,
+                'invoice' => $invoice ? [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'status' => $invoice->status,
+                    'total_amount' => (float) $invoice->total_amount,
+                ] : null,
+            ],
+            'steps' => $steps,
+            'timeline' => $timeline,
         ]);
+    }
+
+    /**
+     * List all orders for customer (alternative to orderHistory which returns invoices)
+     */
+    public function ordersIndex(Request $request)
+    {
+        $customer = $request->user();
+
+        $orders = \App\Models\Order::where('customer_id', $customer->id)
+            ->with([
+                'items.item:id,name_ar,name_en',
+                'quotation:id,order_id,quotation_number,status,customer_response,total',
+                'invoices:id,order_id,invoice_number,status,total_amount',
+            ])
+            ->orderByDesc('id')
+            ->get()
+            ->map(function ($order) {
+                $quotation = $order->quotation->sortByDesc('id')->first();
+                $invoice = $order->invoices->first();
+
+                return [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'date' => $order->created_at?->format('Y-m-d'),
+                    'total' => (float) ($order->total ?? 0),
+                    'status' => $this->getOrderStatusValue($order),
+                    'status_text' => $this->getOrderStatusMeta($order)['label'],
+                    'status_class' => $this->getOrderStatusMeta($order)['class'],
+                    'progress' => $this->calculateProgress($order),
+                    'items_count' => $order->items->count(),
+                    'has_quotation' => (bool) $quotation,
+                    'has_invoice' => (bool) $invoice,
+                    'invoice_number' => $invoice?->invoice_number,
+                    'quotation_number' => $quotation?->quotation_number,
+                    'can_respond' => $this->canCustomerRespond($order, $quotation),
+                    'items' => $order->items->map(fn ($item) => [
+                        'name' => $item->item?->name_ar ?: ($item->item?->name_en ?: 'منتج'),
+                        'quantity' => (float) $item->quantity,
+                        'unit_price' => (float) $item->unit_price,
+                    ])->values(),
+                ];
+            })->values();
+
+        return response()->json([
+            'success' => true,
+            'orders' => $orders,
+        ]);
+    }
+
+    // Helper methods for order status/steps
+    private function getOrderStatusValue($order): string
+    {
+        $status = $order->status;
+        if ($status instanceof \App\Enums\OrderStatus) {
+            return $status->value;
+        }
+        return (string) $status;
+    }
+
+    private function getOrderStatusMeta($order): array
+    {
+        $value = $this->getOrderStatusValue($order);
+        $enum = \App\Enums\OrderStatus::tryFrom($value);
+        $label = $enum?->label() ?? $value;
+
+        $badge = match ($value) {
+            \App\Enums\OrderStatus::New->value, \App\Enums\OrderStatus::PendingReview->value, \App\Enums\OrderStatus::QuotationSent->value,
+            \App\Enums\OrderStatus::PendingApproval->value => 'nova-badge-warning',
+            \App\Enums\OrderStatus::AdminEdited->value, \App\Enums\OrderStatus::InvoiceGenerated->value, \App\Enums\OrderStatus::InDelivery->value => 'nova-badge-info',
+            \App\Enums\OrderStatus::CustomerApproved->value, \App\Enums\OrderStatus::Approved->value, \App\Enums\OrderStatus::Delivered->value => 'nova-badge-success',
+            \App\Enums\OrderStatus::CustomerRejected->value, \App\Enums\OrderStatus::Cancelled->value,
+            \App\Enums\OrderStatus::Rejected->value, \App\Enums\OrderStatus::Expired->value, \App\Enums\OrderStatus::Returned->value => 'nova-badge-danger',
+            default => 'nova-badge-secondary',
+        };
+
+        $class = match (true) {
+            $enum === null => 'text-gray-600 bg-gray-100',
+            str_contains($badge, 'success') => 'text-emerald-700 bg-emerald-50',
+            str_contains($badge, 'danger') => 'text-red-700 bg-red-50',
+            str_contains($badge, 'warning') => 'text-amber-700 bg-amber-50',
+            str_contains($badge, 'info') => 'text-blue-700 bg-blue-50',
+            default => 'text-gray-700 bg-gray-100',
+        };
+
+        return ['label' => $label, 'class' => $class, 'badge' => $badge];
+    }
+
+    private function calculateProgress($order): int
+    {
+        $status = $this->getOrderStatusValue($order);
+        return match ($status) {
+            \App\Enums\OrderStatus::New->value => 10,
+            \App\Enums\OrderStatus::PendingReview->value => 20,
+            \App\Enums\OrderStatus::AdminEdited->value => 30,
+            \App\Enums\OrderStatus::QuotationSent->value => 40,
+            \App\Enums\OrderStatus::CustomerApproved->value => 60,
+            \App\Enums\OrderStatus::Approved->value => 60,
+            \App\Enums\OrderStatus::InvoiceGenerated->value => 70,
+            \App\Enums\OrderStatus::InDelivery->value => 80,
+            \App\Enums\OrderStatus::Delivered->value => 100,
+            \App\Enums\OrderStatus::CustomerRejected->value => 100,
+            \App\Enums\OrderStatus::Cancelled->value => 100,
+            \App\Enums\OrderStatus::Rejected->value => 100,
+            \App\Enums\OrderStatus::Expired->value => 100,
+            \App\Enums\OrderStatus::Returned->value => 100,
+            default => 10,
+        };
+    }
+
+    private function canCustomerRespond($order, $quotation): bool
+    {
+        return $this->getOrderStatusValue($order) === \App\Enums\OrderStatus::QuotationSent->value
+            && $quotation
+            && $quotation->status === 'sent'
+            && in_array($quotation->customer_response, [null, 'pending'], true);
+    }
+
+    private function buildOrderSteps($order): array
+    {
+        $status = $this->getOrderStatusValue($order);
+        $steps = [
+            ['key' => 'submitted', 'label' => 'تم إرسال الطلب', 'icon' => 'fa-send', 'color' => 'purple', 'completed' => true],
+            ['key' => 'review', 'label' => 'قيد المراجعة', 'icon' => 'fa-magnifying-glass', 'color' => 'blue', 'completed' => in_array($status, ['admin_edited', 'quotation_sent', 'customer_approved', 'approved', 'delivered'])],
+            ['key' => 'quotation', 'label' => 'عرض السعر', 'icon' => 'fa-file-invoice-dollar', 'color' => 'indigo', 'completed' => in_array($status, ['customer_approved', 'approved', 'delivered'])],
+            ['key' => 'approval', 'label' => 'موافقة العميل', 'icon' => 'fa-user-check', 'color' => 'emerald', 'completed' => in_array($status, ['approved', 'delivered'])],
+            ['key' => 'delivery', 'label' => 'التسليم', 'icon' => 'fa-truck', 'color' => 'green', 'completed' => $status === 'delivered'],
+        ];
+
+        if (in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $steps[] = ['key' => 'cancelled', 'label' => 'ملغي/مرفوض', 'icon' => 'fa-ban', 'color' => 'red', 'completed' => true];
+        }
+
+        return $steps;
+    }
+
+    private function buildOrderTimeline($order): array
+    {
+        $timeline = [];
+        $status = $this->getOrderStatusValue($order);
+        $createdAt = $order->created_at?->format('Y-m-d');
+
+        $timeline[] = ['to' => 'طلب جديد', 'by' => 'النظام', 'date' => $createdAt];
+
+        if (in_array($status, ['admin_edited', 'quotation_sent', 'customer_approved', 'approved', 'delivered', 'cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $timeline[] = ['to' => 'قيد المراجعة', 'by' => 'الإدارة', 'date' => $createdAt];
+        }
+        if (in_array($status, ['quotation_sent', 'customer_approved', 'approved', 'delivered', 'cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $timeline[] = ['to' => 'عرض السعر', 'by' => 'الإدارة', 'date' => $createdAt];
+        }
+        if (in_array($status, ['customer_approved', 'approved', 'delivered'])) {
+            $timeline[] = ['to' => 'موافقة العميل', 'by' => $order->customer?->name ?? 'العميل', 'date' => $createdAt];
+        }
+        if ($status === 'delivered') {
+            $timeline[] = ['to' => 'تم التسليم', 'by' => 'التوصيل', 'date' => $createdAt];
+        }
+        if (in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $timeline[] = ['to' => 'ملغي/مرفوض', 'by' => 'النظام', 'date' => $createdAt];
+        }
+
+        return $timeline;
     }
 
     // جلب قائمة الاستبيانات النشطة مع حالة العميل
