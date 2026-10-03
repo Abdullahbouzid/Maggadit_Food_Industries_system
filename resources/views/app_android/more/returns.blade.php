@@ -20,7 +20,7 @@
 
         <div class="grid grid-cols-3 gap-3 mb-4">
             <div class="bg-white rounded-2xl shadow-sm p-3 text-center">
-                <div class="text-lg font-bold text-gray-800">{{ $returns->total() }}</div>
+                <div class="text-lg font-bold text-gray-800">{{ $totalReturns ?? 0 }}</div>
                 <div class="text-[11px] text-gray-400">كل الاسترجاعات</div>
             </div>
             <div class="bg-white rounded-2xl shadow-sm p-3 text-center">
@@ -51,13 +51,7 @@
 
         @forelse ($returns as $return)
             @php
-                // Ensure $return is an object (handle edge case where it might be a Collection)
-                if ($return instanceof \Illuminate\Support\Collection) {
-                    $return = $return->first() ?? (object)[];
-                } elseif (is_array($return)) {
-                    $return = (object)$return;
-                }
-
+                // $return is now always a plain object
                 // Handle status from both local DB (enum) and remote API (string)
                 $statusValue = $return->status ?? 'pending';
                 if ($statusValue instanceof \App\Enums\ReturnStatus) {
@@ -88,7 +82,7 @@
                     <div>
                         <div class="text-sm font-bold text-gray-800">{{ $return->return_number ?? $return->id }}</div>
                         <div class="text-[11px] text-gray-400 mt-0.5">
-                            {{ $return->created_at?->format('Y-m-d') }}
+                            {{ $return->created_at?->format('Y-m-d') ?? '' }}
                             @if ($return->invoice)
                                 — {{ $return->invoice->invoice_number }}
                             @endif
@@ -106,7 +100,7 @@
                     <span class="text-gray-500">{{ $return->reason }}</span>
                 </div>
 
-                @if ($return->items->isNotEmpty())
+                @if ($return->items && $return->items->isNotEmpty())
                     <div class="mt-3 border-t border-gray-100 pt-3 space-y-1">
                         @foreach ($return->items as $line)
                             <div class="flex items-center justify-between text-xs text-gray-600">
@@ -135,7 +129,7 @@
         @endforelse
 
         <div class="mt-4">
-            {{ $returns->links() }}
+            {{-- Pagination links would go here if needed --}}
         </div>
     </div>
 @endsection

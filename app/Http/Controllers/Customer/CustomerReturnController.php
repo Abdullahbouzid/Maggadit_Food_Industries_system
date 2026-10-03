@@ -118,24 +118,9 @@ class CustomerReturnController extends Controller
                         ];
                     });
 
-                    // Create a paginator-like object compatible with the view
+                    // Create a simple array of objects for the view (not a paginator)
+                    $returns = $items->all();
                     $total = $remoteData['returns']['total'] ?? 0;
-                    $returns = new class($items, $total) {
-                        public $items;
-                        public $total;
-                        public function __construct($items, $total) {
-                            $this->items = $items;
-                            $this->total = $total;
-                        }
-                        public function total() { return $this->total; }
-                        public function currentPage() { return 1; }
-                        public function lastPage() { return 1; }
-                        public function perPage() { return 20; }
-                        public function isEmpty() { return $this->items->isEmpty(); }
-                        public function getIterator() { return $this->items->getIterator(); }
-                        public function count() { return $this->items->count(); }
-                        public function toArray() { return $this->items->toArray(); }
-                    };
 
                     $summary = collect($remoteData['summary'])->mapWithKeys(function ($item, $status) {
                         return [$status => (object) [
@@ -151,18 +136,22 @@ class CustomerReturnController extends Controller
                         'returns' => $returns,
                         'summary' => $summary,
                         'pendingCount' => $pendingCount,
+                        'totalReturns' => $total,
                     ]);
                 }
             }
         }
 
+        // For local DB, convert paginator items to plain array
+        $returnsArray = $returns->getCollection()->all();
         $pendingCount = (int) ($summary['pending']->aggregate ?? 0);
 
         return view('app_android.more.returns', [
             'customer' => $customer,
-            'returns' => $returns,
+            'returns' => $returnsArray,
             'summary' => $summary,
             'pendingCount' => $pendingCount,
+            'totalReturns' => $returns->total(),
         ]);
     }
 
