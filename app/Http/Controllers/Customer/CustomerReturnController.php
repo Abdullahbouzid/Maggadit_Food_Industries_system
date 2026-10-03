@@ -50,11 +50,22 @@ class CustomerReturnController extends Controller
                 $remoteData = $this->fetchRemoteData('customer/returns', $token);
                 if ($remoteData && isset($remoteData['returns'])) {
                     $items = collect($remoteData['returns']['data'])->map(function ($r) {
+                        // Handle status from API (string or object with value)
+                        $statusVal = $r['status'];
+                        if (is_object($statusVal) && isset($statusVal->value)) {
+                            $statusVal = $statusVal->value;
+                        }
+                        // Handle type from API (string or object with value)
+                        $typeVal = $r['type'];
+                        if (is_object($typeVal) && isset($typeVal->value)) {
+                            $typeVal = $typeVal->value;
+                        }
+
                         return (object) [
                             'id' => $r['id'],
                             'return_number' => $r['return_number'],
-                            'status' => $r['status'],
-                            'type' => $r['type'],
+                            'status' => $statusVal,
+                            'type' => $typeVal,
                             'reason' => $r['reason'],
                             'total_refund' => $r['total_refund'],
                             'created_at' => $r['created_at'],

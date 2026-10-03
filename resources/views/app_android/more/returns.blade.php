@@ -52,7 +52,7 @@
         @forelse ($returns as $return)
             @php
                 // Handle status from both local DB (enum) and remote API (string)
-                $statusValue = $return->status;
+                $statusValue = $return->status ?? 'pending';
                 if ($statusValue instanceof \App\Enums\ReturnStatus) {
                     $status = $statusValue;
                 } elseif (is_string($statusValue)) {
@@ -60,11 +60,11 @@
                 } elseif (is_object($statusValue) && isset($statusValue->value)) {
                     $status = \App\Enums\ReturnStatus::tryFrom($statusValue->value);
                 } else {
-                    $status = null;
+                    $status = \App\Enums\ReturnStatus::tryFrom('pending');
                 }
 
                 // Handle type from both local DB (enum) and remote API (string)
-                $typeValue = $return->type;
+                $typeValue = $return->type ?? 'partial';
                 if ($typeValue instanceof \App\Enums\ReturnType) {
                     $type = $typeValue;
                 } elseif (is_string($typeValue)) {
@@ -72,7 +72,7 @@
                 } elseif (is_object($typeValue) && isset($typeValue->value)) {
                     $type = \App\Enums\ReturnType::tryFrom($typeValue->value);
                 } else {
-                    $type = null;
+                    $type = \App\Enums\ReturnType::tryFrom('partial');
                 }
             @endphp
 
