@@ -468,6 +468,51 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('my_products');
 
+        Route::get('/order/{id}/pdf', function ($id) use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/orders/{$id}/pdf");
+                return response($response->body(), $response->status())
+                    ->header('Content-Type', $response->header('Content-Type', 'application/pdf'))
+                    ->header('Content-Disposition', $response->header('Content-Disposition'));
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('order_pdf');
+
+        Route::get('/order/{id}/invoice-pdf', function ($id) use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/invoices/{$id}/pdf");
+                return response($response->body(), $response->status())
+                    ->header('Content-Type', $response->header('Content-Type', 'application/pdf'))
+                    ->header('Content-Disposition', $response->header('Content-Disposition'));
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('order_invoice_pdf');
+
+        Route::get('/order/{id}/quotation-pdf', function ($id) use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/orders/{$id}/quotation-pdf");
+                return response($response->body(), $response->status())
+                    ->header('Content-Type', $response->header('Content-Type', 'application/pdf'))
+                    ->header('Content-Disposition', $response->header('Content-Disposition'));
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('order_quotation_pdf');
+
         Route::get('/dashboard', function () use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {

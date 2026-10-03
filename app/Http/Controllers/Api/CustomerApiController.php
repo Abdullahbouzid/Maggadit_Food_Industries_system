@@ -1581,4 +1581,85 @@ return response()->json([
             ], 422);
         }
     }
+
+    /**
+     * Download the order PDF for customer
+     */
+    public function downloadOrderPdf(Request $request, $id)
+    {
+        $customer = $request->user();
+
+        $order = Order::where('customer_id', $customer->id)
+            ->where(function ($q) use ($id) {
+                $q->where('id', $id);
+                if (is_numeric($id)) {
+                    $q->orWhere('order_number', $id);
+                }
+            })
+            ->with(['customer', 'currency', 'warehouse', 'createdBy', 'items.item', 'items.pack', 'items.warehouse', 'quotation'])
+            ->first();
+
+        if (! $order) {
+            return response()->json(['success' => false, 'message' => 'الطلبية غير موجودة'], 404);
+        }
+
+        $pdf = \App\Services\PdfGenerator::generate('pdf.order', compact('order'));
+
+        return response($pdf)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="order-' . $order->order_number . '.pdf"');
+    }
+
+    /**
+     * Download the invoice PDF for customer
+     */
+    public function downloadInvoicePdf(Request $request, $id)
+    {
+        $customer = $request->user();
+
+        $invoice = Invoice::where('customer_id', $customer->id)
+            ->where(function ($q) use ($id) {
+                $q->where('id', $id);
+                if (is_numeric($id)) {
+                    $q->orWhere('invoice_number', $id)->orWhere('order_id', $id);
+                }
+            })
+            ->with(['customer', 'priceList', 'currency', 'items.item', 'items.itemPack.packType', 'items.priceList'])
+            ->first();
+
+        if (! $invoice) {
+            return response()->json(['success' => false, 'message' => 'الفاتورة غير موجودة'], 404);
+        }
+
+        $lang = $request->query('lang', 'bilingual');
+        $pdf = \App\Services\PdfGenerator::generate('pdf.invoice', compact('invoice', 'lang'));
+
+        return response($pdf)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="invoice-' . $invoice->invoice_number . '.pdf"');
+    }
+
+    /**
+     * Download the quotation PDF for customer
+     */
+    public function downloadQuotationPdf(Request $request, $id)
+    {
+        $customer = $request->user();
+
+        $quotation = Quotation::where('order_id', $id)
+            ->where('customer_id', $customer->id)
+            ->with(['customer', 'createdBy', 'order.customer', 'order.warehouse', 'order.currency', 'items.item', 'items.pack', 'items.warehouse'])
+            ->latest('version')
+            ->first();
+
+        if (! $quotation) {
+            return response()->json(['success' => false, 'message' => 'لا توجد عروض أسعار لهذا الطلب'], 404);
+        }
+
+        $pdf = \App\Services\PdfGenerator::generate('pdf.quotation', compact('quotation'));
+
+        return response($pdf)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="quotation-' . $quotation->quotation_number . '.pdf"');
+    }
 }

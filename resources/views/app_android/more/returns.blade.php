@@ -51,12 +51,29 @@
 
         @forelse ($returns as $return)
             @php
-                $status = $return->status instanceof \App\Enums\ReturnStatus
-                    ? $return->status
-                    : \App\Enums\ReturnStatus::tryFrom((string) ($return->status->value ?? $return->status));
-                $type = $return->type instanceof \App\Enums\ReturnType
-                    ? $return->type
-                    : \App\Enums\ReturnType::tryFrom((string) ($return->type->value ?? $return->type));
+                // Handle status from both local DB (enum) and remote API (string)
+                $statusValue = $return->status;
+                if ($statusValue instanceof \App\Enums\ReturnStatus) {
+                    $status = $statusValue;
+                } elseif (is_string($statusValue)) {
+                    $status = \App\Enums\ReturnStatus::tryFrom($statusValue);
+                } elseif (is_object($statusValue) && isset($statusValue->value)) {
+                    $status = \App\Enums\ReturnStatus::tryFrom($statusValue->value);
+                } else {
+                    $status = null;
+                }
+
+                // Handle type from both local DB (enum) and remote API (string)
+                $typeValue = $return->type;
+                if ($typeValue instanceof \App\Enums\ReturnType) {
+                    $type = $typeValue;
+                } elseif (is_string($typeValue)) {
+                    $type = \App\Enums\ReturnType::tryFrom($typeValue);
+                } elseif (is_object($typeValue) && isset($typeValue->value)) {
+                    $type = \App\Enums\ReturnType::tryFrom($typeValue->value);
+                } else {
+                    $type = null;
+                }
             @endphp
 
             <div class="bg-white rounded-2xl shadow-sm p-4 mb-3">
