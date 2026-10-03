@@ -321,12 +321,47 @@ class CustomerCatalogController extends Controller
             $remoteData = $this->fetchRemoteData('customer/products', null, $params);
             if ($remoteData && isset($remoteData['products'])) {
                 $rawList = isset($remoteData['products']['data']) ? $remoteData['products']['data'] : $remoteData['products'];
-                $items = collect($rawList)->map(function ($item) use ($customer) {
+                $items = collect($rawList)->map(function ($item) use ($customer, $favoriteItemIds) {
                     $itemObj = (object) $item;
                     $itemObj->name = $itemObj->name ?? ($itemObj->name_ar ?? 'منتج');
                     $itemObj->image = isset($itemObj->image) ? $this->imagePathService->normalize($itemObj->image) : null;
                     $itemObj->price = (float) ($itemObj->price ?? 0);
                     $itemObj->old_price = isset($itemObj->old_price) ? (float) $itemObj->old_price : null;
+                    
+                    // Add packs array (view expects this structure)
+                    $packPrice = $itemObj->price;
+                    if ($itemObj->packs && is_array($itemObj->packs) && count($itemObj->packs) > 0) {
+                        $itemObj->packs = array_map(function ($pack) use ($packPrice) {
+                            return [
+                                'id' => $pack['id'] ?? null,
+                                'name' => $pack['name'] ?? ($pack['display_name'] ?? 'الحبة'),
+                                'uom_name' => $pack['uom_name'] ?? '',
+                                'quantity' => (float) ($pack['quantity'] ?? $pack['quantity_in_pack'] ?? 1),
+                                'uom_id' => $pack['uom_id'] ?? null,
+                                'price' => (float) ($pack['price'] ?? $packPrice),
+                                'barcode' => $pack['barcode'] ?? null,
+                                'pack_type' => $pack['pack_type'] ?? 'قطعة',
+                                'capacity' => $pack['capacity'] ?? '',
+                            ];
+                        }, $itemObj->packs);
+                    } else {
+                        // Default single pack
+                        $itemObj->packs = [[
+                            'id' => null,
+                            'name' => 'الحبة',
+                            'uom_name' => '',
+                            'quantity' => 1,
+                            'uom_id' => null,
+                            'price' => $packPrice,
+                            'barcode' => null,
+                            'pack_type' => 'قطعة',
+                            'capacity' => '',
+                        ]];
+                    }
+                    
+                    // Add favorite boolean
+                    $itemObj->favorite = in_array($itemObj->id, $favoriteItemIds ?? []);
+                    
                     return $itemObj;
                 });
             }
