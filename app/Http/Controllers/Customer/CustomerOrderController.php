@@ -164,12 +164,15 @@ class CustomerOrderController extends Controller
             ->orderByDesc('id')
             ->get();
 
+        $isRemote = false;
+
         // If local DB is empty, fetch from external API (for APK)
         if ($orders->isEmpty()) {
             $token = session('api_token') ?: $request->bearerToken();
             if ($token) {
                 $remoteData = $this->fetchRemoteData('customer/orders', $token);
                 if ($remoteData && isset($remoteData['orders']) && is_array($remoteData['orders'])) {
+                    $isRemote = true;
                     $orders = collect($remoteData['orders'])->map(function ($inv) {
                         $quotation = isset($inv['quotation']) ? (object) $inv['quotation'] : null;
                         $invoice = isset($inv['invoice']) ? (object) $inv['invoice'] : null;
@@ -196,26 +199,38 @@ class CustomerOrderController extends Controller
             }
         }
 
-        $rows = $orders->map(function ($order) use ($customer) {
-            $meta = $this->stepPresenter->currentStatusMeta($order);
-            $quotation = $order->quotation ?? null;
-            $invoice = $order->invoices->first() ?? null;
+        $rows = $orders->map(function ($order) use ($customer, $isRemote) {
+            if ($isRemote) {
+                // For remote data, compute status meta directly without OrderStepPresenter
+                $status = $order->status ?? 'pending';
+                $meta = $this->getRemoteStatusMeta($status);
+                $progress = $this->getRemoteProgress($status);
+                $canRespond = $status === 'quotation_sent';
+                $quotation = $order->quotation ?? null;
+                $invoice = $order->invoices->first() ?? null;
+            } else {
+                $meta = $this->stepPresenter->currentStatusMeta($order);
+                $progress = $this->stepPresenter->progress($order);
+                $quotation = $order->quotation ?? null;
+                $invoice = $order->invoices->first() ?? null;
+                $canRespond = $this->canRespondToQuotation($order);
+            }
 
             return [
                 'id' => $order->id,
                 'number' => $order->order_number ?? $order->invoice_number ?? $order->id,
-                'date' => $order->created_at?->format('Y-m-d') ?? $order->date ?? null,
+                'date' => $this->formatDate($order->created_at ?? $order->date ?? null),
                 'total' => (float) ($order->total ?? $order->total_amount ?? 0),
-                'status' => $this->stepPresenter->currentStatusValue($order),
+                'status' => $isRemote ? ($order->status ?? 'pending') : $this->stepPresenter->currentStatusValue($order),
                 'status_text' => $meta['label'],
                 'status_class' => $meta['class'],
-                'progress' => $this->stepPresenter->progress($order),
+                'progress' => $progress,
                 'items_count' => $order->items->count(),
                 'has_quotation' => (bool) $quotation,
                 'has_invoice' => (bool) $invoice,
                 'invoice_number' => $invoice?->invoice_number,
                 'quotation_number' => $quotation?->quotation_number,
-                'can_respond' => $this->canRespondToQuotation($order),
+                'can_respond' => $canRespond,
                 'items' => $order->items->map(fn ($item) => [
                     'name' => $item->item?->name_ar ?: ($item->item?->name_en ?: 'منتج'),
                     'qty' => (float) $item->quantity,
@@ -236,6 +251,45 @@ class CustomerOrderController extends Controller
         ];
 
         return view('app_android.more.order_history', compact('rows', 'stats'));
+    }
+
+    /**
+     * Get status meta for remote API data (simplified version without Order model)
+     */
+    private function getRemoteStatusMeta(string $status): array
+    {
+        $label = match ($status) {
+            'new', 'pending_review' => 'طلب جديد',
+            'admin_edited', 'quotation_sent' => 'عرض سعر',
+            'customer_approved', 'approved' => 'معتمد',
+            'delivered' => 'تم التسليم',
+            'customer_rejected', 'cancelled', 'rejected', 'expired', 'returned' => 'ملغي/مرفوض',
+            default => $status,
+        };
+
+        $class = match (true) {
+            in_array($status, ['delivered', 'customer_approved', 'approved']) => 'text-emerald-700 bg-emerald-50',
+            in_array($status, ['customer_rejected', 'cancelled', 'rejected', 'expired', 'returned']) => 'text-red-700 bg-red-50',
+            in_array($status, ['admin_edited', 'quotation_sent', 'pending_review', 'new']) => 'text-amber-700 bg-amber-50',
+            default => 'text-gray-700 bg-gray-100',
+        };
+
+        return ['label' => $label, 'class' => $class];
+    }
+
+    /**
+     * Get progress percentage for remote API data
+     */
+    private function getRemoteProgress(string $status): int
+    {
+        return match ($status) {
+            'new', 'pending_review' => 20,
+            'admin_edited', 'quotation_sent' => 40,
+            'customer_approved', 'approved' => 60,
+            'delivered' => 100,
+            'customer_rejected', 'cancelled', 'rejected', 'expired', 'returned' => 100,
+            default => 10,
+        };
     }
 
     /**
@@ -492,6 +546,22 @@ class CustomerOrderController extends Controller
                 }
             });
 
-        return $query->first();
+return $query->first();
+    }
+
+    /**
+     * Format date for both Carbon objects (local DB) and strings (remote API)
+     */
+    private function formatDate($date): ?string
+    {
+        if ($date === null) {
+            return null;
+        }
+        if (is_string($date)) {
+            // Already a string from remote API, just return the date part
+            return strlen($date) >= 10 ? substr($date, 0, 10) : $date;
+        }
+        // Carbon object from local DB
+        return method_exists($date, 'format') ? $date->format('Y-m-d') : (string) $date;
     }
 }
