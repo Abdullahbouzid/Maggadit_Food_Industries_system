@@ -89,7 +89,14 @@
                     <div>
                         <div class="text-sm font-bold text-gray-800">{{ $return->return_number ?? $return->id }}</div>
                         <div class="text-[11px] text-gray-400 mt-0.5">
-                            {{ $return->created_at?->format('Y-m-d') ?? '' }}
+                            @php
+                                $createdAt = $return->created_at ?? '';
+                                if (is_string($createdAt)) {
+                                    echo strlen($createdAt) >= 10 ? substr($createdAt, 0, 10) : $createdAt;
+                                } elseif (method_exists($createdAt, 'format')) {
+                                    echo $createdAt->format('Y-m-d');
+                                }
+                            @endphp
                             @if ($return->invoice)
                                 — {{ $return->invoice->invoice_number }}
                             @endif
