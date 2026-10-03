@@ -43,6 +43,43 @@ class CustomerReturnController extends Controller
             ->get()
             ->keyBy('status');
 
+        // Transform local DB data to match remote API format (strings for status/type)
+        // This ensures consistent handling in the view regardless of data source
+        if (! $returns->isEmpty()) {
+            $returns->getCollection()->transform(function ($return) {
+                // Convert status enum to string value
+                if ($return->status instanceof \App\Enums\ReturnStatus) {
+                    $return->status = $return->status->value;
+                }
+                // Convert type enum to string value
+                if ($return->type instanceof \App\Enums\ReturnType) {
+                    $return->type = $return->type->value;
+                }
+                // Transform items
+                if ($return->items) {
+                    $return->items->transform(function ($line) {
+                        // Ensure item is an object with name_ar/name_en
+                        if ($line->item instanceof \App\Models\Item) {
+                            $line->item = (object) [
+                                'name_ar' => $line->item->name_ar,
+                                'name_en' => $line->item->name_en,
+                            ];
+                        }
+                        // Ensure pack is an object with display_name
+                        if ($line->pack instanceof \App\Models\Pack) {
+                            $line->pack = (object) [
+                                'display_name' => $line->pack->display_name ?? $line->pack->name_ar ?? '',
+                            ];
+                        }
+                        // Ensure quantity_returned is float
+                        $line->quantity_returned = (float) $line->quantity_returned;
+                        return $line;
+                    });
+                }
+                return $return;
+            });
+        }
+
         // If local DB is empty, fetch from external API (for APK)
         if ($returns->isEmpty()) {
             $token = session('api_token') ?: $request->bearerToken();

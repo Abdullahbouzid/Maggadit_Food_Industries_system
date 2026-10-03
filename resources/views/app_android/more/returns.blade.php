@@ -51,6 +51,13 @@
 
         @forelse ($returns as $return)
             @php
+                // Ensure $return is an object (handle edge case where it might be a Collection)
+                if ($return instanceof \Illuminate\Support\Collection) {
+                    $return = $return->first() ?? (object)[];
+                } elseif (is_array($return)) {
+                    $return = (object)$return;
+                }
+
                 // Handle status from both local DB (enum) and remote API (string)
                 $statusValue = $return->status ?? 'pending';
                 if ($statusValue instanceof \App\Enums\ReturnStatus) {
