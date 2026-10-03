@@ -116,7 +116,14 @@ class CustomerPagesController extends Controller
             if ($token) {
                 $remoteData = $this->fetchRemoteData('customer/faq', $token);
                 if ($remoteData && isset($remoteData['faq'])) {
-                    $faqs = collect($remoteData['faq']);
+                    $faqs = collect($remoteData['faq'])->map(function ($item) {
+                        return (object) [
+                            'id' => $item['id'] ?? null,
+                            'category' => $item['category'] ?? null,
+                            'question' => $item['question'] ?? $item['question_ar'] ?? $item['question_en'] ?? '',
+                            'answer' => $item['answer'] ?? $item['answer_ar'] ?? $item['answer_en'] ?? '',
+                        ];
+                    });
                 }
             }
         }
