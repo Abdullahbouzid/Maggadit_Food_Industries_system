@@ -49,32 +49,45 @@ class CustomerReturnController extends Controller
             if ($token) {
                 $remoteData = $this->fetchRemoteData('customer/returns', $token);
                 if ($remoteData && isset($remoteData['returns'])) {
-                    $returns = (object) [
-                        'items' => collect($remoteData['returns']['data'])->map(function ($r) {
-                            return (object) [
-                                'id' => $r['id'],
-                                'return_number' => $r['return_number'],
-                                'status' => $r['status'],
-                                'type' => $r['type'],
-                                'reason' => $r['reason'],
-                                'total_refund' => $r['total_refund'],
-                                'created_at' => $r['created_at'],
-                                'invoice' => $r['invoice'] ? (object) $r['invoice'] : null,
-                                'items' => collect($r['items'])->map(function ($i) {
-                                    return (object) [
-                                        'id' => $i['id'],
-                                        'item' => $i['item'] ? (object) $i['item'] : null,
-                                        'quantity_returned' => $i['quantity_returned'],
-                                        'pack' => $i['pack'] ? (object) $i['pack'] : null,
-                                    ];
-                                }),
-                            ];
-                        }),
-                        'total' => $remoteData['returns']['total'] ?? 0,
-                        'current_page' => $remoteData['returns']['current_page'] ?? 1,
-                        'last_page' => $remoteData['returns']['last_page'] ?? 1,
-                        'per_page' => $remoteData['returns']['per_page'] ?? 20,
-                    ];
+                    $items = collect($remoteData['returns']['data'])->map(function ($r) {
+                        return (object) [
+                            'id' => $r['id'],
+                            'return_number' => $r['return_number'],
+                            'status' => $r['status'],
+                            'type' => $r['type'],
+                            'reason' => $r['reason'],
+                            'total_refund' => $r['total_refund'],
+                            'created_at' => $r['created_at'],
+                            'invoice' => $r['invoice'] ? (object) $r['invoice'] : null,
+                            'items' => collect($r['items'])->map(function ($i) {
+                                return (object) [
+                                    'id' => $i['id'],
+                                    'item' => $i['item'] ? (object) $i['item'] : null,
+                                    'quantity_returned' => $i['quantity_returned'],
+                                    'pack' => $i['pack'] ? (object) $i['pack'] : null,
+                                ];
+                            }),
+                        ];
+                    });
+
+                    // Create a paginator-like object compatible with the view
+                    $total = $remoteData['returns']['total'] ?? 0;
+                    $returns = new class($items, $total) {
+                        public $items;
+                        public $total;
+                        public function __construct($items, $total) {
+                            $this->items = $items;
+                            $this->total = $total;
+                        }
+                        public function total() { return $this->total; }
+                        public function currentPage() { return 1; }
+                        public function lastPage() { return 1; }
+                        public function perPage() { return 20; }
+                        public function isEmpty() { return $this->items->isEmpty(); }
+                        public function getIterator() { return $this->items->getIterator(); }
+                        public function count() { return $this->items->count(); }
+                        public function toArray() { return $this->items->toArray(); }
+                    };
 
                     $summary = collect($remoteData['summary'])->mapWithKeys(function ($item, $status) {
                         return [$status => (object) [

@@ -181,7 +181,7 @@ class CustomerOrderController extends Controller
                             'id' => $inv['id'] ?? $inv['invoice_id'] ?? null,
                             'order_number' => $inv['invoice_number'] ?? $inv['order_number'] ?? null,
                             'created_at' => $inv['date'] ?? $inv['invoice_date'] ?? null,
-                            'total' => $inv['total_amount'] ?? 0,
+                            'total' => $inv['total'] ?? $inv['total_amount'] ?? 0,
                             'status' => $inv['status'] ?? 'pending',
                             'items' => isset($inv['items']) ? collect($inv['items'])->map(fn($i) => (object) [
                                 'item' => (object) [
