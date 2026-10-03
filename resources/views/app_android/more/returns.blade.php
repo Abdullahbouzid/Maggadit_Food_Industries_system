@@ -18,6 +18,13 @@
             </div>
         @endif
 
+        {{-- Debug info --}}
+        @if (isset($debug))
+            <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-xs text-yellow-800">
+                <strong>Debug:</strong> Source: {{ $debug['source'] }} | Count: {{ $debug['returns_count'] }} | Token: {{ $debug['has_api_token'] ? 'Yes' : 'No' }}
+            </div>
+        @endif
+
         <div class="grid grid-cols-3 gap-3 mb-4">
             <div class="bg-white rounded-2xl shadow-sm p-3 text-center">
                 <div class="text-lg font-bold text-gray-800">{{ $totalReturns ?? 0 }}</div>

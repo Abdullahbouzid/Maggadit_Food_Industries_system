@@ -83,8 +83,19 @@ class CustomerReturnController extends Controller
         // If local DB is empty, fetch from external API (for APK)
         if ($returns->isEmpty()) {
             $token = session('api_token') ?: $request->bearerToken();
+            \Illuminate\Support\Facades\Log::info('Returns API: local DB empty, fetching from remote', [
+                'has_token' => (bool)$token,
+                'token_prefix' => $token ? substr($token, 0, 10) . '...' : 'none',
+            ]);
+            
             if ($token) {
                 $remoteData = $this->fetchRemoteData('customer/returns', $token);
+                \Illuminate\Support\Facades\Log::info('Returns API: remote response', [
+                    'success' => $remoteData !== null,
+                    'has_returns' => $remoteData && isset($remoteData['returns']),
+                    'data_count' => $remoteData && isset($remoteData['returns']['data']) ? count($remoteData['returns']['data']) : 0,
+                ]);
+                
                 if ($remoteData && isset($remoteData['returns'])) {
                     $items = collect($remoteData['returns']['data'])->map(function ($r) {
                         // Handle status from API (string or object with value)
@@ -131,12 +142,23 @@ class CustomerReturnController extends Controller
 
                     $pendingCount = $remoteData['pending_count'] ?? 0;
 
+                    \Illuminate\Support\Facades\Log::info('Returns API: returning view with data', [
+                        'returns_count' => count($returns),
+                        'total' => $total,
+                        'pending_count' => $pendingCount,
+                    ]);
+
                     return view('app_android.more.returns', [
                         'customer' => $customer,
                         'returns' => $returns,
                         'summary' => $summary,
                         'pendingCount' => $pendingCount,
                         'totalReturns' => $total,
+                        'debug' => [
+                            'source' => 'remote_api',
+                            'returns_count' => count($returns),
+                            'has_api_token' => true,
+                        ],
                     ]);
                 }
             }
@@ -146,12 +168,23 @@ class CustomerReturnController extends Controller
         $returnsArray = $returns->getCollection()->all();
         $pendingCount = (int) ($summary['pending']->aggregate ?? 0);
 
+        \Illuminate\Support\Facades\Log::info('Returns: returning view with local DB data', [
+            'returns_count' => count($returnsArray),
+            'total' => $returns->total(),
+            'pending_count' => $pendingCount,
+        ]);
+
         return view('app_android.more.returns', [
             'customer' => $customer,
             'returns' => $returnsArray,
             'summary' => $summary,
             'pendingCount' => $pendingCount,
             'totalReturns' => $returns->total(),
+            'debug' => [
+                'source' => 'local_db',
+                'returns_count' => count($returnsArray),
+                'has_api_token' => (bool)session('api_token'),
+            ],
         ]);
     }
 
