@@ -442,6 +442,32 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('order_details');
 
+        Route::get('/returns', function () use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/returns");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('returns');
+
+        Route::get('/my-products', function () use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/my-products");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('my_products');
+
         Route::get('/dashboard', function () use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {

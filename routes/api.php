@@ -35,6 +35,8 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::get('/orders', [CustomerApiController::class, 'ordersIndex']);
         Route::get('/orders/{id}', [CustomerApiController::class, 'orderDetails']);
         Route::get('/order-history', [CustomerApiController::class, 'orderHistory']);
+        Route::get('/returns', [CustomerApiController::class, 'returnsIndex']);
+        Route::get('/my-products', [CustomerApiController::class, 'myProducts']);
         Route::get('/surveys', [CustomerApiController::class, 'surveys']);
         Route::get('/surveys/{id}', [CustomerApiController::class, 'getSurvey']);
         Route::post('/surveys/{id}/respond', [CustomerApiController::class, 'submitSurvey']);

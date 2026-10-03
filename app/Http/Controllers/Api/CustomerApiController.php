@@ -19,6 +19,7 @@ use App\Models\OrganizationAbout;
 use App\Models\PrivacyPolicy;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
+use App\Models\ReturnRequest;
 use App\Models\Survey;
 use App\Models\SurveyAnswer;
 use App\Models\SurveyResponse;
@@ -1150,10 +1151,152 @@ class CustomerApiController extends Controller
         // تعيين المنظمة النشطة
         $customer->setActiveOrganization($organizationId);
 
+return response()->json([
+            'success' => true,
+            'message' => 'تم تسجيل الرد بنجاح',
+            'response' => $validated['response'],
+        ]);
+    }
+
+    /**
+     * Get customer's return requests
+     */
+    public function returnsIndex(Request $request)
+    {
+        $customer = $request->user();
+
+        $returns = ReturnRequest::with([
+            'invoice',
+            'items.item',
+            'items.pack',
+        ])
+            ->where('customer_id', $customer->id)
+            ->latest()
+            ->paginate(20);
+
+        $summary = ReturnRequest::where('customer_id', $customer->id)
+            ->toBase()
+            ->selectRaw('status, COUNT(*) as aggregate, COALESCE(SUM(total_refund), 0) as refund')
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
+
+        $pendingCount = (int) ($summary['pending']->aggregate ?? 0);
+
         return response()->json([
             'success' => true,
-            'message' => 'تم تغيير المنظمة بنجاح',
-            'active_organization_id' => $organizationId,
+            'returns' => [
+                'data' => $returns->getCollection()->map(function ($return) {
+                    return [
+                        'id' => $return->id,
+                        'return_number' => $return->return_number,
+                        'status' => $return->status,
+                        'type' => $return->type,
+                        'reason' => $return->reason,
+                        'total_refund' => (float) $return->total_refund,
+                        'created_at' => $return->created_at?->format('Y-m-d'),
+                        'invoice' => $return->invoice ? [
+                            'id' => $return->invoice->id,
+                            'invoice_number' => $return->invoice->invoice_number,
+                        ] : null,
+                        'items' => $return->items->map(function ($line) {
+                            return [
+                                'id' => $line->id,
+                                'item' => $line->item ? [
+                                    'name_ar' => $line->item->name_ar,
+                                    'name_en' => $line->item->name_en,
+                                ] : null,
+                                'quantity_returned' => (float) $line->quantity_returned,
+                                'pack' => $line->pack ? [
+                                    'display_name' => $line->pack->display_name,
+                                ] : null,
+                            ];
+                        }),
+                    ];
+                }),
+                'current_page' => $returns->currentPage(),
+                'last_page' => $returns->lastPage(),
+                'per_page' => $returns->perPage(),
+                'total' => $returns->total(),
+            ],
+            'summary' => $summary->mapWithKeys(function ($item) {
+                return [$item->status => [
+                    'aggregate' => (int) $item->aggregate,
+                    'refund' => (float) $item->refund,
+                ]];
+            }),
+            'pending_count' => $pendingCount,
+        ]);
+    }
+
+    /**
+     * Get customer's products with batch quantities
+     */
+    public function myProducts(Request $request)
+    {
+        $customer = $request->user();
+
+        $totals = \DB::table('invoice_items')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->join('items', 'items.id', '=', 'invoice_items.item_id')
+            ->where('invoices.customer_id', $customer->id)
+            ->groupBy('items.id', 'items.name_ar', 'items.name_en', 'items.code')
+            ->selectRaw(
+                'items.id as item_id, items.name_ar, items.name_en, items.code,
+                 SUM(invoice_items.quantity) as total_quantity,
+                 COUNT(DISTINCT invoices.id) as invoice_count,
+                 SUM(invoice_items.line_total) as total_value'
+            )
+            ->orderByDesc('total_quantity')
+            ->get();
+
+        $batches = \DB::table('invoice_item_batches')
+            ->join('invoice_items', 'invoice_items.id', '=', 'invoice_item_batches.invoice_item_id')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->join('batch_items', 'batch_items.id', '=', 'invoice_item_batches.batch_item_id')
+            ->leftJoin('production_batches', 'production_batches.id', '=', 'batch_items.batch_id')
+            ->where('invoices.customer_id', $customer->id)
+            ->groupBy(
+                'invoice_items.item_id',
+                'batch_items.id',
+                'production_batches.batch_number',
+                'batch_items.expiry_date'
+            )
+            ->selectRaw(
+                'invoice_items.item_id as item_id,
+                 batch_items.id as batch_item_id,
+                 COALESCE(production_batches.batch_number, "—") as batch_number,
+                 batch_items.expiry_date as expiry_date,
+                 SUM(invoice_item_batches.quantity) as quantity'
+            )
+            ->orderBy('batch_items.expiry_date')
+            ->get()
+            ->groupBy('item_id');
+
+        $rows = $totals->map(function ($row) use ($batches) {
+            return [
+                'item_id' => (int) $row->item_id,
+                'name' => $row->name_ar ?: ($row->name_en ?: 'منتج'),
+                'code' => $row->code ?: '—',
+                'total_quantity' => (float) $row->total_quantity,
+                'invoice_count' => (int) $row->invoice_count,
+                'total_value' => (float) $row->total_value,
+                'batches' => $batches->get((int) $row->item_id, collect())->map(function ($batch) {
+                    return [
+                        'batch_item_id' => (int) $batch->batch_item_id,
+                        'batch_number' => $batch->batch_number,
+                        'expiry_date' => $batch->expiry_date,
+                        'quantity' => (float) $batch->quantity,
+                    ];
+                })->values(),
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'rows' => $rows,
+            'total_items' => $rows->count(),
+            'total_quantity' => round($rows->sum('total_quantity'), 2),
         ]);
     }
 

@@ -43,11 +43,65 @@ class CustomerReturnController extends Controller
             ->get()
             ->keyBy('status');
 
+        // If local DB is empty, fetch from external API (for APK)
+        if ($returns->isEmpty()) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData('customer/returns', $token);
+                if ($remoteData && isset($remoteData['returns'])) {
+                    $returns = (object) [
+                        'items' => collect($remoteData['returns']['data'])->map(function ($r) {
+                            return (object) [
+                                'id' => $r['id'],
+                                'return_number' => $r['return_number'],
+                                'status' => $r['status'],
+                                'type' => $r['type'],
+                                'reason' => $r['reason'],
+                                'total_refund' => $r['total_refund'],
+                                'created_at' => $r['created_at'],
+                                'invoice' => $r['invoice'] ? (object) $r['invoice'] : null,
+                                'items' => collect($r['items'])->map(function ($i) {
+                                    return (object) [
+                                        'id' => $i['id'],
+                                        'item' => $i['item'] ? (object) $i['item'] : null,
+                                        'quantity_returned' => $i['quantity_returned'],
+                                        'pack' => $i['pack'] ? (object) $i['pack'] : null,
+                                    ];
+                                }),
+                            ];
+                        }),
+                        'total' => $remoteData['returns']['total'] ?? 0,
+                        'current_page' => $remoteData['returns']['current_page'] ?? 1,
+                        'last_page' => $remoteData['returns']['last_page'] ?? 1,
+                        'per_page' => $remoteData['returns']['per_page'] ?? 20,
+                    ];
+
+                    $summary = collect($remoteData['summary'])->mapWithKeys(function ($item, $status) {
+                        return [$status => (object) [
+                            'aggregate' => $item['aggregate'] ?? 0,
+                            'refund' => $item['refund'] ?? 0,
+                        ]];
+                    });
+
+                    $pendingCount = $remoteData['pending_count'] ?? 0;
+
+                    return view('app_android.more.returns', [
+                        'customer' => $customer,
+                        'returns' => $returns,
+                        'summary' => $summary,
+                        'pendingCount' => $pendingCount,
+                    ]);
+                }
+            }
+        }
+
+        $pendingCount = (int) ($summary['pending']->aggregate ?? 0);
+
         return view('app_android.more.returns', [
             'customer' => $customer,
             'returns' => $returns,
             'summary' => $summary,
-            'pendingCount' => (int) ($summary['pending']->aggregate ?? 0),
+            'pendingCount' => $pendingCount,
         ]);
     }
 
@@ -204,6 +258,43 @@ class CustomerReturnController extends Controller
                 'batches' => $batches->get((int) $row->item_id, collect()),
             ];
         });
+
+        // If local DB is empty, fetch from external API (for APK)
+        if ($rows->isEmpty()) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData('customer/my-products', $token);
+                if ($remoteData && isset($remoteData['rows'])) {
+                    $rows = collect($remoteData['rows'])->map(function ($r) {
+                        return [
+                            'item_id' => $r['item_id'],
+                            'name' => $r['name'],
+                            'code' => $r['code'],
+                            'total_quantity' => (float) $r['total_quantity'],
+                            'invoice_count' => (int) $r['invoice_count'],
+                            'total_value' => (float) $r['total_value'],
+                            'batches' => collect($r['batches'])->map(function ($b) {
+                                return (object) [
+                                    'batch_item_id' => $b['batch_item_id'],
+                                    'batch_number' => $b['batch_number'],
+                                    'expiry_date' => $b['expiry_date'],
+                                    'quantity' => (float) $b['quantity'],
+                                ];
+                            }),
+                        ];
+                    });
+                    $totalItems = $remoteData['total_items'] ?? $rows->count();
+                    $totalQuantity = $remoteData['total_quantity'] ?? round($rows->sum('total_quantity'), 2);
+
+                    return view('app_android.more.my_products', [
+                        'customer' => $customer,
+                        'rows' => $rows,
+                        'totalItems' => $totalItems,
+                        'totalQuantity' => $totalQuantity,
+                    ]);
+                }
+            }
+        }
 
         return view('app_android.more.my_products', [
             'customer' => $customer,
