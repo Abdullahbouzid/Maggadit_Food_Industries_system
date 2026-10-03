@@ -383,8 +383,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
         Route::get('/faqs', function () use ($baseUrl) {
             try {
-                // The API route is /customer/faq (singular); /customer/faqs 404s.
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/faq");
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/faqs");
                 return response()->json($response->json(), $response->status());
             } catch (Exception $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
