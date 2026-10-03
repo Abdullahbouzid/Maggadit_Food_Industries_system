@@ -314,6 +314,10 @@ class CustomerOrderController extends Controller
             })
             ->first();
 
+        $remoteSteps = null;
+        $remoteTimeline = null;
+        $isRemote = false;
+
         // If local DB is empty, fetch from external API (for APK)
         if (! $order) {
             $token = session('api_token') ?: $request->bearerToken();
@@ -322,6 +326,8 @@ class CustomerOrderController extends Controller
                 if ($remoteData && isset($remoteData['order'])) {
                     $isRemote = true;
                     $order = (object) $remoteData['order'];
+                    $remoteSteps = $remoteData['steps'] ?? null;
+                    $remoteTimeline = $remoteData['timeline'] ?? null;
                 }
             }
         }
@@ -378,11 +384,15 @@ class CustomerOrderController extends Controller
             $progress = $this->getRemoteProgress($order->status ?? 'pending');
             $canRespond = $order->status === 'quotation_sent' && $quotation;
 
+            // Use remote steps/timeline if available, otherwise build locally
+            $steps = $remoteSteps ?? $this->getRemoteSteps($order);
+            $timeline = $remoteTimeline ?? $this->getRemoteTimeline($order);
+
             return view('app_android.more.order_details', [
                 'order' => $order,
                 'orderId' => $order->id,
-                'steps' => $this->getRemoteSteps($order),
-                'timeline' => $this->getRemoteTimeline($order),
+                'steps' => $steps,
+                'timeline' => $timeline,
                 'orderItems' => $orderItems,
                 'quotation' => $quotation,
                 'quotationItems' => $quotationItems,

@@ -90,6 +90,7 @@ class CustomerStatementController extends Controller
                                 'total_amount' => $inv['total_amount'] ?? 0,
                                 'paid_amount' => $inv['paid_amount'] ?? 0,
                                 'status' => $inv['status'] ?? null,
+                                'order_id' => $inv['order_id'] ?? null,
                                 'items' => isset($inv['items']) ? collect($inv['items'])->map(fn($i) => (object) $i) : collect(),
                             ];
                         });
