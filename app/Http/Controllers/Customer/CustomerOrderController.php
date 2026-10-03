@@ -303,6 +303,8 @@ class CustomerOrderController extends Controller
             return redirect()->route('mobile.login');
         }
 
+        $isRemote = false;
+
         $order = Order::where('customer_id', $customer->id)
             ->where(function ($q) use ($id) {
                 $q->where('id', $id);
@@ -311,6 +313,18 @@ class CustomerOrderController extends Controller
                 }
             })
             ->first();
+
+        // If local DB is empty, fetch from external API (for APK)
+        if (! $order) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData("customer/orders/{$id}", $token);
+                if ($remoteData && isset($remoteData['order'])) {
+                    $isRemote = true;
+                    $order = (object) $remoteData['order'];
+                }
+            }
+        }
 
         if (! $order) {
             return view('app_android.more.order_details', [
@@ -324,6 +338,58 @@ class CustomerOrderController extends Controller
                 'statusMeta' => ['label' => '', 'class' => 'text-gray-600 bg-gray-100'],
                 'progress' => 0,
                 'canRespond' => false,
+            ]);
+        }
+
+        if ($isRemote) {
+            // Transform remote data to match view expectations
+            $quotation = isset($order->quotation) ? (object) $order->quotation : null;
+            $invoice = isset($order->invoice) ? (object) $order->invoice : null;
+            
+            $orderItems = [];
+            if (isset($order->items) && is_array($order->items)) {
+                foreach ($order->items as $item) {
+                    $orderItems[] = [
+                        'name' => $item['name'] ?? $item['item']['name_ar'] ?? 'منتج',
+                        'code' => $item['code'] ?? '—',
+                        'pack' => $item['pack'] ?? 'وحدة',
+                        'quantity' => (float) ($item['quantity'] ?? 0),
+                        'unit_price' => (float) ($item['unit_price'] ?? 0),
+                        'line_total' => (float) ($item['line_total'] ?? $item['subtotal'] ?? 0),
+                        'warehouse' => $item['warehouse'] ?? 'غير محدد',
+                    ];
+                }
+            }
+
+            $quotationItems = [];
+            if ($quotation && isset($quotation->items) && is_array($quotation->items)) {
+                foreach ($quotation->items as $item) {
+                    $quotationItems[] = [
+                        'name' => $item['name'] ?? $item['item_name_snapshot'] ?? 'منتج',
+                        'quantity' => (float) ($item['quantity'] ?? 0),
+                        'unit_price' => (float) ($item['unit_price'] ?? 0),
+                        'discount' => (float) ($item['discount'] ?? $item['discount_percent'] ?? 0),
+                        'line_total' => (float) ($item['line_total'] ?? $item['subtotal'] ?? 0),
+                    ];
+                }
+            }
+
+            $statusMeta = $this->getRemoteStatusMeta($order->status ?? 'pending');
+            $progress = $this->getRemoteProgress($order->status ?? 'pending');
+            $canRespond = $order->status === 'quotation_sent' && $quotation;
+
+            return view('app_android.more.order_details', [
+                'order' => $order,
+                'orderId' => $order->id,
+                'steps' => $this->getRemoteSteps($order),
+                'timeline' => $this->getRemoteTimeline($order),
+                'orderItems' => $orderItems,
+                'quotation' => $quotation,
+                'quotationItems' => $quotationItems,
+                'invoice' => $invoice,
+                'statusMeta' => $statusMeta,
+                'progress' => $progress,
+                'canRespond' => $canRespond,
             ]);
         }
 
@@ -376,6 +442,58 @@ class CustomerOrderController extends Controller
             'progress' => $this->stepPresenter->progress($order),
             'canRespond' => $this->canRespondToQuotation($order),
         ]);
+    }
+
+    /**
+     * Get steps for remote API data
+     */
+    private function getRemoteSteps($order): array
+    {
+        $status = $order->status ?? 'pending';
+        $steps = [
+            ['key' => 'submitted', 'label' => 'تم إرسال الطلب', 'icon' => 'fa-send', 'color' => 'purple', 'completed' => true],
+            ['key' => 'review', 'label' => 'قيد المراجعة', 'icon' => 'fa-magnifying-glass', 'color' => 'blue', 'completed' => in_array($status, ['admin_edited', 'quotation_sent', 'customer_approved', 'approved', 'delivered'])],
+            ['key' => 'quotation', 'label' => 'عرض السعر', 'icon' => 'fa-file-invoice-dollar', 'color' => 'indigo', 'completed' => in_array($status, ['customer_approved', 'approved', 'delivered'])],
+            ['key' => 'approval', 'label' => 'موافقة العميل', 'icon' => 'fa-user-check', 'color' => 'emerald', 'completed' => in_array($status, ['approved', 'delivered'])],
+            ['key' => 'delivery', 'label' => 'التسليم', 'icon' => 'fa-truck', 'color' => 'green', 'completed' => $status === 'delivered'],
+        ];
+
+        // Add terminal negative states
+        if (in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $steps[] = ['key' => 'cancelled', 'label' => 'ملغي/مرفوض', 'icon' => 'fa-ban', 'color' => 'red', 'completed' => true];
+        }
+
+        return $steps;
+    }
+
+    /**
+     * Get timeline for remote API data
+     */
+    private function getRemoteTimeline($order): array
+    {
+        $timeline = [];
+        $status = $order->status ?? 'pending';
+        $createdAt = $this->formatDate($order->created_at ?? $order->date ?? null);
+
+        $timeline[] = ['to' => 'طلب جديد', 'by' => 'النظام', 'date' => $createdAt];
+
+        if (in_array($status, ['admin_edited', 'quotation_sent', 'customer_approved', 'approved', 'delivered', 'cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $timeline[] = ['to' => 'قيد المراجعة', 'by' => 'الإدارة', 'date' => $createdAt];
+        }
+        if (in_array($status, ['quotation_sent', 'customer_approved', 'approved', 'delivered', 'cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $timeline[] = ['to' => 'عرض السعر', 'by' => 'الإدارة', 'date' => $createdAt];
+        }
+        if (in_array($status, ['customer_approved', 'approved', 'delivered'])) {
+            $timeline[] = ['to' => 'موافقة العميل', 'by' => $order->customer_name ?? 'العميل', 'date' => $createdAt];
+        }
+        if ($status === 'delivered') {
+            $timeline[] = ['to' => 'تم التسليم', 'by' => 'التوصيل', 'date' => $createdAt];
+        }
+        if (in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $timeline[] = ['to' => 'ملغي/مرفوض', 'by' => 'النظام', 'date' => $createdAt];
+        }
+
+        return $timeline;
     }
 
     /**

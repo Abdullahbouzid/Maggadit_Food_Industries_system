@@ -16,7 +16,7 @@ class CustomerStatementController extends Controller
 {
     use CustomerAppHelpers;
 
-    /**
+/**
      * The customer's financial statement: every wallet movement (deposits,
      * purchases, withdrawals) together with the invoices those movements refer
      * to, so a movement can always be traced back to a document.
@@ -53,12 +53,15 @@ class CustomerStatementController extends Controller
             ->limit(100)
             ->get();
 
+        $isRemote = false;
+
         // If local DB is empty, fetch from external API (for APK)
         if ($transactions->isEmpty() && $invoices->isEmpty()) {
             $token = session('api_token') ?: $request->bearerToken();
             if ($token) {
                 $remoteData = $this->fetchRemoteData('customer/financial-statement', $token);
                 if ($remoteData && isset($remoteData['statement']) && is_array($remoteData['statement'])) {
+                    $isRemote = true;
                     $transactions = collect($remoteData['statement'])->map(function ($item) {
                         return (object) [
                             'id' => $item['id'] ?? null,
@@ -76,7 +79,7 @@ class CustomerStatementController extends Controller
                             'invoice_number' => $item['invoice_number'] ?? null,
                         ];
                     });
-                    
+
                     // Also fetch invoices if available
                     if (isset($remoteData['invoices'])) {
                         $invoices = collect($remoteData['invoices'])->map(function ($inv) {
@@ -95,9 +98,48 @@ class CustomerStatementController extends Controller
             }
         }
 
-        $rows = $transactions instanceof Collection
-            ? $transactions->map(fn ($t) => $this->presentTransaction($t, $invoices))
-            : $transactions->map(fn ($t) => $this->presentTransaction($t, $invoices));
+        if ($isRemote) {
+            // For remote data, use the data directly (already formatted)
+            $rows = $transactions->map(function ($t) {
+                return [
+                    'id' => $t->id,
+                    'date' => $this->formatDate($t->date),
+                    'type' => $t->type,
+                    'label' => $t->label,
+                    'amount' => (float) $t->amount,
+                    'direction' => $t->direction,
+                    'signed' => (float) $t->signed,
+                    'balance_after' => (float) $t->balance_after,
+                    'method' => $t->method,
+                    'reference' => $t->reference,
+                    'notes' => $t->notes,
+                    'invoice_id' => $t->invoice_id,
+                    'invoice_number' => $t->invoice_number,
+                ];
+            });
+
+            $totals = [
+                'deposits' => (float) $rows->where('direction', 'credit')->sum('amount'),
+                'debits' => abs((float) $rows->where('direction', 'debit')->sum('amount')),
+                'balance' => (float) ($wallet->balance ?? 0),
+                'invoiced' => (float) $invoices->sum('total_amount'),
+                'paid' => (float) $invoices->sum('paid_amount'),
+            ];
+
+            $totals['outstanding'] = round($totals['invoiced'] - $totals['paid'], 2);
+
+            return view('app_android.more.financial_statement', [
+                'customer' => $customer,
+                'wallet' => $wallet,
+                'rows' => $rows,
+                'invoices' => $invoices,
+                'totals' => $totals,
+                'from' => $from?->toDateString(),
+                'to' => $to?->toDateString(),
+            ]);
+        }
+
+        $rows = $transactions->map(fn (WalletTransaction $t) => $this->presentTransaction($t, $invoices));
 
         $totals = [
             'deposits' => (float) $rows->where('direction', 'credit')->sum('amount'),
@@ -183,5 +225,19 @@ class CustomerStatementController extends Controller
             'check' => 'شيك',
             default => $method ?: '—',
         };
+    }
+
+    /**
+     * Format date for both Carbon objects (local DB) and strings (remote API)
+     */
+    private function formatDate($date): ?string
+    {
+        if ($date === null) {
+            return null;
+        }
+        if (is_string($date)) {
+            return strlen($date) >= 10 ? substr($date, 0, 10) : $date;
+        }
+        return method_exists($date, 'format') ? $date->format('Y-m-d') : (string) $date;
     }
 }
