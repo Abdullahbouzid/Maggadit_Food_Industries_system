@@ -164,16 +164,48 @@ class CustomerOrderController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $rows = $orders->map(function (Order $order) use ($customer) {
+        // If local DB is empty, fetch from external API (for APK)
+        if ($orders->isEmpty()) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData('customer/orders', $token);
+                if ($remoteData && isset($remoteData['orders']) && is_array($remoteData['orders'])) {
+                    $orders = collect($remoteData['orders'])->map(function ($inv) {
+                        $quotation = isset($inv['quotation']) ? (object) $inv['quotation'] : null;
+                        $invoice = isset($inv['invoice']) ? (object) $inv['invoice'] : null;
+                        
+                        return (object) [
+                            'id' => $inv['id'] ?? $inv['invoice_id'] ?? null,
+                            'order_number' => $inv['invoice_number'] ?? $inv['order_number'] ?? null,
+                            'created_at' => $inv['date'] ?? $inv['invoice_date'] ?? null,
+                            'total' => $inv['total_amount'] ?? 0,
+                            'status' => $inv['status'] ?? 'pending',
+                            'items' => isset($inv['items']) ? collect($inv['items'])->map(fn($i) => (object) [
+                                'item' => (object) [
+                                    'name_ar' => $i['name'] ?? null,
+                                    'name_en' => $i['name_en'] ?? null,
+                                ],
+                                'quantity' => $i['quantity'] ?? 0,
+                                'unit_price' => $i['unit_price'] ?? 0,
+                            ]) : collect(),
+                            'quotation' => $quotation,
+                            'invoices' => $invoice ? collect([$invoice]) : collect(),
+                        ];
+                    });
+                }
+            }
+        }
+
+        $rows = $orders->map(function ($order) use ($customer) {
             $meta = $this->stepPresenter->currentStatusMeta($order);
-            $quotation = $order->quotation->sortByDesc('id')->first();
-            $invoice = $order->invoices->first();
+            $quotation = $order->quotation ?? null;
+            $invoice = $order->invoices->first() ?? null;
 
             return [
                 'id' => $order->id,
-                'number' => $order->order_number,
-                'date' => $order->created_at?->format('Y-m-d'),
-                'total' => (float) ($order->total ?? 0),
+                'number' => $order->order_number ?? $order->invoice_number ?? $order->id,
+                'date' => $order->created_at?->format('Y-m-d') ?? $order->date ?? null,
+                'total' => (float) ($order->total ?? $order->total_amount ?? 0),
                 'status' => $this->stepPresenter->currentStatusValue($order),
                 'status_text' => $meta['label'],
                 'status_class' => $meta['class'],

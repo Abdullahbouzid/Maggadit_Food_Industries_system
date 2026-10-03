@@ -53,7 +53,51 @@ class CustomerStatementController extends Controller
             ->limit(100)
             ->get();
 
-        $rows = $transactions->map(fn (WalletTransaction $t) => $this->presentTransaction($t, $invoices));
+        // If local DB is empty, fetch from external API (for APK)
+        if ($transactions->isEmpty() && $invoices->isEmpty()) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData('customer/financial-statement', $token);
+                if ($remoteData && isset($remoteData['statement']) && is_array($remoteData['statement'])) {
+                    $transactions = collect($remoteData['statement'])->map(function ($item) {
+                        return (object) [
+                            'id' => $item['id'] ?? null,
+                            'date' => $item['date'] ?? null,
+                            'type' => $item['type'] ?? null,
+                            'label' => $item['label'] ?? null,
+                            'amount' => $item['amount'] ?? 0,
+                            'direction' => $item['direction'] ?? 'credit',
+                            'signed' => $item['signed'] ?? 0,
+                            'balance_after' => $item['balance_after'] ?? 0,
+                            'method' => $item['method'] ?? null,
+                            'reference' => $item['reference'] ?? null,
+                            'notes' => $item['notes'] ?? null,
+                            'invoice_id' => $item['invoice_id'] ?? null,
+                            'invoice_number' => $item['invoice_number'] ?? null,
+                        ];
+                    });
+                    
+                    // Also fetch invoices if available
+                    if (isset($remoteData['invoices'])) {
+                        $invoices = collect($remoteData['invoices'])->map(function ($inv) {
+                            return (object) [
+                                'id' => $inv['id'] ?? null,
+                                'invoice_number' => $inv['invoice_number'] ?? null,
+                                'invoice_date' => $inv['invoice_date'] ?? null,
+                                'total_amount' => $inv['total_amount'] ?? 0,
+                                'paid_amount' => $inv['paid_amount'] ?? 0,
+                                'status' => $inv['status'] ?? null,
+                                'items' => isset($inv['items']) ? collect($inv['items'])->map(fn($i) => (object) $i) : collect(),
+                            ];
+                        });
+                    }
+                }
+            }
+        }
+
+        $rows = $transactions instanceof Collection
+            ? $transactions->map(fn ($t) => $this->presentTransaction($t, $invoices))
+            : $transactions->map(fn ($t) => $this->presentTransaction($t, $invoices));
 
         $totals = [
             'deposits' => (float) $rows->where('direction', 'credit')->sum('amount'),
