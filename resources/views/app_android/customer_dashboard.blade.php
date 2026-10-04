@@ -258,17 +258,19 @@
             }, 2000);
         }
 
-        document.querySelectorAll('.add-to-cart').forEach(btn => {
-            btn.addEventListener('click', function(e) {
+        // Event delegation for dynamically loaded add-to-cart buttons
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.add-to-cart');
+            if (btn) {
                 e.preventDefault();
                 e.stopPropagation();
-                let id = this.getAttribute('data-id');
-                let name = this.getAttribute('data-name');
-                let price = parseFloat(this.getAttribute('data-price')) || 0;
-                let image = this.getAttribute('data-image');
-                let packName = this.getAttribute('data-pack-name') || '';
-                let uomName = this.getAttribute('data-uom-name') || '';
-                let packId = this.getAttribute('data-pack-id') || null;
+                let id = btn.getAttribute('data-id');
+                let name = btn.getAttribute('data-name');
+                let price = parseFloat(btn.getAttribute('data-price')) || 0;
+                let image = btn.getAttribute('data-image');
+                let packName = btn.getAttribute('data-pack-name') || '';
+                let uomName = btn.getAttribute('data-uom-name') || '';
+                let packId = btn.getAttribute('data-pack-id') || null;
                 
                 let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
                 let existingItemIndex = cartItems.findIndex(item => item.id == id && item.pack_name == packName);
@@ -291,7 +293,7 @@
                 
                 localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
                 showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
-            });
+            }
         });
         // ========== Carousel with Auto-Scroll ==========
         const carousel = document.getElementById('ad-carousel');
