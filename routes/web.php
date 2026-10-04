@@ -390,6 +390,42 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('faqs');
 
+        Route::get('/categories', function () use ($baseUrl) {
+            try {
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/categories");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('categories');
+
+        Route::get('/categories/{id}', function ($id) use ($baseUrl) {
+            try {
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/categories/{$id}");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('categories.show');
+
+        Route::get('/brands', function () use ($baseUrl) {
+            try {
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/brands");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('brands');
+
+        Route::get('/brands/{id}', function ($id) use ($baseUrl) {
+            try {
+                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/brands/{$id}");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('brands.show');
+
         Route::get('/notifications', function () use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {
