@@ -474,7 +474,15 @@
                     if (data && data.products) {
                         const items = data.products.data || data.products;
                         if (Array.isArray(items) && items.length > 0) {
-                            dashProducts.innerHTML = items.slice(0, 10).map(p => `
+                            dashProducts.innerHTML = items.slice(0, 10).map(p => {
+                                // Get pack details - use first pack or default
+                                const packs = p.packs || [];
+                                const defaultPack = packs.find(pack => pack.is_default) || packs[0] || {};
+                                const packName = defaultPack.name || defaultPack.display_name || '';
+                                const uomName = defaultPack.uom_name || defaultPack.uom_symbol || '';
+                                const packQuantity = defaultPack.quantity || 1;
+                                
+                                return `
                                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='/customer/products/${p.id}'">
                                     <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn text-gray-400" data-id="${p.id}">
                                         <i class="far fa-heart text-lg"></i>
@@ -488,6 +496,11 @@
                                             <span class="text-yellow-500 text-xs">★</span>
                                             <span class="text-xs text-gray-600">${parseFloat(p.rate || 0).toFixed(1)}</span>
                                         </div>
+                                        ${packName ? `
+                                        <span class="inline-block mt-1 bg-purple-50 text-purple-700 text-[10px] px-2 py-0.5 rounded-full">
+                                            ${packName}
+                                            ${uomName ? ` ${uomName}` : ''}
+                                        </span>` : ''}
                                         <div class="mt-2 flex items-center justify-between">
                                             <div>
                                                 <span class="text-purple-700 font-bold text-sm">${parseFloat(p.price || 0).toFixed(2)} ر.س</span>
@@ -497,11 +510,14 @@
                                                     data-id="${p.id}"
                                                     data-name="${p.name || p.name_ar || 'منتج'}" 
                                                     data-price="${p.price || 0}"
-                                                    data-image="${p.image || ''}">إضافة</button>
+                                                    data-image="${p.image || ''}"
+                                                    data-pack-name="${packName}"
+                                                    data-uom-name="${uomName}">إضافة</button>
                                         </div>
                                     </div>
                                 </div>
-                            `).join('');
+                                `;
+                            }).join('');
                         }
                     }
                 }).catch(e => console.error(e));
