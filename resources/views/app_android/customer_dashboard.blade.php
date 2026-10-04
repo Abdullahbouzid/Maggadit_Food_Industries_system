@@ -116,8 +116,7 @@
                         $productImage = is_array($product) ? ($product['image'] ?? '') : ($product->image ?? '');
                         $productPrice = is_array($product) ? ($product['price'] ?? 0) : ($product->price ?? 0);
                         $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
-                        $isFavorite = is_array($product) ? ($product['favorite'] ?? false) : in_array($productId, $favoriteItemIds ?? []);
-                    @endphp
+                   @endphp
                     <a href="{{ route('customer.product.show', $productId, false) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer">
                         @if($packName)
                             <div class="absolute top-2 right-2 z-10">
@@ -126,9 +125,7 @@
                                 </span>
                             </div>
                         @endif
-                        <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ $isFavorite ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $productId }}">
-                            <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart text-lg"></i>
-                        </button>
+                        
                         <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                             @if($productImage)
                                 <img src="{{ $productImage }}" alt="{{ $productName }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=📦';">

@@ -1749,6 +1749,92 @@ return response()->json([
     }
 
     /**
+     * Create an order from customer cart (checkout)
+     */
+    public function checkout(Request $request)
+    {
+        $customer = $request->user();
+
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|integer',
+            'items.*.quantity' => 'required|numeric|min:0.001',
+            'items.*.pack_id' => 'nullable|integer',
+            'delivery_address' => 'nullable|string|max:500',
+            'delivery_phone' => 'nullable|string|max:30',
+            'scheduled_delivery_date' => 'nullable|date',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $lines = [];
+        $rejected = [];
+
+        foreach ($validated['items'] as $rawItem) {
+            $item = Item::find($rawItem['id']);
+
+            if (! $item) {
+                $rejected[] = ['id' => $rawItem['id'], 'reason' => 'المنتج غير موجود'];
+                continue;
+            }
+
+            $packId = $rawItem['pack_id'] ?? null;
+            if ($packId && ! \App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
+                $packId = null;
+            }
+
+            $lines[] = [
+                'item_id' => $item->id,
+                'item_pack_id' => $packId,
+                'quantity' => (float) $rawItem['quantity'],
+            ];
+        }
+
+        if (empty($lines)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على منتجات صالحة في السلة',
+                'rejected' => $rejected,
+            ], 422);
+        }
+
+        try {
+            $order = app(\App\Services\OrderService::class)->create(
+                customer: $customer,
+                items: $lines,
+                deliveryAddress: $validated['delivery_address'] ?? $customer->default_address,
+                deliveryPhone: $validated['delivery_phone'] ?? $customer->phone,
+                scheduledDeliveryDate: isset($validated['scheduled_delivery_date'])
+                    ? \Carbon\Carbon::parse($validated['scheduled_delivery_date'])
+                    : null,
+                user: null,
+                warehouseId: null,
+                currencyId: $customer->priceList?->currency_id,
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Customer checkout failed: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'تعذر إنشاء الطلبية. '.($e->getMessage()),
+            ], 422);
+        }
+
+        $order->load('statusHistory');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إنشاء الطلبية بنجاح',
+            'order' => [
+                'id' => $order->id,
+                'order_number' => $order->order_number,
+                'status' => $order->status->value,
+                'status_label' => $order->status->label(),
+                'total' => (float) $order->total,
+            ],
+        ]);
+    }
+
+    /**
      * Download the quotation PDF for customer
      */
     public function downloadQuotationPdf(Request $request, $id)

@@ -605,6 +605,19 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('order_quotation_pdf');
 
+        Route::post('/checkout', function () use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/checkout", request()->all());
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('checkout_proxy');
+
         Route::get('/dashboard', function () use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {

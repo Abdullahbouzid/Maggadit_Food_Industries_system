@@ -277,7 +277,7 @@
                 headers['Authorization'] = 'Bearer ' + token;
             }
 
-            fetch('{{ route('customer.checkout', [], false) }}', {
+            fetch('{{ route('checkout_proxy', [], false) }}', {
                 method: 'POST',
                 headers: {
                     ...headers,

@@ -60,5 +60,6 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::get('/invoices/{id}', [CustomerApiController::class, 'invoiceDetail'])->name('api.customer.invoice.detail');
         Route::get('/orders/{order}/quotation', [CustomerApiController::class, 'orderQuotation'])->name('api.customer.order.quotation');
         Route::post('/orders/{order}/quotation/respond', [CustomerApiController::class, 'respondToQuotation'])->name('api.customer.order.quotation.respond');
+        Route::post('/checkout', [CustomerApiController::class, 'checkout'])->name('api.customer.checkout');
     });
 });
