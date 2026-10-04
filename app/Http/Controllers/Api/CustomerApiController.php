@@ -1760,6 +1760,9 @@ return response()->json([
             'items.*.id' => 'required|integer',
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.pack_id' => 'nullable|integer',
+            'items.*.pack_name' => 'nullable|string',
+            'items.*.uom_name' => 'nullable|string',
+            'items.*.name' => 'nullable|string',
             'delivery_address' => 'nullable|string|max:500',
             'delivery_phone' => 'nullable|string|max:30',
             'scheduled_delivery_date' => 'nullable|date',
@@ -1772,13 +1775,47 @@ return response()->json([
         foreach ($validated['items'] as $rawItem) {
             $item = Item::find($rawItem['id']);
 
+            // If item not found by ID, try to find by name (for APK with different local IDs)
+            if (! $item && isset($rawItem['name'])) {
+                $item = Item::where(function ($q) use ($rawItem) {
+                    $q->where('name_ar', 'like', $rawItem['name'])
+                        ->orWhere('name_en', 'like', $rawItem['name']);
+                })->first();
+            }
+
             if (! $item) {
                 $rejected[] = ['id' => $rawItem['id'], 'reason' => 'المنتج غير موجود'];
                 continue;
             }
 
             $packId = $rawItem['pack_id'] ?? null;
-            if ($packId && ! \App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
+            
+            // If pack_id not valid, try to find pack by name/uom
+            if (! $packId && (isset($rawItem['pack_name']) || isset($rawItem['uom_name']))) {
+                $packQuery = \App\Models\ItemPack::where('item_id', $item->id);
+                
+                if (isset($rawItem['pack_name'])) {
+                    $packQuery->where(function ($q) use ($rawItem) {
+                        $q->where('display_name', 'like', $rawItem['pack_name'])
+                            ->orWhereHas('packType', function ($q2) use ($rawItem) {
+                                $q2->where('name', 'like', $rawItem['pack_name']);
+                            });
+                    });
+                }
+                
+                if (isset($rawItem['uom_name'])) {
+                    $packQuery->whereHas('packCapacity.uom', function ($q) use ($rawItem) {
+                        $q->where('name_ar', 'like', $rawItem['uom_name'])
+                            ->orWhere('name_en', 'like', $rawItem['uom_name'])
+                            ->orWhere('uom_symbol', 'like', $rawItem['uom_name']);
+                    });
+                }
+                
+                $pack = $packQuery->first();
+                if ($pack) {
+                    $packId = $pack->id;
+                }
+            } elseif ($packId && ! \App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
                 $packId = null;
             }
 

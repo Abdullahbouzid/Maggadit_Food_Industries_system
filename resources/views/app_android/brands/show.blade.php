@@ -81,6 +81,7 @@
                                         data-name="{{ $itemName }}"
                                         data-price="{{ $pack['price'] ?? 0 }}"
                                         data-image="{{ $itemImage ?? '📦' }}"
+                                        data-pack-id="{{ $pack['id'] ?? '' }}"
                                         data-pack-name="{{ $pack['name'] ?? '' }}"
                                         data-uom-name="{{ $pack['uom_name'] ?? '' }}">
                                     <i class="fas fa-shopping-cart ml-1"></i> أضف إلى السلة
@@ -132,6 +133,7 @@
                 let image = this.getAttribute('data-image');
                 let packName = this.getAttribute('data-pack-name') || '';
                 let uomName = this.getAttribute('data-uom-name') || '';
+                let packId = this.getAttribute('data-pack-id') || null;
                 
                 let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
                 let existingItemIndex = cartItems.findIndex(item => item.id == id && item.pack_name == packName);
@@ -147,7 +149,8 @@
                         price: price,
                         quantity: 1,
                         image: image,
-                        discount: 0
+                        discount: 0,
+                        pack_id: packId
                     });
                 }
                 

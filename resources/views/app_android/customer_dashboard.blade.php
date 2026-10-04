@@ -268,6 +268,7 @@
                 let image = this.getAttribute('data-image');
                 let packName = this.getAttribute('data-pack-name') || '';
                 let uomName = this.getAttribute('data-uom-name') || '';
+                let packId = this.getAttribute('data-pack-id') || null;
                 
                 let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
                 let existingItemIndex = cartItems.findIndex(item => item.id == id && item.pack_name == packName);
@@ -283,7 +284,8 @@
                         price: price,
                         quantity: 1,
                         image: image,
-                        discount: 0
+                        discount: 0,
+                        pack_id: packId
                     });
                 }
                 
@@ -510,7 +512,8 @@
                                                     data-price="${p.price || 0}"
                                                     data-image="${p.image || ''}"
                                                     data-pack-name="${packName}"
-                                                    data-uom-name="${uomName}">إضافة</button>
+                                                    data-uom-name="${uomName}"
+                                                    data-pack-id="${defaultPack.id || ''}">إضافة</button>
                                         </div>
                                     </div>
                                 </div>

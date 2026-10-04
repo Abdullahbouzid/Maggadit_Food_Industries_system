@@ -133,6 +133,7 @@
                 let image = this.getAttribute('data-image');
                 let packName = this.getAttribute('data-pack-name') || '';
                 let uomName = this.getAttribute('data-uom-name') || '';
+                let packId = this.getAttribute('data-pack-id') || null;
                 
                 let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
                 let existingItemIndex = cartItems.findIndex(item => item.id == id && item.pack_name == packName);
@@ -148,7 +149,8 @@
                         price: price,
                         quantity: 1,
                         image: image,
-                        discount: 0
+                        discount: 0,
+                        pack_id: packId
                     });
                 }
                 

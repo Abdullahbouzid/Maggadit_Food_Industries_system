@@ -260,7 +260,14 @@
             checkoutBtn.innerText = currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...';
             checkoutBtn.disabled = true;
 
-            const validItems = cartItems.filter(item => item.id && item.price > 0);
+            const validItems = cartItems.filter(item => item.id && item.price > 0).map(item => ({
+                id: item.id,
+                quantity: item.quantity,
+                pack_id: item.pack_id || null,
+                pack_name: item.pack_name || '',
+                uom_name: item.uom_name || '',
+                name: item.name || item.name_ar || item.name_en || ''
+            }));
             if (validItems.length === 0) {
                 showToastMessage(currentLang === 'ar' ? 'لا توجد منتجات صالحة في السلة' : 'No valid items in cart', true);
                 checkoutBtn.innerText = originalText;
