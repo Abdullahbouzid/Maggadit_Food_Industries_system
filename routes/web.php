@@ -504,6 +504,19 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('my_products');
 
+        Route::post('/contact-us', function () use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/contact-us", request()->all());
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('contact_submit_proxy');
+
         Route::get('/order/{id}/pdf', function ($id) use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {
