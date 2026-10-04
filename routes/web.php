@@ -614,7 +614,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/checkout", request()->all());
                 return response()->json($response->json(), $response->status());
             } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال: ' . $e->getMessage()], 503);
             }
         })->name('checkout_proxy');
 

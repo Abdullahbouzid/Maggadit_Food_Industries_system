@@ -34,7 +34,7 @@
                     </div>
                 </div>
                 <button id="checkout-btn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-3 rounded-xl mt-5 shadow-md transition transform hover:scale-[1.02] active:scale-95">
-                    متابعة إلى الدفع
+                    إنشاء الطلبية
                 </button>
             </div>
         </div>
@@ -65,6 +65,7 @@
     </div>
 
     <script>
+        console.log('Cart script loaded, cartItems:', JSON.parse(localStorage.getItem('maggadit_cart')) || []);
         // استرجاع السلة من التخزين المحلي
         let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
         let deliveryFee = 0; // تم إلغاء رسوم التوصيل بناء على طلب العميل
@@ -82,7 +83,7 @@
                 summary_title: "Order Summary",
                 subtotal_label: "Subtotal",
                 total_label: "Total",
-                checkout_btn: "Proceed to Checkout",
+                checkout_btn: "Create Order",
                 currency: "SAR",
                 delete_btn: "Remove",
                 quantity_label: "Qty"
@@ -94,7 +95,7 @@
                 summary_title: "ملخص الطلب",
                 subtotal_label: "المجموع الفرعي",
                 total_label: "الإجمالي",
-                checkout_btn: "متابعة إلى الدفع",
+                checkout_btn: "إنشاء الطلبية",
                 currency: "ر.س",
                 delete_btn: "حذف",
                 quantity_label: "الكمية"
@@ -266,13 +267,27 @@
         }
 
         // زر الدفع
-        document.getElementById('checkout-btn')?.addEventListener('click', () => {
+        console.log('Attaching checkout event listener...');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        if (!checkoutBtn) {
+            console.error('Checkout button NOT found in DOM!');
+        } else {
+            console.log('Checkout button found:', checkoutBtn);
+        }
+        checkoutBtn?.addEventListener('click', () => {
+            console.log('Checkout button clicked');
             if (cartItems.length === 0) {
                 showToastMessage(currentLang === 'ar' ? 'السلة فارغة' : 'Cart is empty', true);
                 return;
             }
 
             const checkoutBtn = document.getElementById('checkout-btn');
+            if (!checkoutBtn) {
+                console.error('Checkout button not found');
+                showToastMessage(currentLang === 'ar' ? 'خطأ: زر الدفع غير موجود' : 'Error: Checkout button not found', true);
+                return;
+            }
+            console.log('Checkout button found, proceeding...');
             const originalText = checkoutBtn.innerText;
             checkoutBtn.innerText = currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...';
             checkoutBtn.disabled = true;
@@ -285,6 +300,7 @@
                 uom_name: item.uom_name || '',
                 name: item.name || item.name_ar || item.name_en || ''
             }));
+            console.log('Valid items:', validItems);
             if (validItems.length === 0) {
                 showToastMessage(currentLang === 'ar' ? 'لا توجد منتجات صالحة في السلة' : 'No valid items in cart', true);
                 checkoutBtn.innerText = originalText;
@@ -293,6 +309,7 @@
             }
 
             const token = localStorage.getItem('customer_token') || localStorage.getItem('api_token');
+            console.log('Token found:', token ? 'yes' : 'no');
             const headers = {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -301,7 +318,10 @@
                 headers['Authorization'] = 'Bearer ' + token;
             }
 
-            fetch('{{ route('customer.proxy.checkout_proxy', [], false) }}', {
+            const checkoutUrl = '{{ route('customer.proxy.checkout_proxy', [], false) }}';
+            console.log('Checkout URL:', checkoutUrl);
+
+            fetch(checkoutUrl, {
                 method: 'POST',
                 headers: {
                     ...headers,
@@ -335,7 +355,9 @@
             })
             .catch(error => {
                 console.error('Checkout error:', error);
-                showToastMessage(currentLang === 'ar' ? 'حدث خطأ في الاتصال، تأكد من تسجيل الدخول' : 'Connection error, please login', true);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                showToastMessage(currentLang === 'ar' ? 'حدث خطأ في الاتصال: ' + error.message : 'Connection error: ' + error.message, true);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
             });
