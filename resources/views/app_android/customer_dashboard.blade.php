@@ -485,8 +485,8 @@
                                 
                                 return `
                                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='/customer/product/${p.id}'">
-                                    <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn text-gray-400" data-id="${p.id}">
-                                        <i class="far fa-heart text-lg"></i>
+                                    <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors ${p.is_favorite ? 'text-red-500' : 'text-gray-400'}" data-id="${p.id}">
+                                        <i class="${p.is_favorite ? 'fas' : 'far'} fa-heart text-lg"></i>
                                     </button>
                                     <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                                         ${p.image ? `<img src="${p.image}" alt="${p.name || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=📦';">` : '<span class="text-5xl text-gray-400">📦</span>'}
