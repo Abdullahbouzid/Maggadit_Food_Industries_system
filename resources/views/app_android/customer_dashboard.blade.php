@@ -398,7 +398,7 @@
             const icon = btn.querySelector('i');
             const productId = btn.getAttribute('data-id');
             
-            fetch('{{ route('customer.favorite.toggle', [], false) }}', {
+            fetch('{{ route('customer.proxy.favorites.toggle', [], false) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
