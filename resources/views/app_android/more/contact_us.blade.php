@@ -92,10 +92,28 @@
     </div>
     <br>
     <br>
+<br>
+    <br>
     <br>
     
-  
+    <!-- Beautiful Success Modal -->
+    <div id="success-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+            <div class="p-8 text-center">
+                <div class="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-check text-3xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">تم الإرسال بنجاح!</h3>
+                <p class="text-gray-600 mb-6" id="modal-message">تم استلام رسالتك وسنرد عليك في أقرب وقت ممكن.</p>
+                <button onclick="closeSuccessModal()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition hover:from-purple-700 hover:to-indigo-800 active:scale-[0.98]">
+                    <i class="fas fa-check-circle ml-2"></i> رائع، شكراً لك
+                </button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Toast for errors -->
     <div id="contact-toast" 
          class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none">
     </div>
@@ -111,6 +129,32 @@
                 toast.classList.remove('opacity-100', 'translate-y-0');
                 toast.classList.add('opacity-0', 'translate-y-10');
             }, 3000);
+        }
+
+        function showSuccessModal(message = null) {
+            const modal = document.getElementById('success-modal');
+            const content = document.getElementById('modal-content');
+            if (message) {
+                document.getElementById('modal-message').innerText = message;
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Trigger animation
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('success-modal');
+            const content = document.getElementById('modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -207,7 +251,7 @@
             .then(r => r.json().catch(() => ({ success: false, message: 'فشل الإرسال (' + r.status + ')' })))
             .then(res => {
                 if (res.success) {
-                    showToast('✅ ' + (res.message || 'تم إرسال رسالتك بنجاح'));
+                    showSuccessModal(res.message || 'تم إرسال رسالتك بنجاح');
                     document.getElementById('contact-form').reset();
                 } else {
                     let msg = res.message || 'فشل الإرسال';
