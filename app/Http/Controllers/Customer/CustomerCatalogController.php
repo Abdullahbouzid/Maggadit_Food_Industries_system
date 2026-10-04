@@ -526,7 +526,7 @@ class CustomerCatalogController extends Controller
             $product->image = $this->imagePathService->normalize($firstImage->image_path);
         }
         
-        // Also populate images array for gallery
+        // Also populate images array for gallery - use normalized paths
         $product->images = $item->images->map(fn($img) => $this->imagePathService->normalize($img->image_path))->all();
 
         $packs = $item->packs->map(function ($pack) use ($item, $customer) {
@@ -546,10 +546,7 @@ class CustomerCatalogController extends Controller
             ];
         });
 
-        $images = $item->images->pluck('image_url');
-
         $product->packs = $packs;
-        $product->images = $images;
 
         $customer = $this->getCustomer($request);
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
