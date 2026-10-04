@@ -47,7 +47,7 @@
                     <span>أرسل رسالتك</span>
                 </h3>
                 <p class="text-sm text-gray-500 mb-4">سنقوم بالرد عليك في أقرب وقت ممكن</p>
-                <form id="contact-form" action="{{ route('contact_submit_proxy', [], false) }}" method="POST" class="space-y-4">
+                <form id="contact-form" action="{{ route('customer.proxy.contact_submit_proxy', [], false) }}" method="POST" class="space-y-4">
                     @csrf
                     <div class="grid grid-cols-1 gap-3 mb-4">
                         <div>
@@ -190,8 +190,8 @@
 
             const orgId = localStorage.getItem('active_organization_id');
             const contactUrl = orgId
-                ? `{{ route('contact_submit_proxy', [], false) }}?organization_id=${encodeURIComponent(orgId)}`
-                : `{{ route('contact_submit_proxy', [], false) }}`;
+                ? `{{ route('customer.proxy.contact_submit_proxy', [], false) }}?organization_id=${encodeURIComponent(orgId)}`
+                : `{{ route('customer.proxy.contact_submit_proxy', [], false) }}`;
 
             fetch(contactUrl, {
                 method: 'POST',
