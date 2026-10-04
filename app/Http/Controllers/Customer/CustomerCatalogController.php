@@ -335,13 +335,16 @@ class CustomerCatalogController extends Controller
                             return [
                                 'id' => $pack['id'] ?? null,
                                 'name' => $pack['name'] ?? ($pack['display_name'] ?? 'الحبة'),
+                                'display_name' => $pack['display_name'] ?? null,
                                 'uom_name' => $pack['uom_name'] ?? '',
+                                'uom_symbol' => $pack['uom_symbol'] ?? '',
                                 'quantity' => (float) ($pack['quantity'] ?? $pack['quantity_in_pack'] ?? 1),
                                 'uom_id' => $pack['uom_id'] ?? null,
                                 'price' => (float) ($pack['price'] ?? $packPrice),
                                 'barcode' => $pack['barcode'] ?? null,
                                 'pack_type' => $pack['pack_type'] ?? 'قطعة',
                                 'capacity' => $pack['capacity'] ?? '',
+                                'is_default' => $pack['is_default'] ?? false,
                             ];
                         }, $itemObj->packs);
                     } else {
