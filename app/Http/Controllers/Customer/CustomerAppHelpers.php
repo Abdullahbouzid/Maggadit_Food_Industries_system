@@ -101,24 +101,42 @@ trait CustomerAppHelpers
 
     private function fetchRemoteData(string $endpoint, ?string $token = null, array $params = [])
     {
-        try {
-            $url = "{$this->baseUrl}/{$endpoint}";
-            $request = \Illuminate\Support\Facades\Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->timeout(5);
-            if ($token) {
-                $request = $request->withToken($token);
+        // Generate cache key based on endpoint, token, and params
+        $cacheKey = 'remote_data_' . md5($endpoint . ($token ?? '') . serialize($params));
+        
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($endpoint, $token, $params) {
+            try {
+                $url = "{$this->baseUrl}/{$endpoint}";
+                $request = \Illuminate\Support\Facades\Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->timeout(5)->retry(3, 500);
+                if ($token) {
+                    $request = $request->withToken($token);
+                }
+                $response = $request->get($url, $params);
+                if ($response->successful()) {
+                    return $response->json();
+                }
+            } catch (\Exception $e) {
+                Log::warning("Failed to fetch remote data from {$endpoint}: " . $e->getMessage());
             }
-            $response = $request->get($url, $params);
-            if ($response->successful()) {
-                return $response->json();
-            }
-        } catch (\Exception $e) {
-            Log::warning("Failed to fetch remote data from {$endpoint}: " . $e->getMessage());
-        }
-        return null;
+            return null;
+        });
     }
 
     /**
-     * Get favorite item IDs from external API (for APK sync)
+     * Clear cached remote data for a specific token
+     */
+    protected function clearRemoteCache(string $token = null): void
+    {
+        $prefix = $token ? 'favorite_ids_' . md5($token) : '';
+        if ($prefix) {
+            \Illuminate\Support\Facades\Cache::forget($prefix);
+        }
+        // Also clear any remote_data cache entries
+        // Note: This is a simplified approach; in production you might want tagged cache
+    }
+
+    /**
+     * Get favorite item IDs from external API (for APK sync) - cached for 5 minutes
      */
     protected function getRemoteFavoriteIds(Request $request): array
     {
@@ -126,11 +144,16 @@ trait CustomerAppHelpers
         if (!$token) {
             return [];
         }
-        $remoteData = $this->fetchRemoteData('customer/favorites/ids', $token);
-        if ($remoteData && isset($remoteData['ids']) && is_array($remoteData['ids'])) {
-            return $remoteData['ids'];
-        }
-        return [];
+        
+        $cacheKey = 'favorite_ids_' . md5($token);
+        
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($token) {
+            $remoteData = $this->fetchRemoteData('customer/favorites/ids', $token);
+            if ($remoteData && isset($remoteData['ids']) && is_array($remoteData['ids'])) {
+                return $remoteData['ids'];
+            }
+            return [];
+        });
     }
 
     private function normalizeItem($item)

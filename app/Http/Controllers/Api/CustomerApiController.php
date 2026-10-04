@@ -1441,10 +1441,16 @@ return response()->json([
         if ($favorite) {
             $favorite->delete();
 
+            // Clear cache for this customer
+            \Illuminate\Support\Facades\Cache::forget('favorite_ids_' . md5($customer->id));
+
             return response()->json(['success' => true, 'is_favorite' => false, 'message' => 'تمت الإزالة من المفضلة']);
         }
 
         $customer->favorites()->create(['item_id' => $itemId]);
+
+        // Clear cache for this customer
+        \Illuminate\Support\Facades\Cache::forget('favorite_ids_' . md5($customer->id));
 
         return response()->json(['success' => true, 'is_favorite' => true, 'message' => 'تمت الإضافة للمفضلة']);
     }

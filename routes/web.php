@@ -360,9 +360,13 @@ Route::prefix('customer')->name('customer.')->group(function () {
             if (!$token) {
                 return response()->json(['success' => false, 'favorites' => []]);
             }
+            $cacheKey = 'proxy_favorites_' . md5($token);
             try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/favorites");
-                return response()->json($response->json(), $response->status());
+                $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($baseUrl, $token) {
+                    $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()->timeout(5)->get("{$baseUrl}/customer/favorites");
+                    return $response->json();
+                });
+                return response()->json($data, 200);
             } catch (Exception $e) {
                 return response()->json(['success' => false, 'favorites' => []], 503);
             }
@@ -373,9 +377,13 @@ Route::prefix('customer')->name('customer.')->group(function () {
             if (!$token) {
                 return response()->json(['success' => false, 'ids' => []]);
             }
+            $cacheKey = 'proxy_favorite_ids_' . md5($token);
             try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/favorites/ids");
-                return response()->json($response->json(), $response->status());
+                $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($baseUrl, $token) {
+                    $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()->timeout(5)->get("{$baseUrl}/customer/favorites/ids");
+                    return $response->json();
+                });
+                return response()->json($data, 200);
             } catch (Exception $e) {
                 return response()->json(['success' => false, 'ids' => []], 503);
             }
@@ -388,7 +396,15 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
             try {
                 $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/favorites/toggle", $request->all());
-
+                
+                // Clear cache after successful toggle
+                if ($response->successful()) {
+                    $cacheKey1 = 'proxy_favorites_' . md5($token);
+                    $cacheKey2 = 'proxy_favorite_ids_' . md5($token);
+                    \Illuminate\Support\Facades\Cache::forget($cacheKey1);
+                    \Illuminate\Support\Facades\Cache::forget($cacheKey2);
+                }
+                
                 return response()->json($response->json(), $response->status());
             } catch (Exception $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
