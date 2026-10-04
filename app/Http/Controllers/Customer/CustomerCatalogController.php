@@ -67,13 +67,52 @@ class CustomerCatalogController extends Controller
                     'image' => isset($c['image']) ? $this->imagePathService->normalize($c['image']) : null,
                     'products_count' => count($c['items'] ?? []),
                 ];
-                $items = collect($c['items'] ?? [])->map(function ($item) {
-                    $itemObj = (object) $item;
-                    $itemObj->image = isset($itemObj->image) ? $this->imagePathService->normalize($itemObj->image) : null;
-                    return $this->normalizeItem($itemObj);
-                });
                 $customer = $this->getCustomer(request());
                 $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+                
+                $items = collect($c['items'] ?? [])->map(function ($item) use ($customer, $favoriteItemIds) {
+                    $itemObj = (object) $item;
+                    $itemObj->name = $itemObj->name_ar ?? $itemObj->name_en ?? $itemObj->name ?? 'منتج';
+                    $itemObj->image = isset($itemObj->image) ? $this->imagePathService->normalize($itemObj->image) : null;
+                    
+                    // Add packs from API response
+                    $packs = [];
+                    if (isset($itemObj->packs) && is_array($itemObj->packs) && count($itemObj->packs) > 0) {
+                        foreach ($itemObj->packs as $pack) {
+                            $packs[] = [
+                                'id' => $pack['id'] ?? null,
+                                'name' => $pack['name'] ?? ($pack['display_name'] ?? 'الحبة'),
+                                'display_name' => $pack['display_name'] ?? null,
+                                'uom_name' => $pack['uom_name'] ?? '',
+                                'uom_symbol' => $pack['uom_symbol'] ?? '',
+                                'quantity' => (float) ($pack['quantity'] ?? $pack['quantity_in_pack'] ?? 1),
+                                'uom_id' => $pack['uom_id'] ?? null,
+                                'price' => (float) ($pack['price'] ?? 0),
+                                'barcode' => $pack['barcode'] ?? null,
+                                'pack_type' => $pack['pack_type'] ?? 'قطعة',
+                                'capacity' => $pack['capacity'] ?? '',
+                                'is_default' => $pack['is_default'] ?? false,
+                            ];
+                        }
+                    } else {
+                        $packs = [[
+                            'id' => null,
+                            'name' => 'الحبة',
+                            'uom_name' => '',
+                            'quantity' => 1,
+                            'uom_id' => null,
+                            'price' => (float) ($itemObj->price ?? 0),
+                            'barcode' => null,
+                            'pack_type' => 'قطعة',
+                            'capacity' => '',
+                        ]];
+                    }
+                    $itemObj->packs = $packs;
+                    $itemObj->favorite = in_array($itemObj->id, $favoriteItemIds ?? []);
+                    
+                    return $itemObj;
+                });
+                
                 return view('app_android.categories.show', compact('category', 'items', 'favoriteItemIds'));
             }
             abort(404);
@@ -175,13 +214,48 @@ class CustomerCatalogController extends Controller
                     'logo' => isset($b['logo']) ? $this->imagePathService->normalize($b['logo']) : null,
                     'products_count' => count($b['items'] ?? []),
                 ];
-                $items = collect($b['items'] ?? [])->map(function ($item) {
+                $items = collect($b['items'] ?? [])->map(function ($item) use ($customer, $favoriteItemIds) {
                     $itemObj = (object) $item;
+                    $itemObj->name = $itemObj->name_ar ?? $itemObj->name_en ?? $itemObj->name ?? 'منتج';
                     $itemObj->image = isset($itemObj->image) ? $this->imagePathService->normalize($itemObj->image) : null;
-                    return $this->normalizeItem($itemObj);
+                    
+                    // Add packs from API response
+                    $packs = [];
+                    if (isset($itemObj->packs) && is_array($itemObj->packs) && count($itemObj->packs) > 0) {
+                        foreach ($itemObj->packs as $pack) {
+                            $packs[] = [
+                                'id' => $pack['id'] ?? null,
+                                'name' => $pack['name'] ?? ($pack['display_name'] ?? 'الحبة'),
+                                'display_name' => $pack['display_name'] ?? null,
+                                'uom_name' => $pack['uom_name'] ?? '',
+                                'uom_symbol' => $pack['uom_symbol'] ?? '',
+                                'quantity' => (float) ($pack['quantity'] ?? $pack['quantity_in_pack'] ?? 1),
+                                'uom_id' => $pack['uom_id'] ?? null,
+                                'price' => (float) ($pack['price'] ?? 0),
+                                'barcode' => $pack['barcode'] ?? null,
+                                'pack_type' => $pack['pack_type'] ?? 'قطعة',
+                                'capacity' => $pack['capacity'] ?? '',
+                                'is_default' => $pack['is_default'] ?? false,
+                            ];
+                        }
+                    } else {
+                        $packs = [[
+                            'id' => null,
+                            'name' => 'الحبة',
+                            'uom_name' => '',
+                            'quantity' => 1,
+                            'uom_id' => null,
+                            'price' => (float) ($itemObj->price ?? 0),
+                            'barcode' => null,
+                            'pack_type' => 'قطعة',
+                            'capacity' => '',
+                        ]];
+                    }
+                    $itemObj->packs = $packs;
+                    $itemObj->favorite = in_array($itemObj->id, $favoriteItemIds ?? []);
+                    
+                    return $itemObj;
                 });
-                $customer = $this->getCustomer(request());
-                $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
                 return view('app_android.brands.show', compact('brand', 'items', 'favoriteItemIds'));
             }
             abort(404);
@@ -399,6 +473,28 @@ class CustomerCatalogController extends Controller
             $remoteData = $this->fetchRemoteData("customer/products/{$id}");
             if ($remoteData && isset($remoteData['product'])) {
                 $p = $remoteData['product'];
+                
+                // Transform packs from API to match view expectations
+                $packs = [];
+                if (isset($p['packs']) && is_array($p['packs']) && count($p['packs']) > 0) {
+                    foreach ($p['packs'] as $pack) {
+                        $packs[] = [
+                            'id' => $pack['id'] ?? null,
+                            'name' => $pack['name'] ?? ($pack['display_name'] ?? 'الحبة'),
+                            'display_name' => $pack['display_name'] ?? null,
+                            'uom_name' => $pack['uom_name'] ?? $pack['uom_symbol'] ?? '',
+                            'uom_symbol' => $pack['uom_symbol'] ?? '',
+                            'quantity' => (float) ($pack['quantity'] ?? $pack['quantity_in_pack'] ?? 1),
+                            'uom_id' => $pack['uom_id'] ?? null,
+                            'price' => (float) ($pack['price'] ?? 0),
+                            'barcode' => $pack['barcode'] ?? null,
+                            'pack_type' => $pack['pack_type'] ?? 'قطعة',
+                            'capacity' => $pack['capacity'] ?? '',
+                            'is_default' => $pack['is_default'] ?? false,
+                        ];
+                    }
+                }
+                
                 $product = (object) [
                     'id' => $p['id'],
                     'name' => $p['name'] ?? 'منتج',
@@ -406,7 +502,7 @@ class CustomerCatalogController extends Controller
                     'image' => isset($p['images'][0]) ? $this->imagePathService->normalize($p['images'][0]) : null,
                     'price' => (float) ($p['packs'][0]['price'] ?? 0),
                     'old_price' => null,
-                    'packs' => $p['packs'] ?? [],
+                    'packs' => $packs,
                     'images' => array_map(fn($img) => $this->imagePathService->normalize($img), $p['images'] ?? []),
                 ];
                 $customer = $this->getCustomer($request);
