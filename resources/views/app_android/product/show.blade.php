@@ -6,11 +6,23 @@
     @include('app_android.partials.mobile.header', ['title' => $product->name ?? 'تفاصيل المنتج'])
     <div class="p-4" dir="rtl">
         <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 p-4">
-            <div class="h-64 bg-gray-100 flex items-center justify-center overflow-hidden mb-4">
+            <div class="h-64 bg-gray-100 flex items-center justify-center overflow-hidden mb-4 relative">
                 @if($product->image)
-                    <img src="{{ $product->image }}" class="w-full h-full object-cover" alt="{{ $product->name }}">
+                    <img src="{{ $product->image }}" class="w-full h-full object-cover" alt="{{ $product->name }}" id="main-product-image">
                 @else
                     <span class="text-5xl text-gray-400">📦</span>
+                @endif
+                @if(isset($product->images) && count($product->images) > 1)
+                    <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1" id="image-thumbnails">
+                        @foreach($product->images as $index => $img)
+                            <button type="button" 
+                                    onclick="document.getElementById('main-product-image').src='{{ $img }}'"
+                                    class="w-10 h-10 rounded overflow-hidden border-2 {{ $index === 0 ? 'border-purple-500' : 'border-transparent' }} hover:border-purple-300 transition"
+                                    aria-label="صورة {{ $index + 1 }}">
+                                <img src="{{ $img }}" class="w-full h-full object-cover" alt="صورة {{ $index + 1 }}">
+                            </button>
+                        @endforeach
+                    </div>
                 @endif
             </div>
             <h3 class="font-bold text-gray-800 text-xl mb-2">{{ $product->name }}</h3>

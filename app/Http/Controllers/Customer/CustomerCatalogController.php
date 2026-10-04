@@ -513,12 +513,21 @@ class CustomerCatalogController extends Controller
         }
 
         $product = $this->normalizeItem($item);
-        $product->image = $item->main_image_url;
         $product->description = $item->definition;
         
         $customer = $this->getCustomer($request);
         $product->price = $this->getItemPrice($item, $customer);
         $product->old_price = null;
+
+        // Ensure image is set - try main_image_url first, then first image from relationship
+        $product->image = $item->main_image_url;
+        if (empty($product->image) && $item->images->isNotEmpty()) {
+            $firstImage = $item->images->first();
+            $product->image = $this->imagePathService->normalize($firstImage->image_path);
+        }
+        
+        // Also populate images array for gallery
+        $product->images = $item->images->map(fn($img) => $this->imagePathService->normalize($img->image_path))->all();
 
         $packs = $item->packs->map(function ($pack) use ($item, $customer) {
             $packPrice = $this->getItemPrice($item, $customer, $pack->id);
