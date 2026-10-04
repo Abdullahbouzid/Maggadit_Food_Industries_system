@@ -484,7 +484,7 @@
                                 const packQuantity = defaultPack.quantity || 1;
                                 
                                 return `
-                                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='/customer/products/${p.id}'">
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='/customer/product/${p.id}'">
                                     <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn text-gray-400" data-id="${p.id}">
                                         <i class="far fa-heart text-lg"></i>
                                     </button>
@@ -534,7 +534,7 @@
                         const items = data.offers.data || data.offers;
                         if (Array.isArray(items) && items.length > 0) {
                             dashOffers.innerHTML = items.map(o => `
-                                <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer" onclick="window.location='/customer/products/${o.item_id || o.id}'">
+                                <div class="bg-white rounded-2xl shadow-lg overflow-hidden offer-card border border-gray-100 cursor-pointer" onclick="window.location='/customer/product/${o.item_id || o.id}'">
                                     ${o.discount_percentage ? `<div class="offer-badge">-${parseFloat(o.discount_percentage).toFixed(0)}%</div>` : ''}
                                     <div class="flex flex-row">
                                         <div class="relative w-28 h-28 overflow-hidden bg-gray-100 flex-shrink-0">
