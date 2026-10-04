@@ -48,9 +48,46 @@ class CustomerApiController extends Controller
     {
         $category = Category::where('show_in_customer_app', true)
             ->with(['items' => function ($q) {
-                $q->where('is_inactive', false);
+                $q->where('is_inactive', false)
+                    ->with(['packs.packType', 'packs.packCapacity.uom']);
             }])
             ->findOrFail($id);
+
+        // Transform items to include packs
+        $category->items->transform(function ($item) {
+            $packs = $item->packs->map(function ($pack) {
+                $capacity = $pack->packCapacity;
+                $uom = $capacity?->uom;
+                $packType = $pack->packType?->name ?? 'قطعة';
+                $capacityText = $capacity ? "{$capacity->value} " . ($uom?->uom_symbol ?? $uom?->name_ar ?? '') : '';
+                
+                return [
+                    'id' => $pack->id,
+                    'name' => $pack->display_name ?? $packType . ($capacityText ? " - {$capacityText}" : ''),
+                    'display_name' => $pack->display_name,
+                    'pack_type' => $packType,
+                    'quantity' => (float) $pack->quantity_in_pack,
+                    'uom_name' => $capacityText,
+                    'uom_symbol' => $uom?->uom_symbol ?? '',
+                    'price' => (float) $pack->price,
+                    'is_default' => (bool) $pack->is_default_pack,
+                    'barcode' => $pack->barcode,
+                ];
+            })->toArray();
+
+            $defaultPack = $item->packs->where('is_default_pack', true)->first() ?? $item->packs->first();
+
+            return [
+                'id' => $item->id,
+                'name' => $item->name_ar ?: $item->name_en,
+                'image' => $item->main_image_url,
+                'price' => $defaultPack ? (float) $defaultPack->price : 0,
+                'old_price' => null,
+                'rate' => 0,
+                'is_favorite' => false,
+                'packs' => $packs,
+            ];
+        });
 
         return response()->json(['success' => true, 'category' => $category]);
     }
@@ -71,8 +108,45 @@ class CustomerApiController extends Controller
     public function brandsShow($id)
     {
         $brand = Brand::with(['items' => function ($q) {
-            $q->where('is_inactive', false);
+            $q->where('is_inactive', false)
+                ->with(['packs.packType', 'packs.packCapacity.uom']);
         }])->findOrFail($id);
+
+        // Transform items to include packs
+        $brand->items->transform(function ($item) {
+            $packs = $item->packs->map(function ($pack) {
+                $capacity = $pack->packCapacity;
+                $uom = $capacity?->uom;
+                $packType = $pack->packType?->name ?? 'قطعة';
+                $capacityText = $capacity ? "{$capacity->value} " . ($uom?->uom_symbol ?? $uom?->name_ar ?? '') : '';
+                
+                return [
+                    'id' => $pack->id,
+                    'name' => $pack->display_name ?? $packType . ($capacityText ? " - {$capacityText}" : ''),
+                    'display_name' => $pack->display_name,
+                    'pack_type' => $packType,
+                    'quantity' => (float) $pack->quantity_in_pack,
+                    'uom_name' => $capacityText,
+                    'uom_symbol' => $uom?->uom_symbol ?? '',
+                    'price' => (float) $pack->price,
+                    'is_default' => (bool) $pack->is_default_pack,
+                    'barcode' => $pack->barcode,
+                ];
+            })->toArray();
+
+            $defaultPack = $item->packs->where('is_default_pack', true)->first() ?? $item->packs->first();
+
+            return [
+                'id' => $item->id,
+                'name' => $item->name_ar ?: $item->name_en,
+                'image' => $item->main_image_url,
+                'price' => $defaultPack ? (float) $defaultPack->price : 0,
+                'old_price' => null,
+                'rate' => 0,
+                'is_favorite' => false,
+                'packs' => $packs,
+            ];
+        });
 
         return response()->json(['success' => true, 'brand' => $brand]);
     }
