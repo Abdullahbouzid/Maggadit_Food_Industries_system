@@ -204,6 +204,9 @@ class CustomerCatalogController extends Controller
             $q->where('is_inactive', false)->with(['packs.packType', 'packs.packCapacity.uom']);
         }])->find($id);
 
+        $customer = $this->getCustomer(request());
+        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
         if (!$brand) {
             $remoteData = $this->fetchRemoteData("customer/brands/{$id}");
             if ($remoteData && isset($remoteData['brand'])) {
@@ -263,9 +266,6 @@ class CustomerCatalogController extends Controller
 
         $brand = $this->applyImagePath($brand, 'logo');
         $brand->products_count = $brand->items->count();
-
-        $customer = $this->getCustomer(request());
-        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
         $items = $brand->items->map(function ($item) use ($customer, $favoriteItemIds) {
             $item = $this->applyImagePath($item, 'image');

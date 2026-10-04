@@ -388,43 +388,44 @@
             });
         });
 
-        // ========== Favorite Toggle ==========
-        document.querySelectorAll('.toggle-favorite-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const icon = this.querySelector('i');
-                const productId = this.getAttribute('data-id');
-                
-                fetch('{{ route('customer.favorite.toggle', [], false) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ item_id: productId })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.success) {
-                        if(data.is_favorite) {
-                            this.classList.remove('text-gray-400');
-                            this.classList.add('text-red-500');
-                            icon.classList.remove('far');
-                            icon.classList.add('fas');
-                        } else {
-                            this.classList.remove('text-red-500');
-                            this.classList.add('text-gray-400');
-                            icon.classList.remove('fas');
-                            icon.classList.add('far');
-                        }
+        // ========== Favorite Toggle (Event Delegation for Dynamic Elements) ==========
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.toggle-favorite-btn');
+            if (!btn) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            const icon = btn.querySelector('i');
+            const productId = btn.getAttribute('data-id');
+            
+            fetch('{{ route('customer.favorite.toggle', [], false) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ item_id: productId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    if(data.is_favorite) {
+                        btn.classList.remove('text-gray-400');
+                        btn.classList.add('text-red-500');
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                    } else {
+                        btn.classList.remove('text-red-500');
+                        btn.classList.add('text-gray-400');
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
                     }
-                })
-                .catch(err => console.error(err));
-            });
+                }
+            })
+            .catch(err => console.error(err));
         });
 
         // Dynamic Proxy Fallback Fetcher for Dashboard Categories
