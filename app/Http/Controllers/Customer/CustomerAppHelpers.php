@@ -117,6 +117,22 @@ trait CustomerAppHelpers
         return null;
     }
 
+    /**
+     * Get favorite item IDs from external API (for APK sync)
+     */
+    protected function getRemoteFavoriteIds(Request $request): array
+    {
+        $token = session('api_token') ?: $request->bearerToken();
+        if (!$token) {
+            return [];
+        }
+        $remoteData = $this->fetchRemoteData('customer/favorites/ids', $token);
+        if ($remoteData && isset($remoteData['ids']) && is_array($remoteData['ids'])) {
+            return $remoteData['ids'];
+        }
+        return [];
+    }
+
     private function normalizeItem($item)
     {
         if (is_array($item)) {

@@ -367,6 +367,20 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'favorites' => []], 503);
             }
         })->name('favorites');
+
+        Route::get('/favorites/ids', function () use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'ids' => []]);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/favorites/ids");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'ids' => []], 503);
+            }
+        })->name('favorites.ids');
+
         Route::post('/favorites/toggle', function (Request $request) use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {

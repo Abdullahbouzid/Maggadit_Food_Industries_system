@@ -54,6 +54,7 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::get('/organizations', [CustomerApiController::class, 'organizationsList']);
         Route::post('/change-organization', [CustomerApiController::class, 'switchOrganization']);
         Route::get('/favorites', [CustomerApiController::class, 'favorites']);
+        Route::get('/favorites/ids', [CustomerApiController::class, 'favoriteIds']);
         Route::post('/favorites/toggle', [CustomerApiController::class, 'toggleFavorite']);
         Route::get('/invoices', [CustomerApiController::class, 'invoices']);
         Route::get('/invoices/{id}', [CustomerApiController::class, 'invoiceDetail'])->name('api.customer.invoice.detail');

@@ -124,6 +124,11 @@ class CustomerCatalogController extends Controller
         $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
+        // If local DB is empty, fetch favorites from external API (for APK)
+        if (empty($favoriteItemIds) && $customer) {
+            $favoriteItemIds = $this->getRemoteFavoriteIds(request());
+        }
+
         $items = $category->items->map(function ($item) use ($customer, $favoriteItemIds) {
             $item = $this->applyImagePath($item, 'image');
 
@@ -206,6 +211,11 @@ class CustomerCatalogController extends Controller
 
         $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        // If local DB is empty, fetch favorites from external API (for APK)
+        if (empty($favoriteItemIds) && $customer) {
+            $favoriteItemIds = $this->getRemoteFavoriteIds(request());
+        }
 
         if (!$brand) {
             $remoteData = $this->fetchRemoteData("customer/brands/{$id}");
@@ -341,6 +351,11 @@ class CustomerCatalogController extends Controller
 
         $customer = $this->getCustomer($request);
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        // If local DB is empty, fetch favorites from external API (for APK)
+        if (empty($favoriteItemIds) && $customer) {
+            $favoriteItemIds = $this->getRemoteFavoriteIds($request);
+        }
 
         $items = $query->get()->map(function ($item) use ($customer, $favoriteItemIds) {
             $item = $this->applyImagePath($item, 'image');

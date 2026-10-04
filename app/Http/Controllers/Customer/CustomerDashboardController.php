@@ -84,6 +84,11 @@ class CustomerDashboardController extends Controller
         $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
 
+        // If local DB is empty, fetch favorites from external API (for APK)
+        if (empty($favoriteItemIds) && $customer) {
+            $favoriteItemIds = $this->getRemoteFavoriteIds(request());
+        }
+
         $products = Item::where('is_inactive', false)
             ->with(['category', 'brand', 'packs.packType', 'packs.packCapacity.uom', 'images'])
             ->limit(10)
@@ -136,6 +141,11 @@ class CustomerDashboardController extends Controller
 
         $customer = $this->getCustomer(request());
         $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
+
+        // If local DB is empty, fetch favorites from external API (for APK)
+        if (empty($favoriteItemIds) && $customer) {
+            $favoriteItemIds = $this->getRemoteFavoriteIds(request());
+        }
 
         $offers = Offer::with(['item', 'itemPack.packType', 'itemPack.packCapacity.uom'])
             ->where('is_active', true)

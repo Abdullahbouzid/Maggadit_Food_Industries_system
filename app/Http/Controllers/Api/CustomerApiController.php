@@ -1419,6 +1419,14 @@ return response()->json([
         return response()->json(['success' => true, 'data' => $favorites]);
     }
 
+    public function favoriteIds(Request $request)
+    {
+        $customer = $request->user();
+        $favoriteItemIds = $customer->favorites()->pluck('item_id')->toArray();
+
+        return response()->json(['success' => true, 'ids' => $favoriteItemIds]);
+    }
+
     public function toggleFavorite(Request $request)
     {
         $customer = $request->user();
