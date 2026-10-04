@@ -1858,6 +1858,17 @@ return response()->json([
 
         $order->load('statusHistory');
 
+        // Send notification to customer
+        try {
+            \App\Services\NotificationService::sendToCustomer($customer, 'order_created', [
+                'order_number' => $order->order_number,
+                'total' => $order->total,
+                'order_id' => $order->id,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to send order notification: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'تم إنشاء الطلبية بنجاح',

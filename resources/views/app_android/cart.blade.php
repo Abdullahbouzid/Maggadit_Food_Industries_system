@@ -47,6 +47,23 @@
     <!-- Toast إشعارات -->
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
+    <!-- Beautiful Success Modal for Order Completion -->
+    <div id="order-success-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+            <div class="p-8 text-center">
+                <div class="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-check text-3xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">تم إنشاء الطلبية بنجاح!</h3>
+                <p class="text-gray-600 mb-6" id="order-modal-message">رقم الطلبية: <span id="order-number" class="font-bold text-purple-700"></span></p>
+                <button onclick="closeOrderSuccessModal()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition hover:from-purple-700 hover:to-indigo-800 active:scale-[0.98]">
+                    <i class="fas fa-check-circle ml-2"></i> عرض الطلبيات
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // استرجاع السلة من التخزين المحلي
         let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
@@ -305,14 +322,11 @@
             })
             .then(data => {
                 if (data.success) {
-                    showToastMessage(data.message, false);
+                    // Show beautiful success modal
+                    showOrderSuccessModal(data.order?.order_number, data.message);
                     cartItems = [];
                     saveCart();
                     renderCart();
-                    
-                    setTimeout(() => {
-                        window.location.href = '{{ route('customer.order_history', [], false) }}';
-                    }, 2000);
                 } else {
                     showToastMessage(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء الطلب' : 'Error occurred'), true);
                     checkoutBtn.innerText = originalText;
@@ -350,8 +364,48 @@
         // تحميل البداية
         updateUILanguage();
         renderCart();
-    </script>
 
-    <!-- أيقونات Fontawesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-@endsection
+        // ========== Order Success Modal Functions ==========
+        function showOrderSuccessModal(orderNumber, message) {
+            const modal = document.getElementById('order-success-modal');
+            const content = document.getElementById('modal-content');
+            if (orderNumber) {
+                document.getElementById('order-number').innerText = orderNumber;
+            }
+            if (message) {
+                document.getElementById('order-modal-message').innerText = message;
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Trigger animation
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeOrderSuccessModal() {
+            const modal = document.getElementById('order-success-modal');
+            const content = document.getElementById('modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                // Redirect to order history after modal closes
+                window.location.href = '{{ route('customer.order_history', [], false) }}';
+            }, 300);
+        }
+
+        // ========== Toast Functions ==========
+        function showToastMessage(msg, isError = false) {
+            const toast = document.getElementById('cart-toast');
+            toast.innerText = msg;
+            toast.style.background = isError ? '#dc2626' : '#1f2937';
+            toast.classList.remove('opacity-0', 'translate-y-10');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-10');
+            }, 3000);
+        }
