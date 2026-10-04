@@ -16,7 +16,7 @@
                     <p id="user-doc" class="text-white/70 text-sm mt-2">{{ $customer->username ?? '' }}</p>
                 </div>
                 <div>
-                    @if($customer->avatar)
+                    @if($customer && $customer->avatar)
                         <img src="{{ asset('uploads/customers/' . $customer->avatar) }}" alt="Avatar" class="w-24 h-24 mx-auto rounded-full object-cover shadow-lg">
                     @else
                         <i class="fas fa-user-circle text-5xl text-white/60"></i>
