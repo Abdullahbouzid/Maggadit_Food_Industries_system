@@ -76,9 +76,9 @@
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
     <!-- Beautiful Success Modal for Order Completion -->
-    <div id="order-success-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
-        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+    <div id="order-success-modal" class="fixed inset-0 z-[99999] hidden items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/80"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content" style="z-index: 100000;">
             <div class="p-8 text-center">
                 <div class="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
                     <i class="fas fa-check text-3xl text-white"></i>
@@ -93,9 +93,9 @@
     </div>
 
     <!-- Centered Error Popup for Checkout Failure -->
-    <div id="checkout-error-popup" class="fixed inset-0 z-[10000] hidden items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
-        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="error-modal-content">
+    <div id="checkout-error-popup" class="fixed inset-0 z-[99999] hidden items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/80"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="error-modal-content" style="z-index: 100000;">
             <div class="p-8 text-center">
                 <div class="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-red-400 to-rose-500 rounded-full flex items-center justify-center shadow-lg">
                     <i class="fas fa-times text-3xl text-white"></i>

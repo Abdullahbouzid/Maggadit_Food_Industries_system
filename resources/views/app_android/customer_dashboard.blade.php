@@ -246,8 +246,8 @@
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
     <!-- Centered popup for Add to Cart confirmation -->
-    <div id="add-success-popup" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-xs w-full mx-4 text-center transform transition-all duration-300 scale-90">
+    <div id="add-success-popup" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-xs w-full mx-4 text-center transform transition-all duration-300 scale-90" style="z-index: 100000;">
             <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-4xl shadow-lg">
                 <i class="fas fa-check text-white"></i>
             </div>
@@ -277,15 +277,16 @@
             const msgEl = document.getElementById('add-success-msg');
             if (!popup || !msgEl) return;
             msgEl.innerText = msg;
-            popup.classList.remove('opacity-0');
+            popup.classList.remove('opacity-0', 'pointer-events-none');
             popup.classList.add('opacity-100');
-            popup.querySelector('.bg-white').classList.remove('scale-90');
-            popup.querySelector('.bg-white').classList.add('scale-100');
+            const inner = popup.querySelector('.bg-white');
+            inner.classList.remove('scale-90');
+            inner.classList.add('scale-100');
             setTimeout(() => {
                 popup.classList.remove('opacity-100');
-                popup.classList.add('opacity-0');
-                popup.querySelector('.bg-white').classList.remove('scale-100');
-                popup.querySelector('.bg-white').classList.add('scale-90');
+                popup.classList.add('opacity-0', 'pointer-events-none');
+                inner.classList.remove('scale-100');
+                inner.classList.add('scale-90');
             }, 2000);
         }
 
