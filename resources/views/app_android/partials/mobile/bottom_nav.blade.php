@@ -17,7 +17,7 @@
     </a>
 
     <a href="{{ route('customer.cart', [], false) }}" class="nav-item-premium {{ $activeRoute === 'customer.cart' ? 'active' : '' }}" data-nav="cart">
-        <div class="nav-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div class="nav-icon relative"><i class="fas fa-shopping-cart"></i><span id="cart-count-badge" class="hidden absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center leading-none"></span></div>
         <span class="nav-text" id="nav-cart">Cart</span>
         <div class="nav-indicator"></div>
     </a>

@@ -101,6 +101,17 @@
     </div>
 
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
+
+    <!-- Centered popup for Add to Cart confirmation -->
+    <div id="add-success-popup" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-xs w-full mx-4 text-center transform transition-all duration-300 scale-90">
+            <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-4xl shadow-lg">
+                <i class="fas fa-check text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">تمت الإضافة للسلة!</h3>
+            <p id="add-success-msg" class="text-gray-600 text-sm mb-4"></p>
+        </div>
+    </div></div>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -114,6 +125,24 @@
             setTimeout(() => {
                 toast.classList.remove('opacity-100', 'translate-y-0');
                 toast.classList.add('opacity-0', 'translate-y-10');
+            }, 2000);
+        }
+
+        // Show centered popup for Add to Cart confirmation
+        function showAddSuccess(msg) {
+            const popup = document.getElementById('add-success-popup');
+            const msgEl = document.getElementById('add-success-msg');
+            if (!popup || !msgEl) return;
+            msgEl.innerText = msg;
+            popup.classList.remove('opacity-0');
+            popup.classList.add('opacity-100');
+            popup.querySelector('.bg-white').classList.remove('scale-90');
+            popup.querySelector('.bg-white').classList.add('scale-100');
+            setTimeout(() => {
+                popup.classList.remove('opacity-100');
+                popup.classList.add('opacity-0');
+                popup.querySelector('.bg-white').classList.remove('scale-100');
+                popup.querySelector('.bg-white').classList.add('scale-90');
             }, 2000);
         }
         
@@ -148,7 +177,9 @@
                 }
                 
                 localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
-                showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
+                updateCartCount();
+                let displayText = packName ? `${name} (${packName})` : name;
+                showAddSuccess(displayText);
             });
         });
 
@@ -191,6 +222,7 @@
                                                     data-name="${offer.name || offer.title || 'عرض'}" 
                                                     data-price="${offer.new_price || 0}"
                                                     data-image="${offer.image || ''}"
+                                                    data-pack-id="${offer.item_pack_id || offer.itemPack?.id || ''}"
                                                     data-pack-name="${offer.pack_type || ''}"
                                                     data-uom-name="${offer.pack_type || ''}">
                                                 إضافة إلى السلة
@@ -210,16 +242,19 @@
                                     let image = this.getAttribute('data-image');
                                     let packName = this.getAttribute('data-pack-name') || '';
                                     let uomName = this.getAttribute('data-uom-name') || '';
+                                    let packId = this.getAttribute('data-pack-id') || null;
                                     
                                     let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
                                     let existingItemIndex = cartItems.findIndex(item => item.id == id && item.pack_name == packName);
                                     if (existingItemIndex > -1) {
                                         cartItems[existingItemIndex].quantity += 1;
                                     } else {
-                                        cartItems.push({ id, name, pack_name: packName, uom_name: uomName, price, quantity: 1, image, discount: 0 });
+                                        cartItems.push({ id, name, pack_name: packName, uom_name: uomName, price, quantity: 1, image, discount: 0, pack_id: packId });
                                     }
                                     localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
-                                    showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
+                                    updateCartCount();
+                                    let displayText = packName ? `${name} (${packName})` : name;
+                                    showAddSuccess(displayText);
                                 });
                             });
                         }
