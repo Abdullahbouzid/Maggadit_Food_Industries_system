@@ -33,6 +33,34 @@
                         <span id="total-value" class="text-lg font-bold text-purple-600">0.00 ر.س</span>
                     </div>
                 </div>
+
+                {{-- نموذج تفاصيل التوصيل --}}
+                <div id="checkout-form" class="mt-6 space-y-4 hidden">
+                    <h4 class="font-bold text-gray-800 text-base mb-3 flex items-center gap-2">
+                        <i class="fas fa-truck text-purple-600"></i> تفاصيل التوصيل
+                    </h4>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">عنوان التوصيل <span class="text-red-500">*</span></label>
+                        <textarea id="delivery_address" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="العنوان بالتفصيل (شارع، حي، رقم المبنى، الدور، الشقة)" required></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">رقم الهاتف <span class="text-red-500">*</span></label>
+                        <input type="tel" id="delivery_phone" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="05XXXXXXXX" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">موعد التوصيل المفضل (اختياري)</label>
+                        <input type="date" id="scheduled_delivery_date" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">ملاحظات إضافية (اختياري)</label>
+                        <textarea id="notes" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="أي تعليمات خاصة بالتوصيل أو الطلب..."></textarea>
+                    </div>
+                </div>
+
                 <button id="checkout-btn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-3 rounded-xl mt-5 shadow-md transition transform hover:scale-[1.02] active:scale-95">
                     إنشاء الطلبية
                 </button>
@@ -281,10 +309,39 @@
                 return;
             }
 
-            console.log('Checkout button found, proceeding...');
+            const checkoutForm = document.getElementById('checkout-form');
+            const isFormVisible = !checkoutForm.classList.contains('hidden');
+
+            if (!isFormVisible) {
+                // First click: show the form
+                checkoutForm.classList.remove('hidden');
+                checkoutBtn.innerText = currentLang === 'ar' ? 'تأكيد إنشاء الطلبية' : 'Confirm Order';
+                checkoutForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            // Form is visible, validate and submit
+            console.log('Checkout form submitted');
             const originalText = checkoutBtn.innerText;
             checkoutBtn.innerText = currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...';
             checkoutBtn.disabled = true;
+
+            // Validate required fields
+            const deliveryAddress = document.getElementById('delivery_address')?.value?.trim();
+            const deliveryPhone = document.getElementById('delivery_phone')?.value?.trim();
+            
+            if (!deliveryAddress) {
+                showToastMessage(currentLang === 'ar' ? 'يرجى إدخال عنوان التوصيل' : 'Please enter delivery address', true);
+                checkoutBtn.innerText = originalText;
+                checkoutBtn.disabled = false;
+                return;
+            }
+            if (!deliveryPhone) {
+                showToastMessage(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Please enter phone number', true);
+                checkoutBtn.innerText = originalText;
+                checkoutBtn.disabled = false;
+                return;
+            }
 
             const validItems = cartItems.filter(item => item.id && item.price > 0).map(item => ({
                 id: item.id,
@@ -315,6 +372,16 @@
             const checkoutUrl = '{{ route('customer.proxy.checkout_proxy', [], false) }}';
             console.log('Checkout URL:', checkoutUrl);
 
+            // Collect form data
+            const formData = {
+                items: validItems,
+                delivery_address: document.getElementById('delivery_address')?.value?.trim() || '',
+                delivery_phone: document.getElementById('delivery_phone')?.value?.trim() || '',
+                scheduled_delivery_date: document.getElementById('scheduled_delivery_date')?.value || null,
+                notes: document.getElementById('notes')?.value?.trim() || ''
+            };
+            console.log('Form data:', formData);
+
             fetch(checkoutUrl, {
                 method: 'POST',
                 headers: {
@@ -323,7 +390,7 @@
                     'X-Requested-With': 'XMLHttpRequest',
                 },
                 credentials: 'include',
-                body: JSON.stringify({ items: validItems })
+                body: JSON.stringify(formData)
             })
             .then(response => {
                 const contentType = response.headers.get('content-type');
