@@ -281,12 +281,6 @@
                 return;
             }
 
-            const checkoutBtn = document.getElementById('checkout-btn');
-            if (!checkoutBtn) {
-                console.error('Checkout button not found');
-                showToastMessage(currentLang === 'ar' ? 'خطأ: زر الدفع غير موجود' : 'Error: Checkout button not found', true);
-                return;
-            }
             console.log('Checkout button found, proceeding...');
             const originalText = checkoutBtn.innerText;
             checkoutBtn.innerText = currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...';
