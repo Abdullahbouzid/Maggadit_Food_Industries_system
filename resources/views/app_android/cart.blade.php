@@ -418,12 +418,17 @@
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     return response.text().then(text => {
-                        throw new Error('Invalid response from server');
+                        throw new Error('استجابة غير صالحة من الخادم: ' + text.substring(0, 200));
                     });
                 }
-                return response.json();
+                return response.json().then(data => {
+                    if (!response.ok && !data.success) {
+                        throw new Error(data.message || 'فشل الطلب برمز ' + response.status);
+                    }
+                    return data;
+                });
             })
-             .then(data => {
+            .then(data => {
                 if (data.success) {
                     // Show beautiful success modal
                     showOrderSuccessModal(data.order?.order_number, data.message);
@@ -431,16 +436,14 @@
                     saveCart();
                     renderCart();
                 } else {
-                    showCheckoutError(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء إنشاء الطلبية. يرجى المحاولة مرة أخرى' : 'An error occurred while creating the order. Please try again'));
-                    checkoutBtn.innerText = originalText;
-                    checkoutBtn.disabled = false;
+                    showCheckoutError(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء إنشاء الطلوية. يرجى المحاولة مرة أخرى' : 'An error occurred while creating the order. Please try again'));
                 }
             })
             .catch(error => {
                 console.error('Checkout error:', error);
-                console.error('Error message:', error.message);
-                console.error('Error stack:', error.stack);
-                showCheckoutError(currentLang === 'ar' ? 'فشل الاتصال بالخادم: ' + error.message : 'Server connection failed: ' + error.message);
+                showCheckoutError(error.message || (currentLang === 'ar' ? 'فشل الاتصال بالخادم' : 'Server connection failed'));
+            })
+            .finally(() => {
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
             });
