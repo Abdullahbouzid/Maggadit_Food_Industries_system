@@ -42,12 +42,12 @@
                     
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">عنوان التوصيل <span class="text-red-500">*</span></label>
-                        <textarea id="delivery_address" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="العنوان بالتفصيل (شارع، حي، رقم المبنى، الدور، الشقة)" required></textarea>
+                        <textarea id="delivery_address" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" dir="auto" placeholder="العنوان بالتفصيل (شارع، حي، رقم المبنى، الدور، الشقة)" required></textarea>
                     </div>
                     
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">رقم الهاتف <span class="text-red-500">*</span></label>
-                        <input type="tel" id="delivery_phone" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="05XXXXXXXX" required>
+                        <input type="text" inputmode="tel" id="delivery_phone" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" dir="auto" placeholder="05XXXXXXXX" required>
                     </div>
                     
                     <div>
@@ -57,7 +57,7 @@
                     
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">ملاحظات إضافية (اختياري)</label>
-                        <textarea id="notes" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="أي تعليمات خاصة بالتوصيل أو الطلب..."></textarea>
+                        <textarea id="notes" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" dir="auto" placeholder="أي تعليمات خاصة بالتوصيل أو الطلب..."></textarea>
                     </div>
                 </div>
 
@@ -310,6 +310,11 @@
             }
 
             const checkoutForm = document.getElementById('checkout-form');
+            if (!checkoutForm) {
+                console.error('Checkout form NOT found in DOM!');
+                showToastMessage(currentLang === 'ar' ? 'خطأ: نموذج الدفع غير موجود' : 'Error: Checkout form not found', true);
+                return;
+            }
             const isFormVisible = !checkoutForm.classList.contains('hidden');
 
             if (!isFormVisible) {
