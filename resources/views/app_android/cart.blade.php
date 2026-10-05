@@ -76,8 +76,8 @@
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
     <!-- Beautiful Success Modal for Order Completion -->
-    <div id="order-success-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div id="order-success-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
         <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
             <div class="p-8 text-center">
                 <div class="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
@@ -87,6 +87,23 @@
                 <p class="text-gray-600 mb-6" id="order-modal-message">رقم الطلبية: <span id="order-number" class="font-bold text-purple-700"></span></p>
                 <button onclick="closeOrderSuccessModal()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition hover:from-purple-700 hover:to-indigo-800 active:scale-[0.98]">
                     <i class="fas fa-check-circle ml-2"></i> عرض الطلبيات
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centered Error Popup for Checkout Failure -->
+    <div id="checkout-error-popup" class="fixed inset-0 z-[10000] hidden items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="error-modal-content">
+            <div class="p-8 text-center">
+                <div class="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-red-400 to-rose-500 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-times text-3xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">فشل إنشاء الطلبية</h3>
+                <p id="error-modal-message" class="text-gray-600 mb-6"></p>
+                <button onclick="closeCheckoutErrorPopup()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition hover:from-purple-700 hover:to-indigo-800 active:scale-[0.98]">
+                    <i class="fas fa-redo ml-2"></i>حاول مرة أخرى
                 </button>
             </div>
         </div>
@@ -305,14 +322,14 @@
         checkoutBtn?.addEventListener('click', () => {
             console.log('Checkout button clicked');
             if (cartItems.length === 0) {
-                showToastMessage(currentLang === 'ar' ? 'السلة فارغة' : 'Cart is empty', true);
+                showCheckoutError(currentLang === 'ar' ? 'السلة فارغة' : 'Cart is empty');
                 return;
             }
 
             const checkoutForm = document.getElementById('checkout-form');
             if (!checkoutForm) {
                 console.error('Checkout form NOT found in DOM!');
-                showToastMessage(currentLang === 'ar' ? 'خطأ: نموذج الدفع غير موجود' : 'Error: Checkout form not found', true);
+                showCheckoutError(currentLang === 'ar' ? 'خطأ: نموذج الدفع غير موجود' : 'Error: Checkout form not found');
                 return;
             }
             const isFormVisible = !checkoutForm.classList.contains('hidden');
@@ -336,13 +353,13 @@
             const deliveryPhone = document.getElementById('delivery_phone')?.value?.trim();
             
             if (!deliveryAddress) {
-                showToastMessage(currentLang === 'ar' ? 'يرجى إدخال عنوان التوصيل' : 'Please enter delivery address', true);
+                showCheckoutError(currentLang === 'ar' ? 'يرجى إدخال عنوان التوصيل' : 'Please enter delivery address');
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
                 return;
             }
             if (!deliveryPhone) {
-                showToastMessage(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Please enter phone number', true);
+                showCheckoutError(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Please enter phone number');
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
                 return;
@@ -358,7 +375,7 @@
             }));
             console.log('Valid items:', validItems);
             if (validItems.length === 0) {
-                showToastMessage(currentLang === 'ar' ? 'لا توجد منتجات صالحة في السلة' : 'No valid items in cart', true);
+                showCheckoutError(currentLang === 'ar' ? 'لا توجد منتجات صالحة في السلة' : 'No valid items in cart');
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
                 return;
@@ -406,7 +423,7 @@
                 }
                 return response.json();
             })
-            .then(data => {
+             .then(data => {
                 if (data.success) {
                     // Show beautiful success modal
                     showOrderSuccessModal(data.order?.order_number, data.message);
@@ -414,7 +431,7 @@
                     saveCart();
                     renderCart();
                 } else {
-                    showToastMessage(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء الطلب' : 'Error occurred'), true);
+                    showCheckoutError(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء إنشاء الطلبية. يرجى المحاولة مرة أخرى' : 'An error occurred while creating the order. Please try again'));
                     checkoutBtn.innerText = originalText;
                     checkoutBtn.disabled = false;
                 }
@@ -423,7 +440,7 @@
                 console.error('Checkout error:', error);
                 console.error('Error message:', error.message);
                 console.error('Error stack:', error.stack);
-                showToastMessage(currentLang === 'ar' ? 'حدث خطأ في الاتصال: ' + error.message : 'Connection error: ' + error.message, true);
+                showCheckoutError(currentLang === 'ar' ? 'فشل الاتصال بالخادم: ' + error.message : 'Server connection failed: ' + error.message);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
             });
@@ -482,6 +499,32 @@
                 modal.classList.remove('flex');
                 // Redirect to order history after modal closes
                 window.location.href = '{{ route('customer.order_history', [], false) }}';
+            }, 300);
+        }
+
+        // ========== Checkout Error Popup Functions ==========
+        function showCheckoutError(message) {
+            const popup = document.getElementById('checkout-error-popup');
+            const modalContent = document.getElementById('error-modal-content');
+            const msgEl = document.getElementById('error-modal-message');
+            if (!popup || !modalContent || !msgEl) return;
+            msgEl.innerText = message;
+            popup.classList.remove('hidden');
+            popup.classList.add('flex');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeCheckoutErrorPopup() {
+            const popup = document.getElementById('checkout-error-popup');
+            const modalContent = document.getElementById('error-modal-content');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                popup.classList.add('hidden');
+                popup.classList.remove('flex');
             }, 300);
         }
 
