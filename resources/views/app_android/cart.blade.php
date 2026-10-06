@@ -92,19 +92,23 @@
         </div>
     </div>
 
-    <!-- Centered Error Popup for Checkout Failure -->
-    <div id="checkout-error-popup" class="fixed inset-0 z-[99999] hidden items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/80"></div>
-        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="error-modal-content" style="z-index: 100000;">
-            <div class="p-8 text-center">
-                <div class="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-red-400 to-rose-500 rounded-full flex items-center justify-center shadow-lg">
-                    <i class="fas fa-times text-3xl text-white"></i>
+    <!-- Centered Error Popup for Checkout Failure (matches logout modal style) -->
+    <div id="checkout-error-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[99999] opacity-0 pointer-events-none transition-opacity duration-300" style="direction: rtl;">
+        <div class="bg-white rounded-2xl w-80 max-w-[85%] p-6 transform scale-95 transition-all duration-300 shadow-2xl" id="error-modal-content" style="z-index: 100000;">
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-times text-red-600 text-2xl"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">فشل إنشاء الطلبية</h3>
-                <p id="error-modal-message" class="text-gray-600 mb-6"></p>
-                <button onclick="closeCheckoutErrorPopup()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition hover:from-purple-700 hover:to-indigo-800 active:scale-[0.98]">
-                    <i class="fas fa-redo ml-2"></i>حاول مرة أخرى
-                </button>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">فشل إنشار الطلوية</h3>
+                <p id="error-modal-message" class="text-gray-500 text-sm mb-6"></p>
+                <div class="flex gap-3">
+                    <button onclick="closeCheckoutErrorPopup()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl transition">
+                        إغلاق
+                    </button>
+                    <button onclick="retryCheckout()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 rounded-xl transition">
+                        <i class="fas fa-redo ml-1"></i>إعادة المحاولة
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -366,9 +370,9 @@
             }
 
             const validItems = cartItems.filter(item => item.id && item.price > 0).map(item => ({
-                id: item.id,
-                quantity: item.quantity,
-                pack_id: item.pack_id || null,
+                id: parseInt(item.id),
+                quantity: parseInt(item.quantity) || 1,
+                pack_id: item.pack_id ? parseInt(item.pack_id) : null,
                 pack_name: item.pack_name || '',
                 uom_name: item.uom_name || '',
                 name: item.name || item.name_ar || item.name_en || ''
@@ -404,7 +408,12 @@
             };
             console.log('Form data:', formData);
 
-            fetch(checkoutUrl, {
+            // Set a timeout on the fetch to prevent indefinite processing
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('انتهى الوقت المخصص للطلب (30 seconds)')), 30000);
+            });
+
+            const fetchPromise = fetch(checkoutUrl, {
                 method: 'POST',
                 headers: {
                     ...headers,
@@ -413,7 +422,9 @@
                 },
                 credentials: 'include',
                 body: JSON.stringify(formData)
-            })
+            });
+
+            Promise.race([fetchPromise, timeoutPromise])
             .then(response => {
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
@@ -441,7 +452,9 @@
             })
             .catch(error => {
                 console.error('Checkout error:', error);
-                showCheckoutError(error.message || (currentLang === 'ar' ? 'فشل الاتصال بالخادم' : 'Server connection failed'));
+                let errorMsg = error.message || (currentLang === 'ar' ? 'فشل الاتصال بالخادم' : 'Server connection failed');
+                errorMsg = errorMsg.replace(/<!DOCTYPE[\s\S]*$/i, '').trim();
+                showCheckoutError(errorMsg);
             })
             .finally(() => {
                 checkoutBtn.innerText = originalText;
@@ -512,8 +525,8 @@
             const msgEl = document.getElementById('error-modal-message');
             if (!popup || !modalContent || !msgEl) return;
             msgEl.innerText = message;
-            popup.classList.remove('hidden');
-            popup.classList.add('flex');
+            popup.classList.remove('opacity-0', 'pointer-events-none');
+            popup.classList.add('opacity-100');
             setTimeout(() => {
                 modalContent.classList.remove('scale-95', 'opacity-0');
                 modalContent.classList.add('scale-100', 'opacity-100');
@@ -526,8 +539,16 @@
             modalContent.classList.remove('scale-100', 'opacity-100');
             modalContent.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
-                popup.classList.add('hidden');
-                popup.classList.remove('flex');
+                popup.classList.remove('opacity-100');
+                popup.classList.add('opacity-0', 'pointer-events-none');
+            }, 300);
+        }
+
+        function retryCheckout() {
+            closeCheckoutErrorPopup();
+            setTimeout(() => {
+                const btn = document.getElementById('checkout-btn');
+                if (btn) btn.click();
             }, 300);
         }
 

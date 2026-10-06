@@ -99,17 +99,25 @@ class OrderService implements OrderServiceInterface
                     ?? throw new ItemNotFoundException(itemId: $itemData['item_id']);
 
                 $itemPack = null;
-                if (isset($itemData['item_pack_id'])) {
+                if (isset($itemData['item_pack_id']) && $itemData['item_pack_id']) {
                     $itemPack = ItemPack::find($itemData['item_pack_id']);
                     if (!$itemPack) {
                         throw new ItemNotFoundException(itemId: $itemData['item_id'], itemPackId: $itemData['item_pack_id']);
+                    }
+                } elseif (!isset($itemData['item_pack_id']) || !$itemData['item_pack_id']) {
+                    // Fallback: use the default pack for the item when none is specified
+                    $itemPack = ItemPack::where('item_id', $item->id)
+                        ->where('is_default_pack', true)
+                        ->first();
+                    if (!$itemPack) {
+                        $itemPack = ItemPack::where('item_id', $item->id)->first();
                     }
                 }
 
                 $availability = $inventoryService->checkAvailability(
                     itemId: $item->id,
                     warehouseId: $warehouse->id,
-                    itemPackId: $itemData['item_pack_id'] ? (int) $itemData['item_pack_id'] : null,
+                    itemPackId: $itemPack?->id,
                 );
 
                 if ($availability->available <= 0) {

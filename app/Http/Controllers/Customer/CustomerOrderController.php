@@ -211,7 +211,7 @@ class CustomerOrderController extends Controller
             } else {
                 $meta = $this->stepPresenter->currentStatusMeta($order);
                 $progress = $this->stepPresenter->progress($order);
-                $quotation = $order->quotation ?? null;
+                $quotation = $order->quotation?->first() ?? null;
                 $invoice = $order->invoices->first() ?? null;
                 $canRespond = $this->canRespondToQuotation($order);
             }

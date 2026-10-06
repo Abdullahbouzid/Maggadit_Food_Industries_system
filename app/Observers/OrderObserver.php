@@ -10,6 +10,12 @@ use App\Models\User;
 
 class OrderObserver
 {
+    private function resolveAuditUser(): ?int
+    {
+        $user = request()->user();
+        return $user instanceof User ? $user->id : null;
+    }
+
     public function created(Order $order): void
     {
         \App\Events\OrderCreated::dispatch($order, null);
@@ -20,7 +26,7 @@ class OrderObserver
             'event' => 'created',
             'old_values' => null,
             'new_values' => $order->toArray(),
-            'user_id' => request()->user()?->id,
+            'user_id' => $this->resolveAuditUser(),
             'user_type' => 'user',
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -39,7 +45,7 @@ class OrderObserver
             'event' => 'updated',
             'old_values' => $original,
             'new_values' => $changes,
-            'user_id' => request()->user()?->id,
+            'user_id' => $this->resolveAuditUser(),
             'user_type' => 'user',
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -54,7 +60,7 @@ class OrderObserver
             'event' => 'deleted',
             'old_values' => $order->toArray(),
             'new_values' => null,
-            'user_id' => request()->user()?->id,
+            'user_id' => $this->resolveAuditUser(),
             'user_type' => 'user',
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
