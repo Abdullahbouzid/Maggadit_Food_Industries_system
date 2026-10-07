@@ -115,8 +115,9 @@
                         $productName = is_array($product) ? ($product['name'] ?? 'منتج') : ($product->name ?? $product->name_en ?? 'منتج');
                         $productImage = is_array($product) ? ($product['image'] ?? '') : ($product->image ?? '');
                         $productPrice = is_array($product) ? ($product['price'] ?? 0) : ($product->price ?? 0);
-                        $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
-                   @endphp
+                         $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
+                         $packId = is_array($product) ? ($product['pack_id'] ?? null) : null;
+                    @endphp
                     <a href="{{ route('customer.product.show', $productId, false) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer">
                         @if($packName)
                             <div class="absolute top-2 right-2 z-10">
@@ -149,8 +150,9 @@
                                         data-name="{{ $productName }}" 
                                         data-price="{{ $productPrice }}"
                                         data-image="{{ $productImage ?? '' }}"
-                                        data-pack-name="{{ $packName }}"
-                                        data-uom-name="">إضافة</button>
+                                data-pack-name="{{ $packName }}"
+                                data-pack-id="{{ $packId ?? '' }}"
+                                data-uom-name="">إضافة</button>
                             </div>
                         </div>
                     </a>
@@ -252,7 +254,7 @@
                 <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
                     <i class="fas fa-check text-green-600 text-2xl"></i>
                 </div>
-                <h3 class="text-lg font-bold text-gray-800 mb-2">تمت الإضافة للسلة!</h3>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">تمت الإضافة بنجاح!</h3>
                 <p id="add-success-msg" class="text-gray-500 text-sm mb-6"></p>
             </div>
         </div>

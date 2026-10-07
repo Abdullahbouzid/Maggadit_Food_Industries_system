@@ -102,14 +102,16 @@
 
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
-    <!-- Centered popup for Add to Cart confirmation -->
-    <div id="add-success-popup" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-xs w-full mx-4 text-center transform transition-all duration-300 scale-90" style="z-index: 100000;">
-            <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-4xl shadow-lg">
-                <i class="fas fa-check text-white"></i>
+    <!-- Centered popup for Add to Cart confirmation (matches logout modal style) -->
+    <div id="add-success-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[99999] opacity-0 pointer-events-none transition-opacity duration-300" style="direction: rtl;">
+        <div class="bg-white rounded-2xl w-80 max-w-[85%] p-6 transform scale-95 transition-all duration-300 shadow-2xl" style="z-index: 100000;">
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-check text-green-600 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">تمت الإضافة بنجاح!</h3>
+                <p id="add-success-msg" class="text-gray-500 text-sm mb-6"></p>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">تمت الإضافة للسلة!</h3>
-            <p id="add-success-msg" class="text-gray-600 text-sm mb-4"></p>
         </div>
     </div></div>
     
@@ -137,13 +139,13 @@
             popup.classList.remove('opacity-0', 'pointer-events-none');
             popup.classList.add('opacity-100');
             const inner = popup.querySelector('.bg-white');
-            inner.classList.remove('scale-90');
+            inner.classList.remove('scale-95');
             inner.classList.add('scale-100');
             setTimeout(() => {
                 popup.classList.remove('opacity-100');
                 popup.classList.add('opacity-0', 'pointer-events-none');
                 inner.classList.remove('scale-100');
-                inner.classList.add('scale-90');
+                inner.classList.add('scale-95');
             }, 2000);
         }
         
