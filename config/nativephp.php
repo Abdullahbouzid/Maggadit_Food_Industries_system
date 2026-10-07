@@ -79,7 +79,7 @@ return [
     */
 
     //     'start_url' => env('NATIVEPHP_START_URL', '/'),
-    'start_url' => 'https://blue-beaver-923812.hostingersite.com',
+   'start_url' => env('NATIVEPHP_START_URL', '/'),
     /*|--------------------------------------------------------------------------
     | Development Team (iOS)
     |--------------------------------------------------------------------------
