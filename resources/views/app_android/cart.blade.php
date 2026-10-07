@@ -42,12 +42,12 @@
                     
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">عنوان التوصيل <span class="text-red-500">*</span></label>
-                        <textarea id="delivery_address" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" dir="auto" placeholder="العنوان بالتفصيل (شارع، حي، رقم المبنى، الدور، الشقة)" required></textarea>
+                        <textarea id="delivery_address" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="العنوان بالتفصيل (شارع، حي، رقم المبنى، الدور، الشقة)" required></textarea>
                     </div>
                     
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">رقم الهاتف <span class="text-red-500">*</span></label>
-                        <input type="text" inputmode="tel" id="delivery_phone" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" dir="auto" placeholder="05XXXXXXXX" required>
+                        <input type="tel" id="delivery_phone" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="05XXXXXXXX" required>
                     </div>
                     
                     <div>
@@ -57,7 +57,7 @@
                     
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">ملاحظات إضافية (اختياري)</label>
-                        <textarea id="notes" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" dir="auto" placeholder="أي تعليمات خاصة بالتوصيل أو الطلب..."></textarea>
+                        <textarea id="notes" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="أي تعليمات خاصة بالتوصيل أو الطلب..."></textarea>
                     </div>
                 </div>
 
@@ -76,9 +76,9 @@
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
     <!-- Beautiful Success Modal for Order Completion -->
-    <div id="order-success-modal" class="fixed inset-0 z-[99999] hidden items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/80"></div>
-        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content" style="z-index: 100000;">
+    <div id="order-success-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
             <div class="p-8 text-center">
                 <div class="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
                     <i class="fas fa-check text-3xl text-white"></i>
@@ -88,27 +88,6 @@
                 <button onclick="closeOrderSuccessModal()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition hover:from-purple-700 hover:to-indigo-800 active:scale-[0.98]">
                     <i class="fas fa-check-circle ml-2"></i> عرض الطلبيات
                 </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Centered Error Popup for Checkout Failure (matches logout modal style) -->
-    <div id="checkout-error-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[99999] opacity-0 pointer-events-none transition-opacity duration-300" style="direction: rtl;">
-        <div class="bg-white rounded-2xl w-80 max-w-[85%] p-6 transform scale-95 transition-all duration-300 shadow-2xl" id="error-modal-content" style="z-index: 100000;">
-            <div class="text-center">
-                <div class="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-times text-red-600 text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-bold text-gray-800 mb-2">فشل إنشار الطلوية</h3>
-                <p id="error-modal-message" class="text-gray-500 text-sm mb-6"></p>
-                <div class="flex gap-3">
-                    <button onclick="closeCheckoutErrorPopup()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl transition">
-                        إغلاق
-                    </button>
-                    <button onclick="retryCheckout()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 rounded-xl transition">
-                        <i class="fas fa-redo ml-1"></i>إعادة المحاولة
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -326,16 +305,11 @@
         checkoutBtn?.addEventListener('click', () => {
             console.log('Checkout button clicked');
             if (cartItems.length === 0) {
-                showCheckoutError(currentLang === 'ar' ? 'السلة فارغة' : 'Cart is empty');
+                showToastMessage(currentLang === 'ar' ? 'السلة فارغة' : 'Cart is empty', true);
                 return;
             }
 
             const checkoutForm = document.getElementById('checkout-form');
-            if (!checkoutForm) {
-                console.error('Checkout form NOT found in DOM!');
-                showCheckoutError(currentLang === 'ar' ? 'خطأ: نموذج الدفع غير موجود' : 'Error: Checkout form not found');
-                return;
-            }
             const isFormVisible = !checkoutForm.classList.contains('hidden');
 
             if (!isFormVisible) {
@@ -357,29 +331,29 @@
             const deliveryPhone = document.getElementById('delivery_phone')?.value?.trim();
             
             if (!deliveryAddress) {
-                showCheckoutError(currentLang === 'ar' ? 'يرجى إدخال عنوان التوصيل' : 'Please enter delivery address');
+                showToastMessage(currentLang === 'ar' ? 'يرجى إدخال عنوان التوصيل' : 'Please enter delivery address', true);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
                 return;
             }
             if (!deliveryPhone) {
-                showCheckoutError(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Please enter phone number');
+                showToastMessage(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Please enter phone number', true);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
                 return;
             }
 
             const validItems = cartItems.filter(item => item.id && item.price > 0).map(item => ({
-                id: parseInt(item.id),
-                quantity: parseInt(item.quantity) || 1,
-                pack_id: item.pack_id ? parseInt(item.pack_id) : null,
+                id: item.id,
+                quantity: item.quantity,
+                pack_id: item.pack_id || null,
                 pack_name: item.pack_name || '',
                 uom_name: item.uom_name || '',
                 name: item.name || item.name_ar || item.name_en || ''
             }));
             console.log('Valid items:', validItems);
             if (validItems.length === 0) {
-                showCheckoutError(currentLang === 'ar' ? 'لا توجد منتجات صالحة في السلة' : 'No valid items in cart');
+                showToastMessage(currentLang === 'ar' ? 'لا توجد منتجات صالحة في السلة' : 'No valid items in cart', true);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
                 return;
@@ -408,12 +382,7 @@
             };
             console.log('Form data:', formData);
 
-            // Set a timeout on the fetch to prevent indefinite processing
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('انتهى الوقت المخصص للطلب (30 seconds)')), 30000);
-            });
-
-            const fetchPromise = fetch(checkoutUrl, {
+            fetch(checkoutUrl, {
                 method: 'POST',
                 headers: {
                     ...headers,
@@ -422,22 +391,15 @@
                 },
                 credentials: 'include',
                 body: JSON.stringify(formData)
-            });
-
-            Promise.race([fetchPromise, timeoutPromise])
+            })
             .then(response => {
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     return response.text().then(text => {
-                        throw new Error('استجابة غير صالحة من الخادم: ' + text.substring(0, 200));
+                        throw new Error('Invalid response from server');
                     });
                 }
-                return response.json().then(data => {
-                    if (!response.ok && !data.success) {
-                        throw new Error(data.message || 'فشل الطلب برمز ' + response.status);
-                    }
-                    return data;
-                });
+                return response.json();
             })
             .then(data => {
                 if (data.success) {
@@ -447,16 +409,16 @@
                     saveCart();
                     renderCart();
                 } else {
-                    showCheckoutError(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء إنشاء الطلوية. يرجى المحاولة مرة أخرى' : 'An error occurred while creating the order. Please try again'));
+                    showToastMessage(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء الطلب' : 'Error occurred'), true);
+                    checkoutBtn.innerText = originalText;
+                    checkoutBtn.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Checkout error:', error);
-                let errorMsg = error.message || (currentLang === 'ar' ? 'فشل الاتصال بالخادم' : 'Server connection failed');
-                errorMsg = errorMsg.replace(/<!DOCTYPE[\s\S]*$/i, '').trim();
-                showCheckoutError(errorMsg);
-            })
-            .finally(() => {
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                showToastMessage(currentLang === 'ar' ? 'حدث خطأ في الاتصال: ' + error.message : 'Connection error: ' + error.message, true);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
             });
@@ -515,40 +477,6 @@
                 modal.classList.remove('flex');
                 // Redirect to order history after modal closes
                 window.location.href = '{{ route('customer.order_history', [], false) }}';
-            }, 300);
-        }
-
-        // ========== Checkout Error Popup Functions ==========
-        function showCheckoutError(message) {
-            const popup = document.getElementById('checkout-error-popup');
-            const modalContent = document.getElementById('error-modal-content');
-            const msgEl = document.getElementById('error-modal-message');
-            if (!popup || !modalContent || !msgEl) return;
-            msgEl.innerText = message;
-            popup.classList.remove('opacity-0', 'pointer-events-none');
-            popup.classList.add('opacity-100');
-            setTimeout(() => {
-                modalContent.classList.remove('scale-95', 'opacity-0');
-                modalContent.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-        function closeCheckoutErrorPopup() {
-            const popup = document.getElementById('checkout-error-popup');
-            const modalContent = document.getElementById('error-modal-content');
-            modalContent.classList.remove('scale-100', 'opacity-100');
-            modalContent.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                popup.classList.remove('opacity-100');
-                popup.classList.add('opacity-0', 'pointer-events-none');
-            }, 300);
-        }
-
-        function retryCheckout() {
-            closeCheckoutErrorPopup();
-            setTimeout(() => {
-                const btn = document.getElementById('checkout-btn');
-                if (btn) btn.click();
             }, 300);
         }
 

@@ -236,7 +236,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     // هذه المسارات تحل محل استدعاء API المباشر من المتصفح بالتوكن
     // ===================================================================
     Route::prefix('proxy')->name('proxy.')->group(function () {
-        $baseUrl = env('CUSTOMER_API_URL', url('/api'));
+        $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
 
         // جلب قائمة الاستبيانات
         Route::get('/surveys', function () use ($baseUrl) {
@@ -608,105 +608,13 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::post('/checkout', function () use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
-
-            // If baseUrl is local (same app), resolve customer from token and call API directly
-            // to avoid deadlock on single-threaded dev server
-            $isLocal = str_contains($baseUrl, '127.0.0.1') || str_contains($baseUrl, 'localhost') || $baseUrl === rtrim(url('/'), '/') . '/api';
-            if ($isLocal) {
-                $customer = \App\Models\Customer::find(request()->user('sanctum')?->id);
-                if (!$customer) {
-                    $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
-                    if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
-                        $customer = $personalToken->tokenable;
-                    }
-                }
-                if (!$customer) {
-                    return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
-                }
-
-                try {
-                    $order = app(\App\Services\OrderService::class)->create(
-                        customer: $customer,
-                        items: array_map(function ($item) {
-                            return [
-                                'item_id' => $item['id'],
-                                'item_pack_id' => $item['pack_id'] ?? null,
-                                'quantity' => (float) ($item['quantity'] ?? 1),
-                            ];
-                        }, request()->input('items')),
-                        deliveryAddress: request()->input('delivery_address'),
-                        deliveryPhone: request()->input('delivery_phone'),
-                        scheduledDeliveryDate: request()->input('scheduled_delivery_date') ? \Carbon\Carbon::parse(request()->input('scheduled_delivery_date')) : null,
-                        user: null,
-                        warehouseId: null,
-                        currencyId: $customer->priceList?->currency_id,
-                    );
-
-                    $order->load('statusHistory');
-
-                    try {
-                        \App\Services\NotificationService::sendToCustomer($customer, 'order_created', [
-                            'order_number' => $order->order_number,
-                            'total' => $order->total,
-                            'order_id' => $order->id,
-                        ]);
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::warning('Failed to send order notification: ' . $e->getMessage());
-                    }
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'تم إنشاء الطلوية بنجاح',
-                        'order' => [
-                            'id' => $order->id,
-                            'order_number' => $order->order_number,
-                            'status' => $order->status->value,
-                            'status_label' => $order->status->label(),
-                            'total' => (float) $order->total,
-                        ],
-                    ]);
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('Customer checkout failed: '.$e->getMessage());
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'تعذر إنشاء الطلوية. ' . $e->getMessage(),
-                    ], 422);
-                }
-            }
-
             try {
-                $response = Http::withToken($token)->withoutVerifying()->timeout(15)->retry(2, 500)->post("{$baseUrl}/customer/checkout", request()->all());
-
-                $data = $response->json();
-                if (!is_array($data)) {
-                    $bodyText = $response->body();
-                    $bodyText = substr(strip_tags($bodyText), 0, 300);
-                    $data = [
-                        'success' => false,
-                        'message' => $bodyText ?: 'استجابة غير صالحة من الخادم',
-                        'status_code' => $response->status(),
-                    ];
-                }
-
-                if (!$response->ok() && !($data['success'] ?? false)) {
-                    $data['success'] = false;
-                    $data['message'] = $data['message'] ?? 'فشل إنشاع الطلوية - رمز خطأ: ' . $response->status();
-                    $data['status_code'] = $response->status();
-                }
-
-                return response()->json($data, $response->status());
-            } catch (\Illuminate\Http\Client\ConnectionException $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم', 'error_detail' => $e->getMessage()], 503);
+                $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/checkout", request()->all());
+                return response()->json($response->json(), $response->status());
             } catch (Exception $e) {
-                $msg = $e->getMessage();
-                if (preg_match('/HTTP request returned status code \d+/i', $msg)) {
-                    $msg = preg_replace('/<!DOCTYPE[^>]*>.*/s', '', $msg);
-                    $msg = strip_tags($msg);
-                    $msg = trim($msg);
-                }
-                return response()->json(['success' => false, 'message' => 'خطأ في إنشار الطلوية', 'error_detail' => $msg], 500);
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال: ' . $e->getMessage()], 503);
             }
         })->name('checkout_proxy');
 

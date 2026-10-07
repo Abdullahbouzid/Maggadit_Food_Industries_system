@@ -321,24 +321,6 @@
         pullDistance = 0;
     }
     
-    // ========== 6. تحديث عداد السلة ==========
-    function updateCartCount() {
-        const cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
-        const totalCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
-        const badge = document.getElementById('cart-count-badge');
-        if (badge) {
-            if (totalCount > 0) {
-                badge.innerText = totalCount > 99 ? '99+' : totalCount;
-                badge.classList.remove('hidden');
-                badge.classList.add('flex');
-            } else {
-                badge.classList.add('hidden');
-                badge.classList.remove('flex');
-            }
-        }
-    }
-    document.addEventListener('DOMContentLoaded', updateCartCount);
-
     document.body.addEventListener('touchstart', onTouchStart, { passive: false });
     document.body.addEventListener('touchmove', onTouchMove, { passive: false });
     document.body.addEventListener('touchend', onTouchEnd);

@@ -115,9 +115,8 @@
                         $productName = is_array($product) ? ($product['name'] ?? 'منتج') : ($product->name ?? $product->name_en ?? 'منتج');
                         $productImage = is_array($product) ? ($product['image'] ?? '') : ($product->image ?? '');
                         $productPrice = is_array($product) ? ($product['price'] ?? 0) : ($product->price ?? 0);
-                         $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
-                         $packId = is_array($product) ? ($product['pack_id'] ?? null) : null;
-                    @endphp
+                        $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
+                   @endphp
                     <a href="{{ route('customer.product.show', $productId, false) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer">
                         @if($packName)
                             <div class="absolute top-2 right-2 z-10">
@@ -150,9 +149,8 @@
                                         data-name="{{ $productName }}" 
                                         data-price="{{ $productPrice }}"
                                         data-image="{{ $productImage ?? '' }}"
-                                data-pack-name="{{ $packName }}"
-                                data-pack-id="{{ $packId ?? '' }}"
-                                data-uom-name="">إضافة</button>
+                                        data-pack-name="{{ $packName }}"
+                                        data-uom-name="">إضافة</button>
                             </div>
                         </div>
                     </a>
@@ -207,15 +205,12 @@
                                         <span class="text-amber-500">⏰</span>
                                         <span>{{ $offer->end_date ? 'ينتهي: ' . \Carbon\Carbon::parse($offer->end_date)->format('d M Y') : 'عرض مستمر' }}</span>
                                     </div>
-                                <button class="add-to-cart bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition" 
-                                        data-id="{{ $offer->item_id }}" 
-                                        data-name="{{ $offer->name ?? $offer->title ?? 'عرض' }}" 
-                                        data-price="{{ $offer->new_price }}"
-                                        data-image="{{ $offer->image ?? '' }}"
-                                        data-pack-id="{{ $offer->item_pack_id ?? '' }}"
-                                        data-pack-name=""
-                                        data-uom-name="{{ $offer->pack_type ?? '' }}">
-                                    إضافة للسلة
+                                    <button class="add-to-cart bg-purple-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-purple-700 transition" 
+                                            data-id="{{ $offer->item_id }}" 
+                                            data-name="{{ $offer->name ?? $offer->title ?? 'عرض' }}" 
+                                            data-price="{{ $offer->new_price }}"
+                                            data-image="{{ $offer->image ?? '' }}">
+                                        إضافة للسلة
                                 </button>
                             </div>
                         </div>
@@ -244,21 +239,8 @@
        
     </div>
 
-    <!-- Toast container (bottom) -->
+    <!-- Toast container -->
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
-
-    <!-- Centered popup for Add to Cart confirmation (matches logout modal style) -->
-    <div id="add-success-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[99999] opacity-0 pointer-events-none transition-opacity duration-300" style="direction: rtl;">
-        <div class="bg-white rounded-2xl w-80 max-w-[85%] p-6 transform scale-95 transition-all duration-300 shadow-2xl" style="z-index: 100000;">
-            <div class="text-center">
-                <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-check text-green-600 text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-bold text-gray-800 mb-2">تمت الإضافة بنجاح!</h3>
-                <p id="add-success-msg" class="text-gray-500 text-sm mb-6"></p>
-            </div>
-        </div>
-    </div></div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
@@ -275,24 +257,6 @@
                 toast.classList.add('opacity-0', 'translate-y-10');
             }, 2000);
         }
-        // Show centered popup for Add to Cart confirmation
-        function showAddSuccess(msg) {
-            const popup = document.getElementById('add-success-popup');
-            const msgEl = document.getElementById('add-success-msg');
-            if (!popup || !msgEl) return;
-            msgEl.innerText = msg;
-            popup.classList.remove('opacity-0', 'pointer-events-none');
-            popup.classList.add('opacity-100');
-            const inner = popup.querySelector('.bg-white');
-            inner.classList.remove('scale-95');
-            inner.classList.add('scale-100');
-            setTimeout(() => {
-                popup.classList.remove('opacity-100');
-                popup.classList.add('opacity-0', 'pointer-events-none');
-                inner.classList.remove('scale-100');
-                inner.classList.add('scale-95');
-            }, 2000);
-        }
 
         // Event delegation for dynamically loaded add-to-cart buttons
         document.addEventListener('click', function(e) {
@@ -304,7 +268,6 @@
                 let name = btn.getAttribute('data-name');
                 let price = parseFloat(btn.getAttribute('data-price')) || 0;
                 let image = btn.getAttribute('data-image');
-
                 let packName = btn.getAttribute('data-pack-name') || '';
                 let uomName = btn.getAttribute('data-uom-name') || '';
                 let packId = btn.getAttribute('data-pack-id') || null;
@@ -329,9 +292,7 @@
                 }
                 
                 localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
-                updateCartCount();
-                let displayText = packName ? `${name} (${packName})` : name;
-                showAddSuccess(displayText);
+                showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
             }
         });
         // ========== Carousel with Auto-Scroll ==========
