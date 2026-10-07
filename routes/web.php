@@ -611,16 +611,19 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
 
-            // Local checkout — bypass external API
-            $customer = \App\Models\Customer::find(request()->user('sanctum')?->id);
-            if (!$customer) {
+            // Local checkout — match web controller's getCustomer() logic exactly
+            $customer = request()->user('customer') ?: auth()->guard('customer')->user();
+            if (!$customer && $token) {
                 $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
                 if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
                     $customer = $personalToken->tokenable;
                 }
             }
-            if (!$customer && session('customer_id')) {
-                $customer = \App\Models\Customer::find(session('customer_id'));
+            if (!$customer) {
+                $customerId = session('customer_id');
+                if ($customerId) {
+                    $customer = \App\Models\Customer::find($customerId);
+                }
             }
             if (!$customer) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
@@ -638,9 +641,11 @@ Route::prefix('customer')->name('customer.')->group(function () {
             ]);
 
             $items = [];
+            $rejected = [];
             foreach ($validated['items'] as $rawItem) {
                 $item = \App\Models\Item::find($rawItem['id']);
                 if (!$item) {
+                    $rejected[] = ['id' => $rawItem['id'], 'reason' => 'المنتج غير موجود'];
                     continue;
                 }
                 $packId = $rawItem['pack_id'] ?? null;
@@ -655,15 +660,15 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
 
             if (empty($items)) {
-                return response()->json(['success' => false, 'message' => 'لا توجد منتجات صالحة في السلة'], 422);
+                return response()->json(['success' => false, 'message' => 'لا توجد منتجات صالحة في السلة', 'rejected' => $rejected], 422);
             }
 
             try {
                 $order = app(\App\Services\OrderService::class)->create(
                     customer: $customer,
                     items: $items,
-                    deliveryAddress: $validated['delivery_address'] ?? null,
-                    deliveryPhone: $validated['delivery_phone'] ?? null,
+                    deliveryAddress: $validated['delivery_address'] ?? $customer->default_address,
+                    deliveryPhone: $validated['delivery_phone'] ?? $customer->phone,
                     scheduledDeliveryDate: $validated['scheduled_delivery_date'] ? \Carbon\Carbon::parse($validated['scheduled_delivery_date']) : null,
                     user: null,
                     warehouseId: null,
