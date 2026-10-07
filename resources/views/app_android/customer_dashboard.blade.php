@@ -593,7 +593,10 @@
                                                         data-id="${o.item_id || o.id}" 
                                                         data-name="${o.name || o.title || 'عرض'}" 
                                                         data-price="${o.new_price || 0}"
-                                                        data-image="${o.image || ''}">إضافة للسلة</button>
+                                                        data-image="${o.image || ''}"
+                                                        data-pack-id="${o.item_pack_id || ''}"
+                                                        data-pack-name="${o.pack_type || ''}"
+                                                        data-uom-name="${o.pack_type || ''}">إضافة للسلة</button>
                                             </div>
                                         </div>
                                     </div>
