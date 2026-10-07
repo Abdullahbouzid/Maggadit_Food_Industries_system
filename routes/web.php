@@ -645,9 +645,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
 
-            // Local checkout — prioritize Bearer token for API requests (APK/WebView)
+// Local checkout — prioritize Bearer token for API requests (APK/WebView)
             $customer = null;
-            
+
             // 1. Try Sanctum Bearer token first (for APK/WebView API requests)
             if ($token && $token === request()->bearerToken()) {
                 $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
@@ -655,12 +655,18 @@ Route::prefix('customer')->name('customer.')->group(function () {
                     $customer = $personalToken->tokenable;
                 }
             }
-            
+
+            // 1b. If Bearer token provided but not a Sanctum token, try session customer_id
+            // This handles APK with stale token but valid session
+            if (!$customer && request()->bearerToken() && session('customer_id')) {
+                $customer = \App\Models\Customer::find(session('customer_id'));
+            }
+
             // 2. Try session-based guards (for web browser)
             if (!$customer) {
                 $customer = request()->user('customer') ?: auth()->guard('customer')->user();
             }
-            
+
             // 3. Try session-based Sanctum token
             if (!$customer && session('api_token')) {
                 $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken(session('api_token'));
@@ -668,14 +674,24 @@ Route::prefix('customer')->name('customer.')->group(function () {
                     $customer = $personalToken->tokenable;
                 }
             }
-            
+
             // 4. Try session customer_id
             if (!$customer && session('customer_id')) {
                 $customer = \App\Models\Customer::find(session('customer_id'));
             }
             
             if (!$customer) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى',
+                    'error_details' => [
+                        'type' => 'AuthenticationFailed',
+                        'has_bearer_token' => (bool) request()->bearerToken(),
+                        'has_session_customer_id' => (bool) session('customer_id'),
+                        'has_session_api_token' => (bool) session('api_token'),
+                        'bearer_token_matches_session' => (bool) (request()->bearerToken() && session('api_token') && request()->bearerToken() === session('api_token')),
+                    ],
+                ], 401);
             }
 
             $validated = request()->validate([

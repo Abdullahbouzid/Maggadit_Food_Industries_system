@@ -465,11 +465,27 @@
                         if (details.requested !== undefined) detailParts.push('مطلوب: ' + details.requested);
                         if (details.available !== undefined) detailParts.push('متاح: ' + details.available);
                         if (details.warehouse_id !== undefined) detailParts.push('المستودع: ' + details.warehouse_id);
+                        
+                        // Authentication-specific details
+                        if (details.type === 'AuthenticationFailed') {
+                            detailParts.push('---');
+                            detailParts.push('تحليل المصادقة:');
+                            detailParts.push('يوجد توكن Bearer: ' + (details.has_bearer_token ? 'نعم' : 'لا'));
+                            detailParts.push('يوجد customer_id في الجلسة: ' + (details.has_session_customer_id ? 'نعم' : 'لا'));
+                            detailParts.push('يوجد api_token في الجلسة: ' + (details.has_session_api_token ? 'نعم' : 'لا'));
+                            detailParts.push('التوكن يطابق الجلسة: ' + (details.bearer_token_matches_session ? 'نعم' : 'لا'));
+                        }
+                        
                         if (detailParts.length > 0) {
                             errorDetails = '\n\nتفاصيل الخطأ:\n' + detailParts.join('\n');
                         }
                         console.error('Error details:', details);
                     }
+                }
+                
+                // Special handling for auth errors
+                if (error.data && error.data.error_details && error.data.error_details.type === 'AuthenticationFailed') {
+                    errorMsg = 'انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى';
                 }
                 
                 showOrderErrorModal(errorMsg + errorDetails);
