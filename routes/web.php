@@ -232,387 +232,151 @@ Route::prefix('customer')->name('customer.')->group(function () {
     })->name('change_organization');
 
     // ===================================================================
-    // مسارات Proxy للـ APK - تستخدم توكن الجلسة للاتصال بالسيرفر الخارجي
-    // هذه المسارات تحل محل استدعاء API المباشر من المتصفح بالتوكن
+    // مسارات Proxy للـ APK - تستخدم توكن الجلسة للاتصال بالسيرفر
     // ===================================================================
-    Route::prefix('proxy')->name('proxy.')->group(function () {
-        $baseUrl = env('CUSTOMER_API_URL', url('/api'));
+    $baseUrl = env('CUSTOMER_API_URL', url('/api'));
 
-        // جلب قائمة الاستبيانات
-        Route::get('/surveys', function () use ($baseUrl) {
-            $token = session('api_token');
-            if (! $token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+    // Helper: proxy API call — uses internal dispatch when API is on same app, HTTP for remote
+    $proxyApi = function (string $method, string $endpoint, ?string $token = null, array $data = [], array $query = []) use (&$baseUrl) {
+        $isLocal = str_contains($baseUrl, '127.0.0.1') || str_contains($baseUrl, 'localhost') || $baseUrl === rtrim(url('/'), '/') . '/api';
+
+        if ($isLocal) {
+            $uri = "api/customer/{$endpoint}";
+            $queryString = !empty($query) ? '?' . http_build_query($query) : '';
+            $request = \Illuminate\Http\Request::create(
+                url($uri . $queryString),
+                $method,
+                $method === 'GET' ? [] : ($data ?: []),
+                [],
+                [],
+                $token ? [
+                    'HTTP_Authorization' => 'Bearer ' . $token,
+                    'CONTENT_TYPE' => 'application/json',
+                    'HTTP_ACCEPT' => 'application/json',
+                ] : [
+                    'CONTENT_TYPE' => 'application/json',
+                    'HTTP_ACCEPT' => 'application/json',
+                ]
+            );
+            if ($method !== 'GET' && !empty($data)) {
+                $request->setJson(new \Symfony\Component\HttpFoundation\ParameterBag($data));
             }
+
             try {
-                $response = Http::withToken($token)->withoutVerifying()
-                    ->get("{$baseUrl}/customer/surveys");
-
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
-            }
-        })->name('surveys.index');
-
-        // جلب تفاصيل استبيان
-        Route::get('/surveys/{id}', function ($id) use ($baseUrl) {
-            $token = session('api_token');
-            if (! $token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()
-                    ->get("{$baseUrl}/customer/surveys/{$id}");
-
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
-            }
-        })->name('surveys.show');
-
-        // إرسال إجابات استبيان
-        Route::post('/surveys/{id}/respond', function (Request $request, $id) use ($baseUrl) {
-            $token = session('api_token');
-            if (! $token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()
-                    ->post("{$baseUrl}/customer/surveys/{$id}/respond", $request->all());
-
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
-            }
-        })->name('surveys.respond');
-
-        // جلب قائمة المنظمات
-        Route::get('/organizations', function () use ($baseUrl) {
-            $token = session('api_token');
-            if (! $token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()
-                    ->get("{$baseUrl}/customer/organizations");
-
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
-            }
-        })->name('organizations.index');
-
-        // تبديل المنظمة
-        Route::post('/change-organization', function (Request $request) use ($baseUrl) {
-            $token = session('api_token');
-            if (! $token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()
-                    ->post("{$baseUrl}/customer/change-organization", $request->all());
-
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
-            }
-        })->name('organizations.switch');
-
-        // Proxy للمنتجات والعروض والماركات والتصنيفات والمفضلة
-        Route::get('/categories', function () use ($baseUrl) {
-            try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/categories");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('categories');
-
-        Route::get('/brands', function () use ($baseUrl) {
-            try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/brands");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('brands');
-
-        Route::get('/products', function (Request $request) use ($baseUrl) {
-            try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/products", $request->all());
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('products');
-
-        Route::get('/offers', function () use ($baseUrl) {
-            try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/offers");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('offers');
-
-        Route::get('/favorites', function () use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'favorites' => []]);
-            }
-            $cacheKey = 'proxy_favorites_' . md5($token);
-            try {
-                $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($baseUrl, $token) {
-                    $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()->timeout(5)->get("{$baseUrl}/customer/favorites");
-                    return $response->json();
-                });
-                return response()->json($data, 200);
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'favorites' => []], 503);
-            }
-        })->name('favorites');
-
-        Route::get('/favorites/ids', function () use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'ids' => []]);
-            }
-            $cacheKey = 'proxy_favorite_ids_' . md5($token);
-            try {
-                $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($baseUrl, $token) {
-                    $response = \Illuminate\Support\Facades\Http::withToken($token)->withoutVerifying()->timeout(5)->get("{$baseUrl}/customer/favorites/ids");
-                    return $response->json();
-                });
-                return response()->json($data, 200);
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'ids' => []], 503);
-            }
-        })->name('favorites.ids');
-
-        Route::post('/favorites/toggle', function (Request $request) use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/favorites/toggle", $request->all());
-                
-                // Clear cache after successful toggle
-                if ($response->successful()) {
-                    $cacheKey1 = 'proxy_favorites_' . md5($token);
-                    $cacheKey2 = 'proxy_favorite_ids_' . md5($token);
-                    \Illuminate\Support\Facades\Cache::forget($cacheKey1);
-                    \Illuminate\Support\Facades\Cache::forget($cacheKey2);
+                $response = app('router')->dispatch($request);
+                if ($response instanceof \Illuminate\Http\JsonResponse) {
+                    return $response;
                 }
-                
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('favorites.toggle');
+                $content = $response->getContent();
+                $decoded = json_decode($content, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    return response()->json($decoded, $response->getStatusCode());
+                }
+                return response()->json(['success' => false, 'message' => 'خطأ داخلي', 'debug' => substr($content, 0, 100)], $response->getStatusCode());
+            } catch (\Illuminate\Auth\AuthenticationException $e) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
+            } catch (\Throwable $e) {https://blue-beaver-923812.hostingersite.com/customer/dashboard
 
-        Route::get('/faqs', function () use ($baseUrl) {
-            try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/faq");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('faqs');
+مشكلة عدم اظهار المنتجات في سكشن افضل المنتجات 
 
-        Route::get('/categories', function () use ($baseUrl) {
-            try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/categories");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('categories');
+https://blue-beaver-923812.hostingersite.com/customer/contact-us
+نموذج التواصل لا يعمل 
 
-        Route::get('/categories/{id}', function ($id) use ($baseUrl) {
-            try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/categories/{$id}");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('categories.show');
 
-        Route::get('/brands', function () use ($baseUrl) {
-            try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/brands");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('brands');
+https://blue-beaver-923812.hostingersite.com/customer/surveys
+الاستبيانات لا تظهر 
 
-        Route::get('/brands/{id}', function ($id) use ($baseUrl) {
-            try {
-                $response = Http::withoutVerifying()->get("{$baseUrl}/customer/brands/{$id}");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('brands.show');
+https://blue-beaver-923812.hostingersite.com/customer/favorite
+المنتجات المفضلة لا تظهر 
 
-        Route::get('/notifications', function () use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/notifications");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('notifications');
+https://blue-beaver-923812.hostingersite.com/customer/offers
+العروض لا تظهر في واجهة العروض
 
-        Route::get('/financial-statement', function () use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/financial-statement");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('financial_statement');
 
-        Route::get('/orders', function () use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/orders");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('orders');
+https://blue-beaver-923812.hostingersite.com/customer/products
 
-        Route::get('/order/{id}', function ($id) use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/orders/{$id}");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('order_details');
+زر اضافة الى السلة لا يعمل 
 
-        Route::get('/returns', function () use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/returns");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('returns');
+https://blue-beaver-923812.hostingersite.com/customer/dashboard
 
-        Route::get('/my-products', function () use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/my-products");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('my_products');
+مشكلة عدم اظهار المنتجات في سكشن افضل المنتجات 
 
-        Route::post('/contact-us', function () use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/contact-us", request()->all());
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('contact_submit_proxy');
+https://blue-beaver-923812.hostingersite.com/customer/contact-us
+نموذج التواصل لا يعمل 
 
-        Route::get('/product/{id}', function ($id) use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/products/{$id}");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('product_show_proxy');
 
-        Route::get('/order/{id}/pdf', function ($id) use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/orders/{$id}/pdf");
-                return response($response->body(), $response->status())
-                    ->header('Content-Type', $response->header('Content-Type', 'application/pdf'))
-                    ->header('Content-Disposition', $response->header('Content-Disposition'));
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('order_pdf');
+https://blue-beaver-923812.hostingersite.com/customer/surveys
+الاستبيانات لا تظهر 
 
-        Route::get('/order/{id}/invoice-pdf', function ($id) use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/invoices/{$id}/pdf");
-                return response($response->body(), $response->status())
-                    ->header('Content-Type', $response->header('Content-Type', 'application/pdf'))
-                    ->header('Content-Disposition', $response->header('Content-Disposition'));
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('order_invoice_pdf');
+https://blue-beaver-923812.hostingersite.com/customer/favorite
+المنتجات المفضلة لا تظهر 
 
-        Route::get('/order/{id}/quotation-pdf', function ($id) use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/orders/{$id}/quotation-pdf");
-                return response($response->body(), $response->status())
-                    ->header('Content-Type', $response->header('Content-Type', 'application/pdf'))
-                    ->header('Content-Disposition', $response->header('Content-Disposition'));
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('order_quotation_pdf');
+https://blue-beaver-923812.hostingersite.com/customer/offers
+العروض لا تظهر في واجهة العروض
 
-        Route::post('/checkout', function () use ($baseUrl) {
+
+https://blue-beaver-923812.hostingersite.com/customer/products
+
+زر اضافة الى السلة لا يعمل 
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+        }
+
+        $http = $token ? Http::withToken($token)->withoutVerifying() : Http::withoutVerifying();
+        $http->timeout(15);
+        $url = "{$baseUrl}/customer/{$endpoint}";
+        try {
+            if ($method === 'GET') {
+                $response = $http->get($url, $query);
+            } else {
+                $response = $http->post($url, $data);
+            }
+            return response()->json($response->json(), $response->status());
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم'], 503);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+        }
+    };
+
+    Route::prefix('proxy')->name('proxy.')->group(function () use ($proxyApi) {
+        $token = session('api_token');
+
+        Route::get('/surveys', fn() => $proxyApi('GET', 'surveys', $token))->name('surveys.index');
+        Route::get('/surveys/{id}', fn($id) => $proxyApi('GET', "surveys/{$id}", $token))->name('surveys.show');
+        Route::post('/surveys/{id}/respond', fn(Request $r, $id) => $proxyApi('POST', "surveys/{$id}/respond", $token, $r->all()))->name('surveys.respond');
+        Route::get('/organizations', fn() => $proxyApi('GET', 'organizations', $token))->name('organizations.index');
+        Route::post('/change-organization', fn(Request $r) => $proxyApi('POST', 'change-organization', $token, $r->all()))->name('organizations.switch');
+        Route::get('/categories', fn() => $proxyApi('GET', 'categories', null))->name('categories');
+        Route::get('/categories/{id}', fn($id) => $proxyApi('GET', "categories/{$id}", null))->name('categories.show');
+        Route::get('/brands', fn() => $proxyApi('GET', 'brands', null))->name('brands');
+        Route::get('/brands/{id}', fn($id) => $proxyApi('GET', "brands/{$id}", null))->name('brands.show');
+        Route::get('/products', fn(Request $r) => $proxyApi('GET', 'products', null, [], $r->query()))->name('products');
+        Route::get('/offers', fn() => $proxyApi('GET', 'offers', null))->name('offers');
+        Route::get('/favorites', fn(Request $r) => $proxyApi('GET', 'favorites', $token ?: $r->bearerToken()))->name('favorites');
+        Route::get('/favorites/ids', fn(Request $r) => $proxyApi('GET', 'favorites/ids', $token ?: $r->bearerToken()))->name('favorites.ids');
+        Route::post('/favorites/toggle', fn(Request $r) => $proxyApi('POST', 'favorites/toggle', $token ?: $r->bearerToken(), $r->all()))->name('favorites.toggle');
+        Route::get('/faqs', fn() => $proxyApi('GET', 'faq', null))->name('faqs');
+        Route::get('/notifications', fn(Request $r) => $proxyApi('GET', 'notifications', $token ?: $r->bearerToken()))->name('notifications');
+        Route::get('/financial-statement', fn(Request $r) => $proxyApi('GET', 'financial-statement', $token ?: $r->bearerToken()))->name('financial_statement');
+        Route::get('/orders', fn(Request $r) => $proxyApi('GET', 'orders', $token ?: $r->bearerToken()))->name('orders');
+        Route::get('/order/{id}', fn($id, Request $r) => $proxyApi('GET', "orders/{$id}", $token ?: $r->bearerToken()))->name('order_details');
+        Route::get('/order/{id}/pdf', fn($id, Request $r) => $proxyApi('GET', "orders/{$id}/pdf", $token ?: $r->bearerToken()))->name('order_pdf');
+        Route::get('/order/{id}/invoice-pdf', fn($id, Request $r) => $proxyApi('GET', "invoices/{$id}/pdf", $token ?: $r->bearerToken()))->name('order_invoice_pdf');
+        Route::get('/order/{id}/quotation-pdf', fn($id, Request $r) => $proxyApi('GET', "orders/{$id}/quotation-pdf", $token ?: $r->bearerToken()))->name('order_quotation_pdf');
+        Route::get('/returns', fn(Request $r) => $proxyApi('GET', 'returns', $token ?: $r->bearerToken()))->name('returns');
+        Route::get('/my-products', fn(Request $r) => $proxyApi('GET', 'my-products', $token ?: $r->bearerToken()))->name('my_products');
+        Route::post('/contact-us', fn(Request $r) => $proxyApi('POST', 'contact-us', $token ?: $r->bearerToken(), $r->all(), $r->query()))->name('contact_submit_proxy');
+        Route::get('/product/{id}', fn($id, Request $r) => $proxyApi('GET', "products/{$id}", $token ?: $r->bearerToken()))->name('product_show_proxy');
+        Route::get('/dashboard', fn(Request $r) => $proxyApi('GET', 'dashboard', $token ?: $r->bearerToken()))->name('dashboard');
+
+        // Checkout - special handling (uses OrderService directly for local)
+        Route::post('/checkout', function () use ($proxyApi, $baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
             }
 
-            // If baseUrl is local (same app), resolve customer from token and call API directly
-            // to avoid deadlock on single-threaded dev server
             $isLocal = str_contains($baseUrl, '127.0.0.1') || str_contains($baseUrl, 'localhost') || $baseUrl === rtrim(url('/'), '/') . '/api';
             if ($isLocal) {
                 $customer = \App\Models\Customer::find(request()->user('sanctum')?->id);
@@ -709,19 +473,6 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'message' => 'خطأ في إنشار الطلوية', 'error_detail' => $msg], 500);
             }
         })->name('checkout_proxy');
-
-        Route::get('/dashboard', function () use ($baseUrl) {
-            $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
-            try {
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/dashboard");
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
-            }
-        })->name('dashboard');
     });
     Route::get('/privacy-policy', function () {
         $policy = PrivacyPolicy::where('type', 'privacy_policy')
