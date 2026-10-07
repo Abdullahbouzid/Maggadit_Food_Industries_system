@@ -453,13 +453,26 @@
                 console.error('Error stack:', error.stack);
                 
                 let errorMsg = error.message || 'Unknown error';
+                let errorDetails = '';
+                
                 if (!error.isNetworkError && error.data) {
-                    // Server returned structured error with data
                     errorMsg = error.data.message || error.data.error || errorMsg;
+                    if (error.data.error_details) {
+                        const details = error.data.error_details;
+                        const detailParts = [];
+                        if (details.type) detailParts.push('النوع: ' + details.type);
+                        if (details.item_id) detailParts.push('المنتج: ' + details.item_id);
+                        if (details.requested !== undefined) detailParts.push('مطلوب: ' + details.requested);
+                        if (details.available !== undefined) detailParts.push('متاح: ' + details.available);
+                        if (details.warehouse_id !== undefined) detailParts.push('المستودع: ' + details.warehouse_id);
+                        if (detailParts.length > 0) {
+                            errorDetails = '\n\nتفاصيل الخطأ:\n' + detailParts.join('\n');
+                        }
+                        console.error('Error details:', details);
+                    }
                 }
                 
-                // Show error modal with server's exact error message
-                showOrderErrorModal(errorMsg);
+                showOrderErrorModal(errorMsg + errorDetails);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
             });

@@ -740,24 +740,55 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json([
                     'success' => false,
                     'message' => 'بيانات غير مكتملة: ' . $e->getMessage(),
+                    'error_details' => [
+                        'type' => 'ModelNotFoundException',
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                    ],
+                ], 422);
+            } catch (\App\Exceptions\InsufficientStockException $e) {
+                \Illuminate\Support\Facades\Log::error('Customer checkout - Insufficient stock: '.$e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'كمية غير كافية: ' . $e->getMessage(),
+                    'error_details' => [
+                        'type' => 'InsufficientStockException',
+                        'item_id' => $e->itemId,
+                        'requested' => $e->requested,
+                        'available' => $e->available,
+                        'warehouse_id' => $e->warehouseId,
+                    ],
                 ], 422);
             } catch (\Illuminate\Validation\ValidationException $e) {
                 \Illuminate\Support\Facades\Log::error('Customer checkout - Validation error: '.$e->getMessage());
                 return response()->json([
                     'success' => false,
                     'message' => 'بيانات غير صالحة: ' . $e->getMessage(),
+                    'error_details' => [
+                        'type' => 'ValidationException',
+                    ],
                 ], 422);
             } catch (\InvalidArgumentException $e) {
                 \Illuminate\Support\Facades\Log::error('Customer checkout - Invalid argument: '.$e->getMessage());
                 return response()->json([
                     'success' => false,
                     'message' => 'خطأ في البيانات: ' . $e->getMessage(),
+                    'error_details' => [
+                        'type' => 'InvalidArgumentException',
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                    ],
                 ], 422);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('Customer checkout failed: '.get_class($e).' - '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
                 return response()->json([
                     'success' => false,
                     'message' => 'تعذر إنشاء الطلبية: ' . $e->getMessage(),
+                    'error_details' => [
+                        'type' => get_class($e),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                    ],
                 ], 422);
             }
         })->name('checkout_proxy');
