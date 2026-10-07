@@ -90,55 +90,76 @@ Route::post('/mobile/register', function (Request $request) {
         'password' => 'required|string|min:6',
     ]);
 
-    // إرسال طلب التسجيل للاستضافة الحقيقية
     try {
-        $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
+        $customer = Customer::create([
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
-            'password' => $request->password,
-            'password_confirmation' => $request->password, // مهم لتجاوز التحقق confirmed في الاستضافة
+            'password' => Hash::make($request->password),
         ]);
 
-        if ($response->successful()) {
-            $data = $response->json();
-            $remoteUser = $data['customer'];
+        $token = $customer->createToken('mobile-app')->plainTextToken;
+        Auth::guard('customer')->login($customer);
+        $request->session()->regenerate();
+        $request->session()->put('api_token', $token);
+        $request->session()->put('customer_id', $customer->id);
 
-            // إنشاء المستخدم محلياً في الـ APK لمزامنة الجلسة
-            $customer = Customer::create([
-                'name' => $remoteUser['name'],
-                'username' => $remoteUser['username'],
-                'email' => $remoteUser['email'],
-                'password' => Hash::make($request->password),
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $token]);
+        }
+
+        return redirect()->route('customer.dashboard');
+    } catch (\Exception $e) {
+        \Log::error('Local registration failed: ' . $e->getMessage());
+
+        try {
+            $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
+                'name' => $request->name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => $request->password,
+                'password_confirmation' => $request->password,
             ]);
 
-            Auth::guard('customer')->login($customer);
-            $request->session()->regenerate();
-            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
-            $request->session()->put('customer_id', $customer->id); // ربط الجلسة بالعميل المحلي
+            if ($response->successful()) {
+                $data = $response->json();
+                $remoteUser = $data['customer'];
 
-            if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
+                $customer = Customer::updateOrCreate(
+                    ['username' => $remoteUser['username']],
+                    [
+                        'name' => $remoteUser['name'],
+                        'email' => $remoteUser['email'],
+                        'password' => Hash::make($request->password),
+                    ]
+                );
+
+                $token = $data['token'] ?? $customer->createToken('mobile-app')->plainTextToken;
+                Auth::guard('customer')->login($customer);
+                $request->session()->regenerate();
+                $request->session()->put('api_token', $token);
+                $request->session()->put('customer_id', $customer->id);
+
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $token]);
+                }
+
+                return redirect()->route('customer.dashboard');
             }
 
-            return redirect()->route('customer.dashboard');
+            $errors = $response->json('errors') ?? ['error' => ['فشل التسجيل']];
+            if ($request->expectsJson()) {
+                return response()->json(['errors' => $errors], 422);
+            }
+
+            return back()->withErrors($errors);
+            } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['errors' => ['error' => ['فشل الاتصال بالخادم']]], 422);
+            }
+
+            return back()->withErrors(['error' => 'فشل الاتصال بالخادم']);
         }
-
-        // في حال وجود أخطاء تحقق من السيرفر
-        $errors = $response->json('errors') ?? ['error' => ['فشل التسجيل في السيرفر']];
-        if ($request->expectsJson()) {
-            return response()->json(['errors' => $errors], 422);
-        }
-
-        return back()->withErrors($errors);
-
-    } catch (Exception $e) {
-        // خطأ في الاتصال
-        if ($request->expectsJson()) {
-            return response()->json(['errors' => ['error' => ['فشل الاتصال بالسيرفر']]], 422);
-        }
-
-        return back()->withErrors(['error' => 'فشل الاتصال بالسيرفر']);
     }
 })->name('mobile.register.submit');
 
@@ -148,7 +169,28 @@ Route::post('/mobile/login', function (Request $request) {
         'password' => 'required',
     ]);
 
-    // إرسال طلب الدخول للاستضافة الحقيقية
+    try {
+        $customer = Customer::where('username', $request->username)
+            ->orWhere('email', $request->username)
+            ->first();
+
+        if ($customer && Hash::check($request->password, $customer->password)) {
+            $token = $customer->createToken('mobile-app')->plainTextToken;
+            Auth::guard('customer')->login($customer);
+            $request->session()->regenerate();
+            $request->session()->put('api_token', $token);
+            $request->session()->put('customer_id', $customer->id);
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $token]);
+            }
+
+            return redirect()->route('customer.dashboard');
+        }
+    } catch (\Exception $e) {
+        \Log::error('Local login failed: ' . $e->getMessage());
+    }
+
     try {
         $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
             'username' => $request->username,
@@ -159,7 +201,6 @@ Route::post('/mobile/login', function (Request $request) {
             $data = $response->json();
             $remoteUser = $data['customer'];
 
-            // إنشاء أو تحديث المستخدم محلياً في الـ APK لمزامنة الجلسة
             $customer = Customer::updateOrCreate(
                 ['username' => $remoteUser['username']],
                 [
@@ -169,19 +210,19 @@ Route::post('/mobile/login', function (Request $request) {
                 ]
             );
 
+            $token = $data['token'] ?? $customer->createToken('mobile-app')->plainTextToken;
             Auth::guard('customer')->login($customer);
             $request->session()->regenerate();
-            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
-            $request->session()->put('customer_id', $customer->id); // ربط الجلسة بالعميل المحلي
+            $request->session()->put('api_token', $token);
+            $request->session()->put('customer_id', $customer->id);
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
+                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $token]);
             }
 
             return redirect()->route('customer.dashboard');
         }
-    } catch (Exception $e) {
-        // خطأ في الاتصال
+    } catch (\Exception $e) {
     }
 
     if ($request->expectsJson()) {
@@ -275,49 +316,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'message' => 'خطأ داخلي', 'debug' => substr($content, 0, 100)], $response->getStatusCode());
             } catch (\Illuminate\Auth\AuthenticationException $e) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
-            } catch (\Throwable $e) {https://blue-beaver-923812.hostingersite.com/customer/dashboard
-
-مشكلة عدم اظهار المنتجات في سكشن افضل المنتجات 
-
-https://blue-beaver-923812.hostingersite.com/customer/contact-us
-نموذج التواصل لا يعمل 
-
-
-https://blue-beaver-923812.hostingersite.com/customer/surveys
-الاستبيانات لا تظهر 
-
-https://blue-beaver-923812.hostingersite.com/customer/favorite
-المنتجات المفضلة لا تظهر 
-
-https://blue-beaver-923812.hostingersite.com/customer/offers
-العروض لا تظهر في واجهة العروض
-
-
-https://blue-beaver-923812.hostingersite.com/customer/products
-
-زر اضافة الى السلة لا يعمل 
-
-https://blue-beaver-923812.hostingersite.com/customer/dashboard
-
-مشكلة عدم اظهار المنتجات في سكشن افضل المنتجات 
-
-https://blue-beaver-923812.hostingersite.com/customer/contact-us
-نموذج التواصل لا يعمل 
-
-
-https://blue-beaver-923812.hostingersite.com/customer/surveys
-الاستبيانات لا تظهر 
-
-https://blue-beaver-923812.hostingersite.com/customer/favorite
-المنتجات المفضلة لا تظهر 
-
-https://blue-beaver-923812.hostingersite.com/customer/offers
-العروض لا تظهر في واجهة العروض
-
-
-https://blue-beaver-923812.hostingersite.com/customer/products
-
-زر اضافة الى السلة لا يعمل 
+            } catch (\Throwable $e) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
             }
         }
@@ -339,7 +338,7 @@ https://blue-beaver-923812.hostingersite.com/customer/products
         }
     };
 
-    Route::prefix('proxy')->name('proxy.')->group(function () use ($proxyApi) {
+    Route::prefix('proxy')->name('proxy.')->group(function () use ($proxyApi, $baseUrl) {
         $token = session('api_token');
 
         Route::get('/surveys', fn() => $proxyApi('GET', 'surveys', $token))->name('surveys.index');
@@ -385,6 +384,9 @@ https://blue-beaver-923812.hostingersite.com/customer/products
                     if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
                         $customer = $personalToken->tokenable;
                     }
+                }
+                if (!$customer && session('customer_id')) {
+                    $customer = \App\Models\Customer::find(session('customer_id'));
                 }
                 if (!$customer) {
                     return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
@@ -463,7 +465,7 @@ https://blue-beaver-923812.hostingersite.com/customer/products
                 return response()->json($data, $response->status());
             } catch (\Illuminate\Http\Client\ConnectionException $e) {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال بالخادم', 'error_detail' => $e->getMessage()], 503);
-            } catch (Exception $e) {
+        } catch (\Exception $e) {
                 $msg = $e->getMessage();
                 if (preg_match('/HTTP request returned status code \d+/i', $msg)) {
                     $msg = preg_replace('/<!DOCTYPE[^>]*>.*/s', '', $msg);

@@ -14,7 +14,21 @@ use Illuminate\Support\Facades\Session;
 
 trait CustomerAppHelpers
 {
-    private string $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
+    private string $baseUrl;
+
+    private function getBaseUrl(): string
+    {
+        if (!isset($this->baseUrl) || empty($this->baseUrl)) {
+            $appUrl = config('app.url');
+            $envUrl = env('CUSTOMER_API_URL', url('/api'));
+            $this->baseUrl = str_contains($envUrl, '127.0.0.1')
+                || str_contains($envUrl, 'localhost')
+                || $envUrl === rtrim(url('/'), '/') . '/api'
+                    ? url('/api')
+                    : $envUrl;
+        }
+        return $this->baseUrl;
+    }
 
     protected ImagePathService $imagePathService;
 
@@ -106,7 +120,7 @@ trait CustomerAppHelpers
         
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($endpoint, $token, $params) {
             try {
-                $url = "{$this->baseUrl}/{$endpoint}";
+                $url = "{$this->getBaseUrl()}/{$endpoint}";
                 $request = \Illuminate\Support\Facades\Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->timeout(5)->retry(3, 500);
                 if ($token) {
                     $request = $request->withToken($token);
