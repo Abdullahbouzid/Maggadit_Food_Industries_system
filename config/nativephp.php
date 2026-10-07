@@ -7,13 +7,13 @@ return [
     | App Version Name
     |--------------------------------------------------------------------------
     |
-    | This is the human-readable version of your app (e.g. "1.0.0"). It is
+    | This is the human-readable version of your app (e.g. "2.0.0"). It is
     | used as the versionName in Android builds and may be displayed in
     | the app or console to determine the current app release version.
     |
     */
 
-    'version' => env('NATIVEPHP_APP_VERSION', '1.0.0'),
+    'version' => env('NATIVEPHP_APP_VERSION', '2.0.0'),
 
     /*
     |--------------------------------------------------------------------------
@@ -26,7 +26,7 @@ return [
     |
     */
 
-    'version_code' => env('NATIVEPHP_APP_VERSION_CODE', 1),
+    'version_code' => env('NATIVEPHP_APP_VERSION_CODE', 2),
 
     /*
     |--------------------------------------------------------------------------
@@ -78,7 +78,8 @@ return [
     |
     */
 
-    'start_url' => env('NATIVEPHP_START_URL', 'https://blue-beaver-923812.hostingersite.com'),
+    //     'start_url' => env('NATIVEPHP_START_URL', '/'),
+    'start_url' => 'https://blue-beaver-923812.hostingersite.com',
     /*|--------------------------------------------------------------------------
     | Development Team (iOS)
     |--------------------------------------------------------------------------
