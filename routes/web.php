@@ -611,20 +611,35 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
 
-            // Local checkout — match web controller's getCustomer() logic exactly
-            $customer = request()->user('customer') ?: auth()->guard('customer')->user();
-            if (!$customer && $token) {
+            // Local checkout — prioritize Bearer token for API requests (APK/WebView)
+            $customer = null;
+            
+            // 1. Try Sanctum Bearer token first (for APK/WebView API requests)
+            if ($token && $token === request()->bearerToken()) {
                 $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
                 if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
                     $customer = $personalToken->tokenable;
                 }
             }
+            
+            // 2. Try session-based guards (for web browser)
             if (!$customer) {
-                $customerId = session('customer_id');
-                if ($customerId) {
-                    $customer = \App\Models\Customer::find($customerId);
+                $customer = request()->user('customer') ?: auth()->guard('customer')->user();
+            }
+            
+            // 3. Try session-based Sanctum token
+            if (!$customer && session('api_token')) {
+                $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken(session('api_token'));
+                if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
+                    $customer = $personalToken->tokenable;
                 }
             }
+            
+            // 4. Try session customer_id
+            if (!$customer && session('customer_id')) {
+                $customer = \App\Models\Customer::find(session('customer_id'));
+            }
+            
             if (!$customer) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
             }
