@@ -61,6 +61,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,41 +91,40 @@ Route::post('/mobile/register', function (Request $request) {
         'password' => 'required|string|min:6',
     ]);
 
-    // إرسال طلب التسجيل للاستضافة الحقيقية
     try {
         $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
             'password' => $request->password,
-            'password_confirmation' => $request->password, // مهم لتجاوز التحقق confirmed في الاستضافة
+            'password_confirmation' => $request->password,
         ]);
 
         if ($response->successful()) {
             $data = $response->json();
             $remoteUser = $data['customer'];
 
-            // إنشاء المستخدم محلياً في الـ APK لمزامنة الجلسة
+            $token = $data['token'];
             $customer = Customer::create([
                 'name' => $remoteUser['name'],
                 'username' => $remoteUser['username'],
                 'email' => $remoteUser['email'],
                 'password' => Hash::make($request->password),
+                'remember_token' => $token,
             ]);
 
             Auth::guard('customer')->login($customer);
             $request->session()->regenerate();
-            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
-            $request->session()->put('customer_id', $customer->id); // ربط الجلسة بالعميل المحلي
+            $request->session()->put('api_token', $token);
+            $request->session()->put('customer_id', $customer->id);
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
+                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $token]);
             }
 
             return redirect()->route('customer.dashboard');
         }
 
-        // في حال وجود أخطاء تحقق من السيرفر
         $errors = $response->json('errors') ?? ['error' => ['فشل التسجيل في السيرفر']];
         if ($request->expectsJson()) {
             return response()->json(['errors' => $errors], 422);
@@ -133,13 +133,29 @@ Route::post('/mobile/register', function (Request $request) {
         return back()->withErrors($errors);
 
     } catch (Exception $e) {
-        // خطأ في الاتصال
-        if ($request->expectsJson()) {
-            return response()->json(['errors' => ['error' => ['فشل الاتصال بالسيرفر']]], 422);
-        }
-
-        return back()->withErrors(['error' => 'فشل الاتصال بالسيرفر']);
     }
+
+    $customer = Customer::create([
+        'name' => $request->name,
+        'username' => $request->username,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'remember_token' => Str::random(60),
+    ]);
+
+    Auth::guard('customer')->login($customer);
+    $request->session()->regenerate();
+    $token = $customer->createToken('apk-register')->plainTextToken;
+    $customer->remember_token = $token;
+    $customer->save();
+    $request->session()->put('api_token', $token);
+    $request->session()->put('customer_id', $customer->id);
+
+    if ($request->expectsJson()) {
+        return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $customer->remember_token]);
+    }
+
+    return redirect()->route('customer.dashboard');
 })->name('mobile.register.submit');
 
 Route::post('/mobile/login', function (Request $request) {
@@ -148,7 +164,26 @@ Route::post('/mobile/login', function (Request $request) {
         'password' => 'required',
     ]);
 
-    // إرسال طلب الدخول للاستضافة الحقيقية
+    $customer = Customer::where('username', $request->username)
+        ->orWhere('email', $request->username)
+        ->first();
+
+    if ($customer && Hash::check($request->password, $customer->password)) {
+        Auth::guard('customer')->login($customer);
+        $request->session()->regenerate();
+        $token = $customer->createToken('apk')->plainTextToken;
+        $customer->remember_token = $token;
+        $customer->save();
+        $request->session()->put('api_token', $token);
+        $request->session()->put('customer_id', $customer->id);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $token]);
+        }
+
+        return redirect()->route('customer.dashboard');
+    }
+
     try {
         $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
             'username' => $request->username,
@@ -159,20 +194,20 @@ Route::post('/mobile/login', function (Request $request) {
             $data = $response->json();
             $remoteUser = $data['customer'];
 
-            // إنشاء أو تحديث المستخدم محلياً في الـ APK لمزامنة الجلسة
             $customer = Customer::updateOrCreate(
                 ['username' => $remoteUser['username']],
                 [
                     'name' => $remoteUser['name'],
                     'email' => $remoteUser['email'],
                     'password' => Hash::make($request->password),
+                    'remember_token' => $data['token'],
                 ]
             );
 
             Auth::guard('customer')->login($customer);
             $request->session()->regenerate();
-            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
-            $request->session()->put('customer_id', $customer->id); // ربط الجلسة بالعميل المحلي
+            $request->session()->put('api_token', $data['token']);
+            $request->session()->put('customer_id', $customer->id);
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
@@ -181,14 +216,13 @@ Route::post('/mobile/login', function (Request $request) {
             return redirect()->route('customer.dashboard');
         }
     } catch (Exception $e) {
-        // خطأ في الاتصال
     }
 
     if ($request->expectsJson()) {
         return response()->json(['message' => 'فشل الاتصال بالسيرفر أو بيانات خاطئة'], 422);
     }
 
-    return back()->withErrors(['username' => 'بيانات الدخول غير صحيحة أو السيرفر غير متاح.']);
+    return back()->withErrors(['username' => 'بيانات الدخول غير صحيقة أو السيرفر غير متاح.']);
 })->name('mobile.login.submit');
 
 Route::get('/customer/logout', function (Request $request) {
