@@ -610,11 +610,101 @@ Route::prefix('customer')->name('customer.')->group(function () {
             if (!$token) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
+
+            // Local checkout — bypass external API
+            $customer = \App\Models\Customer::find(request()->user('sanctum')?->id);
+            if (!$customer) {
+                $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+                if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
+                    $customer = $personalToken->tokenable;
+                }
+            }
+            if (!$customer && session('customer_id')) {
+                $customer = \App\Models\Customer::find(session('customer_id'));
+            }
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
+            }
+
+            $validated = request()->validate([
+                'items' => 'required|array|min:1',
+                'items.*.id' => 'required|integer',
+                'items.*.quantity' => 'required|numeric|min:0.001',
+                'items.*.pack_id' => 'nullable|integer',
+                'delivery_address' => 'nullable|string|max:500',
+                'delivery_phone' => 'nullable|string|max:30',
+                'scheduled_delivery_date' => 'nullable|date',
+                'notes' => 'nullable|string|max:1000',
+            ]);
+
+            $items = [];
+            foreach ($validated['items'] as $rawItem) {
+                $item = \App\Models\Item::find($rawItem['id']);
+                if (!$item) {
+                    continue;
+                }
+                $packId = $rawItem['pack_id'] ?? null;
+                if ($packId && !\App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
+                    $packId = null;
+                }
+                $items[] = [
+                    'item_id' => $item->id,
+                    'item_pack_id' => $packId,
+                    'quantity' => (float) $rawItem['quantity'],
+                ];
+            }
+
+            if (empty($items)) {
+                return response()->json(['success' => false, 'message' => 'لا توجد منتجات صالحة في السلة'], 422);
+            }
+
             try {
-                $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/checkout", request()->all());
-                return response()->json($response->json(), $response->status());
-            } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال: ' . $e->getMessage()], 503);
+                $order = app(\App\Services\OrderService::class)->create(
+                    customer: $customer,
+                    items: $items,
+                    deliveryAddress: $validated['delivery_address'] ?? null,
+                    deliveryPhone: $validated['delivery_phone'] ?? null,
+                    scheduledDeliveryDate: $validated['scheduled_delivery_date'] ? \Carbon\Carbon::parse($validated['scheduled_delivery_date']) : null,
+                    user: null,
+                    warehouseId: null,
+                    currencyId: $customer->priceList?->currency_id,
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم إنشاء الطلبية بنجاح',
+                    'order' => [
+                        'id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'status' => $order->status->value,
+                        'status_label' => $order->status->label(),
+                        'total' => (float) $order->total,
+                    ],
+                ]);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                \Illuminate\Support\Facades\Log::error('Customer checkout - Model not found: '.$e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'بيانات غير مكتملة: ' . $e->getMessage(),
+                ], 422);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                \Illuminate\Support\Facades\Log::error('Customer checkout - Validation error: '.$e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'بيانات غير صالحة: ' . $e->getMessage(),
+                ], 422);
+            } catch (\InvalidArgumentException $e) {
+                \Illuminate\Support\Facades\Log::error('Customer checkout - Invalid argument: '.$e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'خطأ في البيانات: ' . $e->getMessage(),
+                ], 422);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Customer checkout failed: '.get_class($e).' - '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'تعذر إنشاء الطلبية: ' . $e->getMessage(),
+                ], 422);
             }
         })->name('checkout_proxy');
 

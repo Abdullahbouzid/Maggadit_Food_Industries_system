@@ -396,10 +396,16 @@
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     return response.text().then(text => {
-                        throw new Error('Invalid response from server');
+                        throw { message: text || 'Invalid response from server', isNetworkError: true };
                     });
                 }
-                return response.json();
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        // Server returned error status with JSON
+                        throw { message: data.message || data.error || 'Server error', data: data, isNetworkError: false };
+                    }
+                    return data;
+                });
             })
             .then(data => {
                 if (data.success) {
@@ -417,8 +423,19 @@
             .catch(error => {
                 console.error('Checkout error:', error);
                 console.error('Error message:', error.message);
+                console.error('Error data:', error.data);
                 console.error('Error stack:', error.stack);
-                showToastMessage(currentLang === 'ar' ? 'حدث خطأ في الاتصال: ' + error.message : 'Connection error: ' + error.message, true);
+                
+                let errorMsg = error.message || 'Unknown error';
+                if (!error.isNetworkError && error.data) {
+                    // Server returned structured error with data
+                    errorMsg = error.data.message || error.data.error || errorMsg;
+                }
+                
+                showToastMessage(
+                    (currentLang === 'ar' ? '❌ ' : '❌ ') + errorMsg, 
+                    true
+                );
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
             });
