@@ -639,173 +639,181 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('order_quotation_pdf');
 
-        Route::post('/checkout', function () use ($baseUrl) {
+Route::post('/checkout', function () use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
 
-// Local checkout — prioritize Bearer token for API requests (APK/WebView)
-            $customer = null;
-
-            // 1. Try Sanctum Bearer token first (for APK/WebView API requests)
-            if ($token && $token === request()->bearerToken()) {
-                $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
-                if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
-                    $customer = $personalToken->tokenable;
-                }
-            }
-
-            // 1b. If Bearer token provided but not a Sanctum token, try session customer_id
-            // This handles APK with stale token but valid session
-            if (!$customer && request()->bearerToken() && session('customer_id')) {
-                $customer = \App\Models\Customer::find(session('customer_id'));
-            }
-
-            // 2. Try session-based guards (for web browser)
-            if (!$customer) {
-                $customer = request()->user('customer') ?: auth()->guard('customer')->user();
-            }
-
-            // 3. Try session-based Sanctum token
-            if (!$customer && session('api_token')) {
-                $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken(session('api_token'));
-                if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
-                    $customer = $personalToken->tokenable;
-                }
-            }
-
-            // 4. Try session customer_id
-            if (!$customer && session('customer_id')) {
-                $customer = \App\Models\Customer::find(session('customer_id'));
-            }
-            
-            if (!$customer) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى',
-                    'error_details' => [
-                        'type' => 'AuthenticationFailed',
-                        'has_bearer_token' => (bool) request()->bearerToken(),
-                        'has_session_customer_id' => (bool) session('customer_id'),
-                        'has_session_api_token' => (bool) session('api_token'),
-                        'bearer_token_matches_session' => (bool) (request()->bearerToken() && session('api_token') && request()->bearerToken() === session('api_token')),
-                    ],
-                ], 401);
-            }
-
-            $validated = request()->validate([
-                'items' => 'required|array|min:1',
-                'items.*.id' => 'required|integer',
-                'items.*.quantity' => 'required|numeric|min:0.001',
-                'items.*.pack_id' => 'nullable|integer',
-                'delivery_address' => 'nullable|string|max:500',
-                'delivery_phone' => 'nullable|string|max:30',
-                'scheduled_delivery_date' => 'nullable|date',
-                'notes' => 'nullable|string|max:1000',
-            ]);
-
-            $items = [];
-            $rejected = [];
-            foreach ($validated['items'] as $rawItem) {
-                $item = \App\Models\Item::find($rawItem['id']);
-                if (!$item) {
-                    $rejected[] = ['id' => $rawItem['id'], 'reason' => 'المنتج غير موجود'];
-                    continue;
-                }
-                $packId = $rawItem['pack_id'] ?? null;
-                if ($packId && !\App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
-                    $packId = null;
-                }
-                $items[] = [
-                    'item_id' => $item->id,
-                    'item_pack_id' => $packId,
-                    'quantity' => (float) $rawItem['quantity'],
-                ];
-            }
-
-            if (empty($items)) {
-                return response()->json(['success' => false, 'message' => 'لا توجد منتجات صالحة في السلة', 'rejected' => $rejected], 422);
-            }
-
+            // Forward to external API (like contact-us proxy)
             try {
-                $order = app(\App\Services\OrderService::class)->create(
-                    customer: $customer,
-                    items: $items,
-                    deliveryAddress: $validated['delivery_address'] ?? $customer->default_address,
-                    deliveryPhone: $validated['delivery_phone'] ?? $customer->phone,
-                    scheduledDeliveryDate: $validated['scheduled_delivery_date'] ? \Carbon\Carbon::parse($validated['scheduled_delivery_date']) : null,
-                    user: null,
-                    warehouseId: null,
-                    currencyId: $customer->priceList?->currency_id,
-                );
+                $response = Http::withToken($token)
+                    ->withoutVerifying()
+                    ->timeout(30)
+                    ->post("{$baseUrl}/customer/checkout", request()->all());
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'تم إنشاء الطلبية بنجاح',
-                    'order' => [
-                        'id' => $order->id,
-                        'order_number' => $order->order_number,
-                        'status' => $order->status->value,
-                        'status_label' => $order->status->label(),
-                        'total' => (float) $order->total,
-                    ],
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                // Fallback to local checkout if external API fails
+                \Illuminate\Support\Facades\Log::warning('External checkout API failed, using local fallback: ' . $e->getMessage());
+
+                // Local checkout implementation
+                $customer = null;
+
+                if ($token && $token === request()->bearerToken()) {
+                    $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+                    if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
+                        $customer = $personalToken->tokenable;
+                    }
+                }
+
+                if (!$customer && request()->bearerToken() && session('customer_id')) {
+                    $customer = \App\Models\Customer::find(session('customer_id'));
+                }
+
+                if (!$customer) {
+                    $customer = request()->user('customer') ?: auth()->guard('customer')->user();
+                }
+
+                if (!$customer && session('api_token')) {
+                    $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken(session('api_token'));
+                    if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
+                        $customer = $personalToken->tokenable;
+                    }
+                }
+
+                if (!$customer && session('customer_id')) {
+                    $customer = \App\Models\Customer::find(session('customer_id'));
+                }
+
+                if (!$customer) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى',
+                        'error_details' => [
+                            'type' => 'AuthenticationFailed',
+                            'has_bearer_token' => (bool) request()->bearerToken(),
+                            'has_session_customer_id' => (bool) session('customer_id'),
+                            'has_session_api_token' => (bool) session('api_token'),
+                            'bearer_token_matches_session' => (bool) (request()->bearerToken() && session('api_token') && request()->bearerToken() === session('api_token')),
+                        ],
+                    ], 401);
+                }
+
+                $validated = request()->validate([
+                    'items' => 'required|array|min:1',
+                    'items.*.id' => 'required|integer',
+                    'items.*.quantity' => 'required|numeric|min:0.001',
+                    'items.*.pack_id' => 'nullable|integer',
+                    'delivery_address' => 'nullable|string|max:500',
+                    'delivery_phone' => 'nullable|string|max:30',
+                    'scheduled_delivery_date' => 'nullable|date',
+                    'notes' => 'nullable|string|max:1000',
                 ]);
-            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout - Model not found: '.$e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'بيانات غير مكتملة: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => 'ModelNotFoundException',
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                    ],
-                ], 422);
-            } catch (\App\Exceptions\InsufficientStockException $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout - Insufficient stock: '.$e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'كمية غير كافية: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => 'InsufficientStockException',
-                        'item_id' => $e->itemId,
-                        'requested' => $e->requested,
-                        'available' => $e->available,
-                        'warehouse_id' => $e->warehouseId,
-                    ],
-                ], 422);
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout - Validation error: '.$e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'بيانات غير صالحة: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => 'ValidationException',
-                    ],
-                ], 422);
-            } catch (\InvalidArgumentException $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout - Invalid argument: '.$e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'خطأ في البيانات: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => 'InvalidArgumentException',
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                    ],
-                ], 422);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout failed: '.get_class($e).' - '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'تعذر إنشاء الطلبية: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => get_class($e),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                    ],
-                ], 422);
+
+                $items = [];
+                $rejected = [];
+                foreach ($validated['items'] as $rawItem) {
+                    $item = \App\Models\Item::find($rawItem['id']);
+                    if (!$item) {
+                        $rejected[] = ['id' => $rawItem['id'], 'reason' => 'المنتج غير موجود'];
+                        continue;
+                    }
+                    $packId = $rawItem['pack_id'] ?? null;
+                    if ($packId && !\App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
+                        $packId = null;
+                    }
+                    $items[] = [
+                        'item_id' => $item->id,
+                        'item_pack_id' => $packId,
+                        'quantity' => (float) $rawItem['quantity'],
+                    ];
+                }
+
+                if (empty($items)) {
+                    return response()->json(['success' => false, 'message' => 'لا توجد منتجات صالحة في السلة', 'rejected' => $rejected], 422);
+                }
+
+                try {
+                    $order = app(\App\Services\OrderService::class)->create(
+                        customer: $customer,
+                        items: $items,
+                        deliveryAddress: $validated['delivery_address'] ?? $customer->default_address,
+                        deliveryPhone: $validated['delivery_phone'] ?? $customer->phone,
+                        scheduledDeliveryDate: $validated['scheduled_delivery_date'] ? \Carbon\Carbon::parse($validated['scheduled_delivery_date']) : null,
+                        user: null,
+                        warehouseId: null,
+                        currencyId: $customer->priceList?->currency_id,
+                    );
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'تم إنشاء الطلبية بنجاح',
+                        'order' => [
+                            'id' => $order->id,
+                            'order_number' => $order->order_number,
+                            'status' => $order->status->value,
+                            'status_label' => $order->status->label(),
+                            'total' => (float) $order->total,
+                        ],
+                    ]);
+                } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                    \Illuminate\Support\Facades\Log::error('Customer checkout - Model not found: '.$e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'بيانات غير مكتملة: ' . $e->getMessage(),
+                        'error_details' => [
+                            'type' => 'ModelNotFoundException',
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine(),
+                        ],
+                    ], 422);
+                } catch (\App\Exceptions\InsufficientStockException $e) {
+                    \Illuminate\Support\Facades\Log::error('Customer checkout - Insufficient stock: '.$e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'كمية غير كافية: ' . $e->getMessage(),
+                        'error_details' => [
+                            'type' => 'InsufficientStockException',
+                            'item_id' => $e->itemId,
+                            'requested' => $e->requested,
+                            'available' => $e->available,
+                            'warehouse_id' => $e->warehouseId,
+                        ],
+                    ], 422);
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    \Illuminate\Support\Facades\Log::error('Customer checkout - Validation error: '.$e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'بيانات غير صالحة: ' . $e->getMessage(),
+                        'error_details' => [
+                            'type' => 'ValidationException',
+                            'errors' => $e->errors(),
+                        ],
+                    ], 422);
+                } catch (\InvalidArgumentException $e) {
+                    \Illuminate\Support\Facades\Log::error('Customer checkout - Invalid argument: '.$e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'خطأ في البيانات: ' . $e->getMessage(),
+                        'error_details' => [
+                            'type' => 'InvalidArgumentException',
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine(),
+                        ],
+                    ], 422);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Customer checkout failed: '.get_class($e).' - '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'تعذر إنشاء الطلبية: ' . $e->getMessage(),
+                        'error_details' => [
+                            'type' => get_class($e),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine(),
+                        ],
+                    ], 422);
+                }
             }
         })->name('checkout_proxy');
 
