@@ -330,6 +330,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى'], 401);
             }
 
+            $appUrl = config('app.url');
             $isLocal = !env('CUSTOMER_API_URL') || str_contains($appUrl, '127.0.0.1') || str_contains($appUrl, 'localhost');
             if ($isLocal) {
                 $customer = \App\Models\Customer::find(request()->user('sanctum')?->id);
