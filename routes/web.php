@@ -92,7 +92,7 @@ Route::post('/mobile/register', function (Request $request) {
 
     // إرسال طلب التسجيل للاستضافة الحقيقية
     try {
-        $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
+        $response = Http::withoutVerifying()->withHeaders(['Accept' => 'application/json'])->post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
@@ -148,9 +148,34 @@ Route::post('/mobile/login', function (Request $request) {
         'password' => 'required',
     ]);
 
-    // إرسال طلب الدخول للاستضافة الحقيقية
+    // أولاً: محاولة تسجيل الدخول من القاعدة المحلية (لأجهزة APK)
+    $localCustomer = Customer::where('username', $request->username)
+        ->orWhere('email', $request->username)
+        ->first();
+
+    if ($localCustomer && Hash::check($request->password, $localCustomer->password)) {
+        Auth::guard('customer')->login($localCustomer);
+        $request->session()->regenerate();
+        $request->session()->put('api_token', $localCustomer->remember_token ?? '');
+        $request->session()->put('customer_id', $localCustomer->id);
+
+        $token = $localCustomer->createToken('mobile-token')->plainTextToken;
+        $request->session()->put('api_token', $token);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'redirect' => route('customer.dashboard', [], false),
+                'token' => $token,
+            ]);
+        }
+
+        return redirect()->route('customer.dashboard');
+    }
+
+    // Fall back to remote API only if local login fails
     try {
-        $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
+        $response = Http::withoutVerifying()->withHeaders(['Accept' => 'application/json'])->post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
             'username' => $request->username,
             'password' => $request->password,
         ]);
