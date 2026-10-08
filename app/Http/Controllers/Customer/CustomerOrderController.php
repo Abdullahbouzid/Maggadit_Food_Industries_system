@@ -61,10 +61,23 @@ class CustomerOrderController extends Controller
         $rejected = [];
 
         foreach ($validated['items'] as $rawItem) {
-            $item = Item::find($rawItem['id']);
+            try {
+                $item = Item::find($rawItem['id']);
+            } catch (\Throwable $e) {
+                Log::error('Checkout DB query failed for item', [
+                    'item_id' => $rawItem['id'],
+                    'error' => $e->getMessage(),
+                ]);
+                $item = null;
+            }
 
             if (! $item) {
                 $rejected[] = ['id' => $rawItem['id'], 'reason' => 'المنتج غير موجود'];
+                Log::debug('Checkout item not found', [
+                    'raw_item' => $rawItem,
+                    'expected_id' => $rawItem['id'],
+                    'db_connection' => config('database.default'),
+                ]);
 
                 continue;
             }
