@@ -53,6 +53,8 @@ class CustomerOrderController extends Controller
             'delivery_phone' => 'nullable|string|max:30',
             'scheduled_delivery_date' => 'nullable|date',
             'notes' => 'nullable|string|max:1000',
+            'survey_rating' => 'nullable|integer|min:1|max:5',
+            'survey_feedback' => 'nullable|string|max:2000',
         ]);
 
         $lines = [];
@@ -80,11 +82,18 @@ class CustomerOrderController extends Controller
         }
 
         if (empty($lines)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لم يتم العثور على منتجات صالحة في السلة',
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لم يتم العثور على منتجات صالحة في السلة',
+                    'rejected' => $rejected,
+                ], 422);
+            }
+
+            return back()->withInput()->with([
+                'error' => 'لم يتم العثور على منتجات صالحة في السلة',
                 'rejected' => $rejected,
-            ], 422);
+            ]);
         }
 
         try {
@@ -100,26 +109,45 @@ class CustomerOrderController extends Controller
                 warehouseId: null,
                 currencyId: $customer->priceList?->currency_id,
             );
+
+            if (! empty($validated['survey_rating'])) {
+                $order->update([
+                    'notes' => trim(($order->notes ?? '') . "\n\nتقييم العميل: " . $validated['survey_rating'] . "/5" . ($validated['survey_feedback'] ? "\nملاحظات: " . $validated['survey_feedback'] : '')),
+                ]);
+            }
         } catch (\Throwable $e) {
             Log::error('Customer checkout failed: '.$e->getMessage());
 
-            return response()->json([
-                'success' => false,
-                'message' => 'تعذر إنشاء الطلبية. '.($e->getMessage()),
-            ], 422);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'تعذر إنشاء الطلوية. '.$e->getMessage(),
+                ], 422);
+            }
+
+            return back()->withInput()->with([
+                'error' => 'تعذر إنشار الطلبي. '.$e->getMessage(),
+            ]);
         }
 
         $order->load('statusHistory');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'تم استلام طلبك بنجاح وسيتم مراجعته.',
-            'order_id' => $order->id,
-            'order_number' => $order->order_number,
-            'total' => (float) $order->total,
-            'redirect' => route('customer.order_history', [], false),
-            'steps' => $this->stepPresenter->steps($order),
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إنشاء طلبيتك بنجاح! سيتم مراجعتها وتواصلنا معك قريباً.',
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'total' => (float) $order->total,
+                'redirect' => route('customer.order_history', [], false),
+                'steps' => $this->stepPresenter->steps($order),
+            ]);
+        }
+
+        return redirect()
+            ->route('customer.order_history')
+            ->with('success', 'تم إنشار طلبيتك بنجاح! سيتم مراجعتها وتواصلنا معك قريباً.')
+            ->with('order_number', $order->order_number);
     }
 
     /**

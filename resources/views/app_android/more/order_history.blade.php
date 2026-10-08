@@ -5,6 +5,18 @@
 @section('content')
     @include('app_android.partials.mobile.header', ['title' => 'طلباتي'])
 
+    @if (session('success'))
+        <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+            <div class="flex items-center gap-2 text-green-800">
+                <i class="fas fa-check-circle text-lg"></i>
+                <span class="font-semibold">{{ session('success') }}</span>
+            </div>
+            @if (session('order_number'))
+                <p class="text-sm text-green-700 mt-1">رقم الطلبية: <span class="font-bold">{{ session('order_number') }}</span></p>
+            @endif
+        </div>
+    @endif
+
     <div class="p-4" dir="rtl">
         {{-- ملخص سريع --}}
         <div class="grid grid-cols-3 gap-3 mb-4">

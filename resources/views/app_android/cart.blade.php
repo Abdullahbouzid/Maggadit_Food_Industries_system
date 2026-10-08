@@ -59,6 +59,25 @@
                         <label class="block text-xs font-bold text-gray-600 mb-1">ملاحظات إضافية (اختياري)</label>
                         <textarea id="notes" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="أي تعليمات خاصة بالتوصيل أو الطلب..."></textarea>
                     </div>
+
+                    {{-- استبيان التقييم --}}
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <h4 class="font-bold text-gray-800 text-base mb-3 flex items-center gap-2">
+                            <i class="fas fa-star text-amber-500"></i> تقييمك لتجربة التسوق
+                        </h4>
+                        <div class="flex gap-2 mb-3" id="survey-rating">
+                            <button type="button" class="rate-star" data-value="1"><i class="far fa-star text-xl text-gray-300"></i></button>
+                            <button type="button" class="rate-star" data-value="2"><i class="far fa-star text-xl text-gray-300"></i></button>
+                            <button type="button" class="rate-star" data-value="3"><i class="far fa-star text-xl text-gray-300"></i></button>
+                            <button type="button" class="rate-star" data-value="4"><i class="far fa-star text-xl text-gray-300"></i></button>
+                            <button type="button" class="rate-star" data-value="5"><i class="far fa-star text-xl text-gray-300"></i></button>
+                        </div>
+                        <input type="hidden" id="survey_rating" value="">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">ملاحظات تقييمية (اختياري)</label>
+                            <textarea id="survey_feedback" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="شاركنا رأيك..."></textarea>
+                        </div>
+                    </div>
                 </div>
 
                 <button id="checkout-btn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-3 rounded-xl mt-5 shadow-md transition transform hover:scale-[1.02] active:scale-95">
@@ -292,6 +311,24 @@
             showCartToast(msg, isError ? '⚠️ خطأ' : '✅ تمت العملية بنجاح');
         }
 
+        // ========== Survey rating stars ==========
+        document.querySelectorAll('#survey-rating .rate-star').forEach(star => {
+            star.addEventListener('click', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                document.getElementById('survey_rating').value = value;
+                const stars = document.querySelectorAll('#survey-rating .rate-star i');
+                stars.forEach((s, i) => {
+                    if (i < value) {
+                        s.classList.remove('far');
+                        s.classList.add('fas', 'text-amber-500');
+                    } else {
+                        s.classList.remove('fas', 'text-amber-500');
+                        s.classList.add('far', 'text-gray-300');
+                    }
+                });
+            });
+        });
+
         // تحديث واجهة السلة
         function renderCart() {
             const container = document.getElementById('cart-items-list');
@@ -496,12 +533,15 @@
             console.log('Checkout URL:', checkoutUrl);
 
             // Collect form data
+            const surveyRating = document.getElementById('survey_rating')?.value;
             const formData = {
                 items: validItems,
                 delivery_address: document.getElementById('delivery_address')?.value?.trim() || '',
                 delivery_phone: document.getElementById('delivery_phone')?.value?.trim() || '',
                 scheduled_delivery_date: document.getElementById('scheduled_delivery_date')?.value || null,
-                notes: document.getElementById('notes')?.value?.trim() || ''
+                notes: document.getElementById('notes')?.value?.trim() || '',
+                survey_rating: surveyRating ? parseInt(surveyRating) : null,
+                survey_feedback: document.getElementById('survey_feedback')?.value?.trim() || ''
             };
             console.log('Form data:', formData);
 
