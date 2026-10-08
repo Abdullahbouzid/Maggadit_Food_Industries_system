@@ -75,47 +75,22 @@
     <!-- Toast إشعارات -->
     <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
-    <!-- ========== مودال النجاح (نمط تسجيل الخروج) ========== -->
+    <!-- Beautiful Success Modal for Order Completion -->
     <div id="order-success-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-        <div class="relative bg-white rounded-2xl w-80 max-w-[85%] p-6 transform scale-95 transition-all duration-300 shadow-2xl">
-            <div class="text-center">
-                <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-check text-green-600 text-2xl"></i>
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+            <div class="p-8 text-center">
+                <div class="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-check text-3xl text-white"></i>
                 </div>
-                <h3 id="success-modal-title" class="text-lg font-bold text-gray-800 mb-2">تم إنشاء الطلبية!</h3>
-                <p id="success-modal-message" class="text-gray-500 text-sm mb-6">تم إنشاء الطلبية بنجاح.</p>
-                <button onclick="closeOrderSuccessModal()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl transition duration-200 shadow-md">
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">تم إنشاء الطلبية بنجاح!</h3>
+                <p class="text-gray-600 mb-6" id="order-modal-message">رقم الطلبية: <span id="order-number" class="font-bold text-purple-700"></span></p>
+                <button onclick="closeOrderSuccessModal()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition hover:from-purple-700 hover:to-indigo-800 active:scale-[0.98]">
                     <i class="fas fa-check-circle ml-2"></i> عرض الطلبيات
                 </button>
             </div>
         </div>
     </div>
-
-    <!-- ========== مودال الخطأ (نمط تسجيل الخروج - أحمر) ========== -->
-    <div id="order-error-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-        <div class="relative bg-white rounded-2xl w-80 max-w-[85%] p-6 transform scale-95 transition-all duration-300 shadow-2xl">
-            <div class="text-center">
-                <div class="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-times text-red-600 text-2xl"></i>
-                </div>
-                <h3 id="error-modal-title" class="text-lg font-bold text-gray-800 mb-2">فشل إنشاء الطلبية</h3>
-                <p id="error-modal-message" class="text-gray-500 text-sm mb-6">حدث خطأ، يرجى المحاولة مرة أخرى.</p>
-                <div class="flex gap-3">
-                    <button onclick="closeOrderErrorModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl transition duration-200">
-                        إغلاق
-                    </button>
-                    <button onclick="retryCheckout()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-xl transition duration-200 shadow-md">
-                        <i class="fas fa-redo ml-2"></i> إعادة المحاولة
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast إشعارات -->
-    <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
 
     <script>
         console.log('Cart script loaded, cartItems:', JSON.parse(localStorage.getItem('maggadit_cart')) || []);
@@ -421,16 +396,10 @@
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     return response.text().then(text => {
-                        throw { message: text || 'Invalid response from server', isNetworkError: true };
+                        throw new Error('Invalid response from server');
                     });
                 }
-                return response.json().then(data => {
-                    if (!response.ok) {
-                        // Server returned error status with JSON
-                        throw { message: data.message || data.error || 'Server error', data: data, isNetworkError: false };
-                    }
-                    return data;
-                });
+                return response.json();
             })
             .then(data => {
                 if (data.success) {
@@ -440,8 +409,7 @@
                     saveCart();
                     renderCart();
                 } else {
-                    // Show error modal with server's exact error message
-                    showOrderErrorModal(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء الطلب' : 'Error occurred'));
+                    showToastMessage(data.message || (currentLang === 'ar' ? 'حدث خطأ أثناء الطلب' : 'Error occurred'), true);
                     checkoutBtn.innerText = originalText;
                     checkoutBtn.disabled = false;
                 }
@@ -449,46 +417,8 @@
             .catch(error => {
                 console.error('Checkout error:', error);
                 console.error('Error message:', error.message);
-                console.error('Error data:', error.data);
                 console.error('Error stack:', error.stack);
-                
-                let errorMsg = error.message || 'Unknown error';
-                let errorDetails = '';
-                
-                if (!error.isNetworkError && error.data) {
-                    errorMsg = error.data.message || error.data.error || errorMsg;
-                    if (error.data.error_details) {
-                        const details = error.data.error_details;
-                        const detailParts = [];
-                        if (details.type) detailParts.push('النوع: ' + details.type);
-                        if (details.item_id) detailParts.push('المنتج: ' + details.item_id);
-                        if (details.requested !== undefined) detailParts.push('مطلوب: ' + details.requested);
-                        if (details.available !== undefined) detailParts.push('متاح: ' + details.available);
-                        if (details.warehouse_id !== undefined) detailParts.push('المستودع: ' + details.warehouse_id);
-                        
-                        // Authentication-specific details
-                        if (details.type === 'AuthenticationFailed') {
-                            detailParts.push('---');
-                            detailParts.push('تحليل المصادقة:');
-                            detailParts.push('يوجد توكن Bearer: ' + (details.has_bearer_token ? 'نعم' : 'لا'));
-                            detailParts.push('يوجد customer_id في الجلسة: ' + (details.has_session_customer_id ? 'نعم' : 'لا'));
-                            detailParts.push('يوجد api_token في الجلسة: ' + (details.has_session_api_token ? 'نعم' : 'لا'));
-                            detailParts.push('التوكن يطابق الجلسة: ' + (details.bearer_token_matches_session ? 'نعم' : 'لا'));
-                        }
-                        
-                        if (detailParts.length > 0) {
-                            errorDetails = '\n\nتفاصيل الخطأ:\n' + detailParts.join('\n');
-                        }
-                        console.error('Error details:', details);
-                    }
-                }
-                
-                // Special handling for auth errors
-                if (error.data && error.data.error_details && error.data.error_details.type === 'AuthenticationFailed') {
-                    errorMsg = 'انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى';
-                }
-                
-                showOrderErrorModal(errorMsg + errorDetails);
+                showToastMessage(currentLang === 'ar' ? 'حدث خطأ في الاتصال: ' + error.message : 'Connection error: ' + error.message, true);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
             });
@@ -521,9 +451,12 @@
         // ========== Order Success Modal Functions ==========
         function showOrderSuccessModal(orderNumber, message) {
             const modal = document.getElementById('order-success-modal');
-            const content = modal.querySelector('.bg-white');
+            const content = document.getElementById('modal-content');
             if (orderNumber) {
-                document.getElementById('success-modal-message').innerHTML = message + '<br><br><span class="font-bold text-purple-700">رقم الطلبية: ' + orderNumber + '</span>';
+                document.getElementById('order-number').innerText = orderNumber;
+            }
+            if (message) {
+                document.getElementById('order-modal-message').innerText = message;
             }
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -536,7 +469,7 @@
 
         function closeOrderSuccessModal() {
             const modal = document.getElementById('order-success-modal');
-            const content = modal.querySelector('.bg-white');
+            const content = document.getElementById('modal-content');
             content.classList.remove('scale-100', 'opacity-100');
             content.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
@@ -547,41 +480,17 @@
             }, 300);
         }
 
-        // ========== Order Error Modal Functions ==========
-        function showOrderErrorModal(message) {
-            const modal = document.getElementById('order-error-modal');
-            const content = modal.querySelector('.bg-white');
-            if (message) {
-                document.getElementById('error-modal-message').innerText = message;
-            }
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            // Trigger animation
+        // ========== Toast Functions ==========
+        function showToastMessage(msg, isError = false) {
+            const toast = document.getElementById('cart-toast');
+            toast.innerText = msg;
+            toast.style.background = isError ? '#dc2626' : '#1f2937';
+            toast.classList.remove('opacity-0', 'translate-y-10');
+            toast.classList.add('opacity-100', 'translate-y-0');
             setTimeout(() => {
-                content.classList.remove('scale-95', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-        function closeOrderErrorModal() {
-            const modal = document.getElementById('order-error-modal');
-            const content = modal.querySelector('.bg-white');
-            content.classList.remove('scale-100', 'opacity-100');
-            content.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }, 300);
-        }
-
-        function retryCheckout() {
-            closeOrderErrorModal();
-            const checkoutBtn = document.getElementById('checkout-btn');
-            checkoutBtn.innerText = currentLang === 'ar' ? 'تأكيد إنشاء الطلبية' : 'Confirm Order';
-            checkoutBtn.disabled = false;
-            const checkoutForm = document.getElementById('checkout-form');
-            checkoutForm.classList.remove('hidden');
-            checkoutForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-10');
+            }, 3000);
         }
     </script>
 

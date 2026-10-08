@@ -61,7 +61,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,40 +90,41 @@ Route::post('/mobile/register', function (Request $request) {
         'password' => 'required|string|min:6',
     ]);
 
+    // إرسال طلب التسجيل للاستضافة الحقيقية
     try {
         $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/register', [
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
             'password' => $request->password,
-            'password_confirmation' => $request->password,
+            'password_confirmation' => $request->password, // مهم لتجاوز التحقق confirmed في الاستضافة
         ]);
 
         if ($response->successful()) {
             $data = $response->json();
             $remoteUser = $data['customer'];
 
-            $token = $data['token'];
+            // إنشاء المستخدم محلياً في الـ APK لمزامنة الجلسة
             $customer = Customer::create([
                 'name' => $remoteUser['name'],
                 'username' => $remoteUser['username'],
                 'email' => $remoteUser['email'],
                 'password' => Hash::make($request->password),
-                'remember_token' => $token,
             ]);
 
             Auth::guard('customer')->login($customer);
             $request->session()->regenerate();
-            $request->session()->put('api_token', $token);
-            $request->session()->put('customer_id', $customer->id);
+            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
+            $request->session()->put('customer_id', $customer->id); // ربط الجلسة بالعميل المحلي
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $token]);
+                return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
             }
 
             return redirect()->route('customer.dashboard');
         }
 
+        // في حال وجود أخطاء تحقق من السيرفر
         $errors = $response->json('errors') ?? ['error' => ['فشل التسجيل في السيرفر']];
         if ($request->expectsJson()) {
             return response()->json(['errors' => $errors], 422);
@@ -133,29 +133,13 @@ Route::post('/mobile/register', function (Request $request) {
         return back()->withErrors($errors);
 
     } catch (Exception $e) {
+        // خطأ في الاتصال
+        if ($request->expectsJson()) {
+            return response()->json(['errors' => ['error' => ['فشل الاتصال بالسيرفر']]], 422);
+        }
+
+        return back()->withErrors(['error' => 'فشل الاتصال بالسيرفر']);
     }
-
-    $customer = Customer::create([
-        'name' => $request->name,
-        'username' => $request->username,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'remember_token' => Str::random(60),
-    ]);
-
-    Auth::guard('customer')->login($customer);
-    $request->session()->regenerate();
-    $token = $customer->createToken('apk-register')->plainTextToken;
-    $customer->remember_token = $token;
-    $customer->save();
-    $request->session()->put('api_token', $token);
-    $request->session()->put('customer_id', $customer->id);
-
-    if ($request->expectsJson()) {
-        return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $customer->remember_token]);
-    }
-
-    return redirect()->route('customer.dashboard');
 })->name('mobile.register.submit');
 
 Route::post('/mobile/login', function (Request $request) {
@@ -164,26 +148,7 @@ Route::post('/mobile/login', function (Request $request) {
         'password' => 'required',
     ]);
 
-    $customer = Customer::where('username', $request->username)
-        ->orWhere('email', $request->username)
-        ->first();
-
-    if ($customer && Hash::check($request->password, $customer->password)) {
-        Auth::guard('customer')->login($customer);
-        $request->session()->regenerate();
-        $token = $customer->createToken('apk')->plainTextToken;
-        $customer->remember_token = $token;
-        $customer->save();
-        $request->session()->put('api_token', $token);
-        $request->session()->put('customer_id', $customer->id);
-
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $token]);
-        }
-
-        return redirect()->route('customer.dashboard');
-    }
-
+    // إرسال طلب الدخول للاستضافة الحقيقية
     try {
         $response = Http::withoutVerifying()->post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
             'username' => $request->username,
@@ -194,20 +159,20 @@ Route::post('/mobile/login', function (Request $request) {
             $data = $response->json();
             $remoteUser = $data['customer'];
 
+            // إنشاء أو تحديث المستخدم محلياً في الـ APK لمزامنة الجلسة
             $customer = Customer::updateOrCreate(
                 ['username' => $remoteUser['username']],
                 [
                     'name' => $remoteUser['name'],
                     'email' => $remoteUser['email'],
                     'password' => Hash::make($request->password),
-                    'remember_token' => $data['token'],
                 ]
             );
 
             Auth::guard('customer')->login($customer);
             $request->session()->regenerate();
-            $request->session()->put('api_token', $data['token']);
-            $request->session()->put('customer_id', $customer->id);
+            $request->session()->put('api_token', $data['token']); // حفظ التوكن للطلبات القادمة
+            $request->session()->put('customer_id', $customer->id); // ربط الجلسة بالعميل المحلي
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'redirect' => route('customer.dashboard', [], false), 'token' => $data['token']]);
@@ -216,13 +181,14 @@ Route::post('/mobile/login', function (Request $request) {
             return redirect()->route('customer.dashboard');
         }
     } catch (Exception $e) {
+        // خطأ في الاتصال
     }
 
     if ($request->expectsJson()) {
         return response()->json(['message' => 'فشل الاتصال بالسيرفر أو بيانات خاطئة'], 422);
     }
 
-    return back()->withErrors(['username' => 'بيانات الدخول غير صحيقة أو السيرفر غير متاح.']);
+    return back()->withErrors(['username' => 'بيانات الدخول غير صحيحة أو السيرفر غير متاح.']);
 })->name('mobile.login.submit');
 
 Route::get('/customer/logout', function (Request $request) {
@@ -644,168 +610,11 @@ Route::prefix('customer')->name('customer.')->group(function () {
             if (!$token) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
             }
-
-// Local checkout — prioritize Bearer token for API requests (APK/WebView)
-            $customer = null;
-
-            // 1. Try Sanctum Bearer token first (for APK/WebView API requests)
-            if ($token && $token === request()->bearerToken()) {
-                $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
-                if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
-                    $customer = $personalToken->tokenable;
-                }
-            }
-
-            // 1b. If Bearer token provided but not a Sanctum token, try session customer_id
-            // This handles APK with stale token but valid session
-            if (!$customer && request()->bearerToken() && session('customer_id')) {
-                $customer = \App\Models\Customer::find(session('customer_id'));
-            }
-
-            // 2. Try session-based guards (for web browser)
-            if (!$customer) {
-                $customer = request()->user('customer') ?: auth()->guard('customer')->user();
-            }
-
-            // 3. Try session-based Sanctum token
-            if (!$customer && session('api_token')) {
-                $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken(session('api_token'));
-                if ($personalToken && $personalToken->tokenable instanceof \App\Models\Customer) {
-                    $customer = $personalToken->tokenable;
-                }
-            }
-
-            // 4. Try session customer_id
-            if (!$customer && session('customer_id')) {
-                $customer = \App\Models\Customer::find(session('customer_id'));
-            }
-            
-            if (!$customer) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'غير مصرح - يرجى تسجيل الدخول مرة أخرى',
-                    'error_details' => [
-                        'type' => 'AuthenticationFailed',
-                        'has_bearer_token' => (bool) request()->bearerToken(),
-                        'has_session_customer_id' => (bool) session('customer_id'),
-                        'has_session_api_token' => (bool) session('api_token'),
-                        'bearer_token_matches_session' => (bool) (request()->bearerToken() && session('api_token') && request()->bearerToken() === session('api_token')),
-                    ],
-                ], 401);
-            }
-
-            $validated = request()->validate([
-                'items' => 'required|array|min:1',
-                'items.*.id' => 'required|integer',
-                'items.*.quantity' => 'required|numeric|min:0.001',
-                'items.*.pack_id' => 'nullable|integer',
-                'delivery_address' => 'nullable|string|max:500',
-                'delivery_phone' => 'nullable|string|max:30',
-                'scheduled_delivery_date' => 'nullable|date',
-                'notes' => 'nullable|string|max:1000',
-            ]);
-
-            $items = [];
-            $rejected = [];
-            foreach ($validated['items'] as $rawItem) {
-                $item = \App\Models\Item::find($rawItem['id']);
-                if (!$item) {
-                    $rejected[] = ['id' => $rawItem['id'], 'reason' => 'المنتج غير موجود'];
-                    continue;
-                }
-                $packId = $rawItem['pack_id'] ?? null;
-                if ($packId && !\App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
-                    $packId = null;
-                }
-                $items[] = [
-                    'item_id' => $item->id,
-                    'item_pack_id' => $packId,
-                    'quantity' => (float) $rawItem['quantity'],
-                ];
-            }
-
-            if (empty($items)) {
-                return response()->json(['success' => false, 'message' => 'لا توجد منتجات صالحة في السلة', 'rejected' => $rejected], 422);
-            }
-
             try {
-                $order = app(\App\Services\OrderService::class)->create(
-                    customer: $customer,
-                    items: $items,
-                    deliveryAddress: $validated['delivery_address'] ?? $customer->default_address,
-                    deliveryPhone: $validated['delivery_phone'] ?? $customer->phone,
-                    scheduledDeliveryDate: $validated['scheduled_delivery_date'] ? \Carbon\Carbon::parse($validated['scheduled_delivery_date']) : null,
-                    user: null,
-                    warehouseId: null,
-                    currencyId: $customer->priceList?->currency_id,
-                );
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'تم إنشاء الطلبية بنجاح',
-                    'order' => [
-                        'id' => $order->id,
-                        'order_number' => $order->order_number,
-                        'status' => $order->status->value,
-                        'status_label' => $order->status->label(),
-                        'total' => (float) $order->total,
-                    ],
-                ]);
-            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout - Model not found: '.$e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'بيانات غير مكتملة: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => 'ModelNotFoundException',
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                    ],
-                ], 422);
-            } catch (\App\Exceptions\InsufficientStockException $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout - Insufficient stock: '.$e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'كمية غير كافية: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => 'InsufficientStockException',
-                        'item_id' => $e->itemId,
-                        'requested' => $e->requested,
-                        'available' => $e->available,
-                        'warehouse_id' => $e->warehouseId,
-                    ],
-                ], 422);
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout - Validation error: '.$e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'بيانات غير صالحة: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => 'ValidationException',
-                    ],
-                ], 422);
-            } catch (\InvalidArgumentException $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout - Invalid argument: '.$e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'خطأ في البيانات: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => 'InvalidArgumentException',
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                    ],
-                ], 422);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Customer checkout failed: '.get_class($e).' - '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'تعذر إنشاء الطلبية: ' . $e->getMessage(),
-                    'error_details' => [
-                        'type' => get_class($e),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                    ],
-                ], 422);
+                $response = Http::withToken($token)->withoutVerifying()->post("{$baseUrl}/customer/checkout", request()->all());
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال: ' . $e->getMessage()], 503);
             }
         })->name('checkout_proxy');
 
