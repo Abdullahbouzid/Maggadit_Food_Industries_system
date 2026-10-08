@@ -206,7 +206,7 @@ class CustomerOrderController extends Controller
                 $meta = $this->getRemoteStatusMeta($status);
                 $progress = $this->getRemoteProgress($status);
                 $canRespond = $status === 'quotation_sent';
-                $quotation = $order->quotation->first();
+                $quotation = $order->quotation;
                 $invoice = $order->invoices->first() ?? null;
             } else {
                 $meta = $this->stepPresenter->currentStatusMeta($order);

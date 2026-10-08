@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'mobile/register',
             'customer/proxy/*',
             'customer/favorite/toggle',
+            'customer/checkout',
         ]);
         $middleware->alias([
             'check.customer.session' => CheckCustomerSession::class,
