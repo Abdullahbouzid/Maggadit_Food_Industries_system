@@ -69,8 +69,17 @@ class OrderService implements OrderServiceInterface
             $pricingService = app(PricingServiceInterface::class);
 
             $warehouse = $warehouseId
-                ? Warehouse::findOrFail($warehouseId)
-                : Warehouse::where('organization_id', $customer->active_organization_id ?? 1)->firstOrFail();
+                ? Warehouse::find($warehouseId)
+                : Warehouse::where('organization_id', $customer->active_organization_id ?? 1)->first();
+
+            // Fallback: if no warehouse found for customer's organization, use first available
+            if (! $warehouse) {
+                $warehouse = Warehouse::first();
+            }
+
+            if (! $warehouse) {
+                throw new \Exception('No warehouse available for order creation');
+            }
 
             $resolvedCurrencyId = $currencyId ?? $this->resolveCurrencyId($customer);
 
@@ -286,7 +295,11 @@ class OrderService implements OrderServiceInterface
 
     private function resolveCurrencyId(Customer $customer): int
     {
-        return $customer->priceList?->currency_id ?? \App\Models\Currency::first()->id ?? 1;
+        if ($customer->priceList?->currency_id) {
+            return $customer->priceList->currency_id;
+        }
+        $currency = \App\Models\Currency::first();
+        return $currency?->id ?? 1;
     }
 
     /**

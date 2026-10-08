@@ -85,8 +85,20 @@ class CustomerOrderController extends Controller
             }
 
             $packId = $rawItem['pack_id'] ?? null;
-            if ($packId && ! \App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
-                $packId = null;
+            if ($packId) {
+                try {
+                    if (! \App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
+                        $packId = null;
+                    }
+                } catch (\Throwable $e) {
+                    $dbError = true;
+                    Log::error('Checkout DB query failed for pack', [
+                        'pack_id' => $packId,
+                        'item_id' => $item->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $packId = null;
+                }
             }
 
             $lines[] = [
