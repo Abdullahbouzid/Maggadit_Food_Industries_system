@@ -492,7 +492,7 @@
                 headers['Authorization'] = 'Bearer ' + token;
             }
 
-            const checkoutUrl = '{{ route('customer.proxy.checkout_proxy', [], false) }}';
+            const checkoutUrl = '{{ route('customer.checkout', [], false) }}';
             console.log('Checkout URL:', checkoutUrl);
 
             // Collect form data
@@ -527,7 +527,7 @@
             .then(data => {
                 if (data.success) {
                     // Show beautiful success modal
-                    showOrderSuccessModal(data.order?.order_number, data.message);
+                    showOrderSuccessModal(data.order_number, data.message);
                     cartItems = [];
                     saveCart();
                     renderCart();

@@ -117,7 +117,7 @@ class CustomerOrderController extends Controller
             'order_id' => $order->id,
             'order_number' => $order->order_number,
             'total' => (float) $order->total,
-            'redirect' => route('customer.order_details', $order->id),
+            'redirect' => route('customer.order_history', [], false),
             'steps' => $this->stepPresenter->steps($order),
         ]);
     }
@@ -206,12 +206,12 @@ class CustomerOrderController extends Controller
                 $meta = $this->getRemoteStatusMeta($status);
                 $progress = $this->getRemoteProgress($status);
                 $canRespond = $status === 'quotation_sent';
-                $quotation = $order->quotation ?? null;
+                $quotation = $order->quotation->first();
                 $invoice = $order->invoices->first() ?? null;
             } else {
                 $meta = $this->stepPresenter->currentStatusMeta($order);
                 $progress = $this->stepPresenter->progress($order);
-                $quotation = $order->quotation ?? null;
+                $quotation = $order->quotation->first();
                 $invoice = $order->invoices->first() ?? null;
                 $canRespond = $this->canRespondToQuotation($order);
             }
