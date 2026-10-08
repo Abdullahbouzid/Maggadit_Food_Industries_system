@@ -59,11 +59,13 @@ class CustomerOrderController extends Controller
 
         $lines = [];
         $rejected = [];
+        $dbError = false;
 
         foreach ($validated['items'] as $rawItem) {
             try {
                 $item = Item::find($rawItem['id']);
             } catch (\Throwable $e) {
+                $dbError = true;
                 Log::error('Checkout DB query failed for item', [
                     'item_id' => $rawItem['id'],
                     'error' => $e->getMessage(),
@@ -95,16 +97,19 @@ class CustomerOrderController extends Controller
         }
 
         if (empty($lines)) {
+            $message = $dbError
+                ? 'خطأ في الاتصال بقاعدة البيانات. يرجى المحاولة مرة أخرى.'
+                : 'لم يتم العثور على منتجات صالحة في السلة';
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لم يتم العثور على منتجات صالحة في السلة',
+                    'message' => $message,
                     'rejected' => $rejected,
                 ], 422);
             }
 
             return back()->withInput()->with([
-                'error' => 'لم يتم العثور على منتجات صالحة في السلة',
+                'error' => $message,
                 'rejected' => $rejected,
             ]);
         }
@@ -121,6 +126,7 @@ class CustomerOrderController extends Controller
                 user: null,
                 warehouseId: null,
                 currencyId: $customer->priceList?->currency_id,
+                skipStockCheck: true,
             );
 
             if (! empty($validated['survey_rating'])) {

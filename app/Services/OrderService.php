@@ -36,6 +36,7 @@ class OrderService implements OrderServiceInterface
         ?Carbon $scheduledDeliveryDate = null,
         ?int $warehouseId = null,
         ?int $currencyId = null,
+        bool $skipStockCheck = false,
     ): Order {
         return $this->create(
             customer: $customer,
@@ -46,6 +47,7 @@ class OrderService implements OrderServiceInterface
             user: $user,
             warehouseId: $warehouseId,
             currencyId: $currencyId,
+            skipStockCheck: $skipStockCheck,
         );
     }
 
@@ -58,9 +60,10 @@ class OrderService implements OrderServiceInterface
         ?User $user = null,
         ?int $warehouseId = null,
         ?int $currencyId = null,
+        bool $skipStockCheck = false,
     ): Order {
         return DB::transaction(function () use (
-            $customer, $items, $user, $deliveryAddress, $deliveryPhone, $scheduledDeliveryDate, $warehouseId, $currencyId
+            $customer, $items, $user, $deliveryAddress, $deliveryPhone, $scheduledDeliveryDate, $warehouseId, $currencyId, $skipStockCheck
         ) {
             $inventoryService = app(InventoryServiceInterface::class);
             $pricingService = app(PricingServiceInterface::class);
@@ -112,7 +115,7 @@ class OrderService implements OrderServiceInterface
                     itemPackId: $itemData['item_pack_id'] ? (int) $itemData['item_pack_id'] : null,
                 );
 
-                if ($availability->available <= 0) {
+                if (! $skipStockCheck && $availability->available <= 0) {
                     throw new InsufficientStockException(
                         requested: (float) ($itemData['quantity'] ?? 1),
                         available: $availability->available,

@@ -25,5 +25,6 @@ interface OrderServiceInterface
         ?Carbon $scheduledDeliveryDate = null,
         ?int $warehouseId = null,
         ?int $currencyId = null,
+        bool $skipStockCheck = false,
     ): Order;
 }
