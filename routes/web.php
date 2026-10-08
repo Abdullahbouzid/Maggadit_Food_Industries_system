@@ -620,14 +620,36 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
         Route::get('/dashboard', function () use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
-            }
             try {
+                $imageService = app(\App\Services\Customer\ImagePathService::class);
+                $banners = \App\Models\Banner::where('show_in_customer_app', true)
+                    ->orderBy('order', 'asc')
+                    ->get()
+                    ->map(function ($banner) use ($imageService) {
+                        $url = $banner->image;
+                        if (!empty($url)) {
+                            $url = $imageService->normalize($url);
+                        }
+                        $localPath = 'banners/' . basename($banner->image);
+                        if (!empty($banner->image) && file_exists(public_path('uploads/' . $localPath))) {
+                            $url = asset('uploads/' . $localPath);
+                        }
+                        return (object) [
+                            'id' => $banner->id,
+                            'title' => $banner->title,
+                            'url' => $banner->url ?? '#',
+                            'image' => $url ?: 'https://via.placeholder.com/400x160?text=📢',
+                        ];
+                    });
+
+                if ($banners->isNotEmpty()) {
+                    return response()->json(['banners' => $banners->map(fn($b) => (array) $b)->values()], 200);
+                }
+
                 $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/dashboard");
                 return response()->json($response->json(), $response->status());
             } catch (Exception $e) {
-                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+                return response()->json(['banners' => [], 'message' => 'فشل الاتصال'], 503);
             }
         })->name('dashboard');
     });

@@ -94,11 +94,16 @@ class CustomerDashboardController extends Controller
             ->limit(10)
             ->get();
 
+        $activeOffers = Offer::whereIn('item_id', $products->pluck('id'))
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('item_id');
+
         $productCards = collect();
         foreach ($products as $item) {
             $item = $this->normalizeItem($item);
             $itemImage = $item->main_image_url ?: ($item->image ? $this->imagePathService->normalize($item->image) : null);
-            $offer = Offer::where('item_id', $item->id)->where('is_active', true)->first();
+            $offer = $activeOffers[$item->id] ?? null;
 
             $packs = $item->packs;
             if ($packs->isEmpty()) {
@@ -137,14 +142,6 @@ class CustomerDashboardController extends Controller
                     ]);
                 }
             }
-        }
-
-        $customer = $this->getCustomer(request());
-        $favoriteItemIds = $customer ? $customer->favorites()->pluck('item_id')->toArray() : [];
-
-        // If local DB is empty, fetch favorites from external API (for APK)
-        if (empty($favoriteItemIds) && $customer) {
-            $favoriteItemIds = $this->getRemoteFavoriteIds(request());
         }
 
         $offers = Offer::with(['item', 'itemPack.packType', 'itemPack.packCapacity.uom'])

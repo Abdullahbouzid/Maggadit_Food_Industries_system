@@ -61,6 +61,21 @@ class ImagePathService
             return $this->hostingerDomain.'/uploads/'.$cleanPath;
         }
 
+        if (file_exists(public_path('uploads/'.$cleanPath))) {
+            return asset('uploads/'.$cleanPath);
+        }
+
+        $basename = basename($cleanPath);
+        foreach (['uploads/banners', 'uploads/categories', 'uploads/brands', 'uploads/items'] as $dir) {
+            if (file_exists(public_path($dir.'/'.$basename))) {
+                return asset($dir.'/'.$basename);
+            }
+        }
+
+        if (str_contains($cleanPath, 'banners/')) {
+            return 'data:image/svg+xml;base64,'.base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400"><rect width="1200" height="400" fill="%23e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" fill="%239ca3af">صورة غير متوفرة</text></svg>');
+        }
+
         return $this->hostingerDomain.'/storage/'.$cleanPath;
     }
 }

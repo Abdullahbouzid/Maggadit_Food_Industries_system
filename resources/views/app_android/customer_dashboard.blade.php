@@ -22,11 +22,11 @@
             font-size: 13px;
             font-weight: bold;
             box-shadow: -2px 2px 8px rgba(0,0,0,0.2);
-            z-index: 10;
+            z-index: 1;
         }
     </style>
 
-   {{-- ========== شريط الدعايات (Carousel) مع بطاقات وتمرير تلقائي ========== --}}
+   {{-- ========== شريط الدعايات (Carousel) ========== --}}
         <div class="relative">
             <div id="ad-carousel" class="flex overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar rounded-2xl shadow-md" style="scrollbar-width: none; -webkit-overflow-scrolling: touch;">
                 @forelse($banners as $banner)
@@ -43,7 +43,6 @@
                     </div>
                 @endforelse
             </div>
-            <!-- نقاط التنقل -->
             <div class="flex justify-center gap-1 mt-3" id="ad-dots">
                 @php
                     $dotsCount = $banners->count() > 0 ? $banners->count() : 1;
@@ -54,7 +53,7 @@
             </div>
         </div>
 
-        {{-- ========== قسم الفئات (Categories) ديناميكي مع صور ========== --}}
+        {{-- ========== الفئات ========== --}}
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">الفئات</h2>
@@ -78,7 +77,7 @@
             </div>
         </div>
 
-        {{-- ========== قسم الماركات (Brands) ديناميكي مع صور ========== --}}
+        {{-- ========== الماركات ========== --}}
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">ماركات شهيرة</h2>
@@ -102,7 +101,7 @@
             </div>
         </div>
 
-    {{-- ========== قسم المنتجات (Products) ديناميكي مع صور ========== --}}
+    {{-- ========== المنتجات ========== --}}
         <div class="mb-5">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">أفضل المنتجات</h2>
@@ -116,7 +115,8 @@
                         $productImage = is_array($product) ? ($product['image'] ?? '') : ($product->image ?? '');
                         $productPrice = is_array($product) ? ($product['price'] ?? 0) : ($product->price ?? 0);
                         $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
-                   @endphp
+                        $isFavorite = is_array($product) ? ($product['favorite'] ?? in_array($productId, $favoriteItemIds ?? [])) : in_array($productId, $favoriteItemIds ?? []);
+                    @endphp
                     <a href="{{ route('customer.product.show', $productId, false) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer">
                         @if($packName)
                             <div class="absolute top-2 right-2 z-10">
@@ -126,6 +126,10 @@
                             </div>
                         @endif
                         
+                        <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors {{ $isFavorite ? 'text-red-500' : 'text-gray-400' }}" data-id="{{ $productId }}">
+                            <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart text-lg"></i>
+                        </button>
+
                         <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                             @if($productImage)
                                 <img src="{{ $productImage }}" alt="{{ $productName }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=📦';">
@@ -160,7 +164,7 @@
             </div>
         </div>
 
-        {{-- ========== قسم العروض (Offers) مع صور ========== --}}
+        {{-- ========== العروض ========== --}}
         <div>
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-gray-800">عروض حصرية</h2>
@@ -239,26 +243,337 @@
        
     </div>
 
-    <!-- Toast container -->
-    <div id="cart-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
+    <!-- ============================================================
+         CART TOAST NOTIFICATION — إشعار علوي احترافي بلون #9333ea
+         ============================================================ -->
+    <div id="cart-toast"
+         class="cart-toast"
+         role="status"
+         aria-live="polite"
+         dir="rtl">
+
+        <div class="cart-toast__inner">
+
+            <!-- الأيقونة -->
+            <div class="cart-toast__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline class="cart-toast__check" points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+
+            <!-- المحتوى -->
+            <div class="cart-toast__body">
+                <h4 class="cart-toast__title">تمت الإضافة بنجاح</h4>
+                <p class="cart-toast__msg">تم إضافة المنتج إلى السلة</p>
+            </div>
+
+            <!-- زر الإغلاق -->
+            <button type="button"
+                    class="cart-toast__close"
+                    id="cart-toast-close"
+                    aria-label="إغلاق">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <!-- شريط التقدم -->
+            <div class="cart-toast__progress"></div>
+        </div>
+    </div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-    <script>
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('cart-toast');
-            if (!toast) return;
-            toast.innerText = msg;
-            toast.style.background = isError ? '#dc2626' : '#1f2937';
-            toast.classList.remove('opacity-0', 'translate-y-10');
-            toast.classList.add('opacity-100', 'translate-y-0');
-            setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', 'translate-y-10');
-            }, 2000);
+    <style>
+        /* ============================================================
+           CART TOAST NOTIFICATION — اللون الرئيسي #9333ea (بنفسجي)
+           ============================================================ */
+
+        /* متغيّرات اللون — غيّر من هنا فقط */
+        :root {
+            --toast-brand-50 : #faf5ff;
+            --toast-brand-400: #a855f7;
+            --toast-brand-500: #9333ea;   /* اللون الرئيسي */
+            --toast-brand-600: #7e22ce;
+            --toast-brand-700: #6b21a8;
         }
 
-        // Event delegation for dynamically loaded add-to-cart buttons
+        .cart-toast {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            z-index: 999999;
+            width: calc(100% - 28px);
+            max-width: 430px;
+            transform: translateX(-50%) translateY(-140%);
+            opacity: 0;
+            pointer-events: none;
+            transition:
+                transform .55s cubic-bezier(.34, 1.56, .64, 1),
+                opacity   .3s  ease;
+            direction: rtl;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .cart-toast.is-visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ---------- البطاقة الداخلية ---------- */
+        .cart-toast__inner {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 14px 15px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #9333ea 0%, #6b21a8 100%);
+            box-shadow:
+                0 20px 40px -12px rgba(147, 51, 234, .55),
+                0 8px 20px -8px rgba(0, 0, 0, .35),
+                inset 0 1px 0 rgba(255, 255, 255, .25);
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        /* لمعة علوية */
+        .cart-toast__inner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+            pointer-events: none;
+        }
+
+        /* ---------- الأيقونة ---------- */
+        .cart-toast__icon {
+            position: relative;
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.3);
+        }
+
+        /* حلقة نبض حول الأيقونة */
+        .cart-toast__icon::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, .6);
+            opacity: 0;
+        }
+        .cart-toast.is-visible .cart-toast__icon::after {
+            animation: cart-toast-ring 1.6s ease-out .35s 2;
+        }
+        @keyframes cart-toast-ring {
+            0%   { transform: scale(.85); opacity: .85; }
+            100% { transform: scale(1.55); opacity: 0; }
+        }
+
+        .cart-toast__icon svg {
+            width: 22px;
+            height: 22px;
+            color: #ffffff;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,.15));
+        }
+
+        .cart-toast__check {
+            stroke-dasharray: 32;
+            stroke-dashoffset: 32;
+        }
+        .cart-toast.is-visible .cart-toast__check {
+            animation: cart-toast-check .5s cubic-bezier(.65, 0, .45, 1) .25s forwards;
+        }
+        @keyframes cart-toast-check {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* ---------- المحتوى ---------- */
+        .cart-toast__body {
+            flex: 1;
+            min-width: 0;
+            text-align: right;
+        }
+
+        .cart-toast__title {
+            margin: 0 0 2px;
+            font-size: 14.5px;
+            font-weight: 800;
+            letter-spacing: -.2px;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        .cart-toast__msg {
+            margin: 0;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, .92);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ---------- زر الإغلاق ---------- */
+        .cart-toast__close {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .18);
+            color: #ffffff;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color .2s ease, transform .2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .cart-toast__close:hover {
+            background: rgba(255, 255, 255, .32);
+            transform: rotate(90deg);
+        }
+        .cart-toast__close:active {
+            transform: rotate(90deg) scale(.9);
+        }
+
+        /* ---------- شريط التقدم ---------- */
+        .cart-toast__progress {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, .22);
+            overflow: hidden;
+        }
+        .cart-toast__progress::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: #ffffff;
+            transform-origin: right center;
+            transform: scaleX(0);
+        }
+        .cart-toast.is-visible .cart-toast__progress::after {
+            animation: cart-toast-progress 3s linear forwards;
+        }
+        @keyframes cart-toast-progress {
+            0%   { transform: scaleX(1); }
+            100% { transform: scaleX(0); }
+        }
+
+        /* ============================================================
+           📱 Landscape — ضبط الأبعاد للوضع الأفقي
+           ============================================================ */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .cart-toast {
+                top: 10px;
+                max-width: 560px;
+                width: calc(100% - 40px);
+            }
+            .cart-toast__inner {
+                padding: 9px 14px 12px;
+                border-radius: 14px;
+                gap: 10px;
+            }
+            .cart-toast__icon {
+                width: 36px;
+                height: 36px;
+            }
+            .cart-toast__icon svg { width: 18px; height: 18px; }
+            .cart-toast__title { font-size: 13px; }
+            .cart-toast__msg   { font-size: 11.5px; -webkit-line-clamp: 1; }
+            .cart-toast__close { width: 26px; height: 26px; font-size: 11px; }
+        }
+
+        /* 📱 شاشات ضيقة جدًا (≤360px) */
+        @media (max-width: 360px) {
+            .cart-toast { width: calc(100% - 20px); }
+            .cart-toast__inner { padding: 12px 12px 14px; gap: 10px; }
+            .cart-toast__icon { width: 40px; height: 40px; }
+            .cart-toast__title { font-size: 13.5px; }
+            .cart-toast__msg   { font-size: 12px; }
+        }
+
+        /* ♿ تقليل الحركة */
+        @media (prefers-reduced-motion: reduce) {
+            .cart-toast, .cart-toast * {
+                animation-duration: .001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .001ms !important;
+            }
+        }
+    </style>
+
+    <script>
+        // ============================================================
+        // CART TOAST — JavaScript
+        // ============================================================
+        let cartToastTimer = null;
+
+        function showCartToast(message, title = 'تمت الإضافة بنجاح') {
+            const toast  = document.getElementById('cart-toast');
+            if (!toast) return;
+
+            const titleEl = toast.querySelector('.cart-toast__title');
+            const msgEl   = toast.querySelector('.cart-toast__msg');
+
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl)   msgEl.textContent   = message;
+
+            // إعادة ضبط الأنيميشن
+            toast.classList.remove('is-visible');
+            void toast.offsetWidth; // force reflow
+            toast.classList.add('is-visible');
+
+            clearTimeout(cartToastTimer);
+            cartToastTimer = setTimeout(hideCartToast, 3000);
+        }
+
+        function hideCartToast() {
+            const toast = document.getElementById('cart-toast');
+            if (!toast) return;
+            clearTimeout(cartToastTimer);
+            toast.classList.remove('is-visible');
+        }
+
+        // أزرار الإغلاق
+        document.getElementById('cart-toast-close')?.addEventListener('click', hideCartToast);
+
+        // إغلاق بـ Escape
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') hideCartToast();
+        });
+
+        // إيقاف الإغلاق التلقائي عند المرور
+        const cartToastEl = document.getElementById('cart-toast');
+        if (cartToastEl) {
+            cartToastEl.addEventListener('mouseenter', () => clearTimeout(cartToastTimer));
+            cartToastEl.addEventListener('mouseleave', () => {
+                cartToastTimer = setTimeout(hideCartToast, 2000);
+            });
+        }
+
+        // ============================================================
+        // Event delegation لإضافة المنتج للسلة
+        // ============================================================
         document.addEventListener('click', function(e) {
             const btn = e.target.closest('.add-to-cart');
             if (btn) {
@@ -271,10 +586,10 @@
                 let packName = btn.getAttribute('data-pack-name') || '';
                 let uomName = btn.getAttribute('data-uom-name') || '';
                 let packId = btn.getAttribute('data-pack-id') || null;
-                
+
                 let cartItems = JSON.parse(localStorage.getItem('maggadit_cart')) || [];
                 let existingItemIndex = cartItems.findIndex(item => item.id == id && item.pack_name == packName);
-                
+
                 if (existingItemIndex > -1) {
                     cartItems[existingItemIndex].quantity += 1;
                 } else {
@@ -290,88 +605,86 @@
                         pack_id: packId
                     });
                 }
-                
+
                 localStorage.setItem('maggadit_cart', JSON.stringify(cartItems));
-                showToast(`✅ تم إضافة "${name} (${packName})" إلى السلة`);
+
+                // عرض الإشعار
+                const displayName = name + (packName ? ' (' + packName + ')' : '');
+                showCartToast(displayName + ' تمت إضافته إلى السلة', '✅ تمت الإضافة');
             }
         });
+
         // ========== Carousel with Auto-Scroll ==========
-        const carousel = document.getElementById('ad-carousel');
-        const dots = document.querySelectorAll('#ad-dots .rounded-full');
+        function initCarousel() {
+            const carousel = document.getElementById('ad-carousel');
+            const dots = document.querySelectorAll('#ad-dots .rounded-full');
 
-        let autoScrollInterval = null;
-        let isUserInteracting = false;
-        let interactionTimeout = null;
-        const AUTO_SCROLL_DELAY = 4000;
+            let autoScrollInterval = null;
+            let isUserInteracting = false;
+            let interactionTimeout = null;
+            const AUTO_SCROLL_DELAY = 4000;
 
-        function updateDots() {
-            if (!carousel || !dots.length) return;
-            const scrollPos = carousel.scrollLeft;
-            const itemWidth = carousel.clientWidth;
-            if (itemWidth === 0) return;
-            const activeIndex = Math.round(scrollPos / itemWidth);
-            dots.forEach((dot, idx) => {
-                if (idx === activeIndex) {
-                    dot.classList.add('w-4', 'bg-purple-600');
-                    dot.classList.remove('w-2', 'bg-gray-300');
-                } else {
-                    dot.classList.add('w-2', 'bg-gray-300');
-                    dot.classList.remove('w-4', 'bg-purple-600');
-                }
-            });
-        }
+            function updateDots() {
+                if (!carousel || !dots.length) return;
+                const scrollPos = carousel.scrollLeft;
+                const itemWidth = carousel.clientWidth;
+                if (itemWidth === 0) return;
+                const activeIndex = Math.round(scrollPos / itemWidth);
+                dots.forEach((dot, idx) => {
+                    if (idx === activeIndex) {
+                        dot.classList.add('w-4', 'bg-purple-600');
+                        dot.classList.remove('w-2', 'bg-gray-300');
+                    } else {
+                        dot.classList.add('w-2', 'bg-gray-300');
+                        dot.classList.remove('w-4', 'bg-purple-600');
+                    }
+                });
+            }
 
-        function scrollToSlide(index) {
-            if (!carousel) return;
-            const itemWidth = carousel.clientWidth;
-            if (itemWidth === 0) return;
-            carousel.scrollTo({
-                left: index * itemWidth,
-                behavior: 'smooth'
-            });
-        }
+            function scrollToSlide(index) {
+                if (!carousel) return;
+                const itemWidth = carousel.clientWidth;
+                if (itemWidth === 0) return;
+                carousel.scrollTo({ left: index * itemWidth, behavior: 'smooth' });
+            }
 
-        function autoScroll() {
-            if (!carousel || isUserInteracting) return;
-            const itemWidth = carousel.clientWidth;
-            if (itemWidth === 0) return;
-            const totalSlides = dots.length;
-            let currentIndex = Math.round(carousel.scrollLeft / itemWidth);
-            let nextIndex = (currentIndex + 1) % totalSlides;
-            scrollToSlide(nextIndex);
-        }
+            function autoScroll() {
+                if (!carousel || isUserInteracting) return;
+                const itemWidth = carousel.clientWidth;
+                if (itemWidth === 0) return;
+                const totalSlides = dots.length;
+                if (totalSlides <= 1) return;
+                let currentIndex = Math.round(carousel.scrollLeft / itemWidth);
+                let nextIndex = (currentIndex + 1) % totalSlides;
+                scrollToSlide(nextIndex);
+            }
 
-        function startAutoScroll() {
-            if (autoScrollInterval) clearInterval(autoScrollInterval);
-            autoScrollInterval = setInterval(autoScroll, AUTO_SCROLL_DELAY);
-        }
+            function startAutoScroll() {
+                if (autoScrollInterval) clearInterval(autoScrollInterval);
+                autoScrollInterval = setInterval(autoScroll, AUTO_SCROLL_DELAY);
+            }
 
-        function pauseAutoScroll() {
-            isUserInteracting = true;
-            if (interactionTimeout) clearTimeout(interactionTimeout);
-            interactionTimeout = setTimeout(() => {
-                isUserInteracting = false;
-            }, AUTO_SCROLL_DELAY + 500);
-        }
+            function pauseAutoScroll() {
+                isUserInteracting = true;
+                if (interactionTimeout) clearTimeout(interactionTimeout);
+                interactionTimeout = setTimeout(() => { isUserInteracting = false; }, AUTO_SCROLL_DELAY + 500);
+            }
 
-        if (carousel) {
-            carousel.addEventListener('scroll', () => {
+            if (carousel) {
+                carousel.addEventListener('scroll', () => { updateDots(); pauseAutoScroll(); });
+                carousel.addEventListener('touchstart', pauseAutoScroll);
+                carousel.addEventListener('mousedown', pauseAutoScroll);
+                carousel.addEventListener('mouseenter', pauseAutoScroll);
                 updateDots();
-                pauseAutoScroll();
+                startAutoScroll();
+            }
+
+            dots.forEach((dot, idx) => {
+                dot.addEventListener('click', () => { scrollToSlide(idx); pauseAutoScroll(); });
             });
-            carousel.addEventListener('touchstart', pauseAutoScroll);
-            carousel.addEventListener('mousedown', pauseAutoScroll);
-            carousel.addEventListener('mouseenter', pauseAutoScroll);
-            updateDots();
-            startAutoScroll();
         }
 
-        dots.forEach((dot, idx) => {
-            dot.addEventListener('click', () => {
-                scrollToSlide(idx);
-                pauseAutoScroll();
-            });
-        });
+        initCarousel();
 
         // ========== Bottom Navigation ==========
         document.querySelectorAll('.nav-item-premium').forEach(item => {
@@ -389,17 +702,16 @@
             });
         });
 
-        // ========== Favorite Toggle (Event Delegation for Dynamic Elements) ==========
+        // ========== Favorite Toggle ==========
         document.addEventListener('click', function(e) {
             const btn = e.target.closest('.toggle-favorite-btn');
             if (!btn) return;
-            
             e.preventDefault();
             e.stopPropagation();
             const icon = btn.querySelector('i');
             const productId = btn.getAttribute('data-id');
-            
-            fetch('{{ route('customer.proxy.favorites.toggle', [], false) }}', {
+
+            fetch('{{ route('customer.favorite.toggle', [], false) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -418,15 +730,17 @@
                         btn.classList.add('text-red-500');
                         icon.classList.remove('far');
                         icon.classList.add('fas');
+                        showCartToast('تمت الإضافة إلى المفضلة', '❤️ المفضلة');
                     } else {
                         btn.classList.remove('text-red-500');
                         btn.classList.add('text-gray-400');
                         icon.classList.remove('fas');
                         icon.classList.add('far');
+                        showCartToast('تمت الإزالة من المفضلة', '💔 المفضلة');
                     }
                 }
             })
-            .catch(err => console.error(err));
+            .catch(() => showCartToast('خطأ في الاتصال، حاول مجددًا', '⚠️ خطأ'));
         });
 
         // Dynamic Proxy Fallback Fetcher for Dashboard Categories
@@ -477,16 +791,14 @@
                         const items = data.products.data || data.products;
                         if (Array.isArray(items) && items.length > 0) {
                             dashProducts.innerHTML = items.slice(0, 10).map(p => {
-                                // Get pack details - use first pack or default
                                 const packs = p.packs || [];
                                 const defaultPack = packs.find(pack => pack.is_default) || packs[0] || {};
                                 const packName = defaultPack.name || defaultPack.display_name || '';
                                 const uomName = defaultPack.uom_name || defaultPack.uom_symbol || '';
-                                const packQuantity = defaultPack.quantity || 1;
-                                
+
                                 return `
                                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer" onclick="window.location='/customer/product/${p.id}'">
-                                    <button class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors ${p.is_favorite ? 'text-red-500' : 'text-gray-400'}" data-id="${p.id}">
+                                    <button class="absolute top-2 left-2 z-0 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm toggle-favorite-btn transition-colors ${p.is_favorite ? 'text-red-500' : 'text-gray-400'}" data-id="${p.id}">
                                         <i class="${p.is_favorite ? 'fas' : 'far'} fa-heart text-lg"></i>
                                     </button>
                                     <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
@@ -500,8 +812,7 @@
                                         </div>
                                         ${packName ? `
                                         <span class="inline-block mt-1 bg-purple-50 text-purple-700 text-[10px] px-2 py-0.5 rounded-full">
-                                            ${packName}
-                                            ${uomName ? ` ${uomName}` : ''}
+                                            ${packName}${uomName ? ` ${uomName}` : ''}
                                         </span>` : ''}
                                         <div class="mt-2 flex items-center justify-between">
                                             <div>
@@ -582,13 +893,16 @@
                                 </a>
                             </div>
                         `).join('');
-                        
+
                         const dotsContainer = document.getElementById('ad-dots');
                         if (dotsContainer) {
                             dotsContainer.innerHTML = data.banners.map((_, i) => `
                                 <div class="w-2 h-2 rounded-full bg-gray-300 transition-all duration-300 ${i === 0 ? 'w-4 bg-purple-600' : ''}" data-index="${i}"></div>
                             `).join('');
                         }
+
+                        // Re-initialize carousel after dynamic banner load
+                        initCarousel();
                     }
                 }).catch(e => console.error(e));
         }

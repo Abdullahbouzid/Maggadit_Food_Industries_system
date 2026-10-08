@@ -17,6 +17,8 @@ trait CustomerAppHelpers
     private string $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
 
     protected ImagePathService $imagePathService;
+    private ?Customer $cachedCustomer = null;
+    private ?array $cachedPriceListVersion = null;
 
     public function __construct(ImagePathService $imagePathService)
     {
@@ -25,7 +27,13 @@ trait CustomerAppHelpers
 
     private function getCustomer(Request $request): ?Customer
     {
+        // Cache customer per request to avoid multiple DB queries
+        if (isset($this->cachedCustomer)) {
+            return $this->cachedCustomer;
+        }
+
         $customer = $request->user('customer')
+            ?: Auth::guard('api')->user()
             ?: Auth::guard('customer')->user();
 
         if (! $customer && $request->bearerToken()) {
@@ -45,6 +53,7 @@ trait CustomerAppHelpers
             }
         }
 
+        $this->cachedCustomer = $customer;
         return $customer;
     }
 
@@ -186,10 +195,17 @@ trait CustomerAppHelpers
         $priceListId = $customer ? $customer->price_list_id : null;
 
         if ($priceListId) {
-            $latestVersion = PriceListVersion::where('price_list_id', $priceListId)
-                ->where('effective_date', '<=', now())
-                ->orderByDesc('effective_date')
-                ->first();
+            if (!isset($this->cachedPriceListVersion) || $this->cachedPriceListVersion['price_list_id'] !== $priceListId) {
+                $this->cachedPriceListVersion = [
+                    'price_list_id' => $priceListId,
+                    'version' => PriceListVersion::where('price_list_id', $priceListId)
+                        ->where('effective_date', '<=', now())
+                        ->orderByDesc('effective_date')
+                        ->first(),
+                ];
+            }
+
+            $latestVersion = $this->cachedPriceListVersion['version'];
 
             if ($latestVersion) {
                 $priceItemRecord = PriceListVersionItem::where('price_list_version_id', $latestVersion->id)

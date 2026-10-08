@@ -29,8 +29,26 @@
         </div>
     </div>
 
-    <!-- Toast إشعارات -->
-    <div id="fav-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
+    <!-- ============================================================
+         CART TOAST NOTIFICATION
+         ============================================================ -->
+    <div id="cart-toast" class="cart-toast" role="status" aria-live="polite" dir="rtl">
+        <div class="cart-toast__inner">
+            <div class="cart-toast__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline class="cart-toast__check" points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <div class="cart-toast__body">
+                <h4 class="cart-toast__title">تمت الإضافة بنجاح</h4>
+                <p class="cart-toast__msg">تم إضافة المنتج إلى السلة</p>
+            </div>
+            <button type="button" class="cart-toast__close" id="cart-toast-close" aria-label="إغلاق">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="cart-toast__progress"></div>
+        </div>
+    </div>
 
     <script>
         let favoriteItems = @json($favoriteItems ?? []);
@@ -84,20 +102,12 @@
         }
 
         function showToastMessage(msg, isError = false) {
-            const toast = document.getElementById('fav-toast');
-            toast.innerText = msg;
-            toast.style.background = isError ? '#dc2626' : '#1f2937';
-            toast.classList.remove('opacity-0', 'translate-y-10');
-            toast.classList.add('opacity-100', 'translate-y-0');
-            setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', 'translate-y-10');
-            }, 2000);
+            showCartToast(msg, isError ? '⚠️ خطأ' : '✅ تمت الإضافة');
         }
 
         function addToCart(product, pack = null) {
             let cart = JSON.parse(localStorage.getItem('maggadit_cart') || '[]');
-            const packId = pack ? pack.id : null;
+            const packId = pack ? pack.id : (product.pack_id || null);
             const packName = pack ? pack.name : (product.pack_name || product.uom_name || '');
             const uomName = pack ? (pack.uom_name || '') : (product.uom_name || '');
             const price = pack ? pack.price : product.price;
@@ -121,8 +131,8 @@
                 });
             }
             localStorage.setItem('maggadit_cart', JSON.stringify(cart));
-            const msg = currentLang === 'ar' ? `تم إضافة ${product.name_ar} ${packName ? '('+packName+')' : ''} إلى السلة` : `Added ${product.name_en} to cart`;
-            showToastMessage(msg, false);
+            const msg = currentLang === 'ar' ? `تم إضافة ${product.name_ar || product.name} ${packName ? '('+packName+')' : ''} إلى السلة` : `Added ${product.name_en || product.name} to cart`;
+            showCartToast(msg, '✅ تمت الإضافة');
         }
 
         function removeFromFav(id) {
@@ -192,12 +202,12 @@
                             </div>
                             <div class="mt-3 flex items-center justify-between">
                                 <span class="font-extrabold text-purple-700 text-base">${formatPrice(item.price)}</span>
-                                ${item.inStock ? 
-                                    `<button class="add-to-cart-fav bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm active:scale-95" data-id="${item.id}" data-pack-name="${item.pack_name || ''}" data-uom-name="${item.uom_name || ''}">
-                                        <i class="fas fa-cart-plus"></i> ${t.add_to_cart}
-                                    </button>` :
-                                    `<span class="text-red-500 text-xs font-semibold">${t.out_of_stock}</span>`
-                                }
+                                    ${item.inStock ? 
+                                        `<button class="add-to-cart-fav bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm active:scale-95" data-id="${item.id}" data-pack-id="${item.pack_id || ''}" data-pack-name="${item.pack_name || ''}" data-uom-name="${item.uom_name || ''}">
+                                            <i class="fas fa-cart-plus"></i> ${t.add_to_cart}
+                                        </button>` :
+                                        `<span class="text-red-500 text-xs font-semibold">${t.out_of_stock}</span>`
+                                    }
                             </div>
                         </div>
                     </div>
@@ -205,15 +215,8 @@
                 container.appendChild(itemCard);
             });
 
-            // ربط الأحداث
-            document.querySelectorAll('.remove-fav').forEach(btn => {
-                btn.removeEventListener('click', handleRemoveClick);
-                btn.addEventListener('click', handleRemoveClick);
-            });
-            document.querySelectorAll('.add-to-cart-fav').forEach(btn => {
-                btn.removeEventListener('click', handleAddToCartClick);
-                btn.addEventListener('click', handleAddToCartClick);
-            });
+            // ربط أحداث الإزالة — Event Delegation يدعم الأزرار الديناميكية
+            // ملاحظة: زر الإضافة للسلة يتم معالجته عبر Event Delegation في الأسفل
         }
 
         function handleRemoveClick(e) {
@@ -286,4 +289,159 @@
 
     <!-- Fontawesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        .cart-toast {
+            position: fixed; top: 16px; left: 50%;
+            z-index: 999999;
+            width: calc(100% - 28px); max-width: 430px;
+            transform: translateX(-50%) translateY(-140%);
+            opacity: 0; pointer-events: none;
+            transition: transform .55s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
+            direction: rtl; font-family: inherit; box-sizing: border-box;
+        }
+        .cart-toast.is-visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1; pointer-events: auto;
+        }
+        .cart-toast__inner {
+            position: relative; display: flex; align-items: center; gap: 12px;
+            padding: 13px 14px 15px; border-radius: 18px;
+            background: linear-gradient(135deg, #9333ea 0%, #6b21a8 100%);
+            box-shadow: 0 20px 40px -12px rgba(147,51,234,.55),
+                        0 8px 20px -8px rgba(0,0,0,.35),
+                        inset 0 1px 0 rgba(255,255,255,.25);
+            color: #ffffff; overflow: hidden;
+        }
+        .cart-toast__inner::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+            pointer-events: none;
+        }
+        .cart-toast__icon {
+            position: relative; flex-shrink: 0; width: 44px; height: 44px;
+            border-radius: 50%; background: rgba(255,255,255,.22);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.3);
+        }
+        .cart-toast__icon::after {
+            content: ''; position: absolute; inset: -2px;
+            border-radius: 50%; border: 2px solid rgba(255,255,255,.6); opacity: 0;
+        }
+        .cart-toast.is-visible .cart-toast__icon::after { animation: cart-toast-ring 1.6s ease-out .35s 2; }
+        @keyframes cart-toast-ring {
+            0% { transform: scale(.85); opacity: .85; }
+            100% { transform: scale(1.55); opacity: 0; }
+        }
+        .cart-toast__icon svg { width: 22px; height: 22px; color: #fff; filter: drop-shadow(0 1px 1px rgba(0,0,0,.15)); }
+        .cart-toast__check { stroke-dasharray: 32; stroke-dashoffset: 32; }
+        .cart-toast.is-visible .cart-toast__check { animation: cart-toast-check .5s cubic-bezier(.65,0,.45,1) .25s forwards; }
+        @keyframes cart-toast-check { to { stroke-dashoffset: 0; } }
+        .cart-toast__body { flex: 1; min-width: 0; text-align: right; }
+        .cart-toast__title { margin: 0 0 2px; font-size: 14.5px; font-weight: 800; color: #fff; line-height: 1.3; }
+        .cart-toast__msg {
+            margin: 0; font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,.92);
+            line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;
+        }
+        .cart-toast__close {
+            flex-shrink: 0; width: 30px; height: 30px; border: 0; border-radius: 50%;
+            background: rgba(255,255,255,.18); color: #fff; font-size: 12px;
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background-color .2s, transform .2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .cart-toast__close:hover { background: rgba(255,255,255,.32); transform: rotate(90deg); }
+        .cart-toast__close:active { transform: rotate(90deg) scale(.9); }
+        .cart-toast__progress {
+            position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+            background: rgba(255,255,255,.22); overflow: hidden;
+        }
+        .cart-toast__progress::after {
+            content: ''; position: absolute; inset: 0; background: #fff;
+            transform-origin: right center; transform: scaleX(0);
+        }
+        .cart-toast.is-visible .cart-toast__progress::after { animation: cart-toast-progress 3s linear forwards; }
+        @keyframes cart-toast-progress {
+            0% { transform: scaleX(1); }
+            100% { transform: scaleX(0); }
+        }
+    </style>
+
+    <script>
+        // ============================================================
+        // CART TOAST — JavaScript
+        // ============================================================
+        let cartToastTimer = null;
+
+        function showCartToast(message, title = 'تمت الإضافة بنجاح') {
+            const toast  = document.getElementById('cart-toast');
+            if (!toast) return;
+
+            const titleEl = toast.querySelector('.cart-toast__title');
+            const msgEl   = toast.querySelector('.cart-toast__msg');
+
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl)   msgEl.textContent   = message;
+
+            toast.classList.remove('is-visible');
+            void toast.offsetWidth;
+            toast.classList.add('is-visible');
+
+            clearTimeout(cartToastTimer);
+            cartToastTimer = setTimeout(hideCartToast, 3000);
+        }
+
+        function hideCartToast() {
+            const toast = document.getElementById('cart-toast');
+            if (!toast) return;
+            clearTimeout(cartToastTimer);
+            toast.classList.remove('is-visible');
+        }
+
+        document.getElementById('cart-toast-close')?.addEventListener('click', hideCartToast);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCartToast(); });
+        const cartToastEl = document.getElementById('cart-toast');
+        if (cartToastEl) {
+            cartToastEl.addEventListener('mouseenter', () => clearTimeout(cartToastTimer));
+            cartToastEl.addEventListener('mouseleave', () => {
+                cartToastTimer = setTimeout(hideCartToast, 2000);
+            });
+        }
+
+        // ============================================================
+        // إضافة للسلة — Event Delegation (للأزرار الديناميكية)
+        // ============================================================
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.add-to-cart-fav');
+            if (!btn) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            let id = btn.getAttribute('data-id');
+            let packId = btn.getAttribute('data-pack-id') || null;
+            let packName = btn.getAttribute('data-pack-name') || '';
+            let uomName = btn.getAttribute('data-uom-name') || '';
+
+            const product = favoriteItems.find(item => item.id == id);
+            if (product && product.inStock) {
+                addToCart({ ...product, pack_id: packId, pack_name: packName, uom_name: uomName });
+            }
+        });
+
+        // ============================================================
+        // إزالة من المفضلة — Event Delegation (للأزرار الديناميكية)
+        // ============================================================
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.remove-fav');
+            if (!btn) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const id = parseInt(btn.getAttribute('data-id'));
+            removeFromFav(id);
+        });
+    </script>
 @endsection
