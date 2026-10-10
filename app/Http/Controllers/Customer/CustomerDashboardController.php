@@ -276,7 +276,10 @@ class CustomerDashboardController extends Controller
             if ($token) {
                 $remoteData = $this->fetchRemoteData('customer/products', $token);
                 if ($remoteData && isset($remoteData['products'])) {
-                    $remoteProducts = collect($remoteData['products']);
+                    $productsArray = isset($remoteData['products']['data'])
+                        ? $remoteData['products']['data']
+                        : $remoteData['products'];
+                    $remoteProducts = collect($productsArray);
                     $products = $remoteProducts->map(function ($item) {
                         $o = (object) $item;
                         $o->image = isset($o->image) ? $this->imagePathService->normalize($o->image) : null;
@@ -317,11 +320,11 @@ class CustomerDashboardController extends Controller
                                     'pack_id' => $pack->id ?? null,
                                     'name' => $itemObj->name,
                                     'image' => $itemImage,
-                                    'price' => $price,
+                                    'price' => $pack->price ?? $price,
                                     'old_price' => $oldPrice,
                                     'pack_name' => $packName,
                                     'uom_name' => $uomName,
-                                    'pack_quantity' => (float) ($pack->quantity_in_pack ?? 1),
+                                    'pack_quantity' => (float) ($pack->quantity ?? 1),
                                     'favorite' => (bool) ($itemObj->is_favorite ?? in_array($itemObj->id, $favoriteItemIds ?? [])),
                                 ]);
                             }
