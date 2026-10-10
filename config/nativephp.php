@@ -163,7 +163,7 @@ return [
     */
 
     'runtime' => [
-        'mode' => 'persistent', // 'classic' or 'persistent'
+        'mode' => 'classic', // 'classic' or 'persistent' - using classic to avoid "incomplete object" errors with stdClass objects
         'reset_instances' => true,
         'gc_between_dispatches' => false,
     ],

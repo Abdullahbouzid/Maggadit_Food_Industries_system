@@ -113,22 +113,35 @@ trait CustomerAppHelpers
         // Generate cache key based on endpoint, token, and params
         $cacheKey = 'remote_data_' . md5($endpoint . ($token ?? '') . serialize($params));
         
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($endpoint, $token, $params) {
-            try {
-                $url = "{$this->baseUrl}/{$endpoint}";
-                $request = \Illuminate\Support\Facades\Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->timeout(5)->retry(3, 500);
-                if ($token) {
-                    $request = $request->withToken($token);
-                }
-                $response = $request->get($url, $params);
-                if ($response->successful()) {
-                    return $response->json();
-                }
-            } catch (\Exception $e) {
-                Log::warning("Failed to fetch remote data from {$endpoint}: " . $e->getMessage());
+        // Check cache first to avoid caching stdClass objects
+        $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+        if ($cached !== null) {
+            if (is_array($cached)) {
+                return $cached;
             }
-            return null;
-        });
+            // Invalid cache entry, remove it
+            \Illuminate\Support\Facades\Cache::forget($cacheKey);
+        }
+        
+        try {
+            $url = "{$this->baseUrl}/{$endpoint}";
+            $request = \Illuminate\Support\Facades\Http::withHeaders(['Accept' => 'application/json'])->withoutVerifying()->timeout(5)->retry(3, 500);
+            if ($token) {
+                $request = $request->withToken($token);
+            }
+            $response = $request->get($url, $params);
+            if ($response->successful()) {
+                $data = $response->json();
+                // Only cache arrays, never cache stdClass objects
+                if (is_array($data)) {
+                    \Illuminate\Support\Facades\Cache::put($cacheKey, $data, 300);
+                }
+                return $data;
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to fetch remote data from {$endpoint}: " . $e->getMessage());
+        }
+        return null;
     }
 
     /**
@@ -177,18 +190,38 @@ trait CustomerAppHelpers
 
         $cacheKey = 'remote_item_' . md5("customer/products/{$itemId}" . $token);
 
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($itemId, $token) {
-            $remoteData = $this->fetchRemoteData("customer/products/{$itemId}", $token);
-            if ($remoteData && isset($remoteData['product'])) {
-                $item = (object) $remoteData['product'];
-            } elseif ($remoteData && isset($remoteData['id'])) {
-                $item = (object) $remoteData;
-            } else {
-                return null;
+        $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+        if ($cached !== null) {
+            // If cached value is already an object, return it
+            if (is_object($cached)) {
+                return $cached;
             }
-            $item->image = isset($item->image) ? $this->imagePathService->normalize($item->image) : null;
-            return $item;
-        });
+            // If cached value is an array, convert to object
+            if (is_array($cached)) {
+                $item = (object) $cached;
+                if (isset($item->image)) {
+                    $item->image = $this->imagePathService->normalize($item->image);
+                }
+                return $item;
+            }
+            // Invalid cache entry, remove it
+            \Illuminate\Support\Facades\Cache::forget($cacheKey);
+        }
+
+        $remoteData = $this->fetchRemoteData("customer/products/{$itemId}", $token);
+        if ($remoteData && isset($remoteData['product'])) {
+            $item = (object) $remoteData['product'];
+        } elseif ($remoteData && isset($remoteData['id'])) {
+            $item = (object) $remoteData;
+        } else {
+            return null;
+        }
+        $item->image = isset($item->image) ? $this->imagePathService->normalize($item->image) : null;
+        
+        // Store as array in cache to avoid serialization issues
+        \Illuminate\Support\Facades\Cache::put($cacheKey, (array) $item, 60);
+        
+        return $item;
     }
 
     private function normalizeItem($item)
