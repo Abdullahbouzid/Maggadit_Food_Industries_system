@@ -319,6 +319,88 @@ class CustomerOrderController extends Controller
         } catch (\Throwable $e) {
             Log::error('Customer checkout failed: '.$e->getMessage());
 
+            // Check if this is a database error (e.g., foreign key violation in APK mode)
+            $isDatabaseError = false;
+            if (str_contains($e->getMessage(), '23000') || str_contains($e->getMessage(), 'foreign key') || str_contains($e->getMessage(), 'SQLSTATE')) {
+                $isDatabaseError = true;
+            }
+
+            // If database error and we have valid lines, try external API fallback
+            if ($isDatabaseError && !empty($lines) && empty($rejected)) {
+                // Build items for external API (same format as JavaScript sends)
+                $apiItems = [];
+                foreach ($validated['items'] as $rawItem) {
+                    $remoteItem = $this->getRemoteItem($rawItem['id'], $request);
+                    if (! $remoteItem) {
+                        continue;
+                    }
+                    // We only need id, quantity, and pack_id for the external API
+                    $apiItems[] = [
+                        'id' => $rawItem['id'],
+                        'quantity' => (float) $rawItem['quantity'],
+                        'pack_id' => $rawItem['pack_id'] ?? null,
+                    ];
+                }
+
+                if (!empty($apiItems)) {
+                    $externalCheckoutData = [
+                        'items' => $apiItems,
+                        'delivery_address' => $validated['delivery_address'] ?? '',
+                        'delivery_phone' => $validated['delivery_phone'] ?? '',
+                        'scheduled_delivery_date' => $validated['scheduled_delivery_date'] ?? null,
+                        'notes' => $validated['notes'] ?? '',
+                        'survey_rating' => $validated['survey_rating'] ?? null,
+                        'survey_feedback' => $validated['survey_feedback'] ?? '',
+                    ];
+
+                    $token = session('api_token') ?: $request->bearerToken();
+                    if ($token) {
+                        try {
+                            $response = Http::withToken($token)
+                                ->withoutVerifying()
+                                ->timeout(10)
+                                ->post("{$this->baseUrl}/customer/checkout", $externalCheckoutData);
+
+                            if ($response->successful()) {
+                                $responseData = $response->json();
+
+                                if ($request->expectsJson()) {
+                                    return response()->json([
+                                        'success' => true,
+                                        'message' => $responseData['message'] ?? 'تم إنشاء طلبيتك بنجاح!',
+                                        'order_id' => $responseData['order']['id'] ?? null,
+                                        'order_number' => $responseData['order']['order_number'] ?? null,
+                                        'total' => (float) ($responseData['order']['total_amount'] ?? 0),
+                                        'redirect' => route('customer.order_history', [], false),
+                                        'steps' => [],
+                                    ]);
+                                }
+
+                                return redirect()
+                                    ->route('customer.order_history')
+                                    ->with('success', $responseData['message'] ?? 'تم إنشاء طلبيتك بنجاح!')
+                                    ->with('order_number', $responseData['order']['order_number'] ?? '');
+                            } else {
+                                $errorData = $response->json() ?? [];
+                                $message = $errorData['message'] ?? 'فشل في إنشاء الطلب';
+
+                                if ($request->expectsJson()) {
+                                    return response()->json([
+                                        'success' => false,
+                                        'message' => $message,
+                                    ], 422);
+                                }
+
+                                return back()->withInput()->with(['error' => $message]);
+                            }
+                        } catch (\Exception $ex) {
+                            Log::error('Checkout external API fallback failed: ' . $ex->getMessage());
+                        }
+                    }
+                }
+            }
+
+            // If we reach here, fallback didn't work or wasn't applicable
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -327,7 +409,7 @@ class CustomerOrderController extends Controller
             }
 
             return back()->withInput()->with([
-                'error' => 'تعذر إنشار الطلبي. '.$e->getMessage(),
+                'error' => 'تعذر إنشاء الطلبي. '.$e->getMessage(),
             ]);
         }
 
