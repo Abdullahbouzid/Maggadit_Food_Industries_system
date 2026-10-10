@@ -205,9 +205,9 @@ class CustomerProfileController extends Controller
 
         return view('app_android.favorite', compact('favoriteItems'));
     }
-
-    public function toggleFavorite(Request $request)
-    {
+public function toggleFavorite(Request $request)
+{
+    
         $customer = $this->getCustomer($request);
         if (! $customer) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
@@ -219,23 +219,38 @@ class CustomerProfileController extends Controller
 
         $itemId = $request->item_id;
 
-        // Try to find item in local DB first
-        $item = $customer->favorites()->where('item_id', $itemId)->first();
+        // First, check if item exists locally
+        $localItem = $customer->favorites()->where('item_id', $itemId)->first();
 
-        // If not found locally, but we want to toggle favorite, we need to fetch from remote API
-        // to validate the item exists
-        if (! $item) {
-            // Use the CustomerAppHelpers trait to get remote item
-            if (method_exists($this, 'getRemoteItem')) {
-                $remoteItem = $this->getRemoteItem($itemId, $request);
-                if (! $remoteItem) {
-                    return response()->json(['success' => false, 'message' => 'المنتج غير موجود'], 404);
+        // If not found locally in APK environment (empty local DB), fetch from remote API
+        if (! $localItem) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                try {
+                    $remoteData = $this->fetchRemoteData('customer/favorites', $token);
+                    if ($remoteData && is_array($remoteData)) {
+                        // Check if item is in remote favorites
+                        $isFavoriteRemote = false;
+                        foreach ($remoteData as $fav) {
+                            $favItem = (object) $fav;
+                            if ($favItem->id == $itemId) {
+                                $isFavoriteRemote = true;
+                                break;
+                            }
+                        }
+                        if ($isFavoriteRemote) {
+                            // Item is in remote favorites but not local, so we're adding locally
+                            $customer->favorites()->create(['item_id' => $itemId]);
+                            return response()->json(['success' => true, 'is_favorite' => true, 'message' => 'تمت الإضافة للمفضلة']);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to check remote favorites during toggle: ' . $e->getMessage());
                 }
-            } else {
-                return response()->json(['success' => false, 'message' => 'المنتج غير موجود'], 404);
             }
         }
 
+        // Now toggle the local favorite
         $favorite = $customer->favorites()->where('item_id', $itemId)->first();
 
         if ($favorite) {
@@ -243,7 +258,6 @@ class CustomerProfileController extends Controller
 
             return response()->json(['success' => true, 'is_favorite' => false, 'message' => 'تمت الإزالة من المفضلة']);
         } else {
-            $customer->favorites()->create(['item_id' => $itemId]);
 
             return response()->json(['success' => true, 'is_favorite' => true, 'message' => 'تمت الإضافة للمفضلة']);
         }
