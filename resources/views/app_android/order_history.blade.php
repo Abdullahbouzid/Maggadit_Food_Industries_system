@@ -6,58 +6,67 @@
     @include('app_android.partials.mobile.header', ['title' => 'تاريخ الطلبيات'])
 
     <div class="px-4 py-4 mb-5 space-y-4" dir="rtl">
-        @php
-            $items = $orders->items();
-        @endphp
+@if($orders->count() === 0)
+    <div class="bg-white rounded-2xl shadow-md p-10 text-center border border-gray-100">
+        <div class="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-box text-4xl text-gray-300"></i>
+        </div>
+        <h3 class="text-lg font-bold text-gray-700 mb-2">لا توجد طلبيات سابقة</h3>
+        <p class="text-gray-400 text-sm mb-6">لم تقم بطلب أي منتجات بعد</p>
+        <a href="{{ route('customer.dashboard', [], false) }}" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
+            <i class="fas fa-shopping-bag ml-2"></i> ابدأ التسوق
+        </a>
+    </div>
+@else
+    <div class="space-y-3">
+        @foreach($orders as $order)
+            <a href="{{ route('customer.order_details', $order->id, false) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition cursor-pointer">
+                <div class="p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="font-bold text-gray-800">طلب رقم #{{ $order->order_number ?? $order->id }}</h3>
+                            <p class="text-xs text-gray-400 mt-1">{{ $order->created_at?->format('Y-m-d') ?? '' }} - {{ $order->created_at?->format('H:i') ?? '' }}</p>
+                        </div>
+                        <span class="text-xs px-3 py-1 rounded-full font-semibold
+                            @if(($order->status ?? '') == 'completed' || ($order->status ?? '') == 'delivered') bg-green-100 text-green-700
+                            @elseif(($order->status ?? '') == 'cancelled') bg-red-100 text-red-700
+                            @elseif(($order->status ?? '') == 'pending') bg-amber-100 text-amber-700
+                            @elseif(($order->status ?? '') == 'processing') bg-blue-100 text-blue-700
+                            @else bg-gray-100 text-gray-700
+                            @endif">
+                            {{ $order->status_label ?? $order->status ?? 'مجهول' }}
+                        </span>
+                    </div>
 
-        @if($items->isEmpty())
-            <div class="bg-white rounded-2xl shadow-md p-10 text-center border border-gray-100">
-                <div class="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-box text-4xl text-gray-300"></i>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <i class="fas fa-box text-purple-500"></i>
+                            <span>{{ $order->items?->count() ?? 0 }} منتج</span>
+                        </div>
+                        <div class="text-left">
+                            <span class="text-purple-700 font-bold text-lg">{{ number_format($order->total_amount ?? 0, 2) }} ر.س</span>
+                        </div>
+                    </div>
+
+                    @if($order->delivery)
+                        <div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
+                            <i class="fas fa-truck text-purple-400"></i>
+                            <span>{{ $order->delivery->address ?? 'لا توجد تفاصيل توصيل' }}</span>
+                        </div>
+                    @endif
                 </div>
-                <h3 class="text-lg font-bold text-gray-700 mb-2">لا توجد طلبيات السابقة</h3>
-                <p class="text-gray-400 text-sm mb-6">لم تقم بطلب أي منتجات بعد</p>
-                <a href="{{ route('customer.dashboard', [], false) }}" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
-                    <i class="fas fa-shopping-bag ml-2"></i> ابدأ التسوق
-                </a>
-            </div>
-        @else
-            <div class="space-y-3">
-                @foreach($items as $order)
-                    <a href="{{ route('customer.order_details', $order->id, false) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition cursor-pointer">
-                        <div class="p-4">
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <h3 class="font-bold text-gray-800">طلب رقم #{{ $order->order_number ?? $order->id }}</h3>
-                                    <p class="text-xs text-gray-400 mt-1">{{ $order->created_at?->format('Y-m-d') ?? '' }} - {{ $order->created_at?->format('H:i') ?? '' }}</p>
-                                </div>
-                                <span class="text-xs px-3 py-1 rounded-full font-semibold
-                                    @if(($order->status ?? '') == 'completed' || ($order->status ?? '') == 'delivered') bg-green-100 text-green-700
-                                    @elseif(($order->status ?? '') == 'cancelled') bg-red-100 text-red-700
-                                    @elseif(($order->status ?? '') == 'pending') bg-amber-100 text-amber-700
-                                    @elseif(($order->status ?? '') == 'processing') bg-blue-100 text-blue-700
-                                    @else bg-gray-100 text-gray-700
-                                    @endif">
-                                    {{ $order->status_label ?? $order->status ?? 'مجهول' }}
-                                </span>
-                            </div>
+            </a>
+        @endforeach
+    </div>
 
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <i class="fas fa-box text-purple-500"></i>
-                                    <span>{{ $order->items?->count() ?? 0 }} منتج</span>
-                                </div>
-                                <div class="text-left">
-                                    <span class="text-purple-700 font-bold text-lg">{{ number_format($order->total_amount ?? 0, 2) }} ر.س</span>
-                                </div>
-                            </div>
-
-                            @if($order->delivery)
-                                <div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
-                                    <i class="fas fa-truck text-purple-400"></i>
-                                    <span>{{ $order->delivery->address ?? 'لا توجد تفاصيل توصيل' }}</span>
-                                </div>
-                            @endif
+    @if($orders->hasMorePages())
+        <div class="mt-6 text-center">
+            <button id="load-more-orders" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
+                تحميل المزيد
+            </button>
+        </div>
+    @endif
+@endif
                         </div>
                     </a>
                 @endforeach
