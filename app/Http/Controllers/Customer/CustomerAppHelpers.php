@@ -188,7 +188,7 @@ trait CustomerAppHelpers
      */
     protected function getRemoteItem(int $itemId, Request $request): ?object
     {
-        $token = session('api_token') ?: $request->bearerToken();
+        $token = $this->getApiToken($request);
         if (!$token) {
             return null;
         }
