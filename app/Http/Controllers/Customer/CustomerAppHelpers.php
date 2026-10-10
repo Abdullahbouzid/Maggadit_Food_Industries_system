@@ -32,9 +32,19 @@ trait CustomerAppHelpers
             return $this->cachedCustomer;
         }
 
-        $customer = $request->user('customer')
-            ?: Auth::guard('api')->user()
-            ?: Auth::guard('customer')->user();
+        $customer = null;
+
+        // Try customer-specific guards first
+        if ($request->user('customer')) {
+            $customer = $request->user('customer');
+        } elseif (Auth::guard('customer')->user()) {
+            $customer = Auth::guard('customer')->user();
+        } elseif (Auth::guard('api')->user()) {
+            $apiUser = Auth::guard('api')->user();
+            if ($apiUser instanceof Customer) {
+                $customer = $apiUser;
+            }
+        }
 
         if (! $customer && $request->bearerToken()) {
             $personalToken = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
