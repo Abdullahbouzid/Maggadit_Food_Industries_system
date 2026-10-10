@@ -396,4 +396,55 @@ class CustomerOrderController extends Controller
             return back()->withInput()->with(['error' => 'تعذر إنشاء الطلوية. '.$e->getMessage()]);
         }
     }
+
+    public function orderHistory(Request $request)
+    {
+        $customer = $this->getCustomer($request);
+
+        if (! $customer) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
+            }
+            return redirect()->route('customer.login');
+        }
+
+        $orders = $customer->orders()
+            ->with(['items.item', 'delivery', 'invoices'])
+            ->latest()
+            ->paginate(15);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $orders,
+            ]);
+        }
+
+        return view('app_android.order_history', compact('orders'));
+    }
+
+    public function orderDetails(Request $request, $id)
+    {
+        $customer = $this->getCustomer($request);
+
+        if (! $customer) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
+            }
+            return redirect()->route('customer.login');
+        }
+
+        $order = $customer->orders()
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
+            ->findOrFail($id);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $order,
+            ]);
+        }
+
+        return view('app_android.order_details', compact('order'));
+    }
 }
