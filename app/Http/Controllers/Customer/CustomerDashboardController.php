@@ -270,17 +270,63 @@ class CustomerDashboardController extends Controller
             }
         }
 
-        // If local DB is empty, fetch products from external API (for APK)
+        // If local DB is empty, fetch products from external API (for APK) and rebuild productCards
         if ($products->isEmpty()) {
             $token = session('api_token') ?: request()->bearerToken();
             if ($token) {
                 $remoteData = $this->fetchRemoteData('customer/products', $token);
                 if ($remoteData && isset($remoteData['products'])) {
-                    $products = collect($remoteData['products'])->map(function ($item) {
+                    $remoteProducts = collect($remoteData['products']);
+                    $products = $remoteProducts->map(function ($item) {
                         $o = (object) $item;
                         $o->image = isset($o->image) ? $this->imagePathService->normalize($o->image) : null;
                         return $o;
                     });
+
+                    $productCards = collect();
+                    foreach ($remoteProducts as $item) {
+                        $itemObj = (object) $item;
+                        $itemImage = isset($itemObj->image) ? $this->imagePathService->normalize($itemObj->image) : null;
+                        $packs = collect($itemObj->packs ?? []);
+
+                        $price = $itemObj->price ?? 0;
+                        $oldPrice = $itemObj->old_price ?? null;
+
+                        if ($packs->isEmpty()) {
+                            $productCards->push([
+                                'id' => $itemObj->id,
+                                'pack_id' => null,
+                                'name' => $itemObj->name,
+                                'image' => $itemImage,
+                                'price' => $price,
+                                'old_price' => $oldPrice,
+                                'pack_name' => '',
+                                'uom_name' => '',
+                                'pack_quantity' => 1,
+                                'favorite' => (bool) ($itemObj->is_favorite ?? in_array($itemObj->id, $favoriteItemIds ?? [])),
+                            ]);
+                        } else {
+                            foreach ($packs as $pack) {
+                                $packName = $pack->display_name ?? $pack->name ?? '';
+                                $uomName = $pack->uom_name ?? '';
+                                if (empty($packName) && !empty($uomName)) {
+                                    $packName = $uomName;
+                                }
+                                $productCards->push([
+                                    'id' => $itemObj->id,
+                                    'pack_id' => $pack->id ?? null,
+                                    'name' => $itemObj->name,
+                                    'image' => $itemImage,
+                                    'price' => $price,
+                                    'old_price' => $oldPrice,
+                                    'pack_name' => $packName,
+                                    'uom_name' => $uomName,
+                                    'pack_quantity' => (float) ($pack->quantity_in_pack ?? 1),
+                                    'favorite' => (bool) ($itemObj->is_favorite ?? in_array($itemObj->id, $favoriteItemIds ?? [])),
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
         }
