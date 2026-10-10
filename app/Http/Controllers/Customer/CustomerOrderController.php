@@ -24,7 +24,7 @@ class CustomerOrderController extends Controller
 
     public function __construct(ImagePathService $imagePathService)
     {
-        parent::__construct($imagePathService);
+        $this->imagePathService = $imagePathService;
     }
 
     /**
