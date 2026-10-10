@@ -671,8 +671,33 @@ Route::prefix('customer')->name('customer.')->group(function () {
                     return response()->json(['banners' => $banners->map(fn($b) => (array) $b)->values()], 200);
                 }
 
-                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/dashboard");
-                return response()->json($response->json(), $response->status());
+                try {
+                    $response = Http::withToken($token)->withoutVerifying()->timeout(5)->get("{$baseUrl}/customer/dashboard");
+                    if ($response->successful() && isset($response->json()['banners'])) {
+                        return response()->json($response->json(), $response->status());
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('External API dashboard fetch failed, falling back to local banners: ' . $e->getMessage());
+                }
+
+                $fallbackBanners = \App\Models\Banner::orderBy('order', 'asc')->get()->map(function ($banner) use ($imageService) {
+                    $url = $banner->image;
+                    if (!empty($url)) {
+                        $url = $imageService->normalize($url);
+                    }
+                    $localPath = 'banners/' . basename($banner->image);
+                    if (!empty($banner->image) && file_exists(public_path('uploads/' . $localPath))) {
+                        $url = asset('uploads/' . $localPath);
+                    }
+                    return [
+                        'id' => $banner->id,
+                        'title' => $banner->title,
+                        'url' => $banner->url ?? '#',
+                        'image' => $url ?: 'https://via.placeholder.com/400x160?text=📢',
+                    ];
+                });
+
+                return response()->json(['banners' => $fallbackBanners->values()], 200);
             } catch (Exception $e) {
                 return response()->json(['banners' => [], 'message' => 'فشل الاتصال'], 503);
             }
