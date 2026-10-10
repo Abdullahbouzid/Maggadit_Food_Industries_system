@@ -57,6 +57,11 @@ trait CustomerAppHelpers
         return $customer;
     }
 
+    private function getApiToken(Request $request): ?string
+    {
+        return session('api_token') ?? $request->bearerToken() ?? $request->query('token') ?? $request->query('api_token');
+    }
+
     private function parseData($items)
     {
         return collect($items)->filter(function ($item) {
@@ -162,11 +167,11 @@ trait CustomerAppHelpers
      */
     protected function getRemoteFavoriteIds(Request $request): array
     {
-        $token = session('api_token') ?: $request->bearerToken();
+        $token = $this->getApiToken($request);
         if (!$token) {
             return [];
         }
-        
+
         $cacheKey = 'favorite_ids_' . md5($token);
         
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($token) {
