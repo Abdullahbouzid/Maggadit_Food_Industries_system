@@ -60,8 +60,12 @@ class CustomerOrderController extends Controller
         $lines = [];
         $rejected = [];
         $dbError = false;
+        $allItemsMissingLocally = true; // Track if all items were missing from local DB
 
         foreach ($validated['items'] as $rawItem) {
+            $item = null;
+
+            // Try to find item in local DB first
             try {
                 $item = Item::find($rawItem['id']);
             } catch (\Throwable $e) {
@@ -70,12 +74,19 @@ class CustomerOrderController extends Controller
                     'item_id' => $rawItem['id'],
                     'error' => $e->getMessage(),
                 ]);
-                $item = null;
+            }
+
+            // If not found locally, try remote API (for APK environment)
+            if (! $item) {
+                $item = $this->getRemoteItem($rawItem['id'], $request);
+            } else {
+                // Found at least one item locally, so we're not in pure remote mode
+                $allItemsMissingLocally = false;
             }
 
             if (! $item) {
                 $rejected[] = ['id' => $rawItem['id'], 'reason' => 'المنتج غير موجود'];
-                Log::debug('Checkout item not found', [
+                Log::debug('Checkout item not found (local and remote)', [
                     'raw_item' => $rawItem,
                     'expected_id' => $rawItem['id'],
                     'db_connection' => config('database.default'),
@@ -86,18 +97,47 @@ class CustomerOrderController extends Controller
 
             $packId = $rawItem['pack_id'] ?? null;
             if ($packId) {
-                try {
-                    if (! \App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists()) {
-                        $packId = null;
+                // For local items, validate pack exists in DB
+                // For remote items, validate pack exists in item's packs array
+                $packValid = false;
+                
+                if ($item instanceof Item) {
+                    // Local item - validate in DB
+                    try {
+                        $packValid = \App\Models\ItemPack::where('id', $packId)->where('item_id', $item->id)->exists();
+                    } catch (\Throwable $e) {
+                        $dbError = true;
+                        Log::error('Checkout DB query failed for pack', [
+                            'pack_id' => $packId,
+                            'item_id' => $item->id,
+                            'error' => $e->getMessage(),
+                        ]);
                     }
-                } catch (\Throwable $e) {
-                    $dbError = true;
-                    Log::error('Checkout DB query failed for pack', [
-                        'pack_id' => $packId,
-                        'item_id' => $item->id,
-                        'error' => $e->getMessage(),
-                    ]);
+                } else {
+                    // Remote item - validate in item's packs array
+                    $packs = $item->packs ?? [];
+                    if (!is_array($packs)) {
+                        $packs = [$packs];
+                    }
+                    foreach ($packs as $pack) {
+                        if (is_array($pack)) {
+                            $packObj = (object) $pack;
+                        } else {
+                            $packObj = $pack;
+                        }
+                        if ($packObj->id === $packId) {
+                            $packValid = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (! $packValid) {
                     $packId = null;
+                    Log::debug('Checkout pack not valid for item', [
+                        'pack_id' => $rawItem['pack_id'],
+                        'item_id' => $rawItem['id'],
+                    ]);
                 }
             }
 
@@ -106,6 +146,149 @@ class CustomerOrderController extends Controller
                 'item_pack_id' => $packId,
                 'quantity' => (float) $rawItem['quantity'],
             ];
+        }
+
+        // If all items were missing from local DB, we're likely in APK/remote-only mode
+        // In this case, bypass local order service and call external API directly
+        if ($allItemsMissingLocally && !empty($lines) && empty($rejected)) {
+            // Build the items array in the same format as JavaScript sends it
+            // We need to reconstruct the full item data including pack_name, uom_name, name
+            $apiItems = [];
+            foreach ($validated['items'] as $rawItem) {
+                // Find the corresponding line (should exist since we validated all items)
+                $correspondingLine = null;
+                foreach ($lines as $line) {
+                    if ($line['item_id'] == $rawItem['id'] && 
+                        (($line['item_pack_id'] ?? null) == ($rawItem['pack_id'] ?? null))) {
+                        $correspondingLine = $line;
+                        break;
+                    }
+                }
+                
+                if ($correspondingLine) {
+                    // Get pack name and uom name from the validated item data
+                    $packName = '';
+                    $uomName = '';
+                    $productName = '';
+                    
+                    // Try to get this info from the item object we found
+                    $itemObj = null;
+                    if (isset($item)) {
+                        $itemObj = $item;
+                    } else {
+                        // Need to fetch the item again to get display info
+                        $itemObj = $this->getRemoteItem($rawItem['id'], $request);
+                    }
+                    
+                    if ($itemObj) {
+                        $productName = $itemObj->name ?? ($itemObj->name_ar ?? $itemObj->name_en ?? '');
+                        
+                        if (is_array($itemObj->packs ?? [])) {
+                            // Find the specific pack
+                            foreach ($itemObj->packs as $pack) {
+                                $packObj = is_array($pack) ? (object) $pack : $pack;
+                                if ($packObj->id == $rawItem['pack_id']) {
+                                    $packName = $packObj->display_name ?? $packObj->name ?? '';
+                                    $uomName = $packObj->uom_name ?? '';
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    $apiItems[] = [
+                        'id' => $rawItem['id'],
+                        'quantity' => (float) $rawItem['quantity'],
+                        'pack_id' => $rawItem['pack_id'] ?? null,
+                        'pack_name' => $packName,
+                        'uom_name' => $uomName,
+                        'name' => $productName,
+                    ];
+                }
+            }
+
+            // Prepare checkout request for external API - same format as JavaScript sends
+            $externalCheckoutData = [
+                'items' => $apiItems,
+                'delivery_address' => $validated['delivery_address'] ?? '',
+                'delivery_phone' => $validated['delivery_phone'] ?? '',
+                'scheduled_delivery_date' => $validated['scheduled_delivery_date'] ?? null,
+                'notes' => $validated['notes'] ?? '',
+                'survey_rating' => $validated['survey_rating'] ?? null,
+                'survey_feedback' => $validated['survey_feedback'] ?? '',
+            ];
+
+            // Call external API checkout endpoint directly
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                try {
+                    $response = Http::withToken($token)
+                        ->withoutVerifying()
+                        ->timeout(10)
+                        ->post("{$this->baseUrl}/customer/checkout", $externalCheckoutData);
+
+                    if ($response->successful()) {
+                        $responseData = $response->json();
+
+                        if ($request->expectsJson()) {
+                            return response()->json([
+                                'success' => true,
+                                'message' => $responseData['message'] ?? 'تم إنشاء طلبيتك بنجاح!',
+                                'order_id' => $responseData['order']['id'] ?? null,
+                                'order_number' => $responseData['order']['order_number'] ?? null,
+                                'total' => (float) ($responseData['order']['total_amount'] ?? 0),
+                                'redirect' => route('customer.order_history', [], false),
+                                'steps' => [], // External API doesn't provide steps in same format
+                            ]);
+                        }
+
+                        return redirect()
+                            ->route('customer.order_history')
+                            ->with('success', $responseData['message'] ?? 'تم إنشاء طلبيتك بنجاح!')
+                            ->with('order_number', $responseData['order']['order_number'] ?? '');
+                    } else {
+                        // External API returned error
+                        $errorData = $response->json() ?? [];
+                        $message = $errorData['message'] ?? 'فشل في إنشاء الطلب';
+
+                        if ($request->expectsJson()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => $message,
+                            ], 422);
+                        }
+
+                        return back()->withInput()->with([
+                            'error' => $message,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Checkout external API failed: ' . $e->getMessage());
+                    
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'فشل الاتصال بالخادم الخارجي',
+                        ], 503);
+                    }
+
+                    return back()->withInput()->with([
+                        'error' => 'فشل الاتصال بالخادم الخارجي',
+                    ]);
+                }
+            } else {
+                // No token available for external API call
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'يجب تسجيل الدخول أولاً',
+                    ], 401);
+                }
+
+                return back()->withInput()->with([
+                    'error' => 'يجب تسجيل الدخول أولاً',
+                ]);
+            }
         }
 
         if (empty($lines)) {

@@ -219,6 +219,23 @@ class CustomerProfileController extends Controller
 
         $itemId = $request->item_id;
 
+        // Try to find item in local DB first
+        $item = $customer->favorites()->where('item_id', $itemId)->first();
+
+        // If not found locally, but we want to toggle favorite, we need to fetch from remote API
+        // to validate the item exists
+        if (! $item) {
+            // Use the CustomerAppHelpers trait to get remote item
+            if (method_exists($this, 'getRemoteItem')) {
+                $remoteItem = $this->getRemoteItem($itemId, $request);
+                if (! $remoteItem) {
+                    return response()->json(['success' => false, 'message' => 'المنتج غير موجود'], 404);
+                }
+            } else {
+                return response()->json(['success' => false, 'message' => 'المنتج غير موجود'], 404);
+            }
+        }
+
         $favorite = $customer->favorites()->where('item_id', $itemId)->first();
 
         if ($favorite) {

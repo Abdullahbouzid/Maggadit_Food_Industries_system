@@ -165,6 +165,32 @@ trait CustomerAppHelpers
         });
     }
 
+    /**
+     * Get a single remote item by ID (for APK order validation)
+     */
+    protected function getRemoteItem(int $itemId, Request $request): ?object
+    {
+        $token = session('api_token') ?: $request->bearerToken();
+        if (!$token) {
+            return null;
+        }
+
+        $cacheKey = 'remote_item_' . md5("customer/products/{$itemId}" . $token);
+
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($itemId, $token) {
+            $remoteData = $this->fetchRemoteData("customer/products/{$itemId}", $token);
+            if ($remoteData && isset($remoteData['product'])) {
+                $item = (object) $remoteData['product'];
+            } elseif ($remoteData && isset($remoteData['id'])) {
+                $item = (object) $remoteData;
+            } else {
+                return null;
+            }
+            $item->image = isset($item->image) ? $this->imagePathService->normalize($item->image) : null;
+            return $item;
+        });
+    }
+
     private function normalizeItem($item)
     {
         if (is_array($item)) {
