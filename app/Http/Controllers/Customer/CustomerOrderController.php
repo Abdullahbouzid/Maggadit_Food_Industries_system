@@ -153,7 +153,6 @@ class CustomerOrderController extends Controller
         // In this case, bypass local order service and call external API directly
         if ($allItemsMissingLocally && !empty($lines) && empty($rejected)) {
             // Build the items array in the same format as JavaScript sends it
-            // We need to reconstruct the full item data including pack_name, uom_name, name
             $apiItems = [];
             
             // Fetch item details from remote API for each validated item
@@ -165,116 +164,94 @@ class CustomerOrderController extends Controller
                     continue;
                 }
                 
-                // Extract pack name and uom name from the remote item's packs array
-                $packName = '';
-                $uomName = '';
-                $productName = $remoteItem->name ?? ($remoteItem->name_ar ?? $remoteItem->name_en ?? '');
-                
-                if (isset($remoteItem->packs) && is_array($remoteItem->packs)) {
-                    foreach ($remoteItem->packs as $pack) {
-                        $packObj = is_array($pack) ? (object) $pack : $pack;
-                        if ($packObj->id == ($rawItem['pack_id'] ?? null)) {
-                            $packName = $packObj->display_name ?? $packObj->name ?? '';
-                            $uomName = $packObj->uom_name ?? '';
-                            break;
-                        }
-                    }
-                    
-                    $apiItems[] = [
-                        'id' => $rawItem['id'],
-                        'quantity' => (float) $rawItem['quantity'],
-                        'pack_id' => $rawItem['pack_id'] ?? null,
-                    ];
-                }
+                // For the external API, we only need id, quantity, and pack_id
+                // The external API doesn't need pack_name or uom_name - it looks them up by ID
+                $apiItems[] = [
+                    'id' => $rawItem['id'],
+                    'quantity' => (float) $rawItem['quantity'],
+                    'pack_id' => $rawItem['pack_id'] ?? null,
+                ];
             }
             
-            // If we couldn't fetch enough items, fall back to partial processing
-            if (empty($apiItems)) {
-                // Revert to partial local processing for items we can find
-                $allItemsMissingLocally = false;
-            } else {
-                // Prepare checkout request for external API - same format as JavaScript sends
-                $externalCheckoutData = [
-                    'items' => $apiItems,
-                    'delivery_address' => $validated['delivery_address'] ?? '',
-                    'delivery_phone' => $validated['delivery_phone'] ?? '',
-                    'scheduled_delivery_date' => $validated['scheduled_delivery_date'] ?? null,
-                    'notes' => $validated['notes'] ?? '',
-                    'survey_rating' => $validated['survey_rating'] ?? null,
-                    'survey_feedback' => $validated['survey_feedback'] ?? '',
-                ];
+            // Prepare checkout request for external API - same format as JavaScript sends
+            $externalCheckoutData = [
+                'items' => $apiItems,
+                'delivery_address' => $validated['delivery_address'] ?? '',
+                'delivery_phone' => $validated['delivery_phone'] ?? '',
+                'scheduled_delivery_date' => $validated['scheduled_delivery_date'] ?? null,
+                'notes' => $validated['notes'] ?? '',
+                'survey_rating' => $validated['survey_rating'] ?? null,
+                'survey_feedback' => $validated['survey_feedback'] ?? '',
+            ];
 
-                // Call external API checkout endpoint directly
-                $token = session('api_token') ?: $request->bearerToken();
-                if ($token) {
-                    try {
-                        $response = Http::withToken($token)
-                            ->withoutVerifying()
-                            ->timeout(10)
-                            ->post("{$this->baseUrl}/customer/checkout", $externalCheckoutData);
+            // Call external API checkout endpoint directly
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                try {
+                    $response = Http::withToken($token)
+                        ->withoutVerifying()
+                        ->timeout(10)
+                        ->post("{$this->baseUrl}/customer/checkout", $externalCheckoutData);
 
-                        if ($response->successful()) {
-                            $responseData = $response->json();
+                    if ($response->successful()) {
+                        $responseData = $response->json();
 
-                            if ($request->expectsJson()) {
-                                return response()->json([
-                                    'success' => true,
-                                    'message' => $responseData['message'] ?? 'تم إنشاء طلبيتك بنجاح!',
-                                    'order_id' => $responseData['order']['id'] ?? null,
-                                    'order_number' => $responseData['order']['order_number'] ?? null,
-                                    'total' => (float) ($responseData['order']['total_amount'] ?? 0),
-                                    'redirect' => route('customer.order_history', [], false),
-                                    'steps' => [], // External API doesn't provide steps in same format
-                                ]);
-                            }
-
-                            return redirect()
-                                ->route('customer.order_history')
-                                ->with('success', $responseData['message'] ?? 'تم إنشاء طلبيتك بنجاح!')
-                                ->with('order_number', $responseData['order']['order_number'] ?? '');
-                        } else {
-                            // External API returned error
-                            $errorData = $response->json() ?? [];
-                            $message = $errorData['message'] ?? 'فشل في إنشاء الطلب';
-
-                            if ($request->expectsJson()) {
-                                return response()->json([
-                                    'success' => false,
-                                    'message' => $message,
-                                ], 422);
-                            }
-
-                            return back()->withInput()->with([
-                                'error' => $message,
+                        if ($request->expectsJson()) {
+                            return response()->json([
+                                'success' => true,
+                                'message' => $responseData['message'] ?? 'تم إنشاء طلبيتك بنجاح!',
+                                'order_id' => $responseData['order']['id'] ?? null,
+                                'order_number' => $responseData['order']['order_number'] ?? null,
+                                'total' => (float) ($responseData['order']['total_amount'] ?? 0),
+                                'redirect' => route('customer.order_history', [], false),
+                                'steps' => [], // External API doesn't provide steps in same format
                             ]);
                         }
-                    } catch (\Exception $e) {
-                        Log::error('Checkout external API failed: ' . $e->getMessage());
-                        
+
+                        return redirect()
+                            ->route('customer.order_history')
+                            ->with('success', $responseData['message'] ?? 'تم إنشاء طلبيتك بنجاح!')
+                            ->with('order_number', $responseData['order']['order_number'] ?? '');
+                    } else {
+                        // External API returned error
+                        $errorData = $response->json() ?? [];
+                        $message = $errorData['message'] ?? 'فشل في إنشاء الطلب';
+
                         if ($request->expectsJson()) {
                             return response()->json([
                                 'success' => false,
-                                'message' => 'فشل الاتصال بالخادم الخارجي',
-                            ], 503);
+                                'message' => $message,
+                            ], 422);
                         }
 
-                        return back()->withInput()->with([
-                            'error' => 'فشل الاتصال بالخادم الخارجي',
-                        ]);
+                        return back()->withInput()->with(['error' => $message]);
                     }
-                } else {
-                    // No token available for external API call
+                } catch (\Exception $e) {
+                    Log::error('Checkout external API failed: ' . $e->getMessage());
+                    
                     if ($request->expectsJson()) {
                         return response()->json([
                             'success' => false,
-                            'message' => 'يجب تسجيل الدخول أولاً',
-                        ], 401);
+                            'message' => 'فشل الاتصال بالخادم الخارجي',
+                        ], 503);
                     }
 
                     return back()->withInput()->with([
-                        'error' => 'يجب تسجيل الدخول أولاً',
+                        'error' => 'فشل الاتصال بالخادم الخارجي',
                     ]);
                 }
+            } else {
+                // No token available for external API call
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'يجب تسجيل الدخول أولاً',
+                    ], 401);
+                }
+
+                return back()->withInput()->with([
+                    'error' => 'يجب تسجيل الدخول أولاً',
+                ]);
             }
         }
 
