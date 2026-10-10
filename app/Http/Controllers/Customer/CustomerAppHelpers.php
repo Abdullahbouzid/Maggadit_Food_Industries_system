@@ -25,7 +25,13 @@ trait CustomerAppHelpers
         $this->imagePathService = $imagePathService;
     }
 
+    private function getApiToken(Request $request): ?string
+    {
+        return session('api_token') ?? $request->bearerToken() ?? $request->query('token') ?? $request->query('api_token');
+    }
+
     private function getCustomer(Request $request): ?Customer
+    {
     {
         // Cache customer per request to avoid multiple DB queries
         if (isset($this->cachedCustomer)) {

@@ -32,7 +32,18 @@ class CheckCustomerSession
             }
         }
 
-        // 3. customer_id المحفوظ في الجلسة (يضبطه مسار تسجيل الدخول)
+        // 3. Token في query string (للـ APK WebView navigation)
+        $queryToken = $request->query('token') ?? $request->query('api_token');
+        if ($queryToken) {
+            $tokenInstance = PersonalAccessToken::findToken($queryToken);
+            if ($tokenInstance && $tokenInstance->tokenable) {
+                Auth::guard('customer')->setUser($tokenInstance->tokenable);
+
+                return $next($request);
+            }
+        }
+
+        // 4. customer_id المحفوظ في الجلسة (يضبطه مسار تسجيل الدخول)
         $customerId = $request->session()->get('customer_id');
         if ($customerId) {
             $customer = Customer::find($customerId);
@@ -43,7 +54,7 @@ class CheckCustomerSession
             }
         }
 
-        // 4. لا يوجد عميل مصادق -> إعادة التوجيه لصفحة الدخول
+        // 5. لا يوجد عميل مصادق -> إعادة التوجيه لصفحة الدخول
         //    لا يتم استخدام أي عميل احتياطي Secara عشوائي لتجنب تسريب بيانات العملاء.
         if ($request->expectsJson()) {
             return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
