@@ -115,6 +115,7 @@
                         $productImage = is_array($product) ? ($product['image'] ?? '') : ($product->image ?? '');
                         $productPrice = is_array($product) ? ($product['price'] ?? 0) : ($product->price ?? 0);
                         $packName = is_array($product) ? ($product['pack_name'] ?? '') : '';
+                        $packId = is_array($product) ? ($product['pack_id'] ?? null) : ($product->pack_id ?? null);
                         $isFavorite = is_array($product) ? ($product['favorite'] ?? in_array($productId, $favoriteItemIds ?? [])) : in_array($productId, $favoriteItemIds ?? []);
                     @endphp
                     <a href="{{ route('customer.product.show', $productId, false) }}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg relative cursor-pointer">
@@ -154,6 +155,7 @@
                                         data-price="{{ $productPrice }}"
                                         data-image="{{ $productImage ?? '' }}"
                                         data-pack-name="{{ $packName }}"
+                                        data-pack-id="{{ $packId ?? '' }}"
                                         data-uom-name="">إضافة</button>
                             </div>
                         </div>
