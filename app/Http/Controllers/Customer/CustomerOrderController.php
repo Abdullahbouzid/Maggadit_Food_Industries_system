@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Customer;
 
 use App\Enums\OrderStatus;
 use App\Enums\InvoiceStatus;
+use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Delivery;
+use App\Models\Image;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\ItemPack;
@@ -14,24 +16,27 @@ use App\Models\OrderItem;
 use App\Models\PriceListVersion;
 use App\Models\PriceListVersionItem;
 use App\Models\Quotation;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
 use App\Services\Customer\ImagePathService;
-use Laravel\Sanctum\PersonalAccessToken;
+use App\Services\OrderService;
+use App\Services\OrderStepPresenter;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class CustomerOrderController extends Controller
 {
     use CustomerAppHelpers;
 
-    public function __construct(ImagePathService $imagePathService)
+    public function __construct(ImagePathService $imagePathService, OrderStepPresenter $orderStepPresenter, OrderService $orderService)
     {
         $this->imagePathService = $imagePathService;
+        $this->orderStepPresenter = $orderStepPresenter;
+        $this->orderService = $orderService;
     }
 
     /**
@@ -415,54 +420,36 @@ class CustomerOrderController extends Controller
         }
 
         $orders = $customer->orders()
-            ->with(['items.item', 'delivery', 'invoices'])
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation'])
             ->latest()
             ->get();
 
-        // Compute stats using helper to handle enum-cast status
-        $stats = [
-            'all' => $orders->count(),
-            'pending' => $orders->filter(function ($o) {
-                $s = $this->getOrderStatusString($o);
-                return in_array($s, ['new', 'pending_review'], true);
-            })->count(),
-            'delivered' => $orders->filter(function ($o) {
-                return $this->getOrderStatusString($o) === 'delivered';
-            })->count(),
-        ];
-
         $rows = [];
         foreach ($orders as $order) {
-            $statusEnum = $this->getOrderStatusEnum($order);
-            $progress = 0;
-            if ($statusEnum) {
-                $progress = $statusEnum->value === 'delivered' ? 100 : ($statusEnum->value === 'pending_review' ? 30 : 0);
-            }
-
-            $orderItems = $order->items->count();
-            $total = $order->total_amount ?? 0;
-            $invoice = $order->invoices->first();
+            $statusMeta = $this->orderStepPresenter->currentStatusMeta($order);
             $quotation = $order->quotation->first();
-
-            // Determine if can respond (has pending quotation with customer-requested-changes status)
-            $canRespond = !empty($quotation) && in_array($quotation->status ?? '', [
-                'customer_requested_changes', 'pending_review', 'pending_approval'
-            ]);
+            $invoice = $order->invoices->first();
 
             $rows[] = [
                 'id' => $order->id,
                 'number' => $order->order_number ?? $order->id,
                 'date' => $order->created_at?->format('Y/m/d') ?? '',
-                'items_count' => $orderItems,
-                'status_text' => $statusEnum?->label() ?? $order->status ?? 'مجهول',
-                'status_class' => $statusEnum?->value ?? '',
-                'total' => number_format($total, 2),
-                'can_respond' => $canRespond,
+                'items_count' => $order->items->count(),
+                'status_text' => $statusMeta['label'],
+                'status_class' => $statusMeta['class'],
+                'progress' => $this->orderStepPresenter->progress($order),
+                'total' => number_format($order->total_amount ?? 0, 2),
+                'can_respond' => $this->orderStepPresenter->canCustomerRespond($order),
                 'has_invoice' => !empty($invoice),
                 'quotation_number' => $quotation?->quotation_number ?? '',
-                'progress' => $progress,
             ];
         }
+
+        $stats = [
+            'all' => $orders->count(),
+            'pending' => $orders->filter(fn($o) => in_array($o->status, ['new', 'pending_review'], true))->count(),
+            'delivered' => $orders->filter(fn($o) => $o->status === 'delivered')->count(),
+        ];
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -489,14 +476,13 @@ class CustomerOrderController extends Controller
             ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation'])
             ->findOrFail($id);
 
-        $steps = $this->buildOrderSteps($order);
-        $timeline = $this->buildOrderTimeline($order);
-
-        $statusEnum = $this->getOrderStatusEnum($order);
-        $progress = 0;
-        if ($statusEnum) {
-            $progress = $statusEnum->value === 'delivered' ? 100 : ($statusEnum->value === 'pending_review' ? 30 : 0);
-        }
+        $steps = $this->orderStepPresenter->steps($order);
+        $timeline = $this->orderStepPresenter->timeline($order);
+        $statusMeta = $this->orderStepPresenter->currentStatusMeta($order);
+        $progress = $this->orderStepPresenter->progress($order);
+        $canRespond = $this->orderStepPresenter->canCustomerRespond($order);
+        $invoice = $order->invoices->first();
+        $quotation = $order->quotation->first();
 
         $orderItems = $order->items->map(function ($item) {
             return [
@@ -508,27 +494,6 @@ class CustomerOrderController extends Controller
                 'line_total' => number_format($item->quantity * ($item->price ?? 0), 2),
             ];
         })->toArray();
-
-        $invoice = $order->invoices->first();
-        $quotation = $order->quotation->first();
-
-        $statusMeta = [];
-        if ($statusEnum) {
-            $statusMeta = [
-                'label' => $statusEnum->label(),
-                'class' => match ($statusEnum->value) {
-                    'delivered', 'approved' => 'success',
-                    'cancelled', 'rejected' => 'danger',
-                    'pending', 'pending_review' => 'warning',
-                    'admin_edited' => 'accent',
-                    default => 'info',
-                },
-            ];
-        }
-
-        $canRespond = !empty($quotation) && in_array($quotation->status ?? '', [
-            'customer_requested_changes', 'pending_review', 'pending_approval'
-        ]);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -585,7 +550,7 @@ class CustomerOrderController extends Controller
         $invoice = $order->invoices->first();
         
         if (! $invoice) {
-            return back()->with('error', 'لا توجد فاتورة لهذا الطلب');
+            return response()->json(['success' => false, 'message' => 'لا توجد فاتورة لهذا الطلب'], 404);
         }
         
         return response()->streamDownload(function() use ($invoice) {
@@ -608,7 +573,7 @@ class CustomerOrderController extends Controller
         $quotation = $order->quotation->first();
         
         if (! $quotation) {
-            return back()->with('error', 'لا يوجد عرض أسعار لهذا الطلب');
+            return response()->json(['success' => false, 'message' => 'لا يوجد عرض أسعار لهذا الطلب'], 404);
         }
         
         return response()->streamDownload(function() use ($quotation) {
@@ -686,104 +651,5 @@ class CustomerOrderController extends Controller
                 'message' => 'تعذر حفظ ردّك. يرجى المحاولة مرة أخرى.',
             ], 500);
         }
-    }
-
-    private function getOrderStatusValue($order): string
-    {
-        $status = $order->status;
-        if ($status instanceof \App\Enums\OrderStatus) {
-            return $status->value;
-        }
-        return (string) $status;
-    }
-
-    private function getOrderStatusEnum($order): ?\App\Enums\OrderStatus
-    {
-        $status = $order->status;
-        if ($status instanceof \App\Enums\OrderStatus) {
-            return $status;
-        }
-        return OrderStatus::tryFrom($status);
-    }
-
-    private function getOrderStatusString($order): string
-    {
-        return $this->getOrderStatusValue($order);
-    }
-
-    private function buildOrderSteps($order): array
-    {
-        $status = $this->getOrderStatusValue($order);
-        
-        // Determine current step index
-        $stepStatuses = [
-            'new' => 0,
-            'pending_review' => 1,
-            'admin_edited' => 2,
-            'quotation_sent' => 2,
-            'customer_approved' => 3,
-            'approved' => 3,
-            'delivered' => 4,
-            'cancelled' => 5,
-            'rejected' => 5,
-            'returned' => 5,
-            'expired' => 5,
-            'customer_rejected' => 5,
-        ];
-        
-        $currentStepIndex = $stepStatuses[$status] ?? 0;
-        $isTerminal = in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected']);
-        
-        $steps = [
-            ['key' => 'submitted', 'label' => 'تم إرسال الطلب', 'icon' => 'fa-send', 'color' => 'purple'],
-            ['key' => 'review', 'label' => 'قيد المراجعة', 'icon' => 'fa-magnifying-glass', 'color' => 'blue'],
-            ['key' => 'quotation', 'label' => 'عرض السعر', 'icon' => 'fa-file-invoice-dollar', 'color' => 'indigo'],
-            ['key' => 'approval', 'label' => 'موافقة العميل', 'icon' => 'fa-user-check', 'color' => 'emerald'],
-            ['key' => 'delivery', 'label' => 'التسليم', 'icon' => 'fa-truck', 'color' => 'green'],
-        ];
-        
-        if ($isTerminal) {
-            $steps[] = ['key' => 'cancelled', 'label' => 'ملغي/مرفوض', 'icon' => 'fa-ban', 'color' => 'red'];
-        }
-        
-        // Add state to each step
-        foreach ($steps as $index => &$step) {
-            if ($index < $currentStepIndex) {
-                $step['state'] = 'done';
-            } elseif ($index === $currentStepIndex) {
-                $step['state'] = $isTerminal ? 'rejected' : 'current';
-            } else {
-                $step['state'] = 'pending';
-            }
-        }
-        
-        return $steps;
-    }
-
-    private function buildOrderTimeline($order): array
-    {
-        $timeline = [];
-        $status = $this->getOrderStatusValue($order);
-        $createdAt = $order->created_at?->format('Y-m-d');
-        
-        $timeline[] = ['to' => 'طلب جديد', 'by' => 'النظام', 'date' => $createdAt];
-        
-        if (in_array($status, ['admin_edited', 'quotation_sent', 'customer_approved', 'approved', 'delivered', 'cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
-            $timeline[] = ['to' => 'قيد المراجعة', 'by' => 'الإدارة', 'date' => $createdAt];
-        }
-        if (in_array($status, ['quotation_sent', 'customer_approved', 'approved', 'delivered', 'cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
-            $timeline[] = ['to' => 'عرض السعر', 'by' => 'الإدارة', 'date' => $createdAt];
-        }
-        if (in_array($status, ['customer_approved', 'approved', 'delivered'])) {
-            $timeline[] = ['to' => 'موافقة العميل', 'by' => $order->customer?->name ?? 'العميل', 'date' => $createdAt];
-        }
-        if ($status === 'delivered') {
-            $timeline[] = ['to' => 'تم التسليم', 'by' => 'التوصيل', 'date' => $createdAt];
-        }
-        if (in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
-            $timeline[] = ['to' => 'ملغي/مرفوض', 'by' => 'النظام', 'date' => $createdAt];
-        }
-        
-        return $timeline;
     }
 }
