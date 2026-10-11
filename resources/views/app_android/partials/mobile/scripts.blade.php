@@ -50,69 +50,74 @@
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
                     || '{{ csrf_token() }}';
 
-// --- أدوات مساعدة ---
-function getLastId()     { return parseInt(localStorage.getItem(LS_LAST_ID) || '0', 10); }
-function setLastId(id)   { if (id > getLastId()) localStorage.setItem(LS_LAST_ID, id); }
-function getUnread()     { return parseInt(localStorage.getItem(LS_UNREAD) || '0', 10); }
-function setUnread(n)    { localStorage.setItem(LS_UNREAD, n); }
+    // --- أدوات مساعدة ---
+    function getLastId()     { return parseInt(localStorage.getItem(LS_LAST_ID) || '0', 10); }
+    function setLastId(id)   { if (id > getLastId()) localStorage.setItem(LS_LAST_ID, id); }
+    function getUnread()     { return parseInt(localStorage.getItem(LS_UNREAD) || '0', 10); }
+    function setUnread(n)    { localStorage.setItem(LS_UNREAD, n); }
+    function getApiToken()   { return localStorage.getItem('api_token') || localStorage.getItem('customer_token') || ''; }
 
-// --- تحديث شارة الجرس ---
-window.updateNotificationBadge = function(count) {
-    const badge = document.getElementById('notif-badge');
-    if (!badge) return;
-    setUnread(count);
-    if (count > 0) {
-        badge.textContent = count > 99 ? '99+' : count;
-        badge.classList.remove('hidden');
-        // animation رج للجرس
-        const bell = document.getElementById('notification-bell');
-        if (bell) {
-            bell.classList.add('notif-shake');
-            setTimeout(() => bell.classList.remove('notif-shake'), 600);
+    // --- تحديث شارة الجرس ---
+    window.updateNotificationBadge = function(count) {
+        const badge = document.getElementById('notif-badge');
+        if (!badge) return;
+        setUnread(count);
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+            // animation رج للجرس
+            const bell = document.getElementById('notification-bell');
+            if (bell) {
+                bell.classList.add('notif-shake');
+                setTimeout(() => bell.classList.remove('notif-shake'), 600);
+            }
+        } else {
+            badge.classList.add('hidden');
         }
-    } else {
-        badge.classList.add('hidden');
-    }
-};
-
-// --- إظهر Toast منبثق للإشعار الجديد ---
-function showNotifToast(notif) {
-    if (typeof showToast !== 'function') return;
-    const icons = {
-        offer: '🏷️', delivery: '🚚', payment: '💳',
-        receive: '📦', notification: '🔔'
     };
-    const icon = icons[notif.icon_type] || '🔔';
-    showToast(`${icon} ${notif.subject}`, 'info', 5000);
-}
 
-// --- إظهار Native Notification ---
-function showNativeNotification(title, body) {
-    // إشعار Native للمستخدمين على التطبيق الأصلي (Android/iOS)
-    // هذا يستخدم Dialog facade لإظهارToast/Snackbar
-    if (typeof Dialog !== 'undefined') {
-        Dialog.toast(body, 'short');
-    } else if (typeof nativephp_call !== 'undefined') {
-        nativephp_call('Dialog.Toast', JSON.stringify({
-            message: body,
-            duration: 'short'
-        }));
+    // --- إظهر Toast منبثق للإشعار الجديد ---
+    function showNotifToast(notif) {
+        if (typeof showToast !== 'function') return;
+        const icons = {
+            offer: '🏷️', delivery: '🚚', payment: '💳',
+            receive: '📦', notification: '🔔'
+        };
+        const icon = icons[notif.icon_type] || '🔔';
+        showToast(`${icon} ${notif.subject}`, 'info', 5000);
     }
-}
+
+    // --- إظهار Native Notification ---
+    function showNativeNotification(title, body) {
+        // إشعار Native للمستخدمين على التطبيق الأصلي (Android/iOS)
+        // هذا يستخدم Dialog facade لإظهارToast/Snackbar
+        if (typeof Dialog !== 'undefined') {
+            Dialog.toast(body, 'short');
+        } else if (typeof nativephp_call !== 'undefined') {
+            nativephp_call('Dialog.Toast', JSON.stringify({
+                message: body,
+                duration: 'short'
+            }));
+        }
     }
 
     // --- فحص الإشعارات الجديدة ---
     async function checkNewNotifications() {
         try {
             const lastId = getLastId();
+            const apiToken = getApiToken();
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (apiToken) {
+                headers['Authorization'] = 'Bearer ' + apiToken;
+            }
             const resp = await fetch(CHECK_NEW_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
+                headers: headers,
                 credentials: 'same-origin',
                 body: JSON.stringify({ last_id: lastId })
             });
@@ -162,17 +167,45 @@ function showNativeNotification(title, body) {
         }
     }
 
+    // --- استعادة الجلسة عند تحميل الصفحة ---
+    function restoreSession() {
+        const apiToken = getApiToken();
+        if (apiToken) {
+            fetch('{{ route("customer.session.check", [], false) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': 'Bearer ' + apiToken,
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                credentials: 'same-origin'
+            }).then(response => {
+                if (response.ok) {
+                    startPolling();
+                } else {
+                    localStorage.removeItem('api_token');
+                    localStorage.removeItem('customer_token');
+                    window.location.href = '{{ route("mobile.login", [], false) }}';
+                }
+            }).catch(() => {
+                startPolling();
+            });
+        } else {
+            window.location.href = '{{ route("mobile.login", [], false) }}';
+        }
+    }
+
     // --- تهيئة: اقرأ العدد المحفوظ وحدّث الشارة ---
     const savedUnread = getUnread();
     if (savedUnread > 0) {
-        // تأجيل قليل حتى يكتمل رسم الصفحة
         setTimeout(() => updateNotificationBadge(savedUnread), 500);
     }
 
-    // --- ابدأ الـ Polling بعد 5 ثوان من تحميل الصفحة ---
+    // --- بدء الـ Polling ---
     let pollingTimer = null;
     function startPolling() {
-        checkNewNotifications(); // فحص فوري عند البدء
+        checkNewNotifications();
         pollingTimer = setInterval(checkNewNotifications, POLL_INTERVAL);
     }
 
@@ -185,8 +218,9 @@ function showNativeNotification(title, body) {
         }
     });
 
-    window.addEventListener('load', function() {
-        setTimeout(startPolling, 5000);
+    // --- استعادة الجلسة عند تحميل الصفحة ---
+    document.addEventListener('DOMContentLoaded', function() {
+        restoreSession();
     });
 
     // مكشوف للخارج لإعادة ضبط العداد عند فتح صفحة الإشعارات

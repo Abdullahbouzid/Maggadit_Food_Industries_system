@@ -125,17 +125,22 @@
     const LS_LAST   = 'mgd_last_notif_id';
     const LS_READ   = 'mgd_read_ids';      // قائمة IDs المقروءة
     const LS_UNREAD = 'mgd_unread_count';
+    const API_TOKEN = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
 
-    // طلب JSON محمي بجلسة العميل (لا Bearer token داخل الـ WebView)
+    // طلب JSON محمي بجلسة العميل (Bearer token للتطبيق الأصلي APK)
     async function postJson(url, body) {
+        const headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': CSRF,
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (API_TOKEN) {
+            headers['Authorization'] = 'Bearer ' + API_TOKEN;
+        }
         const resp = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': CSRF,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers: headers,
             credentials: 'same-origin',
             body: body ? JSON.stringify(body) : undefined
         });

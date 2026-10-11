@@ -250,6 +250,26 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/products', [CustomerCatalogController::class, 'productsIndex'])->name('products');
     Route::get('/showoffers', [CustomerCatalogController::class, 'offersIndex'])->name('offer');
 
+    // Check session validity (used by APK on startup)
+    Route::post('/session-check', function () {
+        $token = session('api_token') ?: request()->bearerToken();
+        if ($token) {
+            // Validate the token with the external API
+            try {
+                $response = Http::withToken($token)->withoutVerifying()
+                    ->timeout(5)
+                    ->get('https://blue-beaver-923812.hostingersite.com/api/customer');
+                if ($response->ok()) {
+                    return response()->json(['success' => true, 'message' => 'Session valid']);
+                }
+            } catch (\Exception $e) {
+                // Network error - consider session valid if we have a token
+                return response()->json(['success' => true, 'message' => 'Token present']);
+            }
+        }
+        return response()->json(['success' => false, 'message' => 'No active session'], 401);
+    })->name('session.check');
+
     // ===================================================================
     // مسارات APK العامة التي لا تعرض أي بيانات عميل
     // ===================================================================
@@ -546,6 +566,46 @@ Route::prefix('customer')->name('customer.')->group(function () {
                 return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
             }
         })->name('order_details');
+
+        // Proxy for PDF documents (invoice, order, quotation)
+        Route::get('/order/{id}/invoice-pdf', function ($id) use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/orders/{$id}/invoice-pdf");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('order_invoice_pdf');
+
+        Route::get('/order/{id}/pdf', function ($id) use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/orders/{$id}/pdf");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('order_pdf');
+
+        Route::get('/order/{id}/quotation-pdf', function ($id) use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/orders/{$id}/quotation-pdf");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('order_quotation_pdf');
 
         Route::get('/returns', function () use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
