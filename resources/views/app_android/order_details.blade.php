@@ -1,9 +1,9 @@
-@extend('app_android.partials.mobile.app_mobile')
+@extends('app_android.partials.mobile.app_mobile')
 
-@section('title', __('messages.order_details_title'))
+@section('title', 'تفاصيل الطلب')
 
 @section('content')
-    @include('app_android.partials.mobile.header', ['title' => __('messages.order_details_title')])
+    @include('app_android.partials.mobile.header', ['title' => 'تفاصيل الطلب'])
 
     <div class="px-4 py-4 mb-5 space-y-4" dir="rtl">
         @if(!$order)
