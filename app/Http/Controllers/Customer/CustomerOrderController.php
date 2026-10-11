@@ -447,8 +447,8 @@ class CustomerOrderController extends Controller
 
         $stats = [
             'all' => $orders->count(),
-            'pending' => $orders->filter(fn($o) => in_array($o->status, ['new', 'pending_review'], true))->count(),
-            'delivered' => $orders->filter(fn($o) => $o->status === 'delivered')->count(),
+            'pending' => $orders->filter(fn($o) => in_array($this->orderStepPresenter->currentStatusValue($o), ['new', 'pending_review'], true))->count(),
+            'delivered' => $orders->filter(fn($o) => $this->orderStepPresenter->currentStatusValue($o) === 'delivered')->count(),
         ];
 
         if ($request->expectsJson()) {
