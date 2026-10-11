@@ -419,19 +419,24 @@ class CustomerOrderController extends Controller
             ->latest()
             ->get();
 
-        // Compute stats
+        // Compute stats using helper to handle enum-cast status
         $stats = [
             'all' => $orders->count(),
-            'pending' => $orders->where('status', 'pending')->count(),
-            'delivered' => $orders->where('status', 'delivered')->count(),
+            'pending' => $orders->filter(function ($o) {
+                $s = $this->getOrderStatusString($o);
+                return in_array($s, ['new', 'pending_review'], true);
+            })->count(),
+            'delivered' => $orders->filter(function ($o) {
+                return $this->getOrderStatusString($o) === 'delivered';
+            })->count(),
         ];
 
         $rows = [];
         foreach ($orders as $order) {
-            $statusEnum = OrderStatus::tryFrom($order->status);
+            $statusEnum = $this->getOrderStatusEnum($order);
             $progress = 0;
             if ($statusEnum) {
-                $progress = $statusEnum->value === 'delivered' ? 100 : ($statusEnum->value === 'pending' ? 30 : 0);
+                $progress = $statusEnum->value === 'delivered' ? 100 : ($statusEnum->value === 'pending_review' ? 30 : 0);
             }
 
             $orderItems = $order->items->count();
@@ -487,10 +492,10 @@ class CustomerOrderController extends Controller
         $steps = $this->buildOrderSteps($order);
         $timeline = $this->buildOrderTimeline($order);
 
-        $statusEnum = OrderStatus::tryFrom($order->status);
+        $statusEnum = $this->getOrderStatusEnum($order);
         $progress = 0;
         if ($statusEnum) {
-            $progress = $statusEnum->value === 'delivered' ? 100 : ($statusEnum->value === 'pending' ? 30 : 0);
+            $progress = $statusEnum->value === 'delivered' ? 100 : ($statusEnum->value === 'pending_review' ? 30 : 0);
         }
 
         $orderItems = $order->items->map(function ($item) {
@@ -611,6 +616,78 @@ class CustomerOrderController extends Controller
         }, "quotation_{$quotation->quotation_number}.pdf");
     }
 
+    public function respondToQuotation(Request $request, $id)
+    {
+        $customer = $this->getCustomer($request);
+        
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
+        }
+
+        $validated = $request->validate([
+            'response' => 'required|in:approved,changes_requested,rejected',
+            'notes' => 'nullable|string|max:2000',
+        ]);
+
+        $order = $customer->orders()
+            ->with(['quotation'])
+            ->findOrFail($id);
+
+        $quotation = $order->quotation->first();
+
+        if (! $quotation) {
+            return response()->json(['success' => false, 'message' => 'لا يوجد عرض سعر للرد عليه'], 422);
+        }
+
+        $response = $validated['response'];
+        $notes = trim($validated['notes'] ?? '');
+
+        if ($response === 'changes_requested' && $notes === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'يرجى كتابة تفاصيل التعديل المطلوب.',
+            ], 422);
+        }
+
+        try {
+            $quotation->update([
+                'customer_response' => $response,
+                'customer_response_notes' => $notes,
+                'customer_responded_at' => now(),
+            ]);
+
+            $order->update([
+                'status' => match ($response) {
+                    'approved' => OrderStatus::CustomerApproved->value,
+                    'changes_requested' => OrderStatus::CustomerRequestedChanges->value,
+                    'rejected' => OrderStatus::CustomerRejected->value,
+                },
+            ]);
+
+            $message = match ($response) {
+                'approved' => 'تمت موافقتك على عرض السعر. سيتم إصدار الفاتورة قريبًا.',
+                'changes_requested' => 'تم إرسال طلبك للتعديلات إلى الإدارة.',
+                'rejected' => 'تم رفض عرض السعر.',
+            };
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            }
+
+            return back()->with('success', $message);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Customer quotation response failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'تعذر حفظ ردّك. يرجى المحاولة مرة أخرى.',
+            ], 500);
+        }
+    }
+
     private function getOrderStatusValue($order): string
     {
         $status = $order->status;
@@ -618,6 +695,20 @@ class CustomerOrderController extends Controller
             return $status->value;
         }
         return (string) $status;
+    }
+
+    private function getOrderStatusEnum($order): ?\App\Enums\OrderStatus
+    {
+        $status = $order->status;
+        if ($status instanceof \App\Enums\OrderStatus) {
+            return $status;
+        }
+        return OrderStatus::tryFrom($status);
+    }
+
+    private function getOrderStatusString($order): string
+    {
+        return $this->getOrderStatusValue($order);
     }
 
     private function buildOrderSteps($order): array
