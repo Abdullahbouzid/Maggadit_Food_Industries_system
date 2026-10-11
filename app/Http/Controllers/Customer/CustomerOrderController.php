@@ -14,6 +14,7 @@ use App\Models\OrderItem;
 use App\Models\PriceListVersion;
 use App\Models\PriceListVersionItem;
 use App\Models\Quotation;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -483,6 +484,9 @@ class CustomerOrderController extends Controller
             ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation'])
             ->findOrFail($id);
 
+        $steps = $this->buildOrderSteps($order);
+        $timeline = $this->buildOrderTimeline($order);
+
         $statusEnum = OrderStatus::tryFrom($order->status);
         $progress = 0;
         if ($statusEnum) {
@@ -532,13 +536,15 @@ class CustomerOrderController extends Controller
                     'statusMeta' => $statusMeta,
                     'canRespond' => $canRespond,
                     'progress' => $progress,
+                    'steps' => $steps,
+                    'timeline' => $timeline,
                 ],
             ]);
         }
 
         return view('app_android.more.order_details', compact(
             'order', 'orderItems', 'invoice', 'quotation',
-            'statusMeta', 'canRespond', 'progress'
+            'statusMeta', 'canRespond', 'progress', 'steps', 'timeline'
         ));
     }
     
@@ -603,5 +609,90 @@ class CustomerOrderController extends Controller
         return response()->streamDownload(function() use ($quotation) {
             echo view('pdf.quotation', compact('quotation'))->render();
         }, "quotation_{$quotation->quotation_number}.pdf");
+    }
+
+    private function getOrderStatusValue($order): string
+    {
+        $status = $order->status;
+        if ($status instanceof \App\Enums\OrderStatus) {
+            return $status->value;
+        }
+        return (string) $status;
+    }
+
+    private function buildOrderSteps($order): array
+    {
+        $status = $this->getOrderStatusValue($order);
+        
+        // Determine current step index
+        $stepStatuses = [
+            'new' => 0,
+            'pending_review' => 1,
+            'admin_edited' => 2,
+            'quotation_sent' => 2,
+            'customer_approved' => 3,
+            'approved' => 3,
+            'delivered' => 4,
+            'cancelled' => 5,
+            'rejected' => 5,
+            'returned' => 5,
+            'expired' => 5,
+            'customer_rejected' => 5,
+        ];
+        
+        $currentStepIndex = $stepStatuses[$status] ?? 0;
+        $isTerminal = in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected']);
+        
+        $steps = [
+            ['key' => 'submitted', 'label' => 'تم إرسال الطلب', 'icon' => 'fa-send', 'color' => 'purple'],
+            ['key' => 'review', 'label' => 'قيد المراجعة', 'icon' => 'fa-magnifying-glass', 'color' => 'blue'],
+            ['key' => 'quotation', 'label' => 'عرض السعر', 'icon' => 'fa-file-invoice-dollar', 'color' => 'indigo'],
+            ['key' => 'approval', 'label' => 'موافقة العميل', 'icon' => 'fa-user-check', 'color' => 'emerald'],
+            ['key' => 'delivery', 'label' => 'التسليم', 'icon' => 'fa-truck', 'color' => 'green'],
+        ];
+        
+        if ($isTerminal) {
+            $steps[] = ['key' => 'cancelled', 'label' => 'ملغي/مرفوض', 'icon' => 'fa-ban', 'color' => 'red'];
+        }
+        
+        // Add state to each step
+        foreach ($steps as $index => &$step) {
+            if ($index < $currentStepIndex) {
+                $step['state'] = 'done';
+            } elseif ($index === $currentStepIndex) {
+                $step['state'] = $isTerminal ? 'rejected' : 'current';
+            } else {
+                $step['state'] = 'pending';
+            }
+        }
+        
+        return $steps;
+    }
+
+    private function buildOrderTimeline($order): array
+    {
+        $timeline = [];
+        $status = $this->getOrderStatusValue($order);
+        $createdAt = $order->created_at?->format('Y-m-d');
+        
+        $timeline[] = ['to' => 'طلب جديد', 'by' => 'النظام', 'date' => $createdAt];
+        
+        if (in_array($status, ['admin_edited', 'quotation_sent', 'customer_approved', 'approved', 'delivered', 'cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $timeline[] = ['to' => 'قيد المراجعة', 'by' => 'الإدارة', 'date' => $createdAt];
+        }
+        if (in_array($status, ['quotation_sent', 'customer_approved', 'approved', 'delivered', 'cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $timeline[] = ['to' => 'عرض السعر', 'by' => 'الإدارة', 'date' => $createdAt];
+        }
+        if (in_array($status, ['customer_approved', 'approved', 'delivered'])) {
+            $timeline[] = ['to' => 'موافقة العميل', 'by' => $order->customer?->name ?? 'العميل', 'date' => $createdAt];
+        }
+        if ($status === 'delivered') {
+            $timeline[] = ['to' => 'تم التسليم', 'by' => 'التوصيل', 'date' => $createdAt];
+        }
+        if (in_array($status, ['cancelled', 'rejected', 'returned', 'expired', 'customer_rejected'])) {
+            $timeline[] = ['to' => 'ملغي/مرفوض', 'by' => 'النظام', 'date' => $createdAt];
+        }
+        
+        return $timeline;
     }
 }
