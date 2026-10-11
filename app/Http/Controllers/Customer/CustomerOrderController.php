@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers\Customer;
 
-use App\Http\Controllers\Controller;
+use App\Enums\OrderStatus;
+use App\Enums\InvoiceStatus;
 use App\Models\Customer;
+use App\Models\Delivery;
+use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\ItemPack;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\PriceListVersion;
 use App\Models\PriceListVersionItem;
+use App\Models\Quotation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -396,7 +402,6 @@ class CustomerOrderController extends Controller
             return back()->withInput()->with(['error' => 'تعذر إنشاء الطلوية. '.$e->getMessage()]);
         }
     }
-
     public function orderHistory(Request $request)
     {
         $customer = $this->getCustomer($request);
@@ -411,16 +416,56 @@ class CustomerOrderController extends Controller
         $orders = $customer->orders()
             ->with(['items.item', 'delivery', 'invoices'])
             ->latest()
-            ->paginate(15);
+            ->get();
+
+        // Compute stats
+        $stats = [
+            'all' => $orders->count(),
+            'pending' => $orders->where('status', 'pending')->count(),
+            'delivered' => $orders->where('status', 'delivered')->count(),
+        ];
+
+        $rows = [];
+        foreach ($orders as $order) {
+            $statusEnum = OrderStatus::tryFrom($order->status);
+            $progress = 0;
+            if ($statusEnum) {
+                $progress = $statusEnum->value === 'delivered' ? 100 : ($statusEnum->value === 'pending' ? 30 : 0);
+            }
+
+            $orderItems = $order->items->count();
+            $total = $order->total_amount ?? 0;
+            $invoice = $order->invoices->first();
+            $quotation = $order->quotation->first();
+
+            // Determine if can respond (has pending quotation with customer-requested-changes status)
+            $canRespond = !empty($quotation) && in_array($quotation->status ?? '', [
+                'customer_requested_changes', 'pending_review', 'pending_approval'
+            ]);
+
+            $rows[] = [
+                'id' => $order->id,
+                'number' => $order->order_number ?? $order->id,
+                'date' => $order->created_at?->format('Y/m/d') ?? '',
+                'items_count' => $orderItems,
+                'status_text' => $statusEnum?->label() ?? $order->status ?? 'مجهول',
+                'status_class' => $statusEnum?->value ?? '',
+                'total' => number_format($total, 2),
+                'can_respond' => $canRespond,
+                'has_invoice' => !empty($invoice),
+                'quotation_number' => $quotation?->quotation_number ?? '',
+                'progress' => $progress,
+            ];
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $orders,
+                'data' => ['stats' => $stats, 'rows' => $rows],
             ]);
         }
 
-        return view('app_android.order_history', compact('orders'));
+        return view('app_android.more.order_history', compact('orders', 'stats', 'rows'));
     }
 
     public function orderDetails(Request $request, $id)
@@ -435,16 +480,128 @@ class CustomerOrderController extends Controller
         }
 
         $order = $customer->orders()
-            ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation'])
             ->findOrFail($id);
+
+        $statusEnum = OrderStatus::tryFrom($order->status);
+        $progress = 0;
+        if ($statusEnum) {
+            $progress = $statusEnum->value === 'delivered' ? 100 : ($statusEnum->value === 'pending' ? 30 : 0);
+        }
+
+        $orderItems = $order->items->map(function ($item) {
+            return [
+                'name' => $item->item->name ?? $item->item->name_en ?? 'منتج',
+                'code' => $item->item->code ?? '',
+                'pack' => $item->pack?->name ?? '',
+                'quantity' => $item->quantity,
+                'unit_price' => $item->price ?? 0,
+                'line_total' => number_format($item->quantity * ($item->price ?? 0), 2),
+            ];
+        })->toArray();
+
+        $invoice = $order->invoices->first();
+        $quotation = $order->quotation->first();
+
+        $statusMeta = [];
+        if ($statusEnum) {
+            $statusMeta = [
+                'label' => $statusEnum->label(),
+                'class' => match ($statusEnum->value) {
+                    'delivered', 'approved' => 'success',
+                    'cancelled', 'rejected' => 'danger',
+                    'pending', 'pending_review' => 'warning',
+                    'admin_edited' => 'accent',
+                    default => 'info',
+                },
+            ];
+        }
+
+        $canRespond = !empty($quotation) && in_array($quotation->status ?? '', [
+            'customer_requested_changes', 'pending_review', 'pending_approval'
+        ]);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $order,
+                'data' => [
+                    'order' => $order,
+                    'orderItems' => $orderItems,
+                    'invoice' => $invoice,
+                    'quotation' => $quotation,
+                    'statusMeta' => $statusMeta,
+                    'canRespond' => $canRespond,
+                    'progress' => $progress,
+                ],
             ]);
         }
 
-        return view('app_android.order_details', compact('order'));
+        return view('app_android.more.order_details', compact(
+            'order', 'orderItems', 'invoice', 'quotation',
+            'statusMeta', 'canRespond', 'progress'
+        ));
+    }
+    
+    public function downloadOrderPdf(Request $request, $id)
+    {
+        $customer = $this->getCustomer($request);
+        
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
+        }
+        
+        $order = $customer->orders()
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
+            ->findOrFail($id);
+        
+        return response()->streamDownload(function() use ($order) {
+            echo view('pdf.order', compact('order'))->render();
+        }, "order_{$order->order_number}.pdf");
+    }
+    
+    public function downloadPdf(Request $request, $id)
+    {
+        $customer = $this->getCustomer($request);
+        
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
+        }
+        
+        $order = $customer->orders()
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
+            ->findOrFail($id);
+        
+        $invoice = $order->invoices->first();
+        
+        if (! $invoice) {
+            return back()->with('error', 'لا توجد فاتورة لهذا الطلب');
+        }
+        
+        return response()->streamDownload(function() use ($invoice) {
+            echo view('pdf.invoice', compact('invoice'))->render();
+        }, "invoice_{$invoice->invoice_number}.pdf");
+    }
+    
+    public function downloadQuotationPdf(Request $request, $id)
+    {
+        $customer = $this->getCustomer($request);
+        
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
+        }
+        
+        $order = $customer->orders()
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
+            ->findOrFail($id);
+        
+        $quotation = $order->quotation->first();
+        
+        if (! $quotation) {
+            return back()->with('error', 'لا يوجد عرض أسعار لهذا الطلب');
+        }
+        
+        return response()->streamDownload(function() use ($quotation) {
+            echo view('pdf.quotation', compact('quotation'))->render();
+        }, "quotation_{$quotation->quotation_number}.pdf");
     }
 }
