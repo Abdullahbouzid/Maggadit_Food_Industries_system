@@ -578,7 +578,27 @@ class CustomerOrderController extends Controller
         
         $order = $customer->orders()
             ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
-            ->findOrFail($id);
+            ->find($id);
+        
+        if (! $order) {
+            // Fall back to external API for APK
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                try {
+                    $remoteData = $this->fetchRemoteData("customer/orders/{$id}", $token);
+                    if ($remoteData && isset($remoteData['success']) && $remoteData['success']) {
+                        $apiOrder = $remoteData['order'] ?? [];
+                        $order = (object) $apiOrder;
+                    }
+                } catch (\Exception $e) {
+                    // Continue to 404 if remote fetch fails
+                }
+            }
+        }
+        
+        if (! $order) {
+            return response()->json(['success' => false, 'message' => 'لا يوجد طلب بهذا المعرف'], 404);
+        }
         
         return response()->streamDownload(function() use ($order) {
             echo view('pdf.order', compact('order'))->render();
@@ -595,9 +615,35 @@ class CustomerOrderController extends Controller
         
         $order = $customer->orders()
             ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
-            ->findOrFail($id);
+            ->find($id);
         
-        $invoice = $order->invoices->first();
+        if (! $order) {
+            // Fall back to external API for APK
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                try {
+                    $remoteData = $this->fetchRemoteData("customer/orders/{$id}", $token);
+                    if ($remoteData && isset($remoteData['success']) && $remoteData['success']) {
+                        $apiOrder = $remoteData['order'] ?? [];
+                        $order = (object) $apiOrder;
+                    }
+                } catch (\Exception $e) {
+                    // Continue to 404 if remote fetch fails
+                }
+            }
+        }
+        
+        if (! $order) {
+            return response()->json(['success' => false, 'message' => 'لا يوجد طلب بهذا المعرف'], 404);
+        }
+        
+        // Invoice: Eloquent relationship for local DB, direct property for remote API objects
+        $invoice = null;
+        if ($order instanceof \App\Models\Order) {
+            $invoice = $order->invoices->first();
+        } elseif (isset($order->invoice)) {
+            $invoice = $order->invoice;
+        }
         
         if (! $invoice) {
             return response()->json(['success' => false, 'message' => 'لا توجد فاتورة لهذا الطلب'], 404);
@@ -618,9 +664,35 @@ class CustomerOrderController extends Controller
         
         $order = $customer->orders()
             ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
-            ->findOrFail($id);
+            ->find($id);
         
-        $quotation = $order->quotation->first();
+        if (! $order) {
+            // Fall back to external API for APK
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                try {
+                    $remoteData = $this->fetchRemoteData("customer/orders/{$id}", $token);
+                    if ($remoteData && isset($remoteData['success']) && $remoteData['success']) {
+                        $apiOrder = $remoteData['order'] ?? [];
+                        $order = (object) $apiOrder;
+                    }
+                } catch (\Exception $e) {
+                    // Continue to 404 if remote fetch fails
+                }
+            }
+        }
+        
+        if (! $order) {
+            return response()->json(['success' => false, 'message' => 'لا يوجد طلب بهذا المعرف'], 404);
+        }
+        
+        // Quotation: Eloquent relationship for local DB, direct property for remote API objects
+        $quotation = null;
+        if ($order instanceof \App\Models\Order) {
+            $quotation = $order->quotation->first();
+        } elseif (isset($order->quotation)) {
+            $quotation = $order->quotation;
+        }
         
         if (! $quotation) {
             return response()->json(['success' => false, 'message' => 'لا يوجد عرض أسعار لهذا الطلب'], 404);

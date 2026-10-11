@@ -18,6 +18,12 @@ class CheckCustomerSession
             $tokenInstance = \Laravel\Sanctum\PersonalAccessToken::findToken($bearerToken);
             if ($tokenInstance && $tokenInstance->tokenable) {
                 Auth::guard('customer')->setUser($tokenInstance->tokenable);
+                // Persist token/customer_id into session only if not already set,
+                // to avoid regenerating the session ID on every polling request.
+                if (! $request->session()->has('api_token')) {
+                    $request->session()->put('api_token', $bearerToken);
+                    $request->session()->put('customer_id', $tokenInstance->tokenable->id);
+                }
 
                 return $next($request);
             }

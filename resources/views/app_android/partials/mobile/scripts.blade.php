@@ -89,15 +89,17 @@
 
     // --- إظهار Native Notification ---
     function showNativeNotification(title, body) {
-        // إشعار Native للمستخدمين على التطبيق الأصلي (Android/iOS)
-        // هذا يستخدم Dialog facade لإظهارToast/Snackbar
-        if (typeof Dialog !== 'undefined') {
-            Dialog.toast(body, 'short');
-        } else if (typeof nativephp_call !== 'undefined') {
-            nativephp_call('Dialog.Toast', JSON.stringify({
-                message: body,
-                duration: 'short'
-            }));
+        // إرسال إشعار Native للمستخدمين على التطبيق الأصلي (Android/iOS)
+        // يستخدم Dialog facade لإظهار Toast/Snackbar
+        if (typeof nativephp_call !== 'undefined') {
+            try {
+                nativephp_call('Dialog.Toast', JSON.stringify({
+                    message: body || title,
+                    duration: 'short'
+                }));
+            } catch (e) {
+                // فشل بصمت
+            }
         }
     }
 
@@ -167,32 +169,18 @@
         }
     }
 
-    // --- استعادة الجلسة عند تحميل الصفحة ---
+     // --- استعادة الجلسة عند تحميل الصفحة ---
     function restoreSession() {
         const apiToken = getApiToken();
         if (apiToken) {
-            fetch('{{ route("customer.session.check", [], false) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': 'Bearer ' + apiToken,
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                credentials: 'same-origin'
-            }).then(response => {
-                if (response.ok) {
-                    startPolling();
-                } else {
-                    localStorage.removeItem('api_token');
-                    localStorage.removeItem('customer_token');
-                    window.location.href = '{{ route("mobile.login", [], false) }}';
-                }
-            }).catch(() => {
-                startPolling();
-            });
+            // للاعتماد على Middleware السيرفر في التحقق من الصلاحية،
+            // نبدأ فقط است polling للإشعارات دون إعادة توجيه.
+            // إعادة التوجيه تتم فقط إذا لم يوجد Token أصلا ونحن على صفحة محمية.
+            startPolling();
         } else {
-            window.location.href = '{{ route("mobile.login", [], false) }}';
+            // لا يوجد توكن محفوظ ولا نريد إزعاج المستخدم،
+            // المسار سيعالجه Middleware السيرفر (CheckCustomerSession).
+            startPolling();
         }
     }
 
