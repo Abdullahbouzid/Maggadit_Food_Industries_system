@@ -119,10 +119,12 @@ class CustomerStatementController extends Controller
                 ];
             });
 
+            // Prefer the remote totals when the local wallet is missing
+            $remoteBalance = $remoteData['totals']['balance'] ?? null;
             $totals = [
                 'deposits' => (float) $rows->where('direction', 'credit')->sum('amount'),
                 'debits' => abs((float) $rows->where('direction', 'debit')->sum('amount')),
-                'balance' => (float) ($wallet->balance ?? 0),
+                'balance' => $remoteBalance !== null ? (float) $remoteBalance : (float) ($wallet->balance ?? 0),
                 'invoiced' => (float) $invoices->sum('total_amount'),
                 'paid' => (float) $invoices->sum('paid_amount'),
             ];
