@@ -705,9 +705,16 @@ class CustomerOrderController extends Controller
             return response()->json(['success' => false, 'message' => 'لا يوجد عرض أسعار لهذا الطلب'], 404);
         }
         
-        return response()->streamDownload(function() use ($quotation) {
-            echo view('pdf.quotation', compact('quotation'))->render();
-        }, "quotation_{$quotation->quotation_number}.pdf");
+        // Handle both array (from remote API) and Eloquent model
+        if (is_array($quotation)) {
+            $quotationObj = (object) $quotation;
+        } else {
+            $quotationObj = $quotation;
+        }
+        
+        return response()->streamDownload(function() use ($quotationObj) {
+            echo view('pdf.quotation', compact('quotationObj'))->render();
+        }, "quotation_{$quotationObj->quotation_number}.pdf");
     }
 
     public function respondToQuotation(Request $request, $id)

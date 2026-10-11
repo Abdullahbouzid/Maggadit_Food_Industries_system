@@ -87,21 +87,34 @@
         showToast(`${icon} ${notif.subject}`, 'info', 5000);
     }
 
-    // --- إظهار Native Notification ---
-    function showNativeNotification(title, body) {
-        // إرسال إشعار Native للمستخدمين على التطبيق الأصلي (Android/iOS)
-        // يستخدم Dialog facade لإظهار Toast/Snackbar
-        if (typeof nativephp_call !== 'undefined') {
-            try {
-                nativephp_call('Dialog.Toast', JSON.stringify({
-                    message: body || title,
-                    duration: 'short'
-                }));
-            } catch (e) {
-                // فشل بصمت
+// --- إظهار Native Notification ---
+function showNativeNotification(title, body) {
+    // إرسال إشعار Native للمستخدمين على التطبيق الأصلي (Android/iOS)
+    // يستخدم Dialog facade لإظهار Toast/Snackbar
+    if (typeof nativephp_call !== 'undefined') {
+        try {
+            nativephp_call('Dialog.Toast', JSON.stringify({
+                message: body || title,
+                duration: 'short'
+            }));
+            // Log success for debugging (if console is available)
+            if (typeof console !== 'undefined') {
+                console.log('Native notification sent: ', {title: title, body: body});
             }
+        } catch (e) {
+            // Log error for debugging
+            if (typeof console !== 'undefined') {
+                console.error('Native notification failed:', e);
+            }
+            // فشل بصمت في الإنتاج
+        }
+    } else {
+        // nativephp_call غير متاح - قد يكون في وضع التطوير أو المتصفح العادي
+        if (typeof console !== 'undefined') {
+            console.log('nativephp_call غير متاح - تشغيل في المتصفح');
         }
     }
+}
 
     // --- فحص الإشعارات الجديدة ---
     async function checkNewNotifications() {
