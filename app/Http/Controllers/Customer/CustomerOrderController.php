@@ -649,9 +649,16 @@ class CustomerOrderController extends Controller
             return response()->json(['success' => false, 'message' => 'لا توجد فاتورة لهذا الطلب'], 404);
         }
         
-        return response()->streamDownload(function() use ($invoice) {
-            echo view('pdf.invoice', compact('invoice'))->render();
-        }, "invoice_{$invoice->invoice_number}.pdf");
+        // Handle both array (from remote API) and Eloquent model
+        if (is_array($invoice)) {
+            $invoiceObj = (object) $invoice;
+        } else {
+            $invoiceObj = $invoice;
+        }
+        
+        return response()->streamDownload(function() use ($invoiceObj) {
+            echo view('pdf.invoice', compact('invoiceObj'))->render();
+        }, "invoice_{$invoiceObj->invoice_number}.pdf");
     }
     
     public function downloadQuotationPdf(Request $request, $id)
