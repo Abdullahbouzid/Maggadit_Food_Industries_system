@@ -22,6 +22,17 @@ class VerifyCsrfToken extends Middleware
     }
 
     protected $except = [
+        // مسارات الـ API الخاصة بالعميل (بدون تحقق CSRF)
         'api/customer/*',
+        // مسارات الطلبات وعروض الأسعار (مستمدة من تطبيق NativePHP)
+        'customer/order/*/quotation/respond',
+        // مسارات الإشعارات (مستمدة من تطبيق NativePHP)
+        'customer/notifications/*',
+        // مسارات المفضلة (مستمدة من تطبيق NativePHP)
+        'customer/favorite/*',
+        // تحديث معلومات العميل (مستمدة من تطبيق NativePHP)
+        'customer/my-info',
+        // إتمام الطلب (مستمدة من تطبيق NativePHP)
+        'customer/checkout',
     ];
 }

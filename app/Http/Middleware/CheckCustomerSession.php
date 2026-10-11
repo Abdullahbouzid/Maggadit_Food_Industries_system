@@ -12,24 +12,24 @@ class CheckCustomerSession
 {
     public function handle(Request $request, Closure $next)
     {
-        // 1. جلسة guards (customer / api)
+        // 1. bearer token (Sanctum) - check first for API requests from APK
+        $bearerToken = $request->bearerToken();
+        if ($bearerToken) {
+            $tokenInstance = \Laravel\Sanctum\PersonalAccessToken::findToken($bearerToken);
+            if ($tokenInstance && $tokenInstance->tokenable) {
+                Auth::guard('customer')->setUser($tokenInstance->tokenable);
+
+                return $next($request);
+            }
+        }
+
+        // 2. جلسة guards (customer / api)
         if (Auth::guard('customer')->check()) {
             return $next($request);
         }
 
         if (Auth::guard('api')->check()) {
             return $next($request);
-        }
-
-        // 2. Bearer token (Sanctum) في ترويسة الطلب
-        $bearerToken = $request->bearerToken();
-        if ($bearerToken) {
-            $tokenInstance = PersonalAccessToken::findToken($bearerToken);
-            if ($tokenInstance && $tokenInstance->tokenable) {
-                Auth::guard('customer')->setUser($tokenInstance->tokenable);
-
-                return $next($request);
-            }
         }
 
         // 3. customer_id المحفوظ في الجلسة (يضبطه مسار تسجيل الدخول)
