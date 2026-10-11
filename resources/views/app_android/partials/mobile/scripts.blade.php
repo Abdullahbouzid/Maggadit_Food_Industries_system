@@ -50,40 +50,55 @@
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
                     || '{{ csrf_token() }}';
 
-    // --- أدوات مساعدة ---
-    function getLastId()     { return parseInt(localStorage.getItem(LS_LAST_ID) || '0', 10); }
-    function setLastId(id)   { if (id > getLastId()) localStorage.setItem(LS_LAST_ID, id); }
-    function getUnread()     { return parseInt(localStorage.getItem(LS_UNREAD) || '0', 10); }
-    function setUnread(n)    { localStorage.setItem(LS_UNREAD, n); }
+// --- أدوات مساعدة ---
+function getLastId()     { return parseInt(localStorage.getItem(LS_LAST_ID) || '0', 10); }
+function setLastId(id)   { if (id > getLastId()) localStorage.setItem(LS_LAST_ID, id); }
+function getUnread()     { return parseInt(localStorage.getItem(LS_UNREAD) || '0', 10); }
+function setUnread(n)    { localStorage.setItem(LS_UNREAD, n); }
 
-    // --- تحديث شارة الجرس ---
-    window.updateNotificationBadge = function(count) {
-        const badge = document.getElementById('notif-badge');
-        if (!badge) return;
-        setUnread(count);
-        if (count > 0) {
-            badge.textContent = count > 99 ? '99+' : count;
-            badge.classList.remove('hidden');
-            // animation رج للجرس
-            const bell = document.getElementById('notification-bell');
-            if (bell) {
-                bell.classList.add('notif-shake');
-                setTimeout(() => bell.classList.remove('notif-shake'), 600);
-            }
-        } else {
-            badge.classList.add('hidden');
+// --- تحديث شارة الجرس ---
+window.updateNotificationBadge = function(count) {
+    const badge = document.getElementById('notif-badge');
+    if (!badge) return;
+    setUnread(count);
+    if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.classList.remove('hidden');
+        // animation رج للجرس
+        const bell = document.getElementById('notification-bell');
+        if (bell) {
+            bell.classList.add('notif-shake');
+            setTimeout(() => bell.classList.remove('notif-shake'), 600);
         }
-    };
+    } else {
+        badge.classList.add('hidden');
+    }
+};
 
-    // --- إظهار Toast منبثق للإشعار الجديد ---
-    function showNotifToast(notif) {
-        if (typeof showToast !== 'function') return;
-        const icons = {
-            offer: '🏷️', delivery: '🚚', payment: '💳',
-            receive: '📦', notification: '🔔'
-        };
-        const icon = icons[notif.icon_type] || '🔔';
-        showToast(`${icon} ${notif.subject}`, 'info', 5000);
+// --- إظهر Toast منبثق للإشعار الجديد ---
+function showNotifToast(notif) {
+    if (typeof showToast !== 'function') return;
+    const icons = {
+        offer: '🏷️', delivery: '🚚', payment: '💳',
+        receive: '📦', notification: '🔔'
+    };
+    const icon = icons[notif.icon_type] || '🔔';
+    showToast(`${icon} ${notif.subject}`, 'info', 5000);
+}
+
+// --- إظهار Native Notification ---
+function showNativeNotification(title, body) {
+    // إشعار Native للمستخدمين على التطبيق الأصلي (Android/iOS)
+    // هذا يستخدم Dialog facade لإظهارToast/Snackbar
+    if (typeof Dialog !== 'undefined') {
+        Dialog.toast(body, 'short');
+    } else if (typeof nativephp_call !== 'undefined') {
+        nativephp_call('Dialog.Toast', JSON.stringify({
+            message: body,
+            duration: 'short'
+        }));
+    }
+}
     }
 
     // --- فحص الإشعارات الجديدة ---
@@ -129,6 +144,12 @@
                 if (typeof showToast === 'function') {
                     showToast(`🔔 لديك ${newNotifs.length} إشعارات جديدة`, 'info', 5000);
                 }
+            }
+
+            // إرسال إشعار NativePHP للمستخدمين على التطبيق الأصلي (Android)
+            // هذا يرسل إشعارNative إلى Android via Dialog facade
+            if (typeof window.showNativeNotification === 'function') {
+                window.showNativeNotification(newNotifs[0].subject, newNotifs[0].body || '');
             }
 
             // إذا كنا في صفحة الإشعارات، أضف الجديدة في الأعلى دون إعادة تحميل

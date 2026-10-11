@@ -168,7 +168,7 @@
 
     <!-- ================= الترويسة ================= -->
     <div class="header">
-        <img src="file://{{ public_path('icon.png') }}" alt="الشعار" class="logo">
+        <img src="{{ asset('icon.png') }}" alt="الشعار" class="logo">
         <div class="brand-en">MAGADIT FOOD INDUSTRIES</div>
         <div class="brand-ar">صناعات مجد للتغذية والمواد الغذائية</div>
     </div>

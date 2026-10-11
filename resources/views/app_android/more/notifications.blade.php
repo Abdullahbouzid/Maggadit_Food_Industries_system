@@ -182,55 +182,63 @@
     // ===== LocalStorage helpers =====
     function getReadIds()  { try { return new Set(JSON.parse(localStorage.getItem(LS_READ) || '[]')); } catch { return new Set(); } }
     function saveReadIds(s){ localStorage.setItem(LS_READ, JSON.stringify([...s])); }
-    function markRead(id)  {
-        const s = getReadIds(); s.add(parseInt(id)); saveReadIds(s);
+function markRead(id)  {
+         const s = getReadIds(); s.add(parseInt(id)); saveReadIds(s);
 
-        postJson(ROUTES.read(id), null)
-            .then(({ ok, data }) => { if (ok && data.unread_count !== undefined) refreshUnreadBadge(); })
-            .catch(() => {});
-    }
+         postJson(ROUTES.read(id), null)
+             .then(({ ok, data }) => {
+                 if (!ok) {
+                     console.warn('markRead server error:', { id, status: data });
+                 }
+                 if (ok && data.unread_count !== undefined) refreshUnreadBadge();
+             })
+             .catch((e) => console.error('markRead network error:', e));
+     }
     function isRead(id)    { return getReadIds().has(parseInt(id)); }
     
-    // ===== تبديل حالة القراءة يدوياً =====
-    async function toggleReadStatus(id, cardEl, notifObj) {
-        try {
-            const { ok, data } = await postJson(ROUTES.toggleRead(id), null);
-            if (!ok || !data.success) return;
+     // ===== تبديل حالة القراءة يدوياً =====
+     async function toggleReadStatus(id, cardEl, notifObj) {
+         try {
+             const { ok, data } = await postJson(ROUTES.toggleRead(id), null);
+             if (!ok || !data.success) {
+                 console.warn('Failed to toggle read status:', { id, response: data });
+                 return;
+             }
 
-            // الخادم يعيد النتيجة الجديدة كـ result
-            const nowRead = !!data.result;
-            notifObj.is_read = nowRead;
+             // الخادم يعيد النتيجة الجديدة كـ result
+             const nowRead = !!data.result;
+             notifObj.is_read = nowRead;
 
-            // Update local storage
-            const s = getReadIds();
-            if (nowRead) s.add(parseInt(id));
-            else s.delete(parseInt(id));
-            saveReadIds(s);
+             // Update local storage
+             const s = getReadIds();
+             if (nowRead) s.add(parseInt(id));
+             else s.delete(parseInt(id));
+             saveReadIds(s);
 
-            // Update UI
-            const dot = cardEl.querySelector('.unread-dot');
-            if (nowRead) {
-                cardEl.classList.remove('unread');
-                if (dot) dot.remove();
-            } else {
-                cardEl.classList.add('unread');
-                if (!dot) {
-                    const badgeContainer = cardEl.querySelector('.flex.items-center.gap-1.flex-shrink-0');
-                    if (badgeContainer) badgeContainer.innerHTML += '<span class="unread-dot"></span>';
-                }
-            }
+             // Update UI
+             const dot = cardEl.querySelector('.unread-dot');
+             if (nowRead) {
+                 cardEl.classList.remove('unread');
+                 if (dot) dot.remove();
+             } else {
+                 cardEl.classList.add('unread');
+                 if (!dot) {
+                     const badgeContainer = cardEl.querySelector('.flex.items-center.gap-1.flex-shrink-0');
+                     if (badgeContainer) badgeContainer.innerHTML += '<span class="unread-dot"></span>';
+                 }
+             }
 
-            // Update button icon
-            const toggleBtnIcon = cardEl.querySelector('.toggle-read-btn i');
-            if (toggleBtnIcon) {
-                toggleBtnIcon.className = nowRead ? 'fas fa-envelope-open-text' : 'fas fa-envelope';
-            }
+             // Update button icon
+             const toggleBtnIcon = cardEl.querySelector('.toggle-read-btn i');
+             if (toggleBtnIcon) {
+                 toggleBtnIcon.className = nowRead ? 'fas fa-envelope-open-text' : 'fas fa-envelope';
+             }
 
-            refreshUnreadBadge();
-        } catch (e) {
-            console.error(e);
-        }
-    }
+             refreshUnreadBadge();
+         } catch (e) {
+             console.error("Toggle read status error:", e);
+         }
+     }
     
     // ===== تبديل النجمة يدوياً =====
     async function toggleStarStatus(id, btnEl, notifObj) {
@@ -289,7 +297,7 @@
                         ${!read ? '<span class="unread-dot"></span>' : ''}
                     </div>
                 </div>
-                <p class="text-gray-500 text-xs leading-relaxed line-clamp-2" onclick="openModal(this.closest('.notif-card').notifData, this.closest('.notif-card'))">${escHtml(notif.body || notif.message || '')}</p>
+                <p class="text-gray-500 text-xs leading-relaxed" onclick="openModal(this.closest('.notif-card').notifData, this.closest('.notif-card'))">${escHtml(notif.body || notif.message || '')}</p>
                 <div class="flex justify-between items-center mt-2">
                     <p class="text-gray-400 text-[10px]">${escHtml(notif.created_at || notif.date || '')}</p>
                     <div class="flex gap-2">

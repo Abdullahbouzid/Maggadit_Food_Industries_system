@@ -102,7 +102,7 @@ class CustomerProfileController extends Controller
             }
 
             $customer->avatar = $filename;
-        } elseif ($request->filled('avatar') && preg_match('/^data:image\/(\w+);base64,/', $request->avatar)) {
+        } elseif ($request->filled('avatar') && preg_match('/^data:image\/[\w.+-]+;base64,/', $request->avatar)) {
             if (! file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }

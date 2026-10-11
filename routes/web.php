@@ -19,6 +19,7 @@ use App\Http\Controllers\Customer\CustomerReturnController;
 use App\Http\Controllers\Customer\CustomerStatementController;
 use App\Http\Controllers\Customer\CustomerPagesController;
 use App\Http\Controllers\Customer\CustomerProfileController;
+use App\Http\Controllers\Customer\DynamicNotificationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
@@ -814,6 +815,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/order/{id}/quotation-pdf', [CustomerOrderController::class, 'downloadQuotationPdf'])->name('order_quotation_pdf');
         Route::get('/my-info', [CustomerProfileController::class, 'myInfo'])->name('my_info');
         Route::post('/my-info', [CustomerProfileController::class, 'updateInfo'])->name('my_info.update');
+        Route::post('/dynamic-notification', [DynamicNotificationController::class, '__invoke'])->name('dynamic_notification');
     });
 });
 
