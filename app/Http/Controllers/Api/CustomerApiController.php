@@ -610,6 +610,61 @@ class CustomerApiController extends Controller
         ]);
     }
 
+    /**
+     * Customer order history for the Android APK.
+     * Returns stats + rows matching the order_history blade view payload.
+     */
+    public function orderHistory(Request $request)
+    {
+        $customer = $request->user();
+
+        $orders = \App\Models\Order::where('customer_id', $customer->id)
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation'])
+            ->orderByDesc('id')
+            ->get();
+
+        $rows = [];
+        foreach ($orders as $order) {
+            $quotation = $order->quotation->sortByDesc('id')->first();
+            $invoice = $order->invoices->first();
+            $statusEnum = \App\Enums\OrderStatus::tryFrom($this->getOrderStatusValue($order));
+            $progress = match ($this->getOrderStatusValue($order)) {
+                \App\Enums\OrderStatus::Delivered->value => 100,
+                \App\Enums\OrderStatus::PendingReview->value => 30,
+                default => 0,
+            };
+
+            $canRespond = ! empty($quotation) && in_array($quotation->status ?? '', [
+                'customer_requested_changes', 'pending_review', 'pending_approval',
+            ], true);
+
+            $rows[] = [
+                'id' => $order->id,
+                'number' => $order->order_number ?? $order->id,
+                'date' => $order->created_at?->format('Y/m/d') ?? '',
+                'items_count' => $order->items->count(),
+                'status_text' => $this->getOrderStatusMeta($order)['label'],
+                'status_class' => $this->getOrderStatusMeta($order)['class'],
+                'progress' => $progress,
+                'total' => number_format($order->total ?? 0, 2),
+                'can_respond' => $canRespond,
+                'has_invoice' => ! empty($invoice),
+                'quotation_number' => $quotation?->quotation_number ?? '',
+            ];
+        }
+
+        $stats = [
+            'all' => $orders->count(),
+            'pending' => $orders->filter(fn ($o) => in_array($this->getOrderStatusValue($o), ['new', 'pending_review'], true))->count(),
+            'delivered' => $orders->filter(fn ($o) => $this->getOrderStatusValue($o) === 'delivered')->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => ['stats' => $stats, 'rows' => $rows],
+        ]);
+    }
+
     // Helper methods for order status/steps
     private function getOrderStatusValue($order): string
     {

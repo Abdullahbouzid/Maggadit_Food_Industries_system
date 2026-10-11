@@ -130,7 +130,12 @@
                         <div>
                             <div class="text-sm font-bold text-gray-800">{{ $invoice->invoice_number }}</div>
                             <div class="text-[11px] text-gray-400">
-                                {{ \App\Enums\InvoiceStatus::tryFrom($invoice->status)?->label() ?? $invoice->status }}
+                                 @php
+                                    $invoiceStatusValue = is_object($invoice->status) && isset($invoice->status->value)
+                                        ? $invoice->status->value
+                                        : (string) $invoice->status;
+                                 @endphp
+                                 {{ \App\Enums\InvoiceStatus::tryFrom($invoiceStatusValue)?->label() ?? $invoiceStatusValue }}
                             </div>
                         </div>
                         <a href="{{ route('customer.order_invoice_pdf', $order->id, false) }}"

@@ -520,6 +520,19 @@ Route::prefix('customer')->name('customer.')->group(function () {
             }
         })->name('orders');
 
+        Route::get('/order-history', function () use ($baseUrl) {
+            $token = session('api_token') ?: request()->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+            }
+            try {
+                $response = Http::withToken($token)->withoutVerifying()->get("{$baseUrl}/customer/order-history");
+                return response()->json($response->json(), $response->status());
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'فشل الاتصال'], 503);
+            }
+        })->name('order_history');
+
         Route::get('/order/{id}', function ($id) use ($baseUrl) {
             $token = session('api_token') ?: request()->bearerToken();
             if (!$token) {
