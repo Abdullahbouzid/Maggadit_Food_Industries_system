@@ -424,32 +424,50 @@ class CustomerOrderController extends Controller
             ->latest()
             ->get();
 
-        $rows = [];
-        foreach ($orders as $order) {
-            $statusMeta = $this->orderStepPresenter->currentStatusMeta($order);
-            $quotation = $order->quotation->first();
-            $invoice = $order->invoices->first();
+        $isRemote = false;
+        $remoteData = null;
 
-            $rows[] = [
-                'id' => $order->id,
-                'number' => $order->order_number ?? $order->id,
-                'date' => $order->created_at?->format('Y/m/d') ?? '',
-                'items_count' => $order->items->count(),
-                'status_text' => $statusMeta['label'],
-                'status_class' => $statusMeta['class'],
-                'progress' => $this->orderStepPresenter->progress($order),
-                'total' => number_format($order->total_amount ?? 0, 2),
-                'can_respond' => $this->orderStepPresenter->canCustomerRespond($order),
-                'has_invoice' => !empty($invoice),
-                'quotation_number' => $quotation?->quotation_number ?? '',
-            ];
+        // If local DB is empty, fetch from external API (for APK)
+        if ($orders->isEmpty()) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData('customer/order-history', $token);
+                if ($remoteData && isset($remoteData['data']) && is_array($remoteData['data'])) {
+                    $isRemote = true;
+                    $stats = $remoteData['data']['stats'] ?? ['all' => 0, 'pending' => 0, 'delivered' => 0];
+                    $rows = $remoteData['data']['rows'] ?? [];
+                }
+            }
         }
 
-        $stats = [
-            'all' => $orders->count(),
-            'pending' => $orders->filter(fn($o) => in_array($this->orderStepPresenter->currentStatusValue($o), ['new', 'pending_review'], true))->count(),
-            'delivered' => $orders->filter(fn($o) => $this->orderStepPresenter->currentStatusValue($o) === 'delivered')->count(),
-        ];
+        if (! $isRemote) {
+            $rows = [];
+            foreach ($orders as $order) {
+                $statusMeta = $this->orderStepPresenter->currentStatusMeta($order);
+                $quotation = $order->quotation->first();
+                $invoice = $order->invoices->first();
+
+                $rows[] = [
+                    'id' => $order->id,
+                    'number' => $order->order_number ?? $order->id,
+                    'date' => $order->created_at?->format('Y/m/d') ?? '',
+                    'items_count' => $order->items->count(),
+                    'status_text' => $statusMeta['label'],
+                    'status_class' => $statusMeta['class'],
+                    'progress' => $this->orderStepPresenter->progress($order),
+                    'total' => number_format($order->total_amount ?? 0, 2),
+                    'can_respond' => $this->orderStepPresenter->canCustomerRespond($order),
+                    'has_invoice' => !empty($invoice),
+                    'quotation_number' => $quotation?->quotation_number ?? '',
+                ];
+            }
+
+            $stats = [
+                'all' => $orders->count(),
+                'pending' => $orders->filter(fn($o) => in_array($this->orderStepPresenter->currentStatusValue($o), ['new', 'pending_review'], true))->count(),
+                'delivered' => $orders->filter(fn($o) => $this->orderStepPresenter->currentStatusValue($o) === 'delivered')->count(),
+            ];
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -474,26 +492,58 @@ class CustomerOrderController extends Controller
 
         $order = $customer->orders()
             ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation'])
-            ->findOrFail($id);
+            ->find($id);
 
-        $steps = $this->orderStepPresenter->steps($order);
-        $timeline = $this->orderStepPresenter->timeline($order);
-        $statusMeta = $this->orderStepPresenter->currentStatusMeta($order);
-        $progress = $this->orderStepPresenter->progress($order);
-        $canRespond = $this->orderStepPresenter->canCustomerRespond($order);
-        $invoice = $order->invoices->first();
-        $quotation = $order->quotation->first();
+        $isRemote = false;
 
-        $orderItems = $order->items->map(function ($item) {
-            return [
-                'name' => $item->item->name ?? $item->item->name_en ?? 'منتج',
-                'code' => $item->item->code ?? '',
-                'pack' => $item->pack?->name ?? '',
-                'quantity' => $item->quantity,
-                'unit_price' => $item->price ?? 0,
-                'line_total' => number_format($item->quantity * ($item->price ?? 0), 2),
-            ];
-        })->toArray();
+        // If local DB doesn't have the order, fetch from external API (for APK)
+        if (! $order) {
+            $token = session('api_token') ?: $request->bearerToken();
+            if ($token) {
+                $remoteData = $this->fetchRemoteData("customer/orders/{$id}", $token);
+                if ($remoteData && isset($remoteData['success']) && $remoteData['success']) {
+                    $isRemote = true;
+                    $apiOrder = $remoteData['order'] ?? [];
+                    $order = (object) $apiOrder;
+                    $orderItems = $apiOrder['items'] ?? [];
+                    $invoice = isset($apiOrder['invoice']) ? (object) $apiOrder['invoice'] : null;
+                    $quotation = isset($apiOrder['quotation']) ? (object) $apiOrder['quotation'] : null;
+                    $statusMeta = [
+                        'label' => $apiOrder['status_text'] ?? 'غير معروف',
+                        'class' => $apiOrder['status_class'] ?? '',
+                    ];
+                    $canRespond = $apiOrder['can_respond'] ?? false;
+                    $progress = $apiOrder['progress'] ?? 0;
+                    $steps = $remoteData['steps'] ?? [];
+                    $timeline = $remoteData['timeline'] ?? [];
+                }
+            }
+        }
+
+        if (! $isRemote) {
+            if (! $order) {
+                abort(404);
+            }
+
+            $steps = $this->orderStepPresenter->steps($order);
+            $timeline = $this->orderStepPresenter->timeline($order);
+            $statusMeta = $this->orderStepPresenter->currentStatusMeta($order);
+            $progress = $this->orderStepPresenter->progress($order);
+            $canRespond = $this->orderStepPresenter->canCustomerRespond($order);
+            $invoice = $order->invoices->first();
+            $quotation = $order->quotation->first();
+
+            $orderItems = $order->items->map(function ($item) {
+                return [
+                    'name' => $item->item->name ?? $item->item->name_en ?? 'منتج',
+                    'code' => $item->item->code ?? '',
+                    'pack' => $item->pack?->name ?? '',
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->price ?? 0,
+                    'line_total' => number_format($item->quantity * ($item->price ?? 0), 2),
+                ];
+            })->toArray();
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
