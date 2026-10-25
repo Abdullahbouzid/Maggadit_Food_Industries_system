@@ -61,9 +61,10 @@ class OrderService implements OrderServiceInterface
         ?int $warehouseId = null,
         ?int $currencyId = null,
         bool $skipStockCheck = false,
+        ?int $branchId = null,
     ): Order {
         return DB::transaction(function () use (
-            $customer, $items, $user, $deliveryAddress, $deliveryPhone, $scheduledDeliveryDate, $warehouseId, $currencyId, $skipStockCheck
+            $customer, $items, $user, $deliveryAddress, $deliveryPhone, $scheduledDeliveryDate, $warehouseId, $currencyId, $skipStockCheck, $branchId
         ) {
             $inventoryService = app(InventoryServiceInterface::class);
             $pricingService = app(PricingServiceInterface::class);
@@ -88,6 +89,7 @@ class OrderService implements OrderServiceInterface
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'customer_id' => $customer->id,
+                'branch_id' => $branchId,
                 'warehouse_id' => $warehouse->id,
                 'currency_id' => $resolvedCurrencyId,
                 'status' => OrderStatus::New->value,

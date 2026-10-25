@@ -40,8 +40,16 @@
                     </div>
                 </div>
 
-                @if ($order->delivery_address || $order->delivery_phone)
+                @if ($order->delivery_address || $order->delivery_phone || ($order->branch_id ?? false) || ($order->branch_name ?? false))
                     <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
+                        @if (($order->branch_id && $order->branch) || ($order->branch_name ?? false))
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-store text-purple-600"></i>
+                                <span class="font-bold text-purple-700">
+                                    الفرع: {{ $order->branch?->name ?? $order->branch_name }}
+                                </span>
+                            </div>
+                        @endif
                         @if ($order->delivery_address)
                             <div><i class="fas fa-map-marker-alt text-gray-400 ml-1"></i>{{ $order->delivery_address }}</div>
                         @endif

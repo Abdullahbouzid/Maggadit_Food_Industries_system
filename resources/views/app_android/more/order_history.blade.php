@@ -44,6 +44,11 @@
                         <div class="text-[11px] text-gray-400 mt-0.5">
                             {{ $row['date'] }} — {{ $row['items_count'] }} منتج
                         </div>
+                        @if (!empty($row['branch_name']))
+                            <div class="text-[10px] text-purple-600 mt-1 flex items-center gap-1">
+                                <i class="fas fa-store"></i> {{ $row['branch_name'] }}
+                            </div>
+                        @endif
                     </div>
                     <span class="px-3 py-1 rounded-full text-[11px] font-bold {{ $row['status_class'] }}">{{ $row['status_text'] }}</span>
                 </div>

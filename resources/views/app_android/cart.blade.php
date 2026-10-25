@@ -40,6 +40,14 @@
                         <i class="fas fa-truck text-purple-600"></i> تفاصيل التوصيل
                     </h4>
                     
+<div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">الفرع <span class="text-red-500">*</span></label>
+                    <select id="branch_select" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" required>
+                        <option value="">— اختر فرعاً —</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1" id="no-branches-note" style="display:none;">لاختر فرع</p>
+                </div>
+                    
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">عنوان التوصيل <span class="text-red-500">*</span></label>
                         <textarea id="delivery_address" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="العنوان بالتفصيل (شارع، حي، رقم المبنى، الدور، الشقة)" required></textarea>
@@ -326,7 +334,78 @@
                         s.classList.add('far', 'text-gray-300');
                     }
                 });
+});
+
             });
+        });
+
+// ========== customer branches ==========
+        async function loadCustomerBranches() {
+            const token = localStorage.getItem('customer_token') || localStorage.getItem('api_token');
+            const branchSelect = document.getElementById('branch_select');
+            const noBranchesNote = document.getElementById('no-branches-note');
+            
+            if (!branchSelect) return;
+
+            try {
+                const headers = {
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                };
+
+                const response = await fetch('{{ route('api.customer.branches', [], false) }}', {
+                    headers: headers,
+                    credentials: 'include',
+                });
+
+                if (!response.ok) throw new Error('فشل تحميل الفروع');
+
+                const data = await response.json();
+
+                branchSelect.innerHTML = '<option value="">— اختر فرعاً —</option>';
+
+                if (!data.success || !data.branches || data.branches.length === 0) {
+                    noBranchesNote.style.display = 'block';
+                    return;
+                }
+
+                noBranchesNote.style.display = 'none';
+
+                data.branches.forEach(branch => {
+                    const opt = document.createElement('option');
+                    opt.value = branch.id;
+                    opt.textContent = branch.name;
+                    opt.setAttribute('data-address', branch.address || '');
+                    opt.setAttribute('data-phone', branch.phone || '');
+                    opt.setAttribute('data-lat', branch.latitude || '');
+                    opt.setAttribute('data-lng', branch.longitude || '');
+                    branchSelect.appendChild(opt);
+                });
+
+            } catch (error) {
+                console.error('Error loading branches:', error);
+                noBranchesNote.style.display = 'block';
+            }
+        }
+
+        // Handle branch selection - auto-fill address and phone
+        document.getElementById('branch_select')?.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const addressField = document.getElementById('delivery_address');
+            const phoneField = document.getElementById('delivery_phone');
+            
+            if (!selectedOption.value) {
+                addressField.value = '';
+                phoneField.value = '';
+                return;
+            }
+
+            const address = selectedOption.getAttribute('data-address');
+            const phone = selectedOption.getAttribute('data-phone');
+
+            if (address) addressField.value = address;
+            if (phone) phoneField.value = phone;
         });
 
         // تحديث واجهة السلة
@@ -477,6 +556,8 @@
                 checkoutForm.classList.remove('hidden');
                 checkoutBtn.innerText = currentLang === 'ar' ? 'تأكيد إنشاء الطلبية' : 'Confirm Order';
                 checkoutForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Load branches when form becomes visible
+                loadCustomerBranches();
                 return;
             }
 
@@ -489,6 +570,7 @@
             // Validate required fields
             const deliveryAddress = document.getElementById('delivery_address')?.value?.trim();
             const deliveryPhone = document.getElementById('delivery_phone')?.value?.trim();
+            const branchId = document.getElementById('branch_select')?.value?.trim();
             
             if (!deliveryAddress) {
                 showToastMessage(currentLang === 'ar' ? 'يرجى إدخال عنوان التوصيل' : 'Please enter delivery address', true);
@@ -498,6 +580,12 @@
             }
             if (!deliveryPhone) {
                 showToastMessage(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Please enter phone number', true);
+                checkoutBtn.innerText = originalText;
+                checkoutBtn.disabled = false;
+                return;
+            }
+            if (!branchId) {
+                showToastMessage(currentLang === 'ar' ? 'يرجى اختيار الفرع' : 'Please select a branch', true);
                 checkoutBtn.innerText = originalText;
                 checkoutBtn.disabled = false;
                 return;
@@ -529,16 +617,18 @@
                 headers['Authorization'] = 'Bearer ' + token;
             }
 
-            const checkoutUrl = '{{ route('customer.checkout', [], false) }}';
+const checkoutUrl = '{{ route('customer.checkout', [], false) }}';
             console.log('Checkout URL:', checkoutUrl);
 
             // Collect form data
             const surveyRating = document.getElementById('survey_rating')?.value;
+            const branchId = document.getElementById('branch_select')?.value || null;
             const formData = {
                 items: validItems,
                 delivery_address: document.getElementById('delivery_address')?.value?.trim() || '',
                 delivery_phone: document.getElementById('delivery_phone')?.value?.trim() || '',
                 scheduled_delivery_date: document.getElementById('scheduled_delivery_date')?.value || null,
+                branch_id: branchId,
                 notes: document.getElementById('notes')?.value?.trim() || '',
                 survey_rating: surveyRating ? parseInt(surveyRating) : null,
                 survey_feedback: document.getElementById('survey_feedback')?.value?.trim() || ''
@@ -610,6 +700,7 @@
         // تحميل البداية
         updateUILanguage();
         renderCart();
+        loadCustomerBranches();
 
         // ========== Order Success Modal Functions ==========
         function showOrderSuccessModal(orderNumber, message) {

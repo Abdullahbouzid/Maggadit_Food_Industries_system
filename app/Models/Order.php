@@ -13,7 +13,7 @@ class Order extends Model
      * values silently.
      */
     protected $fillable = [
-        'order_number', 'customer_id', 'warehouse_id', 'currency_id',
+        'order_number', 'customer_id', 'branch_id', 'warehouse_id', 'currency_id',
         'price_list_snapshot_id', 'created_by', 'status',
         'exchange_rate', 'delivery_address', 'delivery_phone',
         'scheduled_delivery_date', 'subtotal', 'discount_total',
@@ -38,6 +38,11 @@ class Order extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     public function quotation()

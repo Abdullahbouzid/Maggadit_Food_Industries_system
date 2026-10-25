@@ -55,10 +55,10 @@ Route::prefix('customer')->name('api.customer.')->group(function () {
         Route::post('/change-organization', [CustomerApiController::class, 'switchOrganization']);
 
         // الفروع (branches) - للعميل
-        Route::get('/branches', [CustomerApiController::class, 'branchesIndex']);
-        Route::post('/branches', [CustomerApiController::class, 'branchesStore']);
-        Route::put('/branches/{id}', [CustomerApiController::class, 'branchesUpdate']);
-        Route::delete('/branches/{id}', [CustomerApiController::class, 'branchesDestroy']);
+        Route::get('/branches', [CustomerApiController::class, 'branchesIndex'])->name('branches');
+        Route::post('/branches', [CustomerApiController::class, 'branchesStore'])->name('branches.store');
+        Route::put('/branches/{id}', [CustomerApiController::class, 'branchesUpdate'])->name('branches.update');
+        Route::delete('/branches/{id}', [CustomerApiController::class, 'branchesDestroy'])->name('branches.destroy');
         Route::get('/favorites', [CustomerApiController::class, 'favorites']);
         Route::get('/favorites/ids', [CustomerApiController::class, 'favoriteIds']);
         Route::post('/favorites/toggle', [CustomerApiController::class, 'toggleFavorite']);

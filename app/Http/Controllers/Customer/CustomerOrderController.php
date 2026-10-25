@@ -55,6 +55,7 @@ class CustomerOrderController extends Controller
             'items.*.id' => 'required|integer',
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.pack_id' => 'nullable|integer',
+            'branch_id' => 'nullable|integer|exists:branches,id',
             'delivery_address' => 'nullable|string|max:500',
             'delivery_phone' => 'nullable|string|max:30',
             'scheduled_delivery_date' => 'nullable|date',
@@ -183,6 +184,7 @@ class CustomerOrderController extends Controller
                 'delivery_address' => $validated['delivery_address'] ?? '',
                 'delivery_phone' => $validated['delivery_phone'] ?? '',
                 'scheduled_delivery_date' => $validated['scheduled_delivery_date'] ?? null,
+                'branch_id' => $validated['branch_id'] ?? null,
                 'notes' => $validated['notes'] ?? '',
                 'survey_rating' => $validated['survey_rating'] ?? null,
                 'survey_feedback' => $validated['survey_feedback'] ?? '',
@@ -290,6 +292,7 @@ class CustomerOrderController extends Controller
                 warehouseId: null,
                 currencyId: $customer->priceList?->currency_id,
                 skipStockCheck: true,
+                branchId: $validated['branch_id'] ?? null,
             );
 
             if (! empty($validated['survey_rating'])) {
@@ -345,6 +348,7 @@ class CustomerOrderController extends Controller
                         'delivery_address' => $validated['delivery_address'] ?? '',
                         'delivery_phone' => $validated['delivery_phone'] ?? '',
                         'scheduled_delivery_date' => $validated['scheduled_delivery_date'] ?? null,
+                        'branch_id' => $validated['branch_id'] ?? null,
                         'notes' => $validated['notes'] ?? '',
                         'survey_rating' => $validated['survey_rating'] ?? null,
                         'survey_feedback' => $validated['survey_feedback'] ?? '',
@@ -420,7 +424,7 @@ class CustomerOrderController extends Controller
         }
 
         $orders = $customer->orders()
-            ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation'])
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation', 'branch'])
             ->latest()
             ->get();
 
@@ -459,6 +463,7 @@ class CustomerOrderController extends Controller
                     'can_respond' => $this->orderStepPresenter->canCustomerRespond($order),
                     'has_invoice' => !empty($invoice),
                     'quotation_number' => $quotation?->quotation_number ?? '',
+                    'branch_name' => $order->branch?->name ?? null,
                 ];
             }
 
@@ -491,34 +496,37 @@ class CustomerOrderController extends Controller
         }
 
         $order = $customer->orders()
-            ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation'])
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation', 'branch'])
             ->find($id);
 
-        $isRemote = false;
-
-        // If local DB doesn't have the order, fetch from external API (for APK)
-        if (! $order) {
-            $token = session('api_token') ?: $request->bearerToken();
-            if ($token) {
-                $remoteData = $this->fetchRemoteData("customer/orders/{$id}", $token);
-                if ($remoteData && isset($remoteData['success']) && $remoteData['success']) {
-                    $isRemote = true;
-                    $apiOrder = $remoteData['order'] ?? [];
-                    $order = (object) $apiOrder;
-                    $orderItems = $apiOrder['items'] ?? [];
-                    $invoice = isset($apiOrder['invoice']) ? (object) $apiOrder['invoice'] : null;
-                    $quotation = isset($apiOrder['quotation']) ? (object) $apiOrder['quotation'] : null;
-                    $statusMeta = [
-                        'label' => $apiOrder['status_text'] ?? 'غير معروف',
-                        'class' => $apiOrder['status_class'] ?? '',
-                    ];
-                    $canRespond = $apiOrder['can_respond'] ?? false;
-                    $progress = $apiOrder['progress'] ?? 0;
-                    $steps = $remoteData['steps'] ?? [];
-                    $timeline = $remoteData['timeline'] ?? [];
+            // If local DB doesn't have the order, fetch from external API (for APK)
+            if (! $order) {
+                $token = session('api_token') ?: $request->bearerToken();
+                if ($token) {
+                    $remoteData = $this->fetchRemoteData("customer/orders/{$id}", $token);
+                    if ($remoteData && isset($remoteData['success']) && $remoteData['success']) {
+                        $isRemote = true;
+                        $apiOrder = $remoteData['order'] ?? [];
+                        // Try to get branch info from API response
+                        $branch = $apiOrder['branch'] ?? null;
+                        if ($branch) {
+                            $apiOrder['branch_name'] = $branch['name'] ?? null;
+                        }
+                        $order = (object) $apiOrder;
+                        $orderItems = $apiOrder['items'] ?? [];
+                        $invoice = isset($apiOrder['invoice']) ? (object) $apiOrder['invoice'] : null;
+                        $quotation = isset($apiOrder['quotation']) ? (object) $apiOrder['quotation'] : null;
+                        $statusMeta = [
+                            'label' => $apiOrder['status_text'] ?? 'غير معروف',
+                            'class' => $apiOrder['status_class'] ?? '',
+                        ];
+                        $canRespond = $apiOrder['can_respond'] ?? false;
+                        $progress = $apiOrder['progress'] ?? 0;
+                        $steps = $remoteData['steps'] ?? [];
+                        $timeline = $remoteData['timeline'] ?? [];
+                    }
                 }
             }
-        }
 
         if (! $isRemote) {
             if (! $order) {
