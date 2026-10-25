@@ -43,20 +43,14 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Controllers for page view
   late PageController _pageController;
 
-  // Sections data - loaded from API
-  late Future<List<Map<String, dynamic>>> _categoriesFuture;
-  late Future<List<Map<String, dynamic>>> _brandsFuture;
-  late Future<List<Map<String, dynamic>>> _productsFuture;
-  late Future<int> _unreadCountFuture;
+  // Dashboard data - loaded from /dashboard API endpoint
+  late Future<Map<String, dynamic>> _dashboardDataFuture;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
-    _categoriesFuture = Future.value([]);
-    _brandsFuture = Future.value([]);
-    _productsFuture = Future.value([]);
-    _initData();
+    _dashboardDataFuture = _loadDashboard();
     _initService();
   }
 
@@ -64,23 +58,13 @@ class _DashboardScreenState extends State<DashboardScreen>
     _notificationsService.init(context, widget.token);
   }
 
-  Future<void> _initData() async {
+  Future<Map<String, dynamic>> _loadDashboard() async {
     final api = ApiService();
     try {
-      final categoriesResponse = await api.get('/customer/categories');
-      final brandsResponse = await api.get('/customer/brands');
-      final productsResponse = await api.get('/customer/products');
-
-      setState(() {
-        _categoriesFuture = Future.value(List<Map<String, dynamic>>.from(
-            categoriesResponse['categories'] ?? []));
-        _brandsFuture = Future.value(
-            List<Map<String, dynamic>>.from(brandsResponse['brands'] ?? []));
-        _productsFuture = Future.value(List<Map<String, dynamic>>.from(
-            (productsResponse['products']['data'] as List? ?? [])));
-      });
+      final response = await api.get('/customer/dashboard');
+      return response;
     } catch (e) {
-      // Silently fail, will show empty states
+      return {'success': false, 'banners': [], 'categories': [], 'brands': [], 'products': []};
     }
   }
 
@@ -147,74 +131,85 @@ class _DashboardScreenState extends State<DashboardScreen>
     return SingleChildScrollView(
       physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          _buildHeader(),
-          const SizedBox(height: 20),
+      child: FutureBuilder<Map<String, dynamic>>(
+        future: _dashboardDataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final data = snapshot.data ?? {};
+          if (snapshot.data?['success'] != true) {
+            return _buildEmptyState();
+          }
 
-          // Banner carousel
-          _buildBannerCarousel(),
-          const SizedBox(height: 20),
+          final banners = (data['banners'] as List? ?? [])
+              .cast<Map<String, dynamic>>();
+          final categories = (data['categories'] as List? ?? [])
+              .cast<Map<String, dynamic>>();
+          final brands = (data['brands'] as List? ?? [])
+              .cast<Map<String, dynamic>>();
+          final products = (data['products'] as List? ?? [])
+              .cast<Map<String, dynamic>>();
 
-          // Categories section
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: _categoriesFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return _ShimmerWidget(height: 100);
-              }
-              final categories = snapshot.data ?? [];
-              return Column(
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              _buildHeader(),
+              const SizedBox(height: 20),
+
+// Banner carousel
+              _buildBannerCarousel(banners: banners),
+              const SizedBox(height: 20),
+
+              // Categories section
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('الفئات'),
                   _buildGridItems(categories, _buildCategoryItem),
                   const SizedBox(height: 24),
                 ],
-              );
-            },
-          ),
-          const SizedBox(height: 16),
+              ),
+              const SizedBox(height: 16),
 
-          // Brands section
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: _brandsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return _ShimmerWidget(height: 120);
-              }
-              final brands = snapshot.data ?? [];
-              return Column(
+              // Brands section
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('ماركات شهيرة'),
                   _buildGridItems(brands, _buildBrandItem),
                   const SizedBox(height: 24),
                 ],
-              );
-            },
-          ),
-          const SizedBox(height: 16),
+              ),
+              const SizedBox(height: 16),
 
-          // Products section
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: _productsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return _ShimmerWidget(height: 200);
-              }
-              final products = snapshot.data ?? [];
-              return Column(
+              // Products section
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('أفضل المنتجات'),
                   _buildGridItems(products, _buildProductItem),
                   const SizedBox(height: 80),
                 ],
-              );
-            },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.inbox, size: 64, color: Color(0xFFC4B5FD)),
+          const SizedBox(height: 16),
+          const Text(
+            'لا توجد بيانات متاحة حالياً',
+            style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
           ),
         ],
       ),
@@ -273,16 +268,18 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildCategoryItem(Map<String, dynamic> category) {
     final name = category['name'] as String? ?? 'فئة';
-    final icon = category['icon'] as String? ?? '\uD83D\uDD64';
+    final image = category['image'] as String?;
+    final productsCount = category['products_count'] as int? ?? 0;
 
     return GestureDetector(
       onTap: () {
+        final id = category['id'] as int? ?? 0;
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => CategoryScreen(
               token: widget.token,
               userId: widget.userId,
-              categoryId: category['id'] as int? ?? 0,
+              categoryId: id,
               categoryName: name,
             ),
           ),
@@ -306,10 +303,17 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
             ),
             child: Center(
-              child: Text(
-                icon,
-                style: const TextStyle(fontSize: 32),
-              ),
+              child: image != null && image.isNotEmpty
+                  ? Image.network(
+                      image,
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image,
+                              size: 32, color: Color(0xFF9CA3AF)),
+                    )
+                  : const Icon(Icons.folder, size: 32, color: Color(0xFF9CA3AF)),
             ),
           ),
           const SizedBox(height: 6),
@@ -323,6 +327,11 @@ class _DashboardScreenState extends State<DashboardScreen>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          const SizedBox(height: 2),
+          Text(
+            '$productsCount منتج',
+            style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)),
+          ),
         ],
       ),
     );
@@ -330,7 +339,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildBrandItem(Map<String, dynamic> brand) {
     final name = brand['name'] as String? ?? 'براند';
-    final logoEmoji = brand['logo_emoji'] as String? ?? '\uD83E\uDD44';
+    final logo = brand['logo'] as String?;
 
     return GestureDetector(
       onTap: () {
@@ -363,10 +372,16 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
             ),
             child: Center(
-              child: Text(
-                logoEmoji,
-                style: const TextStyle(fontSize: 32),
-              ),
+              child: logo != null && logo.isNotEmpty
+                  ? Image.network(
+                      logo,
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.store, size: 32, color: Color(0xFF9CA3AF)),
+                    )
+                  : const Icon(Icons.store, size: 32, color: Color(0xFF9CA3AF)),
             ),
           ),
           const SizedBox(height: 6),
@@ -388,7 +403,10 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget _buildProductItem(Map<String, dynamic> product) {
     final name = product['name'] as String? ?? 'منتج';
     final price = (product['price'] as num?)?.toStringAsFixed(2) ?? '0.00';
+    final oldPrice = product['old_price'];
     final image = product['image'] as String?;
+    final isFavorite = product['is_favorite'] as bool? ?? false;
+    final packName = product['pack_name'] as String?;
 
     return GestureDetector(
       onTap: () {
@@ -419,35 +437,82 @@ class _DashboardScreenState extends State<DashboardScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image
-            Container(
-              height: 120,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              child: image != null && image.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
-                      child: Image.network(
-                        image,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.broken_image,
-                                size: 50, color: Color(0xFF9CA3AF)),
-                      ),
-                    )
-                  : Container(
-                      color: const Color(0xFFF9FAFB),
-                      child: const Icon(Icons.inventory,
-                          size: 50, color: Color(0xFF9CA3AF)),
+            Stack(
+              children: [
+                Container(
+                  height: 140,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
+                  ),
+                  child: image != null && image.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(24),
+                            topRight: Radius.circular(24),
+                          ),
+                          child: Image.network(
+                            image,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.broken_image,
+                                    size: 50, color: Color(0xFF9CA3AF)),
+                          ),
+                        )
+                      : Container(
+                          color: const Color(0xFFF9FAFB),
+                          child: const Icon(Icons.inventory,
+                              size: 50, color: Color(0xFF9CA3AF)),
+                        ),
+                ),
+                if (packName != null && packName.isNotEmpty)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF9879b6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        packName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? const Color(0xFFEF4444) : const Color(0xFF9CA3AF),
+                        size: 16,
+                      ),
+                      onPressed: () {},
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ),
+                ),
+              ],
             ),
             // Details
             Padding(
@@ -465,14 +530,71 @@ class _DashboardScreenState extends State<DashboardScreen>
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$price ر.س',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF9879b6),
+                  if (packName != null && packName.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(top: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1E6FF),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        packName,
+                        style: const TextStyle(
+                          color: Color(0xFF9879b6),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            '$price ر.س',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF9879b6),
+                            ),
+                          ),
+                          if (oldPrice != null && oldPrice.toString().isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 6),
+                              child: Text(
+                                '$oldPrice ر.س',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF9CA3AF),
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF9879b6),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: TextButton(
+                          onPressed: () {},
+                          child: const Text(
+                            'إضافة',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -497,58 +619,52 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildBannerCarousel() {
+  Widget _buildBannerCarousel({required List<dynamic> banners}) {
+    if (banners.isEmpty) {
+      return const _ShimmerWidget(height: 180);
+    }
     return SizedBox(
       height: 180,
       child: PageView(
-        children: [
-          // Banner 1
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                'بانون 1',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Color(0xFF1E293B),
-                ),
+        children: banners.map((banner) {
+          final imageUrl = banner['image'] as String? ?? '';
+          final url = banner['url'] as String? ?? '#';
+          return GestureDetector(
+            onTap: () {
+              // Navigate to product/page based on banner URL
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image,
+                                size: 50, color: Color(0xFF9CA3AF)),
+                      )
+                    : Container(
+                        color: const Color(0xFFF1F5FB),
+                        child: const Icon(Icons.image,
+                            size: 50, color: Color(0xFF9CA3AF)),
+                      ),
               ),
             ),
-          ),
-          // Banner 2
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                'بانون 2',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ),
-          ),
-        ],
+          );
+        }).toList(),
       ),
     );
   }

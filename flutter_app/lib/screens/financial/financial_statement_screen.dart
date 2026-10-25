@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/api_service.dart';
 
 class FinancialStatementScreen extends StatefulWidget {
   final String token;
@@ -15,6 +16,7 @@ class FinancialStatementScreen extends StatefulWidget {
 }
 
 class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
+  final ApiService _apiService = ApiService();
   bool _isLoading = true;
   List<Map<String, dynamic>> _transactions = [];
 
@@ -25,81 +27,59 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   }
 
   Future<void> _loadTransactions() async {
-    // Mock data - in real implementation, call API
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      _transactions = [
-        {
-          'type': 'Payment',
-          'amount': -1250.50,
-          'date': '2024-01-15',
-          'description': 'Customer order payment',
-          'status': 'Completed',
-        },
-        {
-          'type': 'Payment',
-          'amount': -890.00,
-          'date': '2024-01-10',
-          'description': 'Invoice payment',
-          'status': 'Completed',
-        },
-        {
-          'type': 'Receipt',
-          'amount': 5000.00,
-          'date': '2024-01-20',
-          'description': 'Cash deposit',
-          'status': 'Completed',
-        },
-        {
-          'type': 'Expense',
-          'amount': -350.00,
-          'date': '2024-01-18',
-          'description': 'Operating expenses',
-          'status': 'Completed',
-        },
-      ];
-      _isLoading = false;
-    });
+    try {
+      final response = await _apiService.get('/customer/financial-statement');
+      final transactions = (response['transactions'] as List? ?? [])
+          .cast<Map<String, dynamic>>();
+      setState(() {
+        _transactions = transactions;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
-    final double total = _transactions.fold(0.0, (sum, t) => sum + (t['amount'] as num).toDouble());
+    final double total = _transactions.fold(0.0, (sum, t) => sum + ((t['amount'] as num?)?.toDouble() ?? 0));
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Financial Statement'),
+        title: Text('كشف حساب مالي'),
         centerTitle: true,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSummaryCard(total),
-                  SizedBox(height: 24),
-                  Text(
-                  'Transaction History',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+          : _transactions.isEmpty
+              ? Center(child: Text('لا توجد معاملات متاحة'))
+              : SingleChildScrollView(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSummaryCard(total),
+                      SizedBox(height: 24),
+                      Text(
+                        'سجل المعاملات',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: _transactions.length,
+                        itemBuilder: (context, index) {
+                          final tx = _transactions[index];
+                          return _TransactionTile(tx: tx);
+                        },
+                      ),
+                    ],
                   ),
                 ),
-                  SizedBox(height: 12),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: _transactions.length,
-                    itemBuilder: (context, index) {
-                      final tx = _transactions[index];
-                      return _TransactionTile(tx: tx);
-                    },
-                  ),
-                ],
-              ),
-            ),
     );
   }
 
