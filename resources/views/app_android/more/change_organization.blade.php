@@ -51,11 +51,13 @@
         // جلب المنظمات من الـ Proxy (Web Route)
         async function loadOrganizations() {
             try {
+                const apiToken = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
                 const response = await fetch('{{ route('customer.proxy.organizations.index', [], false) }}', {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        ...(apiToken ? { 'Authorization': 'Bearer ' + apiToken } : {}),
                     }
                 });
 

@@ -745,10 +745,16 @@
             .catch(() => showCartToast('خطأ في الاتصال، حاول مجددًا', '⚠️ خطأ'));
         });
 
-        // Dynamic Proxy Fallback Fetcher for Dashboard Categories
+         // Dynamic Proxy Fallback Fetcher for Dashboard Categories
         const dashCategories = document.getElementById('dash-categories');
         if (dashCategories && dashCategories.children.length <= 1 && dashCategories.innerText.includes('لا توجد')) {
-            fetch('{{ route('customer.proxy.categories', [], false) }}')
+            const apiToken = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
+            const headers = {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+            fetch('{{ route('customer.proxy.categories', [], false) }}', { headers })
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.categories && data.categories.length > 0) {
@@ -767,7 +773,13 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Brands
         const dashBrands = document.getElementById('dash-brands');
         if (dashBrands && dashBrands.children.length <= 1 && dashBrands.innerText.includes('لا توجد')) {
-            fetch('{{ route('customer.proxy.brands', [], false) }}')
+            const apiToken = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
+            const headers = {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+            fetch('{{ route('customer.proxy.brands', [], false) }}', { headers })
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.brands && data.brands.length > 0) {
@@ -786,7 +798,13 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Products
         const dashProducts = document.getElementById('dash-products');
         if (dashProducts && dashProducts.children.length <= 1 && dashProducts.innerText.includes('لا توجد')) {
-            fetch('{{ route('customer.proxy.products', [], false) }}')
+            const apiToken = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
+            const headers = {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+            fetch('{{ route('customer.proxy.products', [], false) }}', { headers })
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.products) {
@@ -842,7 +860,13 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Offers
         const dashOffers = document.getElementById('dash-offers');
         if (dashOffers && dashOffers.children.length <= 1 && dashOffers.innerText.includes('لا توجد')) {
-            fetch('{{ route('customer.proxy.offers', [], false) }}')
+            const apiToken = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
+            const headers = {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+            fetch('{{ route('customer.proxy.offers', [], false) }}', { headers })
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.offers) {
@@ -883,7 +907,13 @@
         // Dynamic Proxy Fallback Fetcher for Dashboard Banners
         const adCarousel = document.getElementById('ad-carousel');
         if (adCarousel && adCarousel.querySelector('.bg-gray-200')) {
-            fetch('{{ route('customer.proxy.dashboard', [], false) }}')
+            const apiToken = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
+            const headers = {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+            fetch('{{ route('customer.proxy.dashboard', [], false) }}', { headers })
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.banners && data.banners.length > 0) {

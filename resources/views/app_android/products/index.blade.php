@@ -419,7 +419,13 @@
         // ============================================================
         const productsGrid = document.getElementById('products-grid');
         if (productsGrid && productsGrid.children.length <= 1 && productsGrid.querySelector('p')) {
-            fetch('{{ route('customer.proxy.products', [], false) }}')
+            const apiToken = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
+            const headers = {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+            fetch('{{ route('customer.proxy.products', [], false) }}', { headers })
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.products) {

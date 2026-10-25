@@ -470,7 +470,13 @@
         const customerProductUrl = (id) => `${customerProductBase}/customer/product/${encodeURIComponent(id)}`;
 
         if (offersContainer && !offersContainer.querySelector('.offer-card')) {
-            fetch('{{ route('customer.proxy.offers', [], false) }}')
+            const apiToken = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
+            const headers = {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+            fetch('{{ route('customer.proxy.offers', [], false) }}', { headers })
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.offers) {

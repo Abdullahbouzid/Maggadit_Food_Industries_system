@@ -281,7 +281,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     // مسارات Proxy للـ APK - تستخدم توكن الجلسة للاتصال بالسيرفر الخارجي
     // هذه المسارات تحل محل استدعاء API المباشر من المتصفح بالتوكن
     // ===================================================================
-    Route::prefix('proxy')->name('proxy.')->group(function () {
+    Route::prefix('proxy')->name('proxy.')->middleware('check.customer.session')->group(function () {
         $baseUrl = 'https://blue-beaver-923812.hostingersite.com/api';
 
         // جلب قائمة الاستبيانات

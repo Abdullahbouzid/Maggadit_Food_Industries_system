@@ -77,8 +77,11 @@
     <script>
         document.getElementById('load-more-orders')?.addEventListener('click', function() {
             const page = {{ $orders->currentPage() + 1 }};
+            const apiToken = localStorage.getItem('api_token') || localStorage.getItem('customer_token') || '';
+            const headers = { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' };
+            if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
             fetch('/customer/order-history?page=' + page, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                headers: headers
             })
             .then(r => r.json())
             .then(data => {
