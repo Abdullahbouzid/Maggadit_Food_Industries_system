@@ -157,11 +157,26 @@ Route::post('/mobile/login', function (Request $request) {
     if ($localCustomer && Hash::check($request->password, $localCustomer->password)) {
         Auth::guard('customer')->login($localCustomer);
         $request->session()->regenerate();
-        $request->session()->put('api_token', $localCustomer->remember_token ?? '');
         $request->session()->put('customer_id', $localCustomer->id);
 
         $token = $localCustomer->createToken('mobile-token')->plainTextToken;
         $request->session()->put('api_token', $token);
+
+        // جلب توكن جديد من السيرفر الخارجي لضمان أن الـ proxy يعمل بشكل صحيح
+        try {
+            $extResponse = Http::withoutVerifying()->withHeaders(['Accept' => 'application/json'])->post('https://blue-beaver-923812.hostingersite.com/api/customer/login', [
+                'username' => $request->username,
+                'password' => $request->password,
+            ]);
+
+            if ($extResponse->successful()) {
+                $extData = $extResponse->json();
+                $token = $extData['token'];
+                $request->session()->put('api_token', $token);
+            }
+        } catch (Exception $e) {
+            // استمر باستخدام التوكن المحلي
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
