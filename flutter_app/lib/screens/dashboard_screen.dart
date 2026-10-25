@@ -14,6 +14,7 @@ import '../screens/cart/cart_screen.dart';
 import '../screens/categories/category_screen.dart';
 import '../screens/brands/brand_screen.dart';
 import '../screens/product_show_screen.dart';
+import '../screens/more/more_menu_screen.dart';
 import '../widgets/product_offer_cards.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -22,21 +23,22 @@ class DashboardScreen extends StatefulWidget {
   final String userId;
 
   const DashboardScreen({
-    Key? key,
+    super.key,
     required this.token,
     required this.userId,
-  }) : super(key: key);
+  });
 
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen>
+    with TickerProviderStateMixin {
   int _currentIndex = 0;
   UserModel? _user;
-  List<NotificationModel> _notifications = [];
-  int _unreadCount = 0;
-  NotificationsService _notificationsService = NotificationsService();
+  final List<NotificationModel> _notifications = [];
+  final int _unreadCount = 0;
+  final NotificationsService _notificationsService = NotificationsService();
 
   // Controllers for page view
   late PageController _pageController;
@@ -51,6 +53,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
+    _categoriesFuture = Future.value([]);
+    _brandsFuture = Future.value([]);
+    _productsFuture = Future.value([]);
     _initData();
     _initService();
   }
@@ -62,24 +67,24 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   Future<void> _initData() async {
     final api = ApiService();
     try {
-      final categoriesResponse = await api.get('/api/categories');
-      final brandsResponse = await api.get('/api/brands');
-      final productsResponse = await api.get('/api/products');
+      final categoriesResponse = await api.get('/customer/categories');
+      final brandsResponse = await api.get('/customer/brands');
+      final productsResponse = await api.get('/customer/products');
 
       setState(() {
-        _categoriesFuture = Future.value(
-            List<Map<String, dynamic>>.from(categoriesResponse['data'] ?? []));
+        _categoriesFuture = Future.value(List<Map<String, dynamic>>.from(
+            categoriesResponse['categories'] ?? []));
         _brandsFuture = Future.value(
-            List<Map<String, dynamic>>.from(brandsResponse['data'] ?? []));
-        _productsFuture = Future.value(
-            List<Map<String, dynamic>>.from(productsResponse['data'] ?? []));
+            List<Map<String, dynamic>>.from(brandsResponse['brands'] ?? []));
+        _productsFuture = Future.value(List<Map<String, dynamic>>.from(
+            (productsResponse['products']['data'] as List? ?? [])));
       });
     } catch (e) {
       // Silently fail, will show empty states
     }
   }
 
-void _switchPage(int index) {
+  void _switchPage(int index) {
     if (_currentIndex != index) {
       setState(() => _currentIndex = index);
       _pageController.jumpToPage(index);
@@ -127,8 +132,8 @@ void _switchPage(int index) {
           ),
           // Index 3: Favorites (placeholder)
           _buildFavoriteScreen(),
-          // Index 4: Profile screen
-          ProfileScreen(
+          // Index 4: More menu
+          MoreMenuScreen(
             token: widget.token,
             userId: widget.userId,
           ),
@@ -245,8 +250,8 @@ void _switchPage(int index) {
     );
   }
 
-  Widget _buildGridItems(
-      List<Map<String, dynamic>> items, Widget Function(Map<String, dynamic>) itemBuilder) {
+  Widget _buildGridItems(List<Map<String, dynamic>> items,
+      Widget Function(Map<String, dynamic>) itemBuilder) {
     if (items.isEmpty) {
       return const Center(
         child: Text('لا توجد عناصر متاحة'),
@@ -294,7 +299,7 @@ void _switchPage(int index) {
               border: Border.all(color: const Color(0xFFE2E8F0)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -351,7 +356,7 @@ void _switchPage(int index) {
               border: Border.all(color: const Color(0xFFE2E8F0)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -404,7 +409,7 @@ void _switchPage(int index) {
           border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -504,7 +509,7 @@ void _switchPage(int index) {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -527,7 +532,7 @@ void _switchPage(int index) {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -599,7 +604,7 @@ void _switchPage(int index) {
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Color(0xFFf1e6ff).withOpacity(0.5),
+              color: Color(0xFFf1e6ff).withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(50),
             ),
             child: const Icon(Icons.search, color: Color(0xFF9879b6), size: 20),
@@ -617,7 +622,7 @@ void _switchPage(int index) {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFF9879b6).withOpacity(0.15),
+            color: Color(0xFF9879b6).withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -691,7 +696,9 @@ class _BottomNavItem extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
-          color: isActive ? Color(0xFFf1e6ff).withOpacity(0.3) : Colors.transparent,
+          color: isActive
+              ? Color(0xFFf1e6ff).withValues(alpha: 0.3)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(26),
         ),
         child: Column(

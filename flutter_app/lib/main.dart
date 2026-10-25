@@ -14,6 +14,10 @@ import 'screens/brands/brand_screen.dart';
 import 'screens/categories/category_screen.dart';
 import 'screens/product_show_screen.dart';
 import 'screens/cart/cart_screen.dart';
+import 'screens/more/more_menu_screen.dart';
+import 'screens/more/return_create_screen.dart';
+import 'screens/returns/returns_screen.dart';
+import 'screens/survey/survey_screen.dart';
 import 'theme/app_theme.dart';
 import 'routes/app_routes.dart';
 
@@ -107,6 +111,18 @@ class _MaggaditAppState extends State<MaggaditApp> {
           token: widget.token,
           userId: widget.userId,
         ),
+        AppRoutes.more: (context) => MoreMenuScreen(
+          token: widget.token,
+          userId: widget.userId,
+        ),
+        AppRoutes.returns: (context) => ReturnsScreen(
+          token: widget.token,
+          userId: widget.userId,
+        ),
+        AppRoutes.surveys: (context) => SurveyScreen(
+          token: widget.token,
+          userId: widget.userId,
+        ),
       },
       onGenerateRoute: (RouteSettings settings) {
         if (settings.name == null) return null;
@@ -174,6 +190,18 @@ class _MaggaditAppState extends State<MaggaditApp> {
               userId: widget.userId,
               categoryId: categoryId,
               categoryName: categoryName,
+            ),
+          );
+        }
+
+        // Return create: /returns/create/{invoiceId}
+        if (pathSegments.first == 'returns' && pathSegments.length > 2 && pathSegments[1] == 'create') {
+          final invoiceId = int.tryParse(pathSegments[2]) ?? 0;
+          return MaterialPageRoute(
+            builder: (context) => ReturnCreateScreen(
+              token: widget.token,
+              userId: widget.userId,
+              invoiceId: invoiceId,
             ),
           );
         }

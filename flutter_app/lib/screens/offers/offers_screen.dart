@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../services/notifications_service.dart';
-import '../../widgets/product_offer_cards.dart';
 
 class OffersScreen extends StatefulWidget {
   final String token;
@@ -37,10 +36,10 @@ class _OffersScreenState extends State<OffersScreen> {
   Future<void> _loadOffers() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _apiService.get('/api/offers');
+      final response = await _apiService.get('/customer/offers');
       setState(() {
         _offersFuture = Future.value(
-          ((response['data'] as List?)?.cast<Map<String, dynamic>>()) ?? <Map<String, dynamic>>[]
+          ((response['offers'] as List?)?.cast<Map<String, dynamic>>()) ?? <Map<String, dynamic>>[]
         );
         _isLoading = false;
       });
@@ -74,19 +73,24 @@ class _OffersScreenState extends State<OffersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('العروض الحصرية',
-            style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B))),
-        centerTitle: true,
+        title: const Text(
+          'رجوع',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF6B7280),
+          ),
+        ),
+        leading: const SizedBox(),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new,
+                color: Color(0xFF9879b6), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: Color(0xFF1E293B), size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -94,13 +98,13 @@ class _OffersScreenState extends State<OffersScreen> {
               onRefresh: _loadOffers,
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(),
-                    const SizedBox(height: 30),
-                    _buildOffersGrid(),
+                    const SizedBox(height: 16),
+                    _buildOffersList(),
                   ],
                 ),
               ),
@@ -123,7 +127,7 @@ class _OffersScreenState extends State<OffersScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Color(0xFFF1F5F9),
+            color: const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Text(
@@ -139,7 +143,7 @@ class _OffersScreenState extends State<OffersScreen> {
     );
   }
 
-  Widget _buildOffersGrid() {
+  Widget _buildOffersList() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _offersFuture,
       builder: (context, snapshot) {
@@ -156,22 +160,17 @@ class _OffersScreenState extends State<OffersScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.local_offer_outlined, size: 64, color: Color(0xFF9CA3AF)),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text('لا توجد عروض متاحة حالياً'),
               ],
             ),
           );
         }
-        return GridView.builder(
+        return ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.78,
-          ),
           itemCount: offers.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
             final offer = offers[index];
             return _buildOfferCard(offer);
@@ -182,143 +181,177 @@ class _OffersScreenState extends State<OffersScreen> {
   }
 
   Widget _buildOfferCard(Map<String, dynamic> offer) {
-    final discount = (offer['discount_percentage'] as int? ?? 0);
+    final discount = (offer['discount_percentage'] as num? ?? 0).toInt();
     final oldPrice = (offer['old_price'] as num? ?? 0);
     final newPrice = (offer['new_price'] as num? ?? 0);
     final hasOldPrice = oldPrice > 0;
     final hasDiscount = discount > 0;
+    final title = offer['title'] as String? ?? offer['name'] as String? ?? 'عرض';
+    final description = offer['description'] as String?;
+    final image = offer['image'] as String?;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image
-          Container(
-            height: 140,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-            ),
-            child: offer['image'] != null && offer['image']!.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
-                    ),
-                    child: Image.network(
-                      offer['image']!,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Container(
-                    color: const Color(0xFFF9FAFB),
-                    child: const Icon(Icons.local_offer,
-                        size: 60, color: Color(0xFF9CA3AF)),
-                  ),
+            ],
           ),
-          // Details
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title
-                Text(
-                  offer['title'] ?? 'عرض خاص',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFFFB347), Color(0xFFFFCC33)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
                 ),
-                const SizedBox(height: 6),
-                // Discount badge
-                if (hasDiscount)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '-${discount}%',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red.shade800,
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                // Description
-                if (offer['description'] != null &&
-                    offer['description']!.isNotEmpty)
-                  Text(
-                    offer['description'],
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF374151),
-                      height: 1.4,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                const SizedBox(height: 12),
-                // Price row
-                Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (hasOldPrice)
-                      Text(
-                        '${oldPrice.toStringAsFixed(2)} ر.س',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[500],
-                          decoration: TextDecoration.lineThrough,
-                          decorationColor: Colors.grey[400],
-                          decorationThickness: 1.5,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '⏰ حتى تاريخ',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.amber.shade100,
+                          ),
                         ),
-                      ),
-                    if (hasOldPrice) const SizedBox(width: 8),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
                     Text(
-                      '${newPrice.toStringAsFixed(2)} ر.س',
+                      title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF9879b6),
+                        color: Colors.white,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (description != null && description.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          description,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.amber.shade100,
+                            height: 1.4,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: image != null && image.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Image.network(
+                                image,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.local_offer, size: 40, color: Color(0xFF9CA3AF)),
+                              ),
+                            )
+                          : const Icon(Icons.local_offer, size: 40, color: Color(0xFF9CA3AF)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            offer['name'] as String? ?? '',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E293B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (offer['pack_type'] != null)
+                            Text(
+                              offer['pack_type'],
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                '${newPrice.toStringAsFixed(2)} ر.س',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF9879b6),
+                                ),
+                              ),
+                              if (hasOldPrice) ...[
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${oldPrice.toStringAsFixed(2)} ر.س',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade500,
+                                    decoration: TextDecoration.lineThrough,
+                                    decorationColor: Colors.grey.shade400,
+                                    decorationThickness: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const Spacer(),
-                    // Add to cart button
+                    const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color: const Color(0xFF9879b6),
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
                         'إضافة',
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -326,11 +359,34 @@ class _OffersScreenState extends State<OffersScreen> {
                     ),
                   ],
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+        if (hasDiscount)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Text(
+                '-$discount%',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }

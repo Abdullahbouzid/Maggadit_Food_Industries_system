@@ -18,6 +18,7 @@ ThemeData appTheme({Brightness brightness = Brightness.light}) {
     brightness: brightness,
     colorScheme: ColorScheme.fromSeed(
       seedColor: novaPurple,
+      brightness: brightness,
       primary: novaPurple,
       secondary: novaGreen,
       surface: isDark ? novaDark : Colors.white,

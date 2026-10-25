@@ -41,9 +41,9 @@ class _ProductShowScreenState extends State<ProductShowScreen> {
   Future<void> _loadProduct() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _apiService.get('/api/products/${widget.productId}');
+      final response = await _apiService.get('/customer/products/${widget.productId}');
       setState(() {
-        _product = response['data'] as Map<String, dynamic>?;
+        _product = response['product'] as Map<String, dynamic>?;
         _packs = ((_product?['packs'] as List?)?.cast<Map<String, dynamic>>()) ?? [];
         _isFavorite = _product?['is_favorite'] as bool? ?? false;
         _isLoading = false;
@@ -58,7 +58,7 @@ class _ProductShowScreenState extends State<ProductShowScreen> {
   void _toggleFavorite() async {
     setState(() => _isFavorite = !_isFavorite);
     try {
-      await _apiService.post('/api/products/${widget.productId}/favorite');
+      await _apiService.post('/customer/favorites/toggle', body: {'item_id': widget.productId});
       _showToast(_isFavorite ? 'تمت الإضافة إلى المفضلة' : 'تمت الإزالة من المفضلة');
     } catch (e) {
       setState(() => _isFavorite = !_isFavorite);
@@ -282,6 +282,50 @@ class _ProductShowScreenState extends State<ProductShowScreen> {
         ] else ...[
           _buildStandardPack(),
         ],
+        const SizedBox(height: 16),
+
+        // Favorite footer button
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: _isFavorite ? const Color(0xFFFEE2E2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: _isFavorite ? const Color(0xFFFCA5A5) : const Color(0xFFD1D5DB),
+            ),
+          ),
+          child: ElevatedButton(
+            onPressed: _toggleFavorite,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: _isFavorite ? Colors.red : const Color(0xFF6B7280),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              elevation: 0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: _isFavorite ? Colors.red : const Color(0xFF9CA3AF),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _isFavorite ? Colors.red : const Color(0xFF6B7280),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(height: 24),
 
         // Add to cart button
@@ -462,23 +506,53 @@ class _ProductShowScreenState extends State<ProductShowScreen> {
                   ],
                 ),
               ),
-              // Pack price
-              Text(
-                '${packPrice.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF9879b6),
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Text(
-                'ر.س',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF9CA3AF),
-                ),
-              ),
+               // Pack price
+               Text(
+                 '${packPrice.toStringAsFixed(2)}',
+                 style: const TextStyle(
+                   fontSize: 15,
+                   fontWeight: FontWeight.bold,
+                   color: Color(0xFF9879b6),
+                 ),
+               ),
+               const SizedBox(width: 4),
+               const Text(
+                 'ر.س',
+                 style: TextStyle(
+                   fontSize: 12,
+                   color: Color(0xFF9CA3AF),
+                 ),
+               ),
+               const SizedBox(width: 12),
+               // Add to cart button
+               Container(
+                 width: 42,
+                 height: 42,
+                 decoration: BoxDecoration(
+                   borderRadius: BorderRadius.circular(14),
+                   gradient: const LinearGradient(
+                     colors: [Color(0xFF9879b6), Color(0xFF6b21a8)],
+                   ),
+                   boxShadow: [
+                     BoxShadow(
+                       color: const Color(0xFF9333ea).withOpacity(0.6),
+                       blurRadius: 18,
+                       offset: const Offset(0, 8),
+                     ),
+                   ],
+                 ),
+                 child: IconButton(
+                   padding: EdgeInsets.zero,
+                   icon: const Icon(
+                     Icons.shopping_cart,
+                     color: Colors.white,
+                     size: 18,
+                   ),
+                   onPressed: () {
+                     _showToast('تمت الإضافة إلى السلة');
+                   },
+                 ),
+               ),
             ],
           ),
         ),

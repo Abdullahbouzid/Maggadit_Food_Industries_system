@@ -23,8 +23,8 @@ class CategoryScreen extends StatefulWidget {
 class _CategoryScreenState extends State<CategoryScreen> {
   final NotificationsService _notificationsService = NotificationsService();
   final ApiService _apiService = ApiService();
-  late Future<List<Map<String, dynamic>>> _itemsFuture;
-  late Map<String, dynamic> _category;
+  Future<List<Map<String, dynamic>>>? _itemsFuture;
+  Map<String, dynamic> _category = {};
   bool _isLoading = true;
 
   @override
@@ -42,14 +42,14 @@ class _CategoryScreenState extends State<CategoryScreen> {
     setState(() => _isLoading = true);
     try {
       final categoryResponse =
-          await _apiService.get('/api/categories/${widget.categoryId}');
+          await _apiService.get('/customer/categories/${widget.categoryId}');
       final productsResponse = await _apiService.get(
-          '/api/products?category_id=${widget.categoryId}');
+          '/customer/products?category_id=${widget.categoryId}');
 
       setState(() {
-        _category = (categoryResponse['data'] as Map<String, dynamic>?) ?? {};
+        _category = (categoryResponse['category'] as Map<String, dynamic>?) ?? {};
         _itemsFuture = Future.value(
-          ((productsResponse['data'] as List?)?.cast<Map<String, dynamic>>()) ?? <Map<String, dynamic>>[]
+          ((productsResponse['products']['data'] as List?)?.cast<Map<String, dynamic>>()) ?? <Map<String, dynamic>>[]
         );
         _isLoading = false;
       });
@@ -73,6 +73,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
     );
   }
 
+  void _toggleFavorite(int productId) async {
+    try {
+      await _apiService.post('/customer/favorites/toggle', body: {'item_id': productId});
+      _showToast('تم تحديث المفضلة');
+    } catch (e) {
+      _showToast('Error updating favorite', isError: true);
+    }
+  }
+
   @override
   void dispose() {
     _notificationsService.stopPolling();
@@ -86,9 +95,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
         title: const Text(
           'رجوع',
           style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF6B7280)),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF6B7280),
+          ),
         ),
         leading: const SizedBox(),
         actions: [
@@ -127,7 +137,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -139,7 +149,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
       ),
       child: Column(
         children: [
-          // Category image
           Container(
             width: 80,
             height: 80,
@@ -158,7 +167,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 : const Icon(Icons.folder, size: 40, color: Color(0xFF9CA3AF)),
           ),
           const SizedBox(height: 16),
-          // Category name
           Text(
             _category['name'] ?? widget.categoryName,
             style: const TextStyle(
@@ -168,16 +176,13 @@ class _CategoryScreenState extends State<CategoryScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          // Info row
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Products count
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFf1e6ff),
+                  color: const Color(0xFFF3E8FF),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -207,7 +212,20 @@ class _CategoryScreenState extends State<CategoryScreen> {
           return const Center(child: Text('Error loading products'));
         }
         final items = snapshot.data ?? [];
-        if (items.isEmpty) {
+        final productCards = <Widget>[];
+        for (final item in items) {
+          final packs = (item['packs'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          final hasMultiplePacks = packs.length > 1;
+          if (packs.isEmpty) {
+            productCards.add(_buildProductCard(item, null, hasMultiplePacks));
+          } else {
+            for (final pack in packs) {
+              productCards.add(_buildProductCard(item, pack, hasMultiplePacks));
+            }
+          }
+        }
+
+        if (productCards.isEmpty) {
           return const Center(
             child: Text('لا توجد منتجات في هذه الفئة'),
           );
@@ -220,27 +238,28 @@ class _CategoryScreenState extends State<CategoryScreen> {
             crossAxisCount: 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 0.78,
+            childAspectRatio: 0.76,
           ),
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return _buildProductCard(item);
-          },
+          itemCount: productCards.length,
+          itemBuilder: (context, index) => productCards[index],
         );
       },
     );
   }
 
-  Widget _buildProductCard(Map<String, dynamic> item) {
-    final name = item['name'] as String? ?? 'منتج';
-    final price = (item['price'] as num?)?.toStringAsFixed(2) ?? '0.00';
-    final image = item['image'] as String?;
+  Widget _buildProductCard(Map<String, dynamic> item, Map<String, dynamic>? pack, bool hasMultiplePacks) {
+    final itemId = item['id'] ?? 0;
+    final itemName = item['name'] ?? 'منتج';
+    final itemImage = item['image'] ?? '';
+    final isFavorite = item['is_favorite'] ?? item['favorite'] ?? false;
+    final packName = pack?['name'] as String? ?? '';
+    final packPrice = pack?['price'] as num? ?? item['price'] as num? ?? 0;
+    final displayImage = itemImage.isNotEmpty ? itemImage : null;
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -253,42 +272,87 @@ class _CategoryScreenState extends State<CategoryScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+          Stack(
+            children: [
+              Container(
+                height: 128,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
                 ),
-              ),
-              child: Center(
-                child: image != null && image.isNotEmpty
+                child: displayImage != null
                     ? ClipRRect(
                         borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(24),
-                          topRight: Radius.circular(24),
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
                         ),
                         child: Image.network(
-                          image,
+                          displayImage,
+                          width: double.infinity,
+                          height: 128,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.inventory, size: 44, color: Color(0xFF9CA3AF)),
                         ),
                       )
-                    : const Icon(Icons.inventory,
-                        size: 50, color: Color(0xFF9CA3AF)),
+                    : const Icon(Icons.inventory, size: 44, color: Color(0xFF9CA3AF)),
               ),
-            ),
+              if (hasMultiplePacks && packName.isNotEmpty)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF9879b6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      packName,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.85),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : const Color(0xFF9CA3AF),
+                      size: 18,
+                    ),
+                    onPressed: () => _toggleFavorite(itemId as int),
+                  ),
+                ),
+              ),
+            ],
           ),
-          // Details
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  itemName,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -297,13 +361,53 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (hasMultiplePacks && packName.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      packName,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Text(
-                  '$price ر.س',
+                  '${packPrice.toStringAsFixed(2)} ر.س',
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF9879b6),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _showToast('تمت إضافة المنتج إلى السلة');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF9879b6),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    child: const Text(
+                      'أضف إلى السلة',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],

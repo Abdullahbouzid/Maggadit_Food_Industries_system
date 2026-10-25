@@ -9,6 +9,10 @@ class AppRoutes {
   static const String offers = '/offers';
   static const String products = '/products';
   static const String cart = '/cart';
+  static const String more = '/more';
+  static const String returns = '/returns';
+  static const String surveys = '/surveys';
+  static const String returnCreate = '/returns/create/{invoiceId}';
 
   // Dynamic route patterns
   static const String orderDetails = '/order/{orderId}';
@@ -22,4 +26,5 @@ class AppRoutes {
   static String offerDetailsRoute(int offerId) => '/offer/$offerId';
   static String productDetailsRoute(int productId) => '/product/$productId';
   static String brandDetailsRoute(int brandId) => '/brand/$brandId';
+  static String returnCreateRoute(int invoiceId) => '/returns/create/$invoiceId';
 }
