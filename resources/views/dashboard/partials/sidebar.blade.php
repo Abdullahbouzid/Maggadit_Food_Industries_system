@@ -104,6 +104,10 @@
                 <i class="fas fa-users"></i>
                 <span>{{ __('messages.dashboard.sidebar.customers') }}</span>
             </a>
+            <a href="{{ route('branches.index') }}" class="nova-sidebar-link {{ request()->routeIs('branches.*') ? 'active' : '' }}">
+                <i class="fas fa-store"></i>
+                <span>{{ __('messages.dashboard.sidebar.branches') ?? 'الفروع' }}</span>
+            </a>
             {{-- TODO: Add payments route --}}
             <a href="#" class="nova-sidebar-link">
                 <i class="fas fa-money-bill-wave"></i>

@@ -12,6 +12,7 @@ use App\Models\ContactMessage;
 use App\Models\Faq;
 use App\Models\Invoice;
 use App\Models\Item;
+use App\Models\Branch;
 use App\Models\Notification;
 use App\Models\Offer;
 use App\Models\Organization;
@@ -1959,5 +1960,80 @@ return response()->json([
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="quotation-' . $quotation->quotation_number . '.pdf"');
+    }
+
+    /**
+     * Get all branches for the authenticated customer
+     */
+    public function branchesIndex(Request $request)
+    {
+        $customer = $request->user();
+
+        $branches = $customer->branches()->where('is_active', true)->get();
+
+        return response()->json(['success' => true, 'branches' => $branches]);
+    }
+
+    /**
+     * Store a new branch for the authenticated customer
+     */
+    public function branchesStore(Request $request)
+    {
+        $customer = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'working_hours_from' => 'nullable|date_format:H:i',
+            'working_hours_to' => 'nullable|date_format:H:i',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $branch = $customer->branches()->create(array_merge($validated, [
+            'customer_id' => $customer->id,
+        ]));
+
+        return response()->json(['success' => true, 'branch' => $branch]);
+    }
+
+    /**
+     * Update a branch for the authenticated customer
+     */
+    public function branchesUpdate(Request $request, $id)
+    {
+        $customer = $request->user();
+
+        $branch = $customer->branches()->findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'working_hours_from' => 'nullable|date_format:H:i',
+            'working_hours_to' => 'nullable|date_format:H:i',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $branch->update($validated);
+
+        return response()->json(['success' => true, 'branch' => $branch]);
+    }
+
+    /**
+     * Delete a branch for the authenticated customer
+     */
+    public function branchesDestroy(Request $request, $id)
+    {
+        $customer = $request->user();
+
+        $branch = $customer->branches()->findOrFail($id);
+        $branch->delete();
+
+        return response()->json(['success' => true, 'message' => 'تم حذف الفرع بنجاح']);
     }
 }

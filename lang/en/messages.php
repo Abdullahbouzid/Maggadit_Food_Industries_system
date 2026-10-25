@@ -549,6 +549,7 @@ return array (
       'inventory_section' => 'Inventory Management',
       'customers_sales' => 'Customers & Sales',
       'customers' => 'Customers',
+      'branches' => 'Branches',
       'payments' => 'Payments',
       'settings' => 'Settings',
       'payment_deadlines' => 'Payment Deadlines',

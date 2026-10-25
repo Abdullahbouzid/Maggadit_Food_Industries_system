@@ -131,4 +131,10 @@ class Customer extends Authenticatable
     {
         return $this->hasMany(Invoice::class);
     }
+
+    // الفروع (hasMany)
+    public function branches()
+    {
+        return $this->hasMany(Branch::class, 'customer_id');
+    }
 }

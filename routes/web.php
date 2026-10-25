@@ -941,6 +941,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('customers/template', [CustomerController::class, 'downloadTemplate'])->name('customers.template');
     Route::resource('customers', CustomerController::class);
 
+    // الفروع - مسارات إدارة الفروع لكل عميل
+    Route::get('branches', [\App\Http\Controllers\Admin\BranchController::class, 'index'])->name('branches.index');
+    Route::get('branches/create', [\App\Http\Controllers\Admin\BranchController::class, 'create'])->name('branches.create');
+    Route::post('branches', [\App\Http\Controllers\Admin\BranchController::class, 'store'])->name('branches.store');
+    Route::get('branches/{branch}', [\App\Http\Controllers\Admin\BranchController::class, 'show'])->name('branches.show');
+    Route::get('branches/{branch}/edit', [\App\Http\Controllers\Admin\BranchController::class, 'edit'])->name('branches.edit');
+    Route::put('branches/{branch}', [\App\Http\Controllers\Admin\BranchController::class, 'update'])->name('branches.update');
+    Route::delete('branches/{branch}', [\App\Http\Controllers\Admin\BranchController::class, 'destroy'])->name('branches.destroy');
+
     Route::get('package-statuses/export', [PackageStatusController::class, 'export'])->name('package-statuses.export');
     Route::get('package-statuses/template', [PackageStatusController::class, 'downloadTemplate'])->name('package-statuses.template');
     Route::post('package-statuses/import', [PackageStatusController::class, 'import'])->name('package-statuses.import');

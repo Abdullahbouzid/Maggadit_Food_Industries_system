@@ -152,6 +152,9 @@ class CustomerController extends Controller
         $returns = $trace->returnsFor($customer);
         $batchTrace = $trace->forCustomer($customer);
 
+        // فروع العميل
+        $branches = $customer->branches()->latest()->get();
+
         return view('dashboard.customers.show', compact(
             'customer',
             'allPriceLists',
@@ -159,7 +162,8 @@ class CustomerController extends Controller
             'defaultCurrencyId',
             'payments',
             'returns',
-            'batchTrace'
+            'batchTrace',
+            'branches'
         ));
     }
 
