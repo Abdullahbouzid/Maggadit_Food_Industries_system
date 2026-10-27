@@ -205,6 +205,7 @@
                 <tr>
                     <th>#</th>
                     <th>{{ __('messages.orders.col_order_number') }}</th>
+                    <th>{{ __('messages.orders.col_branch') }}</th>
                     <th>{{ __('messages.orders.col_customer') }}</th>
                     <th>{{ __('messages.orders.col_warehouse') }}</th>
                     <th>{{ __('messages.orders.col_date') }}</th>
@@ -232,6 +233,9 @@
                                 {{ __('messages.orders.from_customer_app') ?? 'من تطبيق العميل' }}
                             </small>
                         @endif
+                    </td>
+                    <td>
+                        {{ $order->branch ? $order->branch->name : ($order->branch_id ?? '—') }}
                     </td>
                     <td>
                         <div>
@@ -280,7 +284,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="11">
+                    <td colspan="12">
                         <div class="nova-empty">
                             <div class="nova-empty-icon">
                                 <i class="fas fa-clipboard-list"></i>

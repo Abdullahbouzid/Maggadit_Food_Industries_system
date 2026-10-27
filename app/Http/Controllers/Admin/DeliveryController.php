@@ -16,7 +16,7 @@ class DeliveryController extends Controller
 {
     public function index()
     {
-        $deliveries = Delivery::with(['invoice', 'order', 'customer', 'driver', 'vehicle'])
+        $deliveries = Delivery::with(['invoice', 'order.branch', 'customer', 'driver', 'vehicle'])
             ->latest()
             ->paginate(20);
 
@@ -47,7 +47,7 @@ class DeliveryController extends Controller
     {
         $delivery->load([
             'invoice',
-            'order',
+            'order.branch',
             'customer',
             'driver',
             'vehicle',

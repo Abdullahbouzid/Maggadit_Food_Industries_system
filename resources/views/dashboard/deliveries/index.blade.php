@@ -92,6 +92,7 @@
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>{{ __('messages.delivery_page.col_branch') }}</th>
                         <th>{{ __('messages.delivery_page.col_invoice') }}</th>
                         <th>{{ __('messages.delivery_page.col_customer') }}</th>
                         <th>{{ __('messages.delivery_page.col_driver') }}</th>
@@ -105,6 +106,7 @@
                     @forelse($deliveries as $delivery)
                     <tr>
                         <td><span class="nova-fw-semibold">{{ $delivery->id }}</span></td>
+                        <td>{{ $delivery->order->branch->name ?? ($delivery->order ? $delivery->order->branch_id : '—') }}</td>
                         <td>{{ $delivery->invoice?->invoice_number ?? '—' }}</td>
                         <td>{{ $delivery->invoice?->customer->name ?? '—' }}</td>
                         <td>
@@ -155,7 +157,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="nova-text-center nova-py-4">
+                        <td colspan="9" class="nova-text-center nova-py-4">
                             <div class="nova-empty">
                                 <i class="fas fa-truck" style="font-size: 3rem; color: var(--nova-text-3); margin-bottom: 1rem;"></i>
                                 <p>{{ __('messages.delivery_page.empty') }}</p>

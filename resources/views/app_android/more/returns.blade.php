@@ -114,6 +114,16 @@
                     <span class="text-gray-500">{{ $return->reason }}</span>
                 </div>
 
+                @php
+                    $branchName = $return->order ? ($return->order->branch ? $return->order->branch->name : null) : ($return->branch_name ?? null);
+                @endphp
+                @if ($branchName)
+                    <div class="mt-2 flex items-center gap-2 text-[11px] text-gray-600">
+                        <i class="fas fa-store text-purple-600"></i>
+                        <span class="font-medium">الفرع: {{ $branchName }}</span>
+                    </div>
+                @endif
+
                 @if ($return->items && $return->items->isNotEmpty())
                     <div class="mt-3 border-t border-gray-100 pt-3 space-y-1">
                         @foreach ($return->items as $line)

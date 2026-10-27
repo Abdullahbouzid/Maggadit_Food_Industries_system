@@ -163,6 +163,7 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>{{ __('messages.invoice_page.col_branch') }}</th>
                     <th>{{ __('messages.invoice_page.col_customer') }}</th>
                     <th>{{ __('messages.invoice_page.col_date') }}</th>
                     <th>{{ __('messages.invoice_page.col_payment_type') }}</th>
@@ -185,6 +186,7 @@
                     @endphp
                     <tr>
                         <td><span class="nova-fw-semibold">{{ $invoice->invoice_number ?? $invoice->id }}</span></td>
+                        <td>{{ $invoice->order ? ($invoice->order->branch ? $invoice->order->branch->name : ($invoice->order->branch_id ?? '—')) : '—' }}</td>
                         <td>{{ $invoice->customer->name ?? '—' }}</td>
                         <td>{{ $invoice->created_at ? \Carbon\Carbon::parse($invoice->created_at)->translatedFormat('Y-m-d') : '—' }}</td>
                         <td>
@@ -235,7 +237,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10">
+                        <td colspan="12">
                             <div class="nova-empty">
                                 <div class="nova-empty-icon">
                                     <i class="fas fa-file-invoice"></i>

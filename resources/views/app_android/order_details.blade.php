@@ -24,16 +24,24 @@
                         <h3 class="font-bold text-gray-800">طلب رقم #{{ $order->order_number ?? $order->id }}</h3>
                         <p class="text-xs text-gray-400 mt-1">{{ $order->created_at?->format('Y-m-d') ?? '' }} - {{ $order->created_at?->format('H:i') ?? '' }}</p>
                     </div>
-                    <span class="text-xs px-3 py-1 rounded-full font-semibold
-                        @if(($order->status ?? '') == 'completed' || ($order->status ?? '') == 'delivered') bg-green-100 text-green-700
-                        @elseif(($order->status ?? '') == 'cancelled') bg-red-100 text-red-700
-                        @elseif(($order->status ?? '') == 'pending') bg-amber-100 text-amber-700
-                        @elseif(($order->status ?? '') == 'processing') bg-blue-100 text-blue-700
-                        @else bg-gray-100 text-gray-700
-                        @endif">
-                        {{ $order->status_label ?? $order->status ?? 'مجهول' }}
-                    </span>
-                </div>
+<span class="text-xs px-3 py-1 rounded-full font-semibold
+                                    @if(($order->status ?? '') == 'completed' || ($order->status ?? '') == 'delivered') bg-green-100 text-green-700
+                                    @elseif(($order->status ?? '') == 'cancelled') bg-red-100 text-red-700
+                                    @elseif(($order->status ?? '') == 'pending') bg-amber-100 text-amber-700
+                                    @elseif(($order->status ?? '') == 'processing') bg-blue-100 text-blue-700
+                                    @else bg-gray-100 text-gray-700
+                                    @endif">
+                                {{ $order->status_label ?? $order->status ?? 'مجهول' }}
+                            </span>
+                        </div>
+
+                        @if($order->branch_id || ($order->branch ?? null))
+                            <div class="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                                <i class="fas fa-store text-purple-600"></i>
+                                <span class="font-medium">الفرع: {{ $order->branch?->name ?? 'غير محدد' }}</span>
+                            </div>
+                        @endif
+                    </div>
             </div>
 
             @if($order->delivery)

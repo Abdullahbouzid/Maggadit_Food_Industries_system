@@ -31,7 +31,7 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
-        $query = Order::query()->with(['customer', 'currency', 'warehouse', 'items']);
+        $query = Order::query()->with(['customer', 'currency', 'warehouse', 'branch', 'items']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -128,14 +128,14 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'currency', 'items', 'quotation', 'delivery', 'statusHistory']);
+        $order->load(['customer', 'currency', 'items', 'quotation', 'delivery', 'statusHistory', 'branch']);
 
         return view('dashboard.orders.show', compact('order'));
     }
 
     public function edit(Order $order)
     {
-        $order->load(['customer', 'currency', 'items.item', 'items.pack', 'items.pack.packType', 'items.pack.packCapacity', 'warehouse']);
+        $order->load(['customer', 'currency', 'items.item', 'items.pack', 'items.pack.packType', 'items.pack.packCapacity', 'warehouse', 'branch']);
         $customers = Customer::with(['priceList', 'wallets' => function ($q) {
             $q->where('is_active', true);
         }])->orderBy('name')->get();

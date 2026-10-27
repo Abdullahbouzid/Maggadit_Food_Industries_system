@@ -11,7 +11,7 @@ class ReturnController extends Controller
     public function index()
     {
          return view('dashboard.returns.index', [
-            'returns' => \App\Models\ReturnRequest::with(['invoice', 'customer', 'items'])
+            'returns' => \App\Models\ReturnRequest::with(['invoice.order.branch', 'invoice.customer', 'customer', 'items'])
                 ->latest()
                 ->paginate(20),
             'filters' => [],

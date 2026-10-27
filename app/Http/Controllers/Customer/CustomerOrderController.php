@@ -499,8 +499,10 @@ class CustomerOrderController extends Controller
             ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation', 'branch'])
             ->find($id);
 
-            // If local DB doesn't have the order, fetch from external API (for APK)
-            if (! $order) {
+        $isRemote = false;
+
+        // If local DB doesn't have the order, fetch from external API (for APK)
+        if (! $order) {
                 $token = session('api_token') ?: $request->bearerToken();
                 if ($token) {
                     $remoteData = $this->fetchRemoteData("customer/orders/{$id}", $token);

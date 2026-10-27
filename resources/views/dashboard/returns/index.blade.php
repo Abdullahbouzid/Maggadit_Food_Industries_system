@@ -97,8 +97,9 @@
             <table class="nova-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>{{ __('messages.return_page.col_return_number') }}</th>
+<th>#</th>
+                            <th>{{ __('messages.return_page.col_branch') }}</th>
+                            <th>{{ __('messages.return_page.col_return_number') }}</th>
                         <th>{{ __('messages.return_page.col_invoice') }}</th>
                         <th>{{ __('messages.return_page.col_customer') }}</th>
                         <th>{{ __('messages.return_page.col_type') }}</th>
@@ -113,6 +114,7 @@
                     @forelse($returns as $return)
                     <tr>
                         <td><span class="nova-fw-semibold">{{ $return->id }}</span></td>
+                        <td>{{ $return->invoice?->order?->branch?->name ?? '—' }}</td>
                         <td>{{ $return->return_number ?? '—' }}</td>
                         <td>{{ $return->invoice?->invoice_number ?? '—' }}</td>
                         <td>{{ $return->invoice?->customer->name ?? '—' }}</td>
@@ -156,7 +158,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="nova-text-center nova-py-4">
+                        <td colspan="11" class="nova-text-center nova-py-4">
                             <div class="nova-empty">
                                 <i class="fas fa-undo" style="font-size: 3rem; color: var(--nova-text-3); margin-bottom: 1rem;"></i>
                                 <p>{{ __('messages.return_page.empty') }}</p>

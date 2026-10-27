@@ -29,6 +29,7 @@ class CustomerReturnController extends Controller
 
         $returns = ReturnRequest::with([
             'invoice',
+            'order.branch',
             'items.item',
             'items.pack',
         ])
@@ -109,7 +110,7 @@ class CustomerReturnController extends Controller
                             $typeVal = $typeVal->value;
                         }
 
-                        return (object) [
+                         return (object) [
                             'id' => $r['id'],
                             'return_number' => $r['return_number'],
                             'status' => $statusVal,
@@ -117,6 +118,7 @@ class CustomerReturnController extends Controller
                             'reason' => $r['reason'],
                             'total_refund' => $r['total_refund'],
                             'created_at' => $r['created_at'],
+                            'branch_name' => $r['branch']['name'] ?? ($r['branch_name'] ?? null),
                             'invoice' => $r['invoice'] ? (object) $r['invoice'] : null,
                             'items' => collect($r['items'])->map(function ($i) {
                                 return (object) [
@@ -199,7 +201,8 @@ class CustomerReturnController extends Controller
             return redirect()->route('mobile.login');
         }
 
-        $invoice = Invoice::where('customer_id', $customer->id)
+        $invoice = Invoice::with(['order.branch'])
+            ->where('customer_id', $customer->id)
             ->where(function ($q) use ($invoiceId) {
                 $q->where('id', $invoiceId);
 

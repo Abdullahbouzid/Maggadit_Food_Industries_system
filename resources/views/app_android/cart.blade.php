@@ -319,7 +319,7 @@
             showCartToast(msg, isError ? '⚠️ خطأ' : '✅ تمت العملية بنجاح');
         }
 
-        // ========== Survey rating stars ==========
+// ========== Survey rating stars ==========
         document.querySelectorAll('#survey-rating .rate-star').forEach(star => {
             star.addEventListener('click', function() {
                 const value = parseInt(this.getAttribute('data-value'));
@@ -334,12 +334,10 @@
                         s.classList.add('far', 'text-gray-300');
                     }
                 });
-});
-
             });
         });
 
-// ========== customer branches ==========
+        // ========== customer branches ==========
         async function loadCustomerBranches() {
             const token = localStorage.getItem('customer_token') || localStorage.getItem('api_token');
             const branchSelect = document.getElementById('branch_select');
@@ -622,7 +620,6 @@ const checkoutUrl = '{{ route('customer.checkout', [], false) }}';
 
             // Collect form data
             const surveyRating = document.getElementById('survey_rating')?.value;
-            const branchId = document.getElementById('branch_select')?.value || null;
             const formData = {
                 items: validItems,
                 delivery_address: document.getElementById('delivery_address')?.value?.trim() || '',

@@ -174,6 +174,7 @@
 
     $orderNo     = $invoice->order?->order_number ?? '—';
     $quotationNo = $invoice->quotation?->quotation_number ?? '—';
+    $branchName  = $invoice->order && $invoice->order->branch ? $invoice->order->branch->name : '—';
 
     $subtotalCalculated = 0;
     $minRows = 5;
@@ -284,6 +285,10 @@
             <td class="val">{{ $orderNo }}</td>
         </tr>
         <tr>
+            <td class="lbl">الفرع</td>
+            <td class="colon">:</td>
+            <td class="val">{{ $branchName }}</td>
+
             <td class="lbl">رقم عرض السعر</td>
             <td class="colon">:</td>
             <td class="val">{{ $quotationNo }}</td>

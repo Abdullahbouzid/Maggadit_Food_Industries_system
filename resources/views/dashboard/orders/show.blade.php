@@ -98,6 +98,7 @@
     $statusEnum = $order->status instanceof \App\Enums\OrderStatus ? $order->status : \App\Enums\OrderStatus::tryFrom($order->status);
     $badgeClass = $statusEnum?->badgeColor() ?? 'secondary';
     $statusLabel = $statusEnum?->label() ?? $order->status;
+    $branchName = $order->branch ? $order->branch->name : ($order->branch_id ?? '—');
 @endphp
 
 @section('content')
@@ -159,6 +160,14 @@
             @if($order->customer?->phone)
                 <p class="nova-text-muted nova-fs-sm"><i class="fas fa-phone" style="margin-inline-end: 0.25rem;"></i>{{ $order->customer->phone }}</p>
             @endif
+        </div>
+    </div>
+
+    {{-- التسليم --}}
+    <div class="nova-card nova-summary-card">
+        <div class="nova-card-body">
+            <p class="nova-stat-label">{{ __('messages.orders.branch') }}</p>
+            <p class="nova-stat-value">{{ $branchName }}</p>
         </div>
     </div>
 

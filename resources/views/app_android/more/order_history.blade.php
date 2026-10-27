@@ -61,7 +61,7 @@
                 </div>
 
                 <div class="mt-3 flex items-center justify-between">
-                    <div class="text-sm font-bold text-gray-800">{{ number_format($row['total'], 2) }} ر.س</div>
+                    <div class="text-sm font-bold text-gray-800">{{ number_format((float)$row['total'], 2) }} ر.س</div>
                     <div class="flex items-center gap-2">
                         @if ($row['can_respond'])
                             <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-full">بانتظار ردّك</span>

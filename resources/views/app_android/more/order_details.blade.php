@@ -122,8 +122,8 @@
                                 </div>
                             </div>
                             <div class="text-left shrink-0">
-                                <div class="text-sm font-bold text-gray-800">{{ number_format($item['line_total'], 2) }}</div>
-                                <div class="text-[11px] text-gray-400">{{ number_format($item['unit_price'], 2) }} للوحدة</div>
+                                <div class="text-sm font-bold text-gray-800">{{ number_format((float)$item['line_total'], 2) }}</div>
+                                <div class="text-[11px] text-gray-400">{{ number_format((float)$item['unit_price'], 2) }} للوحدة</div>
                             </div>
                         </div>
                     @endforeach

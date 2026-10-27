@@ -68,6 +68,13 @@
                         <div class="nova-fw-semibold">{{ $delivery->order?->order_number ?? '—' }}</div>
                     </div>
                     <div class="nova-col-6 nova-mb-3">
+                        <div class="nova-text-muted nova-fs-sm">{{ __('messages.delivery_page.branch') }}</div>
+                        <div class="nova-fw-semibold">
+                            <i class="fas fa-store" style="margin-inline-end: 0.25rem;"></i>
+                            {{ $delivery->order?->branch?->name ?? ($delivery->order ? $delivery->order->branch_id : '—') }}
+                        </div>
+                    </div>
+                    <div class="nova-col-6 nova-mb-3">
                         <div class="nova-text-muted nova-fs-sm">{{ __('messages.delivery_page.customer') }}</div>
                         <div class="nova-fw-semibold">{{ $delivery->customer?->name ?? '—' }}</div>
                     </div>

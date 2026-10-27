@@ -6,11 +6,12 @@
 $statusEnum = $order && $order->status
     ? ($order->status instanceof \App\Enums\OrderStatus ? $order->status : \App\Enums\OrderStatus::tryFrom($order->status))
     : null;
-$isTerminalStatus = $statusEnum && in_array($statusEnum->value, ['delivered', 'cancelled', 'returned', 'expired']);
+$isTerminalStatus = $statusEnum && in_array($statusEnum->value, ['delivered', 'cancelled', 'returned', 'expired', 'rejected']);
 $customerObj = $order->customer;
 $priceListId = $customerObj?->priceList?->id;
 $priceListName = $customerObj?->priceList?->name ?? '—';
 $walletBalance = $customerObj ? $customerObj->wallets->where('is_active', 1)->sum('balance') : 0;
+$branchName = $order->branch ? $order->branch->name : ($order->branch_id ?? '—');
 @endphp
 
 @push('styles')
@@ -267,6 +268,10 @@ $walletBalance = $customerObj ? $customerObj->wallets->where('is_active', 1)->su
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="nova-order-info-item">
+                        <label class="nova-order-info-label">{{ __('messages.orders.branch') }}</label>
+                        <div class="nova-order-info-value">{{ $branchName }}</div>
                     </div>
                 </div>
 

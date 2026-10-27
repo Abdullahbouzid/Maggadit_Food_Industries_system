@@ -131,6 +131,9 @@
     $warehouseName = $warehouse ? ($warehouse->name_ar ?: $warehouse->name_en) : 'المستودع الرئيسي';
     $warehouseCode = $warehouse?->code ?? ($order->warehouse_id ?? '—');
 
+    $branch = $order->branch;
+    $branchName = $branch ? ($branch->name ?? '—') : '—';
+
     $currencyName = $order->currency ? ($order->currency->name_ar ?: $order->currency->code) : 'ر.س / SAR';
     $currencyCode = $order->currency->code ?? 'SAR';
     $exchangeRate = $order->exchange_rate ? (float) $order->exchange_rate : 1.0;
@@ -224,9 +227,14 @@
             <td class="val">{{ $warehouseCode }}</td>
         </tr>
         <tr>
+            <td class="lbl">الفرع</td>
+            <td class="colon">:</td>
+            <td class="val">{{ $branchName }}</td>
+
             <td class="lbl">حالة الطلبية</td>
             <td class="colon">:</td>
             <td class="val">{{ $statusLabel }}</td>
+        </tr>
 
             <td class="lbl">قائمة الأسعار</td>
             <td class="colon">:</td>

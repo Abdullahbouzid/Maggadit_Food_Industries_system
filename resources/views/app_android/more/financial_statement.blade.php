@@ -107,12 +107,18 @@
             @php
                  $statusValue = is_object($invoice->status) && isset($invoice->status->value) ? $invoice->status->value : (string) $invoice->status;
                  $status = \App\Enums\InvoiceStatus::tryFrom($statusValue);
+                 $branchName = $invoice->order ? ($invoice->order->branch ? $invoice->order->branch->name : null) : ($invoice->branch_name ?? null);
             @endphp
             <div class="bg-white rounded-2xl shadow-md p-4 border border-gray-100 mb-2">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="font-semibold text-gray-800">{{ $invoice->invoice_number }}</p>
                         <p class="text-xs text-gray-400">{{ $invoice->invoice_date }}</p>
+                        @if ($branchName)
+                            <div class="mt-1 flex items-center gap-1 text-xs text-purple-600">
+                                <i class="fas fa-store"></i> {{ $branchName }}
+                            </div>
+                        @endif
                     </div>
                     <div class="text-left">
                         <p class="font-bold text-gray-800">{{ number_format((float) $invoice->total_amount, 2) }} ر.س</p>

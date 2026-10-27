@@ -28,6 +28,17 @@
             <div class="text-xs text-gray-500 mt-1">
                 الإجمالي: {{ number_format((float) $invoice->total_amount, 2) }} ر.س
             </div>
+            @if ($invoice->order && $invoice->order->branch)
+                <div class="mt-1 flex items-center gap-2 text-xs text-gray-600">
+                    <i class="fas fa-store text-purple-600"></i>
+                    <span class="font-medium">الفرع: {{ $invoice->order->branch->name }}</span>
+                </div>
+            @elseif ($invoice->order && $invoice->order->branch_id)
+                <div class="mt-1 flex items-center gap-2 text-xs text-gray-600">
+                    <i class="fas fa-store text-purple-600"></i>
+                    <span class="font-medium">الفرع: #{{ $invoice->order->branch_id }}</span>
+                </div>
+            @endif
         </div>
 
         @if ($lines->isEmpty())

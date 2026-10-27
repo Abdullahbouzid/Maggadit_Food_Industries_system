@@ -18,7 +18,7 @@ class InvoiceController extends Controller
         $perPage = $request->get('per_page', 20);
         if ($perPage === 'all') $perPage = 999999;
 
-        $query = Invoice::with('customer');
+        $query = Invoice::with(['customer', 'order.branch']);
         if ($request->filled('search')) {
             $query->whereHas('customer', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -66,7 +66,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
-        $invoice->load(['customer', 'items.item', 'items.warehouse']);
+        $invoice->load(['customer', 'items.item', 'items.warehouse', 'order.branch']);
 
         return view('dashboard.invoices.show', compact('invoice'));
     }

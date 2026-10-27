@@ -45,7 +45,7 @@ class CustomerStatementController extends Controller
                 ->get()
             : collect();
 
-        $invoices = Invoice::with(['items'])
+        $invoices = Invoice::with(['items', 'order.branch'])
             ->where('customer_id', $customer->id)
             ->when($from, fn ($q) => $q->whereDate('invoice_date', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('invoice_date', '<=', $to))
@@ -91,6 +91,7 @@ class CustomerStatementController extends Controller
                                 'paid_amount' => $inv['paid_amount'] ?? 0,
                                 'status' => $inv['status'] ?? null,
                                 'order_id' => $inv['order_id'] ?? null,
+                                'branch_name' => $inv['branch']['name'] ?? ($inv['branch_name'] ?? null),
                                 'items' => isset($inv['items']) ? collect($inv['items'])->map(fn($i) => (object) $i) : collect(),
                             ];
                         });

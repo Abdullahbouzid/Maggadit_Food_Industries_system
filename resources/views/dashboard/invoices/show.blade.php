@@ -47,6 +47,7 @@ $invoice = $invoice ?? null;
 $items = $invoice->items ?? collect();
 $order = $invoice->order ?? null;
 $customer = $invoice->customer ?? null;
+$branchName = $invoice->order && $invoice->order->branch ? $invoice->order->branch->name : ($order->branch_id ?? '—');
 $delivery = null;
 try {
     $delivery = $invoice->deliveries()->latest()->first();
@@ -176,6 +177,9 @@ $canCollect = in_array($invoiceStatus?->value, ['approved', 'partially_paid'], t
                         <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.details') }}</p>
                         <p class="mb-0"><strong>#{{ $invoice->invoice_number }}</strong></p>
                         <small class="nova-text-muted">{{ $order ? route('orders.show', $order) : '#' }} {{ $order->order_number ?? $invoice->id }}</small>
+                        @if($branchName)
+                            <small class="nova-text-muted"><i class="fas fa-store" style="margin-inline-end: 0.25rem;"></i>{{ $branchName }}</small>
+                        @endif
                     </div>
                     <div class="nova-col">
                         <p class="nova-text-muted" style="margin: 0;">{{ __('messages.invoice_page.payment_method') }}</p>
