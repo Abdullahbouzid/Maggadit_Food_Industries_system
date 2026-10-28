@@ -282,7 +282,7 @@
                     <div class="nova-text-muted nova-fs-sm">{{ __('messages.dashboard.warehouse') }}: {{ $item->warehouse->name ?? '-' }}</div>
                 </div>
                 <div class="nova-text-end">
-                    <span class="nova-text-danger nova-fw-semibold">{{ number_format($item->available_quantity ?? 0, 0) }}</span>
+                    <span class="nova-text-danger nova-fw-semibold">{{ number_format($item->quantity_on_hand ?? 0, 0) }}</span>
                     <div>
                         <span class="nova-badge danger">{{ __('messages.dashboard.below_reorder') }}</span>
                     </div>

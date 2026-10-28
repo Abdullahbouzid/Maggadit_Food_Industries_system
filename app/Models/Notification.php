@@ -17,16 +17,21 @@ class Notification extends Model
         'image',
         'video',
         'group',
+        'type',
+        'data',
         'channel',
         'icon_type',
         'customers',
         'is_sent',
+        'is_read',
         'scheduled_at',
     ];
 
     protected $casts = [
         'customers' => 'array',
+        'data' => 'array',
         'is_sent' => 'boolean',
+        'is_read' => 'boolean',
         'scheduled_at' => 'datetime',
     ];
 

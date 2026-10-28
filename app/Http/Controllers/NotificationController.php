@@ -120,7 +120,18 @@ class NotificationController extends Controller
 
     public function show(Notification $notification)
     {
+        if (!$notification->is_read) {
+            $notification->update(['is_read' => true]);
+        }
+
         return view('dashboard.data_definition.customer_app.notification.show', compact('notification'));
+    }
+
+    public function markAllRead()
+    {
+        Notification::where('is_read', false)->update(['is_read' => true]);
+
+        return redirect()->route('notifications.index')->with('success', 'تم تحديد جميع الإشعارات كمقروءة.');
     }
 
     public function edit(Notification $notification)

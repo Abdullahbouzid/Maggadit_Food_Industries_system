@@ -446,7 +446,7 @@ class OrderController extends Controller
      */
     public function downloadOrderPdf(Order $order)
     {
-        $order->load(['customer', 'currency', 'items.item', 'items.pack', 'items.warehouse', 'quotation']);
+        $order->load(['customer', 'currency', 'items.item', 'items.pack', 'items.warehouse', 'quotation', 'branch']);
 
         return \App\Services\PdfGenerator::download(
             'pdf.order',
@@ -466,7 +466,7 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'لا توجد عروض أسعار لهذا الطلب');
         }
 
-        $quotation->load(['customer', 'items.item', 'items.pack', 'order']);
+        $quotation->load(['customer', 'items.item', 'items.pack', 'order.branch']);
 
         return \App\Services\PdfGenerator::download(
             'pdf.quotation',
