@@ -115,7 +115,7 @@
                 </div>
 
                 @php
-                    $branchName = $return->order ? ($return->order->branch ? $return->order->branch->name : null) : ($return->branch_name ?? null);
+                    $branchName = isset($return->order) && $return->order ? ($return->order->branch ? $return->order->branch->name : null) : ($return->branch_name ?? null);
                 @endphp
                 @if ($branchName)
                     <div class="mt-2 flex items-center gap-2 text-[11px] text-gray-600">

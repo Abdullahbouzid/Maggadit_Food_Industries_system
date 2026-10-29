@@ -40,9 +40,9 @@
                     </div>
                 </div>
 
-                @if ($order->delivery_address || $order->delivery_phone || ($order->branch_id ?? false) || ($order->branch_name ?? false))
+                @if ($order->delivery_address || $order->delivery_phone || (isset($order->branch_id) && $order->branch_id) || ($order->branch_name ?? false))
                     <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
-                        @if (($order->branch_id && $order->branch) || ($order->branch_name ?? false))
+                        @if ((isset($order->branch_id) && $order->branch_id && isset($order->branch) && $order->branch) || ($order->branch_name ?? false))
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-store text-purple-600"></i>
                                 <span class="font-bold text-purple-700">

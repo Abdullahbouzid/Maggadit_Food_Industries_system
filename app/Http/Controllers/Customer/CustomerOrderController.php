@@ -610,9 +610,19 @@ class CustomerOrderController extends Controller
             return response()->json(['success' => false, 'message' => 'لا يوجد طلب بهذا المعرف'], 404);
         }
         
-        return response()->streamDownload(function() use ($order) {
-            echo view('pdf.order', compact('order'))->render();
-        }, "order_{$order->order_number}.pdf");
+        if (is_array($order)) {
+            $orderObj = (object) $order;
+        } else {
+            $orderObj = $order;
+        }
+
+        $fileName = 'order_' . ($orderObj->order_number ?? $orderObj->id ?? 'order') . '.pdf';
+
+        return \App\Services\PdfGenerator::download(
+            'pdf.order',
+            ['order' => $orderObj],
+            $fileName,
+        );
     }
     
     public function downloadPdf(Request $request, $id)

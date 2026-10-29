@@ -107,7 +107,7 @@
             @php
                  $statusValue = is_object($invoice->status) && isset($invoice->status->value) ? $invoice->status->value : (string) $invoice->status;
                  $status = \App\Enums\InvoiceStatus::tryFrom($statusValue);
-                 $branchName = $invoice->order ? ($invoice->order->branch ? $invoice->order->branch->name : null) : ($invoice->branch_name ?? null);
+                 $branchName = isset($invoice->order) && $invoice->order ? ($invoice->order->branch ? $invoice->order->branch->name : null) : ($invoice->branch_name ?? null);
             @endphp
             <div class="bg-white rounded-2xl shadow-md p-4 border border-gray-100 mb-2">
                 <div class="flex justify-between items-start">

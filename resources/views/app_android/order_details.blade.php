@@ -35,10 +35,10 @@
                             </span>
                         </div>
 
-                        @if($order->branch_id || ($order->branch ?? null))
+                        @if(isset($order->branch_id) && $order->branch_id || (isset($order->branch) && $order->branch))
                             <div class="mt-2 flex items-center gap-2 text-xs text-gray-600">
                                 <i class="fas fa-store text-purple-600"></i>
-                                <span class="font-medium">الفرع: {{ $order->branch?->name ?? 'غير محدد' }}</span>
+                                <span class="font-medium">الفرع: {{ $order->branch?->name ?? $order->branch_name ?? 'غير محدد' }}</span>
                             </div>
                         @endif
                     </div>
