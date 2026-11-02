@@ -17,7 +17,7 @@
                 </div>
                 <div>
                     @if($customer && $customer->avatar)
-                        <img src="{{ asset('uploads/customers/' . $customer->avatar) }}" alt="Avatar" class="w-24 h-24 mx-auto rounded-full object-cover shadow-lg">
+                        <img src="{{ $customer->avatar_url }}" alt="Avatar" class="w-24 h-24 mx-auto rounded-full object-cover shadow-lg">
                     @else
                         <i class="fas fa-user-circle text-5xl text-white/60"></i>
                     @endif

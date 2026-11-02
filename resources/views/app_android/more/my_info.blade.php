@@ -17,7 +17,7 @@
         <div class="text-center mb-6">
             <div class="relative inline-block cursor-pointer" onclick="openModal()">
                 @if($customer->avatar)
-                    <img src="{{ asset('uploads/customers/' . $customer->avatar) }}" alt="Avatar" class="w-24 h-24 mx-auto rounded-full object-cover shadow-lg">
+                    <img src="{{ $customer->avatar_url }}" alt="Avatar" class="w-24 h-24 mx-auto rounded-full object-cover shadow-lg">
                 @else
                     <div class="w-24 h-24 mx-auto bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full flex items-center justify-center shadow-lg">
                         <i class="fas fa-user text-white text-4xl"></i>
@@ -84,7 +84,7 @@
                 <div class="text-center mb-4">
                     <div class="relative inline-block cursor-pointer" onclick="document.getElementById('avatar-input').click()">
                         @if($customer->avatar)
-                            <img id="avatar-preview" src="{{ asset('uploads/customers/' . $customer->avatar) }}" class="w-20 h-20 mx-auto rounded-full object-cover shadow-md border-2 border-purple-200">
+                            <img id="avatar-preview" src="{{ $customer->avatar_url }}" class="w-20 h-20 mx-auto rounded-full object-cover shadow-md border-2 border-purple-200">
                         @else
                             <div id="avatar-preview-container" class="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center shadow-md border-2 border-dashed border-gray-300">
                                 <i class="fas fa-camera text-gray-400 text-2xl"></i>

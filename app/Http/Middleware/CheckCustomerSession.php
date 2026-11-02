@@ -29,7 +29,24 @@ class CheckCustomerSession
             }
         }
 
-        // 2. جلسة guards (customer / api)
+        // 2. API token stored in session (set by mobile login) — APK users
+        //    The token was already validated against the external API during login.
+        //    The controllers handle remote API fallback themselves.
+        $apiToken = session('api_token');
+        if ($apiToken) {
+            $customerId = session('customer_id');
+            if ($customerId) {
+                $customer = Customer::find($customerId);
+                if ($customer) {
+                    Auth::guard('customer')->setUser($customer);
+                    return $next($request);
+                }
+            }
+
+            return $next($request);
+        }
+
+        // 3. جلسة guards (customer / api)
         if (Auth::guard('customer')->check()) {
             return $next($request);
         }
@@ -38,7 +55,7 @@ class CheckCustomerSession
             return $next($request);
         }
 
-        // 3. customer_id المحفوظ في الجلسة (يضبطه مسار تسجيل الدخول)
+        // 4. customer_id المحفوظ في الجلسة (يضبطه مسار تسجيل الدخول)
         $customerId = $request->session()->get('customer_id');
         if ($customerId) {
             $customer = Customer::find($customerId);
@@ -49,7 +66,7 @@ class CheckCustomerSession
             }
         }
 
-        // 4. لا يوجد عميل مصادق -> إعادة التوجيه لصفحة الدخول
+        // 5. لا يوجد عميل مصادق -> إعادة التوجيه لصفحة الدخول
         //    لا يتم استخدام أي عميل احتياطي Secara عشوائي لتجنب تسريب بيانات العملاء.
         if ($request->expectsJson()) {
             return response()->json(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], 401);
