@@ -27,3 +27,4 @@ Homestead.yaml
 Thumbs.db
 *.apk
 apk-output/
+config/*.json

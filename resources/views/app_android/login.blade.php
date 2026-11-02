@@ -311,6 +311,8 @@
                         localStorage.setItem('api_token', data.token);
                         localStorage.setItem('customer_token', data.token);
                     }
+                    // Register push notification token after successful login
+                    await registerPushNotifications(data.token);
                     if (data.success && data.redirect) {
                         window.location.href = data.redirect;
                     } else {
