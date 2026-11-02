@@ -156,14 +156,9 @@
 
         <!-- System -->
         <div class="nova-sidebar-section">
-            <div class="nova-sidebar-title">{{ __('messages.dashboard.sidebar.system') }}</div>
             <a href="{{ route('permissions.index') }}" class="nova-sidebar-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}">
                 <i class="fas fa-key"></i>
                 <span>{{ __('messages.dashboard.sidebar.permissions') ?? 'الصلاحيات' }}</span>
-            </a>
-            <a href="{{ route('admin.notifications.index') }}" class="nova-sidebar-link {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}">
-                <i class="fas fa-bell"></i>
-                <span>{{ __('messages.dashboard.sidebar.notifications') ?? 'إشعارات التطبيق' }}</span>
             </a>
             <a href="#" onclick="event.preventDefault(); document.getElementById('nova-logout-form').submit();" class="nova-sidebar-link nova-text-danger">
                 <i class="fas fa-sign-out-alt"></i>

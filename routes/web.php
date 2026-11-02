@@ -891,16 +891,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/my-info', [CustomerProfileController::class, 'myInfo'])->name('my_info');
         Route::post('/my-info', [CustomerProfileController::class, 'updateInfo'])->name('my_info.update');
         Route::post('/dynamic-notification', [DynamicNotificationController::class, '__invoke'])->name('dynamic_notification');
-        Route::post('/notification/subscribe', [NotificationController::class, 'subscribe'])->name('notification.subscribe');
     });
-});
-
-// ========== push notification routes (admin only) ==========
-Route::prefix('admin/notifications')->name('admin.notifications.')->middleware(['auth'])->group(function () {
-    Route::get('/', [\App\Http\Controllers\Customer\NotificationController::class, 'index'])->name('index');
-    Route::post('/send/customer', [\App\Http\Controllers\Customer\NotificationController::class, 'sendToCustomer'])->name('send_customer');
-    Route::post('/send/all', [\App\Http\Controllers\Customer\NotificationController::class, 'sendToAll'])->name('send_all');
-    Route::post('/send/branches', [\App\Http\Controllers\Customer\NotificationController::class, 'sendToBranches'])->name('send_branches');
 });
 
 Route::get('/offers/get-item-price', [\App\Http\Controllers\Offer\OfferController::class, 'getItemPrice'])->name('offers.get_item_price');
