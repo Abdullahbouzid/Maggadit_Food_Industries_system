@@ -311,6 +311,8 @@
                         localStorage.setItem('api_token', data.token);
                         localStorage.setItem('customer_token', data.token);
                     }
+                    // Register push notification token after successful login
+                    await registerPushNotifications(data.token);
                     if (data.success && data.redirect) {
                         window.location.href = data.redirect;
                     } else {
@@ -341,6 +343,37 @@
 
         // تعيين اللغة الأولية
         setLanguage(currentLang);
+
+        // Push notification registration after login
+        async function registerPushNotifications(apiToken) {
+            try {
+                if (typeof nativephp_call !== 'undefined') {
+                    // Request permission and get FCM token via NativePHP
+                    nativephp_call('PushNotification.RequestPermission', JSON.stringify({
+                        event: 'PushNotification.TokenGenerated'
+                    }));
+
+                    // Listen for token generation
+                    window.addEventListener('nativephp_push_token', async (event) => {
+                        const token = event.detail.token;
+                        if (token && apiToken) {
+                            // Send token to backend
+                            await fetch('/customer/notification/subscribe', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + apiToken,
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                                },
+                                body: JSON.stringify({ token: token })
+                            });
+                        }
+                    });
+                }
+            } catch (error) {
+                console.warn('Push notification setup failed:', error);
+            }
+        }
 
 
         // في صفحة login.blade.php أو في ملف JavaScript الخاص بتسجيل الدخول
