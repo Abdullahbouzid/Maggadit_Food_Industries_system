@@ -1789,7 +1789,7 @@ return response()->json([
                     $q->orWhere('invoice_number', $id)->orWhere('order_id', $id);
                 }
             })
-            ->with(['customer', 'priceList', 'currency', 'items.item', 'items.itemPack.packType', 'items.priceList'])
+            ->with(['customer', 'priceList', 'currency', 'items.item', 'items.itemPack.packType', 'items.priceList', 'order.branch'])
             ->first();
 
         if (! $invoice) {
@@ -1947,7 +1947,7 @@ return response()->json([
 
         $quotation = Quotation::where('order_id', $id)
             ->where('customer_id', $customer->id)
-            ->with(['customer', 'createdBy', 'order.customer', 'order.warehouse', 'order.currency', 'items.item', 'items.pack', 'items.warehouse'])
+            ->with(['customer', 'createdBy', 'order.customer', 'order.warehouse', 'order.currency', 'order.branch', 'items.item', 'items.pack', 'items.warehouse'])
             ->latest('version')
             ->first();
 

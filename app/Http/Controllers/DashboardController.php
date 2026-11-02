@@ -261,17 +261,21 @@ class DashboardController extends Controller
                 $nearDeadlineInvoices = collect();
                 if (class_exists('App\Models\Invoice')) {
                     $cutoffDate = now()->addDays(3);
-                    $nearDeadlineInvoices = Invoice::with(['customer', 'currency'])
-                        ->where('status', 'approved')
+                    $nearDeadlineInvoices = Invoice::with(['customer', 'currency', 'order.branch'])
+                        ->whereIn('status', ['approved', 'partially_paid', 'pending_approval'])
                         ->whereNotNull('payment_deadline_at')
-                        ->whereBetween('payment_deadline_at', [now()->startOfDay(), $cutoffDate])
+                        ->where(function ($query) use ($cutoffDate) {
+                            $query->where('payment_deadline_at', '<=', $cutoffDate)
+                                  ->where('payment_deadline_at', '>=', now()->subDays(365)->startOfDay());
+                        })
                         ->orderBy('payment_deadline_at')
                         ->limit(10)
                         ->get();
                     $nearDeadlineCount = $nearDeadlineInvoices->count();
-                    $currentDeadlineInvoices = Invoice::where('status', 'approved')
+                    $currentDeadlineInvoices = Invoice::whereIn('status', ['approved', 'partially_paid', 'pending_approval'])
                         ->whereNotNull('payment_deadline_at')
-                        ->whereBetween('payment_deadline_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->addDays(3)->startOfDay()])
+                        ->where('payment_deadline_at', '<=', Carbon::yesterday()->addDays(3)->endOfDay())
+                        ->where('payment_deadline_at', '>=', Carbon::yesterday()->subDays(365)->startOfDay())
                         ->count() ?? 0;
                     $stats['near_deadline_trend'] = $currentDeadlineInvoices > 0
                         ? (int) round((($nearDeadlineCount - $currentDeadlineInvoices) / max($currentDeadlineInvoices, 1)) * 100)

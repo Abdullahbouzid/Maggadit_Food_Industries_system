@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
+use App\Events\WarehouseStockAlert;
 use App\Models\Inventory;
 use App\Models\AuditLog;
 
@@ -58,5 +59,12 @@ class InventoryObserver
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
+
+        $availableQty = (float) $inventory->available_quantity;
+        $threshold = (float) $inventory->reorder_level;
+
+        if ($availableQty <= $threshold) {
+            WarehouseStockAlert::dispatch($inventory, $availableQty, $threshold);
+        }
     }
 }

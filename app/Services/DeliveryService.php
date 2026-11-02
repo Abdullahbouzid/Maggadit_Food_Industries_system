@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Contracts\DeliveryServiceInterface;
 use App\DTOs\TimelineEntry;
 use App\Events\DeliveryCancelled;
+use App\Events\DeliveryCreated;
 use App\Events\DeliveryStageChanged;
 use App\Models\AuditLog;
 use App\Models\Delivery;
@@ -42,6 +43,8 @@ class DeliveryService implements DeliveryServiceInterface
                     'current_stage' => 'shipping',
                     'started_at' => now(),
                 ]);
+
+                event(new DeliveryCreated($delivery, $driver));
             } else {
                 $delivery->update([
                     'vehicle_id' => $vehicle?->id ?? $delivery->vehicle_id,

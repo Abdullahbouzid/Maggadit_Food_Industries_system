@@ -587,7 +587,7 @@ class CustomerOrderController extends Controller
         }
         
         $order = $customer->orders()
-            ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
+            ->with(['customer', 'currency', 'items.item', 'items.pack', 'delivery', 'invoices.order.branch', 'branch'])
             ->find($id);
         
         if (! $order) {
@@ -624,7 +624,7 @@ class CustomerOrderController extends Controller
         }
         
         $order = $customer->orders()
-            ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
+            ->with(['customer', 'currency', 'items.item', 'items.pack', 'delivery', 'invoices.order.branch', 'branch'])
             ->find($id);
         
         if (! $order) {
@@ -665,10 +665,14 @@ class CustomerOrderController extends Controller
         } else {
             $invoiceObj = $invoice;
         }
-        
-        return response()->streamDownload(function() use ($invoiceObj) {
-            echo view('pdf.invoice', compact('invoiceObj'))->render();
-        }, "invoice_{$invoiceObj->invoice_number}.pdf");
+
+        $fileName = 'invoice_' . ($invoiceObj->invoice_number ?? $invoiceObj->id ?? 'invoice') . '.pdf';
+
+        return \App\Services\PdfGenerator::download(
+            'pdf.invoice',
+            ['invoice' => $invoiceObj],
+            $fileName,
+        );
     }
     
     public function downloadQuotationPdf(Request $request, $id)
@@ -680,7 +684,7 @@ class CustomerOrderController extends Controller
         }
         
         $order = $customer->orders()
-            ->with(['items.item', 'items.pack', 'delivery', 'invoices'])
+            ->with(['customer', 'currency', 'items.item', 'items.pack', 'delivery', 'invoices.order.branch', 'branch'])
             ->find($id);
         
         if (! $order) {
@@ -706,7 +710,10 @@ class CustomerOrderController extends Controller
         // Quotation: Eloquent relationship for local DB, direct property for remote API objects
         $quotation = null;
         if ($order instanceof \App\Models\Order) {
-            $quotation = $order->quotation->first();
+            $quotation = $order->quotation()
+                ->with(['order.branch', 'customer', 'items.item', 'items.pack'])
+                ->latest()
+                ->first();
         } elseif (isset($order->quotation)) {
             $quotation = $order->quotation;
         }
@@ -721,10 +728,14 @@ class CustomerOrderController extends Controller
         } else {
             $quotationObj = $quotation;
         }
-        
-        return response()->streamDownload(function() use ($quotationObj) {
-            echo view('pdf.quotation', compact('quotationObj'))->render();
-        }, "quotation_{$quotationObj->quotation_number}.pdf");
+
+        $fileName = 'quotation_' . ($quotationObj->quotation_number ?? $quotationObj->id ?? 'quotation') . '.pdf';
+
+        return \App\Services\PdfGenerator::download(
+            'pdf.quotation',
+            ['quotation' => $quotationObj],
+            $fileName,
+        );
     }
 
     public function respondToQuotation(Request $request, $id)

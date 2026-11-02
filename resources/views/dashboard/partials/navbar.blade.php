@@ -1,3 +1,9 @@
+<?php
+$unreadCount = \App\Models\Notification::where('is_read', false)->latest()->count();
+$recentNotifications = \App\Models\Notification::where('is_read', false)->latest()->limit(5)->get();
+$isArabic = app()->getLocale() === 'ar';
+?>
+
 <nav class="nova-topnav">
     <div class="nova-topnav-left">
         <button class="nova-icon-btn nova-mobile-menu-btn" type="button" id="novaMobileMenu" aria-label="{{ __('messages.navbar.open_menu') }}">
@@ -21,10 +27,52 @@
             <i class="fas fa-plus"></i>
         </button>
 
-        <button class="nova-icon-btn" type="button" aria-label="{{ __('messages.navbar.notifications') }}" title="{{ __('messages.navbar.notifications') }}">
-            <i class="fas fa-bell"></i>
-            <span class="nova-badge">3</span>
-        </button>
+        <div class="nova-notification-wrapper" style="position: relative; display: inline-block;" id="novaNotificationDropdown">
+            <button class="nova-icon-btn nova-notification-btn" type="button" id="novaNotificationsBtn" aria-label="{{ __('messages.navbar.notifications') }}" title="{{ __('messages.navbar.notifications') }}" style="position: relative;">
+                <i class="fas fa-bell fa-beat" style="animation: none;"></i>
+                <i class="fas fa-bell-slash" style="display: none;"></i>
+                @if($unreadCount > 0)
+                    <span class="nova-badge nova-badge-danger" style="position: absolute; top: 4px; right: 4px; background: #ef4444; color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.65rem; font-weight: 700; animation: nova-notif-badge 2s infinite;">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+                @else
+                    <span class="nova-badge nova-badge-secondary" style="position: absolute; top: 4px; right: 4px; background: var(--nova-text-3); color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.55rem; font-weight: 700;">0</span>
+                @endif
+            </button>
+
+            <div id="novaNotificationsMenu" class="nova-dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; width: 340px; max-height: 420px; overflow-y: auto; background: var(--nova-surface); border: 1px solid var(--nova-border-color); border-radius: var(--nova-radius-lg); box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000;">
+                <div class="nova-dropdown-header" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--nova-border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <span class="nova-fw-bold">{{ __('messages.navbar.notifications') }}</span>
+                    @if($unreadCount > 0)
+                        <a href="{{ route('notifications.mark_all_read') }}" style="font-size: 0.75rem; color: var(--nova-primary); text-decoration: none;">{{ __('messages.navbar.mark_all_read') }}</a>
+                    @endif
+                </div>
+                @forelse($recentNotifications as $notification)
+                    <a href="{{ route('notifications.show', $notification->id) }}"
+                       style="display: block; padding: 0.75rem 1rem; text-decoration: none; color: inherit; border-bottom: 1px solid var(--nova-border-color);">
+                        <div class="nova-fw-semibold" style="font-size: 0.85rem; display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span>{{ $isArabic ? $notification->subject_ar : $notification->subject_en }}</span>
+                            <span class="nova-text-muted" style="font-size: 0.65rem; white-space: nowrap; margin-left: 0.5rem;">
+                                {{ $notification->created_at ? \Carbon\Carbon::parse($notification->created_at)->translatedFormat('Y-m-d H:i') : '' }}
+                            </span>
+                        </div>
+                        <div class="nova-text-muted nova-fs-sm" style="font-size: 0.75rem; margin-top: 0.25rem; line-height: 1.4;">
+                            {{ \Illuminate\Support\Str::limit($isArabic ? $notification->body_ar : $notification->body_en, 120) }}
+                        </div>
+                    </a>
+                @empty
+                    <div style="padding: 1rem; text-align: center; color: var(--nova-text-3);">
+                        {{ __('messages.navbar.no_notifications') }}
+                    </div>
+                @endforelse
+                @if($recentNotifications->isNotEmpty())
+                    <div style="padding: 0.5rem; text-align: center; border-top: 1px solid var(--nova-border-color);">
+                        <a href="{{ route('notifications.index') }}" style="font-size: 0.75rem; color: var(--nova-primary); text-decoration: none;">
+                            {{ __('messages.navbar.view_all') }}
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </div>
+
         <span class="nova-badge" style="background: #22c55e; color: white; padding: 2px 7px; border-radius: 50%; font-size: 0.65rem; font-weight: 700; min-width: 16px; text-align: center;">0</span>
         <span style="font-size: 0.7rem; font-weight: 600; color: #22c55e; margin-inline-end: 0.25rem; align-self: center;">{{ __('messages.navbar.translation_status') }}</span>
 
@@ -64,7 +112,7 @@
                 <a href="{{ route('profile.edit') }}" class="nova-user-dropdown-item">
                     <i class="fas fa-user"></i> <span>{{ __('messages.navbar.my_profile') }}</span>
                 </a>
-           
+        
         
                 <div class="nova-dropdown-divider"></div>
                 <a href="#" onclick="event.preventDefault(); document.getElementById('nova-logout-form').submit();" class="nova-user-dropdown-item nova-text-danger">
@@ -99,15 +147,29 @@
 <!-- Sidebar Overlay (for mobile) -->
 <div class="nova-sidebar-overlay"></div>
 
+<style>
+@keyframes nova-notif-badge {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const userBtn = document.getElementById('novaUserBtn');
     const userDropdown = document.getElementById('novaUserDropdown');
 
+    const notifBtn = document.getElementById('novaNotificationsBtn');
+    const notifMenu = document.getElementById('novaNotificationsMenu');
+
     function closeAllDropdowns() {
         if (userDropdown) userDropdown.classList.remove('show');
         const qa = document.getElementById('novaQuickAddMenu');
         if (qa) qa.classList.remove('show');
+        if (notifMenu) {
+            notifMenu.classList.remove('show');
+            notifMenu.style.display = 'none';
+        }
     }
 
     if (userBtn && userDropdown) {
@@ -116,6 +178,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const isShowing = userDropdown.classList.contains('show');
             closeAllDropdowns();
             if (!isShowing) userDropdown.classList.add('show');
+        });
+    }
+
+    if (notifBtn && notifMenu) {
+        notifBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isShowing = notifMenu.classList.contains('show');
+            closeAllDropdowns();
+            if (!isShowing) {
+                notifMenu.style.display = 'block';
+                notifMenu.classList.add('show');
+                setTimeout(() => notifMenu.classList.add('loaded'), 10);
+            }
         });
     }
 
@@ -137,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.nova-user-menu') && !e.target.closest('#novaQuickAdd') && !e.target.closest('.nova-quickadd-menu')) {
+        if (!e.target.closest('.nova-user-menu') && !e.target.closest('#novaQuickAdd') && !e.target.closest('.nova-quickadd-menu') && !e.target.closest('#novaNotificationDropdown')) {
             closeAllDropdowns();
         }
     });
