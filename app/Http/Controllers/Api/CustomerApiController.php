@@ -362,7 +362,7 @@ class CustomerApiController extends Controller
                 ->get()
             : collect();
 
-        $invoices = Invoice::with(['items'])
+        $invoices = Invoice::with(['items', 'order.branch'])
             ->where('customer_id', $customer->id)
             ->orderByDesc('id')
             ->limit(100)
@@ -437,6 +437,7 @@ class CustomerApiController extends Controller
                     'paid_amount' => (float) $invoice->paid_amount,
                     'status' => $invoice->status,
                     'order_id' => $invoice->order_id,
+                    'branch_name' => $invoice->order?->branch?->name ?? null,
                     'items' => $invoice->items->map(function ($item) {
                         return [
                             'name' => $item->item->name_ar ?? $item->item->name_en ?? 'Product',
@@ -473,6 +474,7 @@ class CustomerApiController extends Controller
                 'quotation.items.item',
                 'quotation.items.pack',
                 'invoices',
+                'branch',
             ])
             ->first();
 
@@ -542,6 +544,7 @@ class CustomerApiController extends Controller
                 'delivery_address' => $order->delivery_address,
                 'delivery_phone' => $order->delivery_phone,
                 'customer_name' => $order->customer?->name,
+                'branch_name' => $order->branch?->name ?? null,
                 'items' => $orderItems,
                 'quotation' => $quotation ? [
                     'id' => $quotation->id,
@@ -575,6 +578,7 @@ class CustomerApiController extends Controller
                 'items.item:id,name_ar,name_en',
                 'quotation:id,order_id,quotation_number,status,customer_response,total',
                 'invoices:id,order_id,invoice_number,status,total_amount',
+                'branch',
             ])
             ->orderByDesc('id')
             ->get()
@@ -597,6 +601,7 @@ class CustomerApiController extends Controller
                     'invoice_number' => $invoice?->invoice_number,
                     'quotation_number' => $quotation?->quotation_number,
                     'can_respond' => $this->canCustomerRespond($order, $quotation),
+                    'branch_name' => $order->branch?->name ?? null,
                     'items' => $order->items->map(fn ($item) => [
                         'name' => $item->item?->name_ar ?: ($item->item?->name_en ?: 'منتج'),
                         'quantity' => (float) $item->quantity,
@@ -620,7 +625,7 @@ class CustomerApiController extends Controller
         $customer = $request->user();
 
         $orders = \App\Models\Order::where('customer_id', $customer->id)
-            ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation'])
+            ->with(['items.item', 'items.pack', 'delivery', 'invoices', 'quotation', 'branch'])
             ->orderByDesc('id')
             ->get();
 
@@ -651,6 +656,7 @@ class CustomerApiController extends Controller
                 'can_respond' => $canRespond,
                 'has_invoice' => ! empty($invoice),
                 'quotation_number' => $quotation?->quotation_number ?? '',
+                'branch_name' => $order->branch?->name ?? null,
             ];
         }
 
@@ -1317,7 +1323,7 @@ return response()->json([
         $customer = $request->user();
 
         $returns = ReturnRequest::with([
-            'invoice',
+            'invoice.order.branch',
             'items.item',
             'items.pack',
         ])
@@ -1346,6 +1352,7 @@ return response()->json([
                         'reason' => $return->reason,
                         'total_refund' => (float) $return->total_refund,
                         'created_at' => $return->created_at?->format('Y-m-d'),
+                        'branch_name' => $return->invoice?->order?->branch?->name ?? null,
                         'invoice' => $return->invoice ? [
                             'id' => $return->invoice->id,
                             'invoice_number' => $return->invoice->invoice_number,
