@@ -51,6 +51,7 @@
                             <thead>
                                 <tr class="text-gray-400">
                                     <th class="text-right font-normal pb-1">رقم الباتش</th>
+                                    <th class="text-right font-normal pb-1">الفرع/المنظمة</th>
                                     <th class="text-right font-normal pb-1">تاريخ الصلاحية</th>
                                     <th class="text-left font-normal pb-1">الكمية</th>
                                 </tr>
@@ -59,6 +60,9 @@
                                 @foreach ($row['batches'] as $batch)
                                     <tr class="border-t border-gray-50">
                                         <td class="py-1.5 text-gray-700 font-semibold">{{ $batch->batch_number }}</td>
+                                        <td class="py-1.5 text-gray-500 text-xs">
+                                            {{ $batch->organization_name ?? '—' }}
+                                        </td>
                                         <td class="py-1.5 text-gray-500">
                                             {{ $batch->expiry_date ? \Carbon\Carbon::parse($batch->expiry_date)->format('Y-m-d') : '—' }}
                                         </td>

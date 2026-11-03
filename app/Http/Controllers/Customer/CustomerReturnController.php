@@ -392,7 +392,7 @@ class CustomerReturnController extends Controller
 
     /**
      * Group the customer's invoiced quantities by the production batch they
-     * were drawn from.
+     * were drawn from, including branch/organization info per batch.
      */
     private function quantitiesPerBatch(int $customerId)
     {
@@ -401,18 +401,24 @@ class CustomerReturnController extends Controller
             ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
             ->join('batch_items', 'batch_items.id', '=', 'invoice_item_batches.batch_item_id')
             ->leftJoin('production_batches', 'production_batches.id', '=', 'batch_items.batch_id')
+            ->leftJoin('organizations', 'organizations.id', '=', 'invoices.organization_id')
             ->where('invoices.customer_id', $customerId)
             ->groupBy(
                 'invoice_items.item_id',
                 'batch_items.id',
                 'production_batches.batch_number',
-                'batch_items.expiry_date'
+                'batch_items.expiry_date',
+                'organizations.id',
+                'organizations.name_ar',
+                'organizations.name_en'
             )
             ->selectRaw(
                 'invoice_items.item_id as item_id,
                  batch_items.id as batch_item_id,
                  COALESCE(production_batches.batch_number, "—") as batch_number,
                  batch_items.expiry_date as expiry_date,
+                 organizations.id as organization_id,
+                 COALESCE(organizations.name_ar, organizations.name_en) as organization_name,
                  SUM(invoice_item_batches.quantity) as quantity'
             )
             ->orderBy('batch_items.expiry_date')
