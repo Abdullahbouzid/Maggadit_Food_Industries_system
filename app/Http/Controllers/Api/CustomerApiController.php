@@ -1829,6 +1829,7 @@ return response()->json([
             'delivery_address' => 'nullable|string|max:500',
             'delivery_phone' => 'nullable|string|max:30',
             'scheduled_delivery_date' => 'nullable|date',
+            'branch_id' => 'nullable|integer',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -1909,6 +1910,7 @@ return response()->json([
                 user: null,
                 warehouseId: null,
                 currencyId: $customer->priceList?->currency_id,
+                branchId: $validated['branch_id'] ?? null,
             );
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Customer checkout failed: '.$e->getMessage());
