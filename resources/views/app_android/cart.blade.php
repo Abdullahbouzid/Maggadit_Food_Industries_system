@@ -615,7 +615,7 @@
                 headers['Authorization'] = 'Bearer ' + token;
             }
 
-const checkoutUrl = '{{ route('customer.checkout', [], false) }}';
+const checkoutUrl = '{{ route('customer.proxy.checkout_proxy', [], false) }}';
             console.log('Checkout URL:', checkoutUrl);
 
             // Collect form data
