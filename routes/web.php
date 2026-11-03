@@ -1148,7 +1148,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('notifications', NotificationController::class);
     Route::post('notifications/{notification}/resend', [NotificationController::class, 'resend'])->name('notifications.resend');
     Route::get('notifications/export', [NotificationController::class, 'export'])->name('notifications.export');
-    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark_all_read');
+    Route::get('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark_all_read');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark_all_read.post');
 
     Route::get('/deliveries', [\App\Http\Controllers\Admin\DeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('/returns', [\App\Http\Controllers\Admin\ReturnController::class, 'index'])->name('returns.index');

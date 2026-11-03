@@ -14,6 +14,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\VisitorLog;
 use App\Models\Warehouse;
+use App\Services\LowStockAlertService;
 use Carbon\Carbon;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\DB;
@@ -298,11 +299,10 @@ class DashboardController extends Controller
 
             // Compute low_stock_items
             try {
-                if (class_exists('App\Models\Inventory')) {
-                    $stats['low_stock_items'] = Inventory::with(['item', 'warehouse'])
-                        ->whereRaw('quantity_on_hand <= reorder_level')
-                        ->limit(10)
-                        ->get();
+                if (class_exists('App\Services\LowStockAlertService')) {
+                    $lowStockService = app(LowStockAlertService::class);
+                    $stats['low_stock_items'] = $lowStockService->lowStockRows()
+                        ->take(10);
                 }
             } catch (\Exception $e) {
                 Log::warning('Could not fetch low_stock_items: '.$e->getMessage());
