@@ -352,7 +352,7 @@
                     'X-Requested-With': 'XMLHttpRequest',
                 };
 
-                const response = await fetch('{{ route('api.customer.branches', [], false) }}', {
+                const response = await fetch('{{ route('customer.proxy.branches', [], false) }}', {
                     headers: headers,
                     credentials: 'include',
                 });
