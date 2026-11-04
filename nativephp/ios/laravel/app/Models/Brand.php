@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Traits\HasRoles;
+
+class Brand extends Model
+{
+    use HasFactory, HasRoles;
+
+    protected $fillable = ['name', 'logo', 'show_in_customer_app'];
+
+    /**
+     * Get the items for the brand.
+     */
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
+}

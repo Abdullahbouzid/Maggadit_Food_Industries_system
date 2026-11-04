@@ -1,0 +1,289 @@
+@extends('app_android.partials.mobile.app_mobile')
+
+@section('title', __('messages.favorite_title'))
+
+@section('content')
+    @include('app_android.partials.mobile.header', ['title' => __('messages.favorite_title')])
+
+    <div class="px-4 py-4 mb-5 space-y-4" dir="rtl">
+        {{-- حالة المفضلة فارغة --}}
+        <div id="empty-fav-state" class="hidden text-center py-10">
+            <div class="w-32 h-32 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="far fa-heart text-5xl text-gray-300"></i>
+            </div>
+            <h3 id="empty-title" class="text-xl font-bold text-gray-700 mb-2">المفضلة فارغة</h3>
+            <p id="empty-message" class="text-gray-400 text-sm mb-6">أضف المنتجات التي تعجبك إلى قائمة مفضلاتك</p>
+            <a href="{{ route('customer.products', [], false) }}" id="empty-shop-btn" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition">
+                استعرض المنتجات
+            </a>
+        </div>
+
+        {{-- محتوى المفضلة --}}
+        <div id="fav-content">
+            <div class="grid grid-cols-1 gap-4" id="fav-items-list">
+                {{-- عناصر المفضلة ستضاف ديناميكياً هنا --}}
+            </div>
+        </div>
+          <div id="logout-btn" class="mt-6 rounded-xl p-4 flex items-center justify-center gap-3  ">
+            <br><br>
+        </div>
+    </div>
+
+    <!-- Toast إشعارات -->
+    <div id="fav-toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none"></div>
+
+    <script>
+        let favoriteItems = @json($favoriteItems ?? []);
+        const productUrls = @json(
+            collect($favoriteItems ?? [])
+                ->mapWithKeys(function ($item) {
+                    $id = is_array($item) ? ($item['id'] ?? null) : ($item->id ?? null);
+                    return $id ? [(string) $id => route('customer.product.show', $id, false)] : [];
+                })
+                ->all()
+        );
+        const favoriteProductBase = @json(rtrim(url('/'), '/'));
+        const productUrlFor = (id) => productUrls[String(id)] || `${favoriteProductBase}/customer/product/${encodeURIComponent(id)}`;
+
+        // ========== ترجمة الواجهة ==========
+        const translations = {
+            en: {
+                empty_title: "Your Wishlist is Empty",
+                empty_message: "Add your favorite products to your wishlist",
+                empty_btn: "Browse Products",
+                remove_btn: "Remove",
+                add_to_cart: "Add to Cart",
+                out_of_stock: "Out of Stock",
+                in_stock: "In Stock",
+                currency: "SAR"
+            },
+            ar: {
+                empty_title: "المفضلة فارغة",
+                empty_message: "أضف المنتجات التي تعجبك إلى قائمة مفضلاتك",
+                empty_btn: "استعرض المنتجات",
+                remove_btn: "إزالة",
+                add_to_cart: "أضف إلى السلة",
+                out_of_stock: "غير متوفر",
+                in_stock: "متوفر",
+                currency: "ر.س"
+            }
+        };
+
+        let currentLang = localStorage.getItem('fav_lang') || 'ar';
+
+        function updateUILanguage() {
+            const t = translations[currentLang];
+            document.getElementById('empty-title').innerText = t.empty_title;
+            document.getElementById('empty-message').innerText = t.empty_message;
+            document.getElementById('empty-shop-btn').innerText = t.empty_btn;
+        }
+
+        function formatPrice(price) {
+            const t = translations[currentLang];
+            return `${price.toFixed(2)} ${t.currency}`;
+        }
+
+        function showToastMessage(msg, isError = false) {
+            const toast = document.getElementById('fav-toast');
+            toast.innerText = msg;
+            toast.style.background = isError ? '#dc2626' : '#1f2937';
+            toast.classList.remove('opacity-0', 'translate-y-10');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-10');
+            }, 2000);
+        }
+
+        function addToCart(product, pack = null) {
+            let cart = JSON.parse(localStorage.getItem('maggadit_cart') || '[]');
+            const packId = pack ? pack.id : null;
+            const packName = pack ? pack.name : (product.pack_name || product.uom_name || '');
+            const uomName = pack ? (pack.uom_name || '') : (product.uom_name || '');
+            const price = pack ? pack.price : product.price;
+
+            const existingIndex = cart.findIndex(item => item.id === product.id && (item.pack_id === packId || (!item.pack_id && !packId)));
+            if (existingIndex > -1) {
+                cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+            } else {
+                cart.push({
+                    id: product.id,
+                    pack_id: packId,
+                    name: product.name_ar || product.name,
+                    name_ar: product.name_ar || product.name,
+                    name_en: product.name_en || product.name_ar || product.name,
+                    pack_name: packName,
+                    uom_name: uomName,
+                    price: price,
+                    image: product.image,
+                    quantity: 1,
+                    discount: product.discount || 0
+                });
+            }
+            localStorage.setItem('maggadit_cart', JSON.stringify(cart));
+            const msg = currentLang === 'ar' ? `تم إضافة ${product.name_ar} ${packName ? '('+packName+')' : ''} إلى السلة` : `Added ${product.name_en} to cart`;
+            showToastMessage(msg, false);
+        }
+
+        function removeFromFav(id) {
+            fetch('{{ route('customer.favorite.toggle', [], false) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ item_id: id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    favoriteItems = favoriteItems.filter(item => item.id !== id);
+                    renderFavorites();
+                    showToastMessage(currentLang === 'ar' ? 'تمت الإزالة من المفضلة' : 'Removed from wishlist', false);
+                } else {
+                    showToastMessage(currentLang === 'ar' ? 'حدث خطأ' : 'Error occurred', true);
+                }
+            })
+            .catch(err => {
+                showToastMessage(currentLang === 'ar' ? 'حدث خطأ' : 'Error occurred', true);
+            });
+        }
+
+        function renderFavorites() {
+            const container = document.getElementById('fav-items-list');
+            const emptyState = document.getElementById('empty-fav-state');
+            const favContent = document.getElementById('fav-content');
+            const t = translations[currentLang];
+
+            if (favoriteItems.length === 0) {
+                emptyState.classList.remove('hidden');
+                favContent.classList.add('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+            favContent.classList.remove('hidden');
+
+            container.innerHTML = '';
+            favoriteItems.forEach((item, index) => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition hover:shadow-lg p-3.5';
+                
+                let uomBadge = item.uom_name ? `<span class="bg-purple-100 text-purple-700 text-xs px-2.5 py-0.5 rounded-full font-bold"><i class="fas fa-box ml-1"></i>${item.uom_name}</span>` : '';
+
+                itemCard.innerHTML = `
+                    <div class="flex flex-row gap-3.5">
+                        <a href="${productUrlFor(item.id)}" class="w-24 h-24 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl flex items-center justify-center text-4xl overflow-hidden border border-purple-100 flex-shrink-0">
+                            ${item.image ? `<img src="${item.image}" alt="${currentLang === 'ar' ? item.name_ar : item.name_en}" class="w-full h-full object-cover rounded-xl">` : '📦'}
+                        </a>
+                        <div class="flex-1 text-right flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start gap-1">
+                                    <a href="${productUrlFor(item.id)}" class="font-bold text-gray-800 text-sm leading-snug hover:text-purple-700">${currentLang === 'ar' ? item.name_ar : item.name_en}</a>
+                                    <button class="remove-fav text-red-500 hover:text-red-700 text-xs font-medium p-1 transition" data-id="${item.id}" title="${t.remove_btn}">
+                                        <i class="fas fa-heart text-red-500 text-base"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-1 flex items-center gap-2">
+                                    ${uomBadge}
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between">
+                                <span class="font-extrabold text-purple-700 text-base">${formatPrice(item.price)}</span>
+                                ${item.inStock ? 
+                                    `<button class="add-to-cart-fav bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm active:scale-95" data-id="${item.id}" data-pack-name="${item.pack_name || ''}" data-uom-name="${item.uom_name || ''}">
+                                        <i class="fas fa-cart-plus"></i> ${t.add_to_cart}
+                                    </button>` :
+                                    `<span class="text-red-500 text-xs font-semibold">${t.out_of_stock}</span>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(itemCard);
+            });
+
+            // ربط الأحداث
+            document.querySelectorAll('.remove-fav').forEach(btn => {
+                btn.removeEventListener('click', handleRemoveClick);
+                btn.addEventListener('click', handleRemoveClick);
+            });
+            document.querySelectorAll('.add-to-cart-fav').forEach(btn => {
+                btn.removeEventListener('click', handleAddToCartClick);
+                btn.addEventListener('click', handleAddToCartClick);
+            });
+        }
+
+        function handleRemoveClick(e) {
+            const id = parseInt(e.currentTarget.getAttribute('data-id'));
+            removeFromFav(id);
+        }
+
+        function handleAddToCartClick(e) {
+            const id = parseInt(e.currentTarget.getAttribute('data-id'));
+            const packName = e.currentTarget.getAttribute('data-pack-name') || '';
+            const uomName = e.currentTarget.getAttribute('data-uom-name') || '';
+            const product = favoriteItems.find(item => item.id === id);
+            if (product && product.inStock) {
+                addToCart({ ...product, pack_name: packName, uom_name: uomName });
+                // اختياري: إزالة من المفضلة بعد الإضافة (يمكنك تفعيل السطر التالي)
+                // removeFromFav(id);
+            } else {
+                showToastMessage(currentLang === 'ar' ? 'المنتج غير متوفر حالياً' : 'Product is out of stock', true);
+            }
+        }
+
+        // تبديل اللغة
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            localStorage.setItem('fav_lang', currentLang);
+            updateUILanguage();
+            renderFavorites();
+        }
+
+        // زر استعراض المنتجات الآن يعمل عبر الـ href مباشرة
+
+        // زر تبديل اللغة (إذا كان موجوداً في الهيدر)
+        const langSwitch = document.getElementById('lang-switch');
+        if (langSwitch) {
+            langSwitch.addEventListener('click', toggleLanguage);
+        } else {
+            // زر تبديل مؤقت
+            const tempBtn = document.createElement('button');
+            tempBtn.id = 'temp-lang-switch-fav';
+            tempBtn.innerText = currentLang === 'ar' ? '🇬🇧 English' : '🇸🇦 العربية';
+            tempBtn.className = 'fixed top-20 left-4 z-50 bg-white shadow-md rounded-full px-3 py-1 text-sm font-semibold text-purple-600';
+            tempBtn.onclick = toggleLanguage;
+            document.body.appendChild(tempBtn);
+        }
+
+        // تحميل البداية
+        updateUILanguage();
+        renderFavorites();
+
+        if (favoriteItems.length === 0) {
+            fetch('{{ route('customer.proxy.favorites', [], false) }}')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
+                        favoriteItems = data.data.map(item => ({
+                            id: item.id,
+                            name_ar: item.name_ar || item.name || 'منتج',
+                            name_en: item.name_en || item.name || 'Product',
+                            price: parseFloat(item.price || 0),
+                            image: item.image || null,
+                            discount: 0,
+                            inStock: true
+                        }));
+                        renderFavorites();
+                    }
+                })
+                .catch(err => console.error("Favorites proxy error:", err));
+        }
+    </script>
+
+    <!-- Fontawesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+@endsection

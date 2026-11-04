@@ -1,0 +1,103 @@
+@extends('dashboard.partials.layout')
+
+@section('title', 'Edit Pack Operation: ' . $packOperation->name_en)
+
+@section('content')
+<div class="nova-actionbar">
+    <div>
+        <h2 class="nova-actionbar-title">
+            <i class="fas fa-edit" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            Edit Pack Operation: {{ $packOperation->name_en }}
+        </h2>
+        <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Update details for {{ $packOperation->name_en }} / {{ $packOperation->name_ar }}</p>
+    </div>
+    <div class="nova-actionbar-actions">
+        <a href="{{ route('pack-operations.index') }}" class="nova-btn nova-btn-outline nova-btn-sm">
+            <i class="fas fa-arrow-right"></i> Back
+        </a>
+    </div>
+</div>
+
+@if($errors->any())
+    <div class="nova-alert danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <ul class="nova-mb-0 nova-mt-2">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="nova-card nova-mb-4">
+    <div class="nova-card-header">
+        <h5 class="nova-fw-bold mb-0"><i class="fas fa-file-alt me-1"></i> Pack Operation Information</h5>
+    </div>
+    <div class="nova-card-body">
+        <form action="{{ route('pack-operations.update', $packOperation) }}" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="nova-row g-4">
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Code <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="code" class="nova-input @error('code') nova-invalid @enderror" value="{{ old('code', $packOperation->code) }}" required>
+                        @error('code')
+                            <div class="nova-form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Name (English) <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="name_en" class="nova-input @error('name_en') nova-invalid @enderror" value="{{ old('name_en', $packOperation->name_en) }}" required>
+                        @error('name_en')
+                            <div class="nova-form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Name (Arabic) <span class="nova-text-danger">*</span></label>
+                        <input type="text" name="name_ar" class="nova-input @error('name_ar') nova-invalid @enderror" value="{{ old('name_ar', $packOperation->name_ar) }}" required>
+                        @error('name_ar')
+                            <div class="nova-form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Status</label>
+                        <select name="is_active" class="nova-select @error('is_active') nova-invalid @enderror">
+                            <option value="1" {{ old('is_active', $packOperation->is_active) ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('is_active', $packOperation->is_active) ? '' : 'selected' }}>Inactive</option>
+                        </select>
+                        @error('is_active')
+                            <div class="nova-form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-md-6">
+                    <div class="nova-form-group">
+                        <label class="nova-label">Sort Order</label>
+                        <input type="number" name="sort_order" class="nova-input @error('sort_order') nova-invalid @enderror" value="{{ old('sort_order', $packOperation->sort_order) }}">
+                        @error('sort_order')
+                            <div class="nova-form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="nova-col nova-col-12">
+                    <div class="nova-form-actions">
+                        <a href="{{ route('pack-operations.index') }}" class="nova-btn nova-btn-outline">
+                            <i class="fas fa-x me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="nova-btn nova-btn-primary">
+                            <i class="fas fa-save me-1"></i> Update Operation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

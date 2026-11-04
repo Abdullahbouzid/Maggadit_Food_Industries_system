@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Runs tests against the real MySQL connection from .env instead of sqlite.
+
+    DANGER: this config points at whatever DB_DATABASE says, which in this
+    project is the live production database. Never run it with APP_ENV=testing
+    against a database you are willing to lose.
+
+    The testsuite below lists ONLY tests that are explicitly opt-in via
+    INVOICE_FLOW_TESTS=1 and wrap themselves in a transaction that is always
+    rolled back. It deliberately does NOT glob tests/Feature: ten classes there
+    use RefreshDatabase, which drops and re-migrates every table. Running the
+    directory against this config wiped the production database once already.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="SafeAgainstConfiguredDatabase">
+            <file>tests/Feature/InvoiceCollectionFlowTest.php</file>
+            <file>tests/Feature/DeliveryIndexTest.php</file>
+            <file>tests/Feature/DeliveryShowTest.php</file>
+            <file>tests/Feature/SchemaRegressionGuardTest.php</file>
+            <file>tests/Feature/ReturnsIndexTest.php</file>
+            <file>tests/Feature/CustomerReturnsTest.php</file>
+            <file>tests/Feature/InvSmokeTest.php</file>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_URL" value=""/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+    </php>
+</phpunit>
