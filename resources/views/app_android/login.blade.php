@@ -311,6 +311,14 @@
                         localStorage.setItem('api_token', data.token);
                         localStorage.setItem('customer_token', data.token);
                     }
+                    // Bridge token to native Android SharedPreferences for FCM service
+                    if (typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.storeApiToken) {
+                        try {
+                            await AndroidBridge.storeApiToken(data.token);
+                        } catch (e) {
+                            console.warn('Failed to store token via native bridge:', e);
+                        }
+                    }
                     // Register push notification token after successful login
                     await registerPushNotifications(data.token);
                     if (data.success && data.redirect) {
