@@ -319,14 +319,8 @@
                             console.warn('Failed to store token via native bridge:', e);
                         }
                     }
-                    // Send FCM token to backend after successful login
-                    if (typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.sendFcmTokenToBackend) {
-                        try {
-                            await AndroidBridge.sendFcmTokenToBackend();
-                        } catch (e) {
-                            console.warn('Failed to send FCM token to backend:', e);
-                        }
-                    }
+                    // Send FCM token to backend after successful login with retry
+                    await sendFcmTokenWithRetry(data.token);
                     // Register push notification token after successful login
                     await registerPushNotifications(data.token);
                     if (data.success && data.redirect) {
@@ -391,6 +385,28 @@
             } catch (error) {
                 console.warn('Push notification setup warning (non-critical):', error);
             }
+        }
+
+        // Send FCM token to backend with retry logic
+        async function sendFcmTokenWithRetry(apiToken, maxRetries = 3, delay = 1000) {
+            if (typeof AndroidBridge === 'undefined' || !AndroidBridge || !AndroidBridge.sendFcmTokenToBackend) {
+                console.warn('AndroidBridge not available for FCM token sync');
+                return;
+            }
+            
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    await AndroidBridge.sendFcmTokenToBackend();
+                    console.log('FCM token sent successfully on attempt', attempt);
+                    return;
+                } catch (e) {
+                    console.warn(`FCM token send attempt ${attempt} failed:`, e);
+                    if (attempt < maxRetries) {
+                        await new Promise(r => setTimeout(r, delay * attempt));
+                    }
+                }
+            }
+            console.error('Failed to send FCM token after', maxRetries, 'attempts');
         }
 
 

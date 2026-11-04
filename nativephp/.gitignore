@@ -1,0 +1,22 @@
+# Ignore build outputs
+android-build.log
+ios-build.log
+android/app/build/
+android/.gradle/
+android/gradle/wrapper/gradle-wrapper.jar
+ios/build/
+ios/Pods/
+*.apk
+*.aab
+*.ipa
+
+# Keep source files
+!android/app/src/
+!android/gradle/
+!android/gradlew*
+!android/settings.gradle*
+!android/build.gradle*
+!ios/*.xcodeproj/
+!ios/*.xcworkspace/
+!ios/Podfile*
+!resources/

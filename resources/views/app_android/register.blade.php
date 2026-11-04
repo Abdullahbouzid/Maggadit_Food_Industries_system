@@ -307,8 +307,16 @@
                         localStorage.setItem('api_token', data.token);
                         localStorage.setItem('customer_token', data.token);
                     }
-                    // Register push notification token after successful registration
-                    await registerPushNotifications(data.token);
+                    // Bridge token to native Android SharedPreferences for FCM service
+                    if (typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.storeApiToken) {
+                        try {
+                            await AndroidBridge.storeApiToken(data.token);
+                        } catch (e) {
+                            console.warn('Failed to store token via native bridge:', e);
+                        }
+                    }
+                    // Send FCM token to backend after successful registration with retry
+                    await sendFcmTokenWithRetry(data.token);
                     if (data.success && data.redirect) {
                         window.location.href = data.redirect;
                     } else {
@@ -358,6 +366,28 @@
             } catch (error) {
                 console.warn('Push notification setup warning (non-critical):', error);
             }
+        }
+
+        // Send FCM token to backend with retry logic
+        async function sendFcmTokenWithRetry(apiToken, maxRetries = 3, delay = 1000) {
+            if (typeof AndroidBridge === 'undefined' || !AndroidBridge || !AndroidBridge.sendFcmTokenToBackend) {
+                console.warn('AndroidBridge not available for FCM token sync');
+                return;
+            }
+            
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    await AndroidBridge.sendFcmTokenToBackend();
+                    console.log('FCM token sent successfully on attempt', attempt);
+                    return;
+                } catch (e) {
+                    console.warn(`FCM token send attempt ${attempt} failed:`, e);
+                    if (attempt < maxRetries) {
+                        await new Promise(r => setTimeout(r, delay * attempt));
+                    }
+                }
+            }
+            console.error('Failed to send FCM token after', maxRetries, 'attempts');
         }
     </script>
 </body>
