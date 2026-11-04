@@ -203,6 +203,9 @@ function markRead(id)  {
                      console.warn('markRead server error:', { id, status: data });
                  }
                  if (ok && data.unread_count !== undefined) refreshUnreadBadge();
+                 
+                 // Reload notification list to reflect updated read state
+                 loadNotifications();
              })
              .catch((e) => console.error('markRead network error:', e));
      }

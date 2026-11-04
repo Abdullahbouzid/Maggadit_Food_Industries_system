@@ -6,9 +6,13 @@
 @push('styles')
 <style>
     .bottom-nav-premium {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 9999;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         will-change: transform;
-        z-index: 1000;
     }
     .bottom-nav-hidden {
         transform: translateY(100%) !important;
