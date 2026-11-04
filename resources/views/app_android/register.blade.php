@@ -307,6 +307,8 @@
                         localStorage.setItem('api_token', data.token);
                         localStorage.setItem('customer_token', data.token);
                     }
+                    // Register push notification token after successful registration
+                    await registerPushNotifications(data.token);
                     if (data.success && data.redirect) {
                         window.location.href = data.redirect;
                     } else {
@@ -332,6 +334,34 @@
         });
 
         setLanguage(currentLang);
+
+        // Push notification registration after registration
+        async function registerPushNotifications(apiToken) {
+            try {
+                if (typeof nativephp_call !== 'undefined') {
+                    nativephp_call('PushNotification.RequestPermission', JSON.stringify({
+                        event: 'PushNotification.TokenGenerated'
+                    }));
+
+                    window.addEventListener('nativephp_push_token', async (event) => {
+                        const token = event.detail.token;
+                        if (token && apiToken) {
+                            await fetch('/customer/notification/subscribe', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + apiToken,
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                                },
+                                body: JSON.stringify({ token: token })
+                            });
+                        }
+                    });
+                }
+            } catch (error) {
+                console.warn('Push notification setup failed:', error);
+            }
+        }
     </script>
 </body>
 </html>

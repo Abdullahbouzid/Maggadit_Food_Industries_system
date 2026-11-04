@@ -68,7 +68,7 @@ class NotificationService
             return;
         }
 
-        $path = storage_path('app/firebase/google-services.json');
+        $path = storage_path('app/maggaditfoodsystem-firebase-adminsdk-fbsvc-09bb9b4bf5.json');
 
         if (! is_file($path)) {
             Log::warning('FCM: google-services.json not found at ' . $path);

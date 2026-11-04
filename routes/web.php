@@ -1164,6 +1164,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark_all_read');
     Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark_all_read.post');
 
+    // Push Notifications (Firebase FCM)
+    Route::post('admin/notifications/send-customer', [\App\Http\Controllers\Customer\NotificationController::class, 'sendToCustomer'])->name('admin.notifications.send_customer');
+    Route::post('admin/notifications/send-all', [\App\Http\Controllers\Customer\NotificationController::class, 'sendToAll'])->name('admin.notifications.send_all');
+    Route::post('admin/notifications/send-branches', [\App\Http\Controllers\Customer\NotificationController::class, 'sendToBranches'])->name('admin.notifications.send_branches');
+    Route::post('customer/notification/subscribe', [\App\Http\Controllers\Customer\NotificationController::class, 'subscribe'])->name('customer.notification.subscribe');
+
     Route::get('/deliveries', [\App\Http\Controllers\Admin\DeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('/returns', [\App\Http\Controllers\Admin\ReturnController::class, 'index'])->name('returns.index');
     Route::get('/inventory', [\App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('inventory.index');

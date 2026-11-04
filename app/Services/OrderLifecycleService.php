@@ -418,7 +418,7 @@ class OrderLifecycleService implements OrderLifecycleServiceInterface
             }
 
             $factory = (new Factory)
-                ->withServiceAccount(storage_path('app/firebase/google-services.json'));
+                ->withServiceAccount(storage_path('app/maggaditfoodsystem-firebase-adminsdk-fbsvc-09bb9b4bf5.json'));
 
             $messaging = $factory->createMessaging();
 

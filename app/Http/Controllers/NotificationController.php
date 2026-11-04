@@ -303,7 +303,7 @@ class NotificationController extends Controller
             }
 
             $factory = (new Factory)
-                ->withServiceAccount(storage_path('app/firebase/google-services.json')); // المسار لملف الخدمة
+                ->withServiceAccount(storage_path('app/maggaditfoodsystem-firebase-adminsdk-fbsvc-09bb9b4bf5.json')); // المسار لملف الخدمة
 
             $messaging = $factory->createMessaging();
 
