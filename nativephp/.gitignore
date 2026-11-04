@@ -10,6 +10,10 @@ ios/Pods/
 *.aab
 *.ipa
 
+# Ignore large bundled files
+android/app/src/main/assets/laravel_bundle.zip
+ios/laravel/vendor/
+
 # Keep source files
 !android/app/src/
 !android/gradle/
