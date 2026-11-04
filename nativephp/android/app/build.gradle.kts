@@ -17,7 +17,7 @@ android {
         applicationId = "com.maggadit.foodindustries"
         minSdk = 33
         targetSdk = 36
-        versionCode = 39
+        versionCode = 40
         versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -155,6 +155,8 @@ android {
 }
 
 dependencies {
+    // NativePHP Plugin Dependencies
+
     // NativePHP Plugin Dependencies
 
     // NativePHP Plugin Dependencies
