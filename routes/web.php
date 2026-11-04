@@ -89,6 +89,7 @@ Route::post('/mobile/register', function (Request $request) {
         'username' => 'required|string|unique:customers',
         'email' => 'required|email|unique:customers',
         'password' => 'required|string|min:6',
+        'fcm_token' => 'nullable|string',
     ]);
 
     // إرسال طلب التسجيل للاستضافة الحقيقية
@@ -111,6 +112,7 @@ Route::post('/mobile/register', function (Request $request) {
                 'username' => $remoteUser['username'],
                 'email' => $remoteUser['email'],
                 'password' => Hash::make($request->password),
+                'fcm_token' => $request->filled('fcm_token') ? $request->fcm_token : null,
             ]);
 
             Auth::guard('customer')->login($customer);
@@ -147,6 +149,7 @@ Route::post('/mobile/login', function (Request $request) {
     $request->validate([
         'username' => 'required',
         'password' => 'required',
+        'fcm_token' => 'nullable|string',
     ]);
 
     // أولاً: محاولة تسجيل الدخول من القاعدة المحلية (لأجهزة APK)
@@ -155,6 +158,12 @@ Route::post('/mobile/login', function (Request $request) {
         ->first();
 
     if ($localCustomer && Hash::check($request->password, $localCustomer->password)) {
+        // حفظ FCM token إذا تم إرساله
+        if ($request->filled('fcm_token')) {
+            $localCustomer->fcm_token = $request->fcm_token;
+            $localCustomer->save();
+        }
+
         Auth::guard('customer')->login($localCustomer);
         $request->session()->regenerate();
         $request->session()->put('customer_id', $localCustomer->id);
@@ -207,6 +216,7 @@ Route::post('/mobile/login', function (Request $request) {
                     'name' => $remoteUser['name'],
                     'email' => $remoteUser['email'],
                     'password' => Hash::make($request->password),
+                    'fcm_token' => $request->filled('fcm_token') ? $request->fcm_token : null,
                 ]
             );
 

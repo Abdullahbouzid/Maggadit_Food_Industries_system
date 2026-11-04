@@ -16,6 +16,7 @@ class CustomerAuthController extends Controller
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
+            'fcm_token' => 'nullable|string',
         ]);
 
         $customer = Customer::where('username', $request->username)
@@ -26,6 +27,12 @@ class CustomerAuthController extends Controller
             throw ValidationException::withMessages([
                 'username' => ['بيانات الدخول غير صحيحة.'],
             ]);
+        }
+
+        // حفظ FCM token إذا تم إرساله
+        if ($request->filled('fcm_token')) {
+            $customer->fcm_token = $request->fcm_token;
+            $customer->save();
         }
 
         // حذف التوكنات القديمة

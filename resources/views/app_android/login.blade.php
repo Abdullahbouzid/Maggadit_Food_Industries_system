@@ -295,6 +295,12 @@
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
                 
+                // Include FCM token if available (from localStorage or native bridge)
+                const fcmToken = localStorage.getItem('fcm_token');
+                if (fcmToken) {
+                    data.fcm_token = fcmToken;
+                }
+                
                 const response = await fetch('/mobile/login', {
                     method: 'POST',
                     body: JSON.stringify(data),
@@ -319,8 +325,6 @@
                             console.warn('Failed to store token via native bridge:', e);
                         }
                     }
-                    // Send FCM token to backend after successful login with retry
-                    await sendFcmTokenWithRetry(data.token);
                     // Register push notification token after successful login
                     await registerPushNotifications(data.token);
                     if (data.success && data.redirect) {
