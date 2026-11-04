@@ -99,7 +99,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun sendTokenToApiWithCookie(token: String, cookieHeader: String) {
         Thread {
             try {
-                val url = java.net.URL("https://blue-beaver-923812.hostingersite.com/api/customer/fcm-token")
+                // Use local Laravel API endpoint (http://127.0.0.1/api/customer/fcm-token)
+                val url = java.net.URL("http://127.0.0.1/api/customer/fcm-token")
                 val connection = url.openConnection() as java.net.HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.doOutput = true
@@ -114,7 +115,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 connection.outputStream.close()
 
                 val responseCode = connection.responseCode
-                Log.d(TAG, "FCM Token sent to API: $responseCode")
+                Log.d(TAG, "FCM Token sent to local API: $responseCode")
                 
                 if (responseCode != 200 && responseCode != 201) {
                     val errorStream = connection.errorStream
@@ -124,7 +125,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to send FCM token to API: ${e.message}")
+                Log.e(TAG, "Failed to send FCM token to local API: ${e.message}")
             }
         }.start()
     }
@@ -132,7 +133,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun sendTokenToApiWithBearer(token: String, authToken: String) {
         Thread {
             try {
-                val url = java.net.URL("https://blue-beaver-923812.hostingersite.com/api/customer/fcm-token")
+                // Use local Laravel API endpoint (http://127.0.0.1/api/customer/fcm-token)
+                val url = java.net.URL("http://127.0.0.1/api/customer/fcm-token")
                 val connection = url.openConnection() as java.net.HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.doOutput = true
@@ -146,7 +148,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 connection.outputStream.close()
 
                 val responseCode = connection.responseCode
-                Log.d(TAG, "FCM Token sent to API (Bearer): $responseCode")
+                Log.d(TAG, "FCM Token sent to local API (Bearer): $responseCode")
                 
                 if (responseCode == 200 || responseCode == 201) {
                     Log.d(TAG, "✅ FCM Token saved successfully!")
@@ -158,7 +160,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to send FCM token to API (Bearer): ${e.message}")
+                Log.e(TAG, "Failed to send FCM token to local API (Bearer): ${e.message}")
             }
         }.start()
     }

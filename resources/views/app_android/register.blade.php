@@ -349,6 +349,30 @@
 
         setLanguage(currentLang);
 
+        // Sync FCM token from native Android SharedPreferences to localStorage
+        async function syncFcmTokenFromNative() {
+            try {
+                if (typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.getFcmToken) {
+                    const fcmToken = await AndroidBridge.getFcmToken();
+                    if (fcmToken && fcmToken !== '') {
+                        localStorage.setItem('fcm_token', fcmToken);
+                        console.log('✅ FCM token synced from native to localStorage:', fcmToken.substring(0, 20) + '...');
+                    } else {
+                        console.log('⚠️ No FCM token found in native SharedPreferences');
+                    }
+                } else {
+                    console.warn('AndroidBridge.getFcmToken not available');
+                }
+            } catch (error) {
+                console.warn('Failed to sync FCM token from native:', error);
+            }
+        }
+
+        // Sync on page load
+        window.addEventListener('DOMContentLoaded', async function() {
+            await syncFcmTokenFromNative();
+        });
+
         // Push notification registration after registration
         async function registerPushNotifications(apiToken) {
             try {

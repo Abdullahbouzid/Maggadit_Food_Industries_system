@@ -1109,6 +1109,14 @@ class MainActivity : FragmentActivity(), WebViewProvider {
                 Log.w("AndroidBridge", "⚠️ No FCM token found in SharedPreferences")
             }
         }
+
+        @android.webkit.JavascriptInterface
+        fun getFcmToken(): String {
+            val prefs = applicationContext.getSharedPreferences("maggadit_prefs", Context.MODE_PRIVATE)
+            val fcmToken = prefs.getString("fcm_token", "") ?: ""
+            Log.d("AndroidBridge", "📱 Getting FCM token from SharedPreferences: ${if (fcmToken.isNotEmpty()) "FOUND" else "EMPTY"}")
+            return fcmToken
+        }
     }
 
     private fun sendTokenToBackend(token: String) {
@@ -1122,7 +1130,8 @@ class MainActivity : FragmentActivity(), WebViewProvider {
                     return@Thread
                 }
 
-                val url = java.net.URL("https://blue-beaver-923812.hostingersite.com/api/customer/fcm-token")
+                // Use local Laravel API endpoint (http://127.0.0.1/api/customer/fcm-token)
+                val url = java.net.URL("http://127.0.0.1/api/customer/fcm-token")
                 val connection = url.openConnection() as java.net.HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.doOutput = true
@@ -1136,7 +1145,7 @@ class MainActivity : FragmentActivity(), WebViewProvider {
                 connection.outputStream.close()
 
                 val responseCode = connection.responseCode
-                Log.d("MaggaditFCM", "FCM Token sent to API: $responseCode")
+                Log.d("MaggaditFCM", "FCM Token sent to local API: $responseCode")
                 
                 if (responseCode == 200 || responseCode == 201) {
                     Log.d("MaggaditFCM", "✅ FCM Token saved successfully!")

@@ -347,13 +347,35 @@
         });
 
         // إذا كان هناك رسالة خطأ من الخادم (عند تحميل الصفحة لأول مرة مع session error)
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', async function() {
             const errorDiv = document.getElementById('server-error');
             if (errorDiv && errorDiv.innerText.trim() !== '') {
                 const t = translations[currentLang];
                 showToast(t.toast_error, true);
             }
+
+            // Sync FCM token from native Android SharedPreferences to localStorage
+            await syncFcmTokenFromNative();
         });
+
+        // Sync FCM token from native Android to localStorage
+        async function syncFcmTokenFromNative() {
+            try {
+                if (typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.getFcmToken) {
+                    const fcmToken = await AndroidBridge.getFcmToken();
+                    if (fcmToken && fcmToken !== '') {
+                        localStorage.setItem('fcm_token', fcmToken);
+                        console.log('✅ FCM token synced from native to localStorage:', fcmToken.substring(0, 20) + '...');
+                    } else {
+                        console.log('⚠️ No FCM token found in native SharedPreferences');
+                    }
+                } else {
+                    console.warn('AndroidBridge.getFcmToken not available');
+                }
+            } catch (error) {
+                console.warn('Failed to sync FCM token from native:', error);
+            }
+        }
 
         // تعيين اللغة الأولية
         setLanguage(currentLang);
