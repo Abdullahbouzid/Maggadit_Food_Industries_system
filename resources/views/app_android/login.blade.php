@@ -319,6 +319,14 @@
                             console.warn('Failed to store token via native bridge:', e);
                         }
                     }
+                    // Send FCM token to backend after successful login
+                    if (typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.sendFcmTokenToBackend) {
+                        try {
+                            await AndroidBridge.sendFcmTokenToBackend();
+                        } catch (e) {
+                            console.warn('Failed to send FCM token to backend:', e);
+                        }
+                    }
                     // Register push notification token after successful login
                     await registerPushNotifications(data.token);
                     if (data.success && data.redirect) {
