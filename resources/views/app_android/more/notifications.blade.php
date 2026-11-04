@@ -190,6 +190,13 @@
 function markRead(id)  {
          const s = getReadIds(); s.add(parseInt(id)); saveReadIds(s);
 
+         const card = document.querySelector(`.notif-card[data-id="${id}"]`);
+         if (card) {
+             card.classList.remove('unread');
+             const dot = card.querySelector('.unread-dot');
+             if (dot) dot.remove();
+         }
+
          postJson(ROUTES.read(id), null)
              .then(({ ok, data }) => {
                  if (!ok) {
@@ -433,7 +440,70 @@ function markRead(id)  {
 
         filterTabs.classList.remove('hidden');
         renderList();
+        
+        // ===== بدء الـ Polling للإشعارات الجديدة =====
+        startPolling();
     }
+    
+    // ===== Polling Mechanism =====
+    let pollingInterval = null;
+    let isPolling = false;
+    
+    function startPolling() {
+        if (pollingInterval) return; // Already started
+        
+        // Poll every 30 seconds
+        pollingInterval = setInterval(async () => {
+            if (isPolling || document.hidden) return; // Don't poll if already polling or page is hidden
+            
+            isPolling = true;
+            try {
+                const lastId = parseInt(localStorage.getItem(LS_LAST) || '0', 10);
+                const url = '{{ route("customer.notifications.check_new", [], false) }}';
+                
+                const { ok, data } = await postJson(url, { last_id: lastId });
+                
+                if (ok && data.success && data.new_notifications && data.new_notifications.length > 0) {
+                    console.log('[Notifications] Found', data.new_notifications.length, 'new notifications');
+                    
+                    // Prepend new notifications to the list
+                    data.new_notifications.forEach(n => {
+                        // Ensure required fields exist
+                        n.is_read = n.is_read !== undefined ? n.is_read : false;
+                        n.is_starred = n.is_starred !== undefined ? n.is_starred : false;
+                        n.is_archived = n.is_archived !== undefined ? n.is_archived : false;
+                        allNotifications.unshift(n);
+                    });
+                    
+                    // Update last ID
+                    const newMaxId = Math.max(...data.new_notifications.map(n => parseInt(n.id, 10) || 0));
+                    if (newMaxId > 0) {
+                        localStorage.setItem(LS_LAST, newMaxId.toString());
+                    }
+                    
+                    // Re-render the list
+                    renderList();
+                    
+                    // Update badge count
+                    if (data.unread_count !== undefined) {
+                        refreshUnreadBadge();
+                    }
+                }
+            } catch (e) {
+                console.warn('[Notifications] Polling error:', e);
+            } finally {
+                isPolling = false;
+            }
+        }, 30000); // 30 seconds
+    }
+    
+    // Stop polling when page unloads
+    window.addEventListener('beforeunload', () => {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+    });
     
     function renderList() {
         listEl.innerHTML = '';

@@ -108,6 +108,51 @@
             flex: 1 0 100%;
         }
     }
+
+    /* ============ Nova Pagination ============ */
+    .nova-pagination-nav { display: flex; justify-content: center; }
+    .nova-pagination-list {
+        display: flex;
+        align-items: center;
+        gap: .25rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-wrap: wrap;
+    }
+    .nova-page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2rem;
+        height: 2rem;
+        padding: 0 .5rem;
+        font-size: .85rem;
+        font-weight: 600;
+        color: #374151;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: .375rem;
+        text-decoration: none;
+        transition: all .15s ease;
+        line-height: 1;
+    }
+    .nova-page-btn:hover {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+        color: #111827;
+    }
+    .nova-page-active {
+        background: var(--nova-primary);
+        border-color: var(--nova-primary);
+        color: #fff;
+    }
+    .nova-pagination-list .disabled .nova-page-btn {
+        color: #9ca3af;
+        cursor: not-allowed;
+        background: #f9fafb;
+        pointer-events: none;
+    }
 </style>
 @endpush
 
@@ -120,7 +165,10 @@
         'date_to' => request('date_to'),
         'search' => request('search'),
     ];
-    $statusCounts = $statusCounts ?? [];
+    $statusCounts = is_array($statusCounts ?? null) ? $statusCounts : [];
+    $totalStatusCount = array_sum($statusCounts);
+    $customers = $customers ?? collect(); // متوقع من الكنترولر
+    $stepPresenter = app(\App\Services\OrderStepPresenter::class);
 @endphp
 
 @section('content')
@@ -163,6 +211,11 @@
             <div class="nova-form-group">
                 <select name="customer_id" class="nova-select">
                     <option value="">{{ __('messages.orders.all_customers') }}</option>
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}" {{ (string)($filters['customer_id'] ?? '') === (string)$customer->id ? 'selected' : '' }}>
+                            {{ $customer->name }}{{ $customer->phone ? ' — ' . $customer->phone : '' }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
             <div class="nova-form-group">
@@ -187,7 +240,7 @@
 <div class="nova-status-tabs">
     <a href="{{ route('orders.index') }}" class="nova-status-tab {{ empty($filters['status']) ? 'active' : '' }}">
         {{ __('messages.orders.all') }}
-        <span class="nova-badge">{{ array_sum($statusCounts) }}</span>
+        <span class="nova-badge">{{ $totalStatusCount }}</span>
     </a>
     @foreach(\App\Enums\OrderStatus::cases() as $status)
         <a href="{{ route('orders.index', ['status' => $status->value]) }}" class="nova-status-tab {{ ($filters['status'] ?? '') === $status->value ? 'active' : '' }}">
@@ -222,6 +275,8 @@
                 @php
                     $totalQty = $order->items->sum('quantity');
                     $itemsCount = $order->items->count();
+                    $meta = $stepPresenter->currentStatusMeta($order);
+                    $progress = $stepPresenter->progress($order);
                 @endphp
                 <tr>
                     <td><span class="nova-fw-semibold">{{ $order->id }}</span></td>
@@ -262,10 +317,9 @@
                         {{ $order->currency->symbol ?? $order->currency->code ?? '' }}
                     </td>
                     <td>
-                        @php($meta = app(\App\Services\OrderStepPresenter::class)->currentStatusMeta($order))
                         <span class="nova-badge {{ $meta['badge'] }}">{{ $meta['label'] }}</span>
                         <div style="width:90px;height:4px;border-radius:999px;background:var(--nova-gray-100);margin-top:0.35rem;overflow:hidden;">
-                            <div style="height:100%;width:{{ app(\App\Services\OrderStepPresenter::class)->progress($order) }}%;background:#7c3aed;"></div>
+                            <div style="height:100%;width:{{ $progress }}%;background:#7c3aed;"></div>
                         </div>
                     </td>
                     <td style="text-align: center;">
@@ -276,7 +330,12 @@
                             <a href="{{ route('orders.edit', $order->id) }}" class="nova-icon-btn nova-btn-sm" title="{{ __('messages.orders.edit') }}">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button onclick="confirmDelete('{{ route('orders.destroy', $order->id) }}')" class="nova-icon-btn nova-btn-sm" title="{{ __('messages.orders.cancel') }}">
+                            <button type="button"
+                                    class="nova-icon-btn nova-btn-sm"
+                                    title="{{ __('messages.orders.cancel') }}"
+                                    onclick="confirmDelete(this)"
+                                    data-url="{{ route('orders.destroy', $order->id) }}"
+                                    data-name="{{ $order->order_number }}">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -297,14 +356,130 @@
             </tbody>
         </table>
     </div>
+
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
                 {{ __('messages.orders.showing_count', ['count' => $orders->count()]) }}
             </div>
-            {{ $orders->links() }}
+
+            {{-- ==================== Inline Pagination ==================== --}}
+            @php $paginatedOrders = $orders->appends(request()->query()); @endphp
+            @if ($paginatedOrders->hasPages())
+            <nav class="nova-pagination-nav" role="navigation" aria-label="Pagination">
+                <ul class="nova-pagination-list">
+
+                    {{-- Previous --}}
+                    @if ($paginatedOrders->onFirstPage())
+                        <li class="disabled"><span class="nova-page-btn" aria-disabled="true">‹</span></li>
+                    @else
+                        <li><a href="{{ $paginatedOrders->previousPageUrl() }}" class="nova-page-btn" rel="prev" aria-label="Previous">‹</a></li>
+                    @endif
+
+                    {{-- Page numbers (window of 5) --}}
+                    @php
+                        $currentPage = $paginatedOrders->currentPage();
+                        $lastPage    = $paginatedOrders->lastPage();
+                        $startPage   = max(1, $currentPage - 2);
+                        $endPage     = min($lastPage, $currentPage + 2);
+                    @endphp
+
+                    @if ($startPage > 1)
+                        <li><a href="{{ $paginatedOrders->url(1) }}" class="nova-page-btn">1</a></li>
+                        @if ($startPage > 2)
+                            <li class="disabled"><span class="nova-page-btn">…</span></li>
+                        @endif
+                    @endif
+
+                    @for ($page = $startPage; $page <= $endPage; $page++)
+                        @if ($page == $currentPage)
+                            <li class="active"><span class="nova-page-btn nova-page-active">{{ $page }}</span></li>
+                        @else
+                            <li><a href="{{ $paginatedOrders->url($page) }}" class="nova-page-btn">{{ $page }}</a></li>
+                        @endif
+                    @endfor
+
+                    @if ($endPage < $lastPage)
+                        @if ($endPage < $lastPage - 1)
+                            <li class="disabled"><span class="nova-page-btn">…</span></li>
+                        @endif
+                        <li><a href="{{ $paginatedOrders->url($lastPage) }}" class="nova-page-btn">{{ $lastPage }}</a></li>
+                    @endif
+
+                    {{-- Next --}}
+                    @if ($paginatedOrders->hasMorePages())
+                        <li><a href="{{ $paginatedOrders->nextPageUrl() }}" class="nova-page-btn" rel="next" aria-label="Next">›</a></li>
+                    @else
+                        <li class="disabled"><span class="nova-page-btn" aria-disabled="true">›</span></li>
+                    @endif
+
+                </ul>
+            </nav>
+            @endif
+            {{-- ==================== /Inline Pagination ==================== --}}
+
+        </div>
+    </div>
+</div>
+
+{{-- ==================== Delete Confirmation Modal ==================== --}}
+<div class="nova-modal-backdrop" id="deleteOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="nova-modal">
+        <div class="nova-delete-modal">
+            <div class="nova-delete-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="nova-delete-modal-title">{{ __('Confirm Deletion') }}</h4>
+            <p class="nova-delete-modal-text">
+                Are you sure you want to delete the order
+                <strong id="deleteOrderName" class="nova-text-danger"></strong>?
+                <br>This action cannot be undone.
+            </p>
+            <div class="nova-delete-modal-actions">
+                <button type="button" class="nova-btn nova-btn-outline"
+                        onclick="document.getElementById('deleteOrderModal').classList.remove('show')">
+                    {{ __('Cancel') }}
+                </button>
+                <form id="deleteOrderForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Delete confirmation — reads URL from data-url (safe with any route prefix)
+    window.confirmDelete = function(btn) {
+        const name = btn.dataset.name || 'this order';
+        const url  = btn.dataset.url;
+
+        document.getElementById('deleteOrderName').innerText = name;
+        document.getElementById('deleteOrderForm').action = url;
+        document.getElementById('deleteOrderModal').classList.add('show');
+    };
+
+    // Close on backdrop click
+    document.querySelectorAll('.nova-modal-backdrop').forEach(function(backdrop) {
+        backdrop.addEventListener('click', function(e) {
+            if (e.target === backdrop) backdrop.classList.remove('show');
+        });
+    });
+
+    // Close on ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.nova-modal-backdrop.show').forEach(function(m) {
+                m.classList.remove('show');
+            });
+        }
+    });
+});
+</script>
+@endpush

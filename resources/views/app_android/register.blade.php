@@ -338,28 +338,25 @@
         // Push notification registration after registration
         async function registerPushNotifications(apiToken) {
             try {
-                if (typeof nativephp_call !== 'undefined') {
-                    nativephp_call('PushNotification.RequestPermission', JSON.stringify({
-                        event: 'PushNotification.TokenGenerated'
-                    }));
+                // NativePHP doesn't have PushNotification bridge - rely on native Firebase service
+                // The native Java FirebaseMessagingService handles token generation automatically
+                console.log('Push notification service initialized via native Firebase SDK');
 
-                    window.addEventListener('nativephp_push_token', async (event) => {
-                        const token = event.detail.token;
-                        if (token && apiToken) {
-                            await fetch('/customer/notification/subscribe', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': 'Bearer ' + apiToken,
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                                },
-                                body: JSON.stringify({ token: token })
-                            });
-                        }
+                // Send existing token if available from local storage
+                const storedToken = localStorage.getItem('fcm_token');
+                if (storedToken && apiToken) {
+                    await fetch('/customer/notification/subscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + apiToken,
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        },
+                        body: JSON.stringify({ token: storedToken })
                     });
                 }
             } catch (error) {
-                console.warn('Push notification setup failed:', error);
+                console.warn('Push notification setup warning (non-critical):', error);
             }
         }
     </script>

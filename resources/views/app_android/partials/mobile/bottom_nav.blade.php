@@ -3,6 +3,19 @@
     $activeRoute = request()->route()?->getName() ?? '';
 @endphp
 
+@push('styles')
+<style>
+    .bottom-nav-premium {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        will-change: transform;
+        z-index: 1000;
+    }
+    .bottom-nav-hidden {
+        transform: translateY(100%) !important;
+    }
+</style>
+@endpush
+
 <div class="bottom-nav-premium">
     <a href="{{ route('customer.dashboard', [], false) }}" class="nav-item-premium {{ $activeRoute === 'customer.dashboard' ? 'active' : '' }}" data-nav="home">
         <div class="nav-icon"><i class="fas fa-home"></i></div>
@@ -34,3 +47,37 @@
         <div class="nav-indicator"></div>
     </a>
 </div>
+
+@push('scripts')
+<script>
+    (function () {
+        'use strict';
+        var bottomNav = document.querySelector('.bottom-nav-premium');
+        if (!bottomNav) return;
+        var lastScrollY = window.scrollY;
+        var ticking = false;
+        function onScroll() {
+            if (!ticking) {
+                window.requestAnimationFrame(function () {
+                    var currentScrollY = window.scrollY;
+                    var diff = currentScrollY - lastScrollY;
+                    // threshold of 10px to avoid jitter
+                    if (Math.abs(diff) > 10) {
+                        if (diff > 0) {
+                            // Scrolling down → hide
+                            bottomNav.classList.add('bottom-nav-hidden');
+                        } else {
+                            // Scrolling up → show
+                            bottomNav.classList.remove('bottom-nav-hidden');
+                        }
+                        lastScrollY = currentScrollY;
+                    }
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+    })();
+</script>
+@endpush
