@@ -135,6 +135,18 @@ class MainActivity : FragmentActivity(), WebViewProvider {
         try {
             FirebaseApp.initializeApp(this)
             Log.d("Firebase", "✅ Firebase initialized")
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val token = task.result
+                    if (!token.isNullOrEmpty()) {
+                        val prefs = applicationContext.getSharedPreferences("maggadit_prefs", Context.MODE_PRIVATE)
+                        prefs.edit().putString("fcm_token", token).apply()
+                        Log.d("MainActivity", "🔥 Fetched FCM token successfully: $token")
+                    }
+                } else {
+                    Log.w("MainActivity", "Fetching FCM registration token failed", task.exception)
+                }
+            }
         } catch (e: Exception) {
             Log.e("Firebase", "❌ Firebase initialization failed: ${e.message}")
         }
@@ -397,12 +409,12 @@ class MainActivity : FragmentActivity(), WebViewProvider {
             Log.d("OAuth", "🔐 OAuth callback host: ${uri.host}")
             Log.d("OAuth", "🔐 OAuth callback path: ${uri.path}")
             Log.d("OAuth", "🔐 OAuth callback query: ${uri.query}")
-            
+
             // Check for common OAuth parameters
             val code = uri.getQueryParameter("code")
             val state = uri.getQueryParameter("state")
             val error = uri.getQueryParameter("error")
-            
+
             if (code != null) {
                 Log.d("OAuth", "✅ OAuth authorization code received: ${code.take(10)}...")
             }
@@ -1141,7 +1153,7 @@ class MainActivity : FragmentActivity(), WebViewProvider {
             try {
                 val prefs = getSharedPreferences("maggadit_prefs", Context.MODE_PRIVATE)
                 val authToken = prefs.getString("api_token", "") ?: ""
-                
+
                 if (authToken.isEmpty()) {
                     Log.w("MaggaditFCM", "⚠️ No API token, cannot send FCM token")
                     return@Thread
@@ -1163,7 +1175,7 @@ class MainActivity : FragmentActivity(), WebViewProvider {
 
                 val responseCode = connection.responseCode
                 Log.d("MaggaditFCM", "FCM Token sent to local API: $responseCode")
-                
+
                 if (responseCode == 200 || responseCode == 201) {
                     Log.d("MaggaditFCM", "✅ FCM Token saved successfully!")
                 } else {
