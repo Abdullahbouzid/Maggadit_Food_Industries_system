@@ -295,8 +295,19 @@
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
                 
-                // Include FCM token if available (from localStorage or native bridge)
-                const fcmToken = localStorage.getItem('fcm_token');
+                // Include FCM token - try localStorage first, then native bridge
+                let fcmToken = localStorage.getItem('fcm_token');
+                if (!fcmToken && typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.getFcmToken) {
+                    try {
+                        fcmToken = await AndroidBridge.getFcmToken();
+                        if (fcmToken) {
+                            localStorage.setItem('fcm_token', fcmToken);
+                            console.log('✅ FCM token retrieved from native bridge:', fcmToken.substring(0, 20) + '...');
+                        }
+                    } catch (e) {
+                        console.warn('Failed to get FCM token from native bridge:', e);
+                    }
+                }
                 if (fcmToken) {
                     data.fcm_token = fcmToken;
                 }
