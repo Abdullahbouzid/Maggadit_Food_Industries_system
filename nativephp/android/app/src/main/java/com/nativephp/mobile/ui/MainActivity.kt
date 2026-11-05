@@ -174,7 +174,7 @@ class MainActivity : FragmentActivity(), WebViewProvider {
                 val prefs = applicationContext.getSharedPreferences("maggadit_prefs", Context.MODE_PRIVATE)
                 val fcmToken = prefs.getString("fcm_token", "") ?: ""
                 if (fcmToken.isNotEmpty()) {
-                    webView.evaluateJavascript("localStorage.setItem('fcm_token', '$fcmToken'); console.log('✅ FCM token synced from SharedPreferences to localStorage:', '$fcmToken');", null)
+                    webView.evaluateJavascript("localStorage.setItem('fcm_token', '${fcmToken.replace("\\", "\\\\").replace("'", "\\'")}'); console.log('✅ FCM token synced from SharedPreferences to WebView localStorage:', '${fcmToken.replace("'", "\\'").substring(0, Math.min(20, fcmToken.length))}...');", null)
                     Log.d("MainActivity", "📱 FCM token synced from SharedPreferences to WebView localStorage")
                 } else {
                     Log.d("MainActivity", "⚠️ No FCM token in SharedPreferences yet")

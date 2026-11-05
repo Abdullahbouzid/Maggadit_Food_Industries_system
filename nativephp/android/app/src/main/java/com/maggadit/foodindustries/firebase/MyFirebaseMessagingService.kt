@@ -36,7 +36,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val webView = MainActivity.instance?.getWebView()
         if (webView != null) {
             webView.post {
-                webView.evaluateJavascript("localStorage.setItem('fcm_token', '$token'); console.log('✅ FCM token saved to localStorage:', '$token');", null)
+                webView.evaluateJavascript("localStorage.setItem('fcm_token', '${token.replace("\\", "\\\\").replace("'", "\\'")}'); console.log('✅ FCM token saved to localStorage:', '${token.replace("'", "\\'").substring(0, Math.min(20, token.length))}...');", null)
                 Log.d(TAG, "📱 FCM token written to WebView localStorage")
             }
         } else {
