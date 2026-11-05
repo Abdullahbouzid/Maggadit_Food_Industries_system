@@ -461,9 +461,16 @@
             
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    await AndroidBridge.sendFcmTokenToBackend();
-                    console.log('FCM token sent successfully on attempt', attempt);
-                    return;
+                    const sent = await AndroidBridge.sendFcmTokenToBackend();
+                    if (sent) {
+                        console.log('FCM token sent successfully on attempt', attempt);
+                        return;
+                    } else {
+                        console.log(`FCM token not yet available, fetch will retry on attempt`, attempt);
+                        if (attempt < maxRetries) {
+                            await new Promise(r => setTimeout(r, delay * attempt));
+                        }
+                    }
                 } catch (e) {
                     console.warn(`FCM token send attempt ${attempt} failed:`, e);
                     if (attempt < maxRetries) {
