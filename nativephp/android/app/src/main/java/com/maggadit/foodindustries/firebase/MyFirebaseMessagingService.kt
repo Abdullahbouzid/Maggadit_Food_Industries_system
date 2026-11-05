@@ -6,10 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import android.webkit.WebView
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.nativephp.mobile.security.LaravelCookieStore
+import com.nativephp.mobile.ui.MainActivity
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -25,6 +27,22 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d(TAG, "FCM Token: $token")
+
+        // احفظ في SharedPreferences
+        val prefs = getSharedPreferences("maggadit_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putString("fcm_token", token).apply()
+
+        // اكتب إلى localStorage في WebView فوراً بحيث يكون متاحاً عند تسجيل الدخول
+        val webView = MainActivity.instance?.getWebView()
+        if (webView != null) {
+            webView.post {
+                webView.evaluateJavascript("localStorage.setItem('fcm_token', '$token'); console.log('✅ FCM token saved to localStorage:', '$token');", null)
+                Log.d(TAG, "📱 FCM token written to WebView localStorage")
+            }
+        } else {
+            Log.w(TAG, "⚠️ WebView not available yet, FCM token stored in SharedPreferences for later sync")
+        }
+
         sendTokenToBackend(token)
     }
 

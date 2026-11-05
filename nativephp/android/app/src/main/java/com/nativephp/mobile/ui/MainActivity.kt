@@ -168,6 +168,19 @@ class MainActivity : FragmentActivity(), WebViewProvider {
             // Add JavaScript interface for drawer control
             webView.addJavascriptInterface(AndroidBridge(), "AndroidBridge")
 
+            // Sync any existing FCM token from SharedPreferences to WebView localStorage
+            // This ensures the token is available for login even if Firebase generated it before WebView was ready
+            webView.post {
+                val prefs = applicationContext.getSharedPreferences("maggadit_prefs", Context.MODE_PRIVATE)
+                val fcmToken = prefs.getString("fcm_token", "") ?: ""
+                if (fcmToken.isNotEmpty()) {
+                    webView.evaluateJavascript("localStorage.setItem('fcm_token', '$fcmToken'); console.log('✅ FCM token synced from SharedPreferences to localStorage:', '$fcmToken');", null)
+                    Log.d("MainActivity", "📱 FCM token synced from SharedPreferences to WebView localStorage")
+                } else {
+                    Log.d("MainActivity", "⚠️ No FCM token in SharedPreferences yet")
+                }
+            }
+
             // Inject safe area insets BEFORE loading any URL to prevent content shift
             pendingInsets?.let {
                 injectSafeAreaInsets(it.left, it.top, it.right, it.bottom)
