@@ -363,6 +363,9 @@
                     }
                     // Register push notification token after successful login
                     await registerPushNotifications(data.token);
+                    // After login, trigger native FCM token sync with retry
+                    // Firebase generates tokens asynchronously, so we need to retry
+                    await sendFcmTokenWithRetry(data.token, 10, 2000);
                     if (data.success && data.redirect) {
                         window.location.href = data.redirect;
                     } else {
