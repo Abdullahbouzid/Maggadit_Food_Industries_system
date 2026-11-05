@@ -12,7 +12,6 @@ import android.webkit.CookieManager
 import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import com.google.firebase.FirebaseApp
-import com.google.firebase.messaging.FirebaseMessaging
 import com.maggadit.foodindustries.firebase.MyFirebaseMessagingService
 import com.nativephp.mobile.bridge.PHPBridge
 import com.nativephp.mobile.bridge.PHPQueueWorker
@@ -1113,7 +1112,7 @@ class MainActivity : FragmentActivity(), WebViewProvider {
             Log.d("AndroidBridge", "💾 API token stored in SharedPreferences")
         }
 
-        @android.webkit.JavascriptInterface
+@android.webkit.JavascriptInterface
         fun sendFcmTokenToBackend(): Boolean {
             val prefs = applicationContext.getSharedPreferences("maggadit_prefs", Context.MODE_PRIVATE)
             val fcmToken = prefs.getString("fcm_token", "") ?: ""
@@ -1121,40 +1120,19 @@ class MainActivity : FragmentActivity(), WebViewProvider {
                 sendTokenToBackend(fcmToken)
                 return true
             } else {
-                Log.w("AndroidBridge", "⚠️ No FCM token found in SharedPreferences, fetching from Firebase...")
-                // Force Firebase to generate/get token and retry
-                FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                    val fetchedToken = if (task.isSuccessful) task.result else null
-                    if (fetchedToken != null) {
-                        prefs.edit().putString("fcm_token", fetchedToken).apply()
-                        Log.d("AndroidBridge", "FCM token fetched from Firebase: ${fetchedToken.substring(0, Math.min(20, fetchedToken.length))}")
-                        sendTokenToBackend(fetchedToken)
-                    } else {
-                        Log.e("AndroidBridge", "Failed to fetch FCM token from Firebase: ${task.exception?.message}")
-                    }
-                }
+                Log.w("AndroidBridge", "⚠️ No FCM token found in SharedPreferences")
+                // Don't try to fetch from Firebase here - it crashes on JS thread
+                // The MyFirebaseMessagingService.onNewToken will auto-update prefs when ready
                 return false
             }
         }
 
-@android.webkit.JavascriptInterface
+        @android.webkit.JavascriptInterface
         fun getFcmToken(): String {
             val prefs = applicationContext.getSharedPreferences("maggadit_prefs", Context.MODE_PRIVATE)
             val fcmToken = prefs.getString("fcm_token", "") ?: ""
-            if (fcmToken.isNotEmpty()) {
-                Log.d("AndroidBridge", "📱 Getting FCM token from SharedPreferences: FOUND")
-                return fcmToken
-            }
-            Log.d("AndroidBridge", "📱 Getting FCM token from SharedPreferences: EMPTY, fetching from Firebase...")
-            // Force Firebase to fetch token if not already in prefs
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                val fetchedToken = if (task.isSuccessful) task.result else null
-                if (fetchedToken != null) {
-                    prefs.edit().putString("fcm_token", fetchedToken).apply()
-                    Log.d("AndroidBridge", "📱 FCM token fetched from Firebase and stored in SharedPreferences")
-                }
-            }
-            return ""
+            Log.d("AndroidBridge", "📱 Getting FCM token from SharedPreferences: ${if (fcmToken.isNotEmpty()) "FOUND" else "EMPTY"}")
+            return fcmToken
         }
     }
 
