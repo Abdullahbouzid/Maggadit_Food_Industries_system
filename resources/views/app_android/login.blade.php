@@ -295,48 +295,7 @@
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
                 
-                // Include FCM token - try native bridge first for most reliable result, then localStorage, with retry
-                async function getFcmTokenWithRetry(maxRetries = 5, delayMs = 600) {
-                    for (let attempt = 0; attempt < maxRetries; attempt++) {
-                        let fcmToken = '';
-                        if (typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.getFcmToken) {
-                            try {
-                                fcmToken = await AndroidBridge.getFcmToken();
-                                if (fcmToken) {
-                                    localStorage.setItem('fcm_token', fcmToken);
-                                    console.log('✅ FCM token retrieved from native bridge:', fcmToken.substring(0, 20) + '...');
-                                }
-                            } catch (e) {
-                                console.warn(`Failed to get FCM token from native bridge (attempt ${attempt + 1}):`, e);
-                            }
-                        }
-                        if (!fcmToken) {
-                            fcmToken = localStorage.getItem('fcm_token');
-                        }
-                        // Handle backwards compatibility - if localStorage has a JSON string (from earlier code)
-                        if (fcmToken && fcmToken.startsWith('"') && fcmToken.endsWith('"')) {
-                            try {
-                                fcmToken = JSON.parse(fcmToken);
-                            } catch (e) {
-                                console.warn(`Failed to parse JSON token from localStorage (attempt ${attempt + 1}):`, e);
-                            }
-                        }
-                        if (fcmToken) {
-                            return fcmToken;
-                        }
-                        if (attempt < maxRetries - 1) {
-                            console.log(`FCM token not yet available, retrying in ${delayMs}ms... (attempt ${attempt + 1}/${maxRetries})`);
-                            await new Promise(resolve => setTimeout(resolve, delayMs));
-                        }
-                    }
-                    return '';
-                }
-                
-                const fcmToken = await getFcmTokenWithRetry();
-                if (fcmToken) {
-                    data.fcm_token = fcmToken;
-                }
-                
+                // Login without FCM token initially - it will be sent in background
                 const response = await fetch('/mobile/login', {
                     method: 'POST',
                     body: JSON.stringify(data),
@@ -363,7 +322,7 @@
                     }
                     // Register push notification token after successful login
                     await registerPushNotifications(data.token);
-                    // Send FCM token to backend in background (non-blocking)
+                    // Send FCM token to backend in background (non-blocking, 500ms delay)
                     setTimeout(() => await sendFcmTokenWithRetry(data.token, 10, 2000), 500);
                     if (data.success && data.redirect) {
                         window.location.href = data.redirect;
