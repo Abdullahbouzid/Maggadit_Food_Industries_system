@@ -64,12 +64,12 @@
                     <td>{{ $faq->question }}</td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                            <a href="{{ route('faqs.edit', $faq->id) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $faq->id }}', '{{ addslashes($faq->question) }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                            <x-table-actions
+                                :view-url="null"
+                                :edit-url="route('faqs.edit', $faq->id)"
+                                :delete-url="route('faqs.destroy', $faq->id)"
+                                :delete-name="$faq->question"
+                                delete-modal="deleteFaqModal" />
                         </div>
                     </td>
                 </tr>
@@ -108,36 +108,4 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal (Nova) --}}
-<div class="nova-modal-backdrop" id="deleteFaqModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete FAQ <strong id="deleteFaqName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteFaqModal').classList.remove('show')">Cancel</button>
-                <form id="deleteFaqForm" method="POST" action="" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
-        document.getElementById('deleteFaqName').innerText = name;
-        document.getElementById('deleteFaqForm').action = '/faqs/' + id;
-        document.getElementById('deleteFaqModal').classList.add('show');
-    };
-});
-</script>
-@endpush
+<x-delete-modal modal-id="deleteFaqModal" />

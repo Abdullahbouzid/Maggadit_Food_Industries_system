@@ -82,9 +82,12 @@
                                     <i class="fas fa-{{ $priceList->status === 'active' ? 'pause' : 'play' }}"></i>
                                 </button>
                             </form>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $priceList->id }}', '{{ addslashes($priceList->name) }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                            <x-table-actions
+                                :view-url="null"
+                                :edit-url="null"
+                                :delete-url="route('price-lists.destroy', $priceList)"
+                                :delete-name="$priceList->name"
+                                delete-modal="deleteModal" />
                         </div>
                     </td>
                 </tr>
@@ -108,42 +111,16 @@
         </table>
     </div>
     <div class="nova-card-footer">
-        <div class="nova-pagination">
-            {{ $priceLists->appends(request()->query())->links() }}
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                عرض {{ $priceLists->firstItem() ?? 0 }} إلى {{ $priceLists->lastItem() ?? 0 }} من أصل {{ $priceLists->total() }} سجلاً
+            </div>
+            <div class="nova-pagination">
+                {{ $priceLists->appends(request()->query())->links() }}
+            </div>
         </div>
     </div>
 </div>
 @endsection
 
-{{-- Delete Confirmation Modal (Nova) --}}
-<div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete price list <strong id="deleteName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">Cancel</button>
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
-        document.getElementById('deleteName').innerText = name;
-        document.getElementById('deleteForm').action = '/price-lists/' + id;
-        document.getElementById('deleteModal').classList.add('show');
-    };
-});
-</script>
-@endpush
+<x-delete-modal modal-id="deleteModal" />

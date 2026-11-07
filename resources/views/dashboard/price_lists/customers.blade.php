@@ -96,7 +96,14 @@
         </div>
     </div>
     <div class="nova-card-footer">
-        {{ $customers->appends(request()->query())->links() }}
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                عرض {{ $customers->firstItem() ?? 0 }} إلى {{ $customers->lastItem() ?? 0 }} من أصل {{ $customers->total() }} سجلاً
+            </div>
+            <div class="nova-pagination">
+                {{ $customers->appends(request()->query())->links() }}
+            </div>
+        </div>
     </div>
 </div>
 @endsection

@@ -10,6 +10,7 @@ use App\Models\City;
 use App\Models\Country;
 use App\Models\Customer;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -71,6 +72,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // حدد الـ pagination view الافتراضي لكل ->links() في المشروع
+        Paginator::defaultView('vendor.pagination.nova');
 
         // Sanctum::usePersonalAccessTokenModel(...);
         //

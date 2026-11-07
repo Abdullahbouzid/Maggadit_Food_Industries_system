@@ -161,7 +161,7 @@
         <div class="nova-card-footer">
             <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
                 <div class="nova-text-muted nova-fs-sm">
-                    Showing {{ $settings->count() }} setting/settings
+                    عرض {{ $settings->firstItem() ?? 0 }} إلى {{ $settings->lastItem() ?? 0 }} من أصل {{ $settings->total() }} سجلاً
                 </div>
                 <div class="nova-pagination">
                     {{ $settings->links() }}

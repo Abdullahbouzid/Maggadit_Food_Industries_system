@@ -247,14 +247,20 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
+</div>
 
                 <div class="nova-mt-3">
-                    {{ $transactions->links() }}
+                    <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+                        <div class="nova-text-muted nova-fs-sm">
+                            عرض {{ $transactions->firstItem() ?? 0 }} إلى {{ $transactions->lastItem() ?? 0 }} من أصل {{ $transactions->total() }} سجلاً
+                        </div>
+                        <div class="nova-pagination">
+                            {{ $transactions->links() }}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 @endsection

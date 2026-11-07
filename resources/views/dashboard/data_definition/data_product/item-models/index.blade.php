@@ -156,18 +156,13 @@
                         @endif
                     </td>
                     <td>{{ $m->sort_order ?? '-' }}</td>
-                    <td class="nova-text-end">
-                        <div class="nova-table-actions">
-                <a href="{{ route('item-models.show', $m) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
-                    <i class="fas fa-eye"></i>
-                </a>
-                <a href="{{ route('item-models.edit', $m) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
-                    <i class="fas fa-edit"></i>
-                </a>
-                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذف({{ $m->id }}, '{{ addslashes($m->name_en) }}')">
-                    <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
+<td class="nova-text-end">
+                        <x-table-actions
+                            :view-url="route('item-models.show', $m)"
+                            :edit-url="route('item-models.edit', $m)"
+                            :delete-url="route('item-models.destroy', $m)"
+                            :delete-name="$m->name_en"
+                            delete-modal="deleteModal" />
                     </td>
                 </tr>
                 @empty
@@ -201,36 +196,12 @@
     </div>
 </div>
 
-{{-- حذف تأكيدation Modal (لاva) --}}
-<div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
-            <p class="nova-delete-modal-text">هل أنت متأكد أنك تريد حذف نوع المنتج <strong id="deleteName" class="nova-text-danger"></strong>؟<br>هذا الإجراء لا يمكن التراجع عنه.</p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteModal').classList.remove('show')">إلغاء</button>
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">حذف نهائي</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<x-delete-modal modal-id="deleteModal" />
 @endsection
 
 @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    window.confirmحذف = function(id, name) {
-        document.getElementById('deleteName').innerText = name;
-        document.getElementById('deleteForm').action = '/item-models/' + id;
-        document.getElementById('deleteModal').classList.add('show');
-    };
-});
-</script>
-@endpush
+ <script>
+ document.addEventListener('DOMContentLoaded', function() {
+ });
+ </script>
+ @endpush

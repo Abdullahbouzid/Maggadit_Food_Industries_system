@@ -323,22 +323,12 @@
                         </div>
                     </td>
                     <td style="text-align: center;">
-                        <div class="nova-table-actions">
-                            <a href="{{ route('orders.show', $order->id) }}" class="nova-icon-btn nova-btn-sm" title="{{ __('messages.orders.view') }}">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('orders.edit', $order->id) }}" class="nova-icon-btn nova-btn-sm" title="{{ __('messages.orders.edit') }}">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button"
-                                    class="nova-icon-btn nova-btn-sm"
-                                    title="{{ __('messages.orders.cancel') }}"
-                                    onclick="confirmDelete(this)"
-                                    data-url="{{ route('orders.destroy', $order->id) }}"
-                                    data-name="{{ $order->order_number }}">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
+                        <x-table-actions
+                            :view-url="route('orders.show', $order->id)"
+                            :edit-url="route('orders.edit', $order->id)"
+                            :delete-url="route('orders.destroy', $order->id)"
+                            :delete-name="$order->order_number"
+                            delete-modal="deleteOrderModal" />
                     </td>
                 </tr>
                 @empty
@@ -363,123 +353,19 @@
                 {{ __('messages.orders.showing_count', ['count' => $orders->count()]) }}
             </div>
 
-            {{-- ==================== Inline Pagination ==================== --}}
-            @php $paginatedOrders = $orders->appends(request()->query()); @endphp
-            @if ($paginatedOrders->hasPages())
-            <nav class="nova-pagination-nav" role="navigation" aria-label="Pagination">
-                <ul class="nova-pagination-list">
-
-                    {{-- Previous --}}
-                    @if ($paginatedOrders->onFirstPage())
-                        <li class="disabled"><span class="nova-page-btn" aria-disabled="true">‹</span></li>
-                    @else
-                        <li><a href="{{ $paginatedOrders->previousPageUrl() }}" class="nova-page-btn" rel="prev" aria-label="Previous">‹</a></li>
-                    @endif
-
-                    {{-- Page numbers (window of 5) --}}
-                    @php
-                        $currentPage = $paginatedOrders->currentPage();
-                        $lastPage    = $paginatedOrders->lastPage();
-                        $startPage   = max(1, $currentPage - 2);
-                        $endPage     = min($lastPage, $currentPage + 2);
-                    @endphp
-
-                    @if ($startPage > 1)
-                        <li><a href="{{ $paginatedOrders->url(1) }}" class="nova-page-btn">1</a></li>
-                        @if ($startPage > 2)
-                            <li class="disabled"><span class="nova-page-btn">…</span></li>
-                        @endif
-                    @endif
-
-                    @for ($page = $startPage; $page <= $endPage; $page++)
-                        @if ($page == $currentPage)
-                            <li class="active"><span class="nova-page-btn nova-page-active">{{ $page }}</span></li>
-                        @else
-                            <li><a href="{{ $paginatedOrders->url($page) }}" class="nova-page-btn">{{ $page }}</a></li>
-                        @endif
-                    @endfor
-
-                    @if ($endPage < $lastPage)
-                        @if ($endPage < $lastPage - 1)
-                            <li class="disabled"><span class="nova-page-btn">…</span></li>
-                        @endif
-                        <li><a href="{{ $paginatedOrders->url($lastPage) }}" class="nova-page-btn">{{ $lastPage }}</a></li>
-                    @endif
-
-                    {{-- Next --}}
-                    @if ($paginatedOrders->hasMorePages())
-                        <li><a href="{{ $paginatedOrders->nextPageUrl() }}" class="nova-page-btn" rel="next" aria-label="Next">›</a></li>
-                    @else
-                        <li class="disabled"><span class="nova-page-btn" aria-disabled="true">›</span></li>
-                    @endif
-
-                </ul>
-            </nav>
-            @endif
-            {{-- ==================== /Inline Pagination ==================== --}}
+            {{-- ==================== Pagination (global component) ==================== --}}
+            {{ $orders->links() }}
 
         </div>
     </div>
 </div>
 
-{{-- ==================== Delete Confirmation Modal ==================== --}}
-<div class="nova-modal-backdrop" id="deleteOrderModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">{{ __('Confirm Deletion') }}</h4>
-            <p class="nova-delete-modal-text">
-                Are you sure you want to delete the order
-                <strong id="deleteOrderName" class="nova-text-danger"></strong>?
-                <br>This action cannot be undone.
-            </p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="document.getElementById('deleteOrderModal').classList.remove('show')">
-                    {{ __('Cancel') }}
-                </button>
-                <form id="deleteOrderForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<x-delete-modal id="deleteOrderModal" title="{{ __('Confirm Deletion') }}" />
 
 @endsection
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Delete confirmation — reads URL from data-url (safe with any route prefix)
-    window.confirmDelete = function(btn) {
-        const name = btn.dataset.name || 'this order';
-        const url  = btn.dataset.url;
-
-        document.getElementById('deleteOrderName').innerText = name;
-        document.getElementById('deleteOrderForm').action = url;
-        document.getElementById('deleteOrderModal').classList.add('show');
-    };
-
-    // Close on backdrop click
-    document.querySelectorAll('.nova-modal-backdrop').forEach(function(backdrop) {
-        backdrop.addEventListener('click', function(e) {
-            if (e.target === backdrop) backdrop.classList.remove('show');
-        });
-    });
-
-    // Close on ESC
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.nova-modal-backdrop.show').forEach(function(m) {
-                m.classList.remove('show');
-            });
-        }
-    });
-});
+// Additional scripts can be added here
 </script>
 @endpush

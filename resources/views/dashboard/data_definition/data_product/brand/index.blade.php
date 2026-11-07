@@ -183,22 +183,12 @@
                         @endif
                     </td>
                     <td class="nova-text-end">
-                        <div class="nova-table-actions">
-                            <a href="{{ route('brands.show', $brand) }}"
-                               class="nova-icon-btn nova-btn-sm" title="عرض">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('brands.edit', $brand) }}"
-                               class="nova-icon-btn nova-btn-sm" title="تعديل">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button"
-                                    class="nova-icon-btn nova-btn-sm nova-text-danger"
-                                    title="حذف"
-                                    onclick="confirmحذف({{ $brand->id }}, '{{ addslashes($brand->name) }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
+                        <x-table-actions
+                            :view-url="route('brands.show', $brand)"
+                            :edit-url="route('brands.edit', $brand)"
+                            :delete-url="route('brands.destroy', $brand)"
+                            :delete-name="$brand->name"
+                            delete-modal="globalحذفModal" />
                     </td>
                 </tr>
                 @empty

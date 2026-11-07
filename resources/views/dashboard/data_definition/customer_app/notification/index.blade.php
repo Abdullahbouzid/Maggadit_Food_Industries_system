@@ -195,22 +195,12 @@
                         @endif
                     </td>
                     <td class="nova-text-end">
-                        <div class="nova-table-actions">
-                            <a href="{{ route('notifications.show', $notification) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('notifications.edit', $notification) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            @if(in_array($notification->channel, ['all', 'push']))
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-info" title="Resend" onclick="confirmResend({{ $notification->id }}, '{{ addslashes($notification->subject_en) }}')">
-                                <i class="fas fa-redo"></i>
-                            </button>
-                            @endif
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmDelete({{ $notification->id }}, '{{ addslashes($notification->subject_en) }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
+                        <x-table-actions
+                            :view-url="route('notifications.show', $notification)"
+                            :edit-url="route('notifications.edit', $notification)"
+                            :delete-url="route('notifications.destroy', $notification)"
+                            :delete-name="$notification->subject_en"
+                            delete-modal="deleteNotificationModal" />
                     </td>
                 </tr>
                 @empty
@@ -295,30 +285,9 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal --}}
-<div class="nova-modal-backdrop" id="deleteNotificationModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon"><i class="fas fa-triangle-exclamation"></i></div>
-            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
-            <p class="nova-delete-modal-text">
-                Are you sure you want to delete the notification
-                <strong id="deleteNotificationName" class="nova-text-danger"></strong>?
-                <br>لا يمكن التراجع عن هذا الإجراء.
-            </p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteNotificationModal').classList.remove('show')">إلغاء</button>
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<x-delete-modal modal-id="deleteNotificationModal" />
 
-{{-- Resend Confirmation Modal --}}
+ {{-- Resend Confirmation Modal --}}
 <div class="nova-modal-backdrop" id="resendNotificationModal" tabindex="-1" aria-hidden="true">
     <div class="nova-modal">
         <div class="nova-delete-modal">
@@ -351,13 +320,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('filterForm').submit();
         });
     }
-
-    // Delete confirmation
-    window.confirmDelete = function(id, name) {
-        document.getElementById('deleteNotificationName').innerText = name;
-        document.getElementById('deleteForm').action = '/notifications/' + id;
-        document.getElementById('deleteNotificationModal').classList.add('show');
-    };
 
     // Resend confirmation
     window.confirmResend = function(id, name) {

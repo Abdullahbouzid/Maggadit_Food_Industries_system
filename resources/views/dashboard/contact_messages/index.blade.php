@@ -121,18 +121,22 @@
                     <td>{{ $msg?->created_at?->format('Y-m-d H:i') ?? '—' }}</td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                            <a href="{{ route('contact-messages.show', $msg) }}" class="nova-icon-btn nova-btn-sm" title="View">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                            @if(!$msg->forwarded_to_email)
+                                <a href="{{ route('contact-messages.show', $msg) }}" class="nova-icon-btn nova-btn-sm" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            @endif
                             <form action="{{ route('contact-messages.forward', $msg) }}" method="POST" class="d-inline">
                                 @csrf
-                                <button type="submit" class="nova-icon-btn nova-btn-sm nova-text-success" title="Forward" {{ $msg->forwarded_to_email ? 'disabled' : '' }}>
+                                <button type="submit" class="nova-icon-btn nova-btn-sm nova-text-success" title="Forward">
                                     <i class="fas fa-send"></i>
                                 </button>
                             </form>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete({{ $msg->id }}, '{{ addslashes($msg->name ?? 'Message') }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                            <x-table-actions
+                                :view-url="null"
+                                :delete-url="route('contact-messages.destroy', $msg)"
+                                :delete-name="$msg->name ?? 'Message'"
+                                delete-modal="deleteMessageModal" />
                         </div>
                     </td>
                 </tr>
@@ -153,45 +157,18 @@
         </table>
     </div>
     <div class="nova-card-footer">
-        <div class="nova-pagination">
-            {{ $messages->links() }}
-        </div>
-    </div>
-</div>
-
-{{-- Delete Confirmation Modal (Nova) --}}
-<div class="nova-modal-backdrop" id="deleteMessageModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                عرض {{ $messages->firstItem() ?? 0 }} إلى {{ $messages->lastItem() ?? 0 }} من أصل {{ $messages->total() }} سجلاً
             </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete the message from <strong id="deleteMessageName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteMessageModal').classList.remove('show')">Cancel</button>
-                <form id="deleteMessageForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
-                </form>
+            <div class="nova-pagination">
+                {{ $messages->links() }}
             </div>
         </div>
     </div>
 </div>
-@endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
-        document.getElementById('deleteMessageName').innerText = name;
-        document.getElementById('deleteMessageForm').action = '/contact-messages/' + id;
-        document.getElementById('deleteMessageModal').classList.add('show');
-    };
-});
-</script>
-@endpush
+<x-delete-modal modal-id="deleteMessageModal" />
 
 <style>
 .nova-row-highlighted {

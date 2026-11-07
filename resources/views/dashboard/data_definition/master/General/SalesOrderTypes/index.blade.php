@@ -240,9 +240,12 @@
                 <a href="{{ route('sales-order-types.edit', $type) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
                     <i class="fas fa-edit"></i>
                 </a>
-                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذف({{ $type->id }}, '{{ addslashes($type->name) }}')">
-                    <i class="fas fa-trash-alt"></i>
-                            </button>
+                <x-table-actions
+                    :view-url="null"
+                    :edit-url="null"
+                    :delete-url="route('sales-order-types.destroy', $type)"
+                    :delete-name="$type->name"
+                    delete-modal="globalحذفModal" />
                         </div>
                     </td>
                 </tr>
@@ -275,51 +278,4 @@
 </div>
 @endsection
 
-{{-- حذف تأكيدation Modal (لاva) --}}
-<div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
-            <p class="nova-delete-modal-text">هل أنت متأكد أنك تريد حذف <strong id="deleteItemName" class="nova-text-danger"></strong>؟<br>هذا الإجراء لا يمكن التراجع عنه.</p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('globalحذفModal').classList.remove('show')">إلغاء</button>
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">حذف نهائي</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const perصفحةSelect = document.querySelector('select[name="per_page"]');
-    if (perصفحةSelect) {
-        perصفحةSelect.addEventListener('change', function() {
-            document.getElementById('filterForm').submit();
-        });
-    }
-
-    window.confirmحذف = (id, name) => {
-        document.getElementById('deleteItemName').innerText = name;
-        document.getElementById('deleteForm').action = '/sales-order-types/' + id;
-        document.getElementById('globalحذفModal').classList.add('show');
-    };
-
-    setTimeout(function() {
-        document.querySelectorالكل('.nova-alert').forEach(function(alert) {
-            alert.style.transition = 'opacity 0.3s, transform 0.3s';
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateY(-10px)';
-            setTimeout(() => alert.remove(), 300);
-        });
-    }, 5000);
-});
-</script>
-@endpush
+<x-delete-modal modal-id="globalحذفModal" />

@@ -128,22 +128,22 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
 
-                                <form method="POST"
-                                      action="{{ route('payment-deadlines.toggle', $setting) }}"
-                                      style="display: inline;">
-                                    @csrf
-                                    <button type="submit" class="nova-btn nova-btn-sm"
-                                            title="{{ trans('messages.payment_deadline_page.toggle_active') }}">
-                                        <i class="fas fa-power-off"></i>
-                                    </button>
-                                </form>
+                                        <form method="POST"
+                                              action="{{ route('payment-deadlines.toggle', $setting) }}"
+                                              style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="nova-btn nova-btn-sm"
+                                                    title="{{ trans('messages.payment_deadline_page.toggle_active') }}">
+                                                <i class="fas fa-power-off"></i>
+                                            </button>
+                                        </form>
 
-                                <button type="button"
-                                        class="nova-btn nova-btn-sm nova-btn-danger"
-                                        title="{{ trans('messages.payment_deadline_page.delete') }}"
-                                        onclick="confirmDelete('{{ route('payment-deadlines.destroy', $setting) }}', '{{ $setting->payment_type }}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                        <x-table-actions
+                                            :view-url="null"
+                                            :edit-url="route('payment-deadlines.edit', $setting)"
+                                            :delete-url="route('payment-deadlines.destroy', $setting)"
+                                            :delete-name="$setting->payment_type"
+                                            delete-modal="deleteModal" />
                             </td>
                         </tr>
                     @empty
@@ -157,61 +157,17 @@
             </table>
         </div>
 
-        <div class="nova-mt-3">
-            {{ $settings->links() }}
-        </div>
-    </div>
-</div>
-
-{{-- ===== نافذة تأكيد الحذف ===== --}}
-<div class="nova-modal-backdrop" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-card" style="width: 100%; max-width: 440px;">
-            <div class="nova-card-body nova-text-center">
-                <i class="fas fa-triangle-exclamation" style="font-size: 2rem; color: var(--nova-danger);"></i>
-                <p style="margin-top: 0.75rem;">
-                    {{ trans('messages.payment_deadline_page.warning_confirm') }}
-                </p>
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                عرض {{ $settings->firstItem() ?? 0 }} إلى {{ $settings->lastItem() ?? 0 }} من أصل {{ $settings->total() }} سجلاً
             </div>
-            <div class="nova-card-footer" style="justify-content: center;">
-                <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="closeDeleteModal()">
-                    {{ trans('messages.payment_deadline_page.warning_cancel') }}
-                </button>
-                <button type="button" class="nova-btn nova-btn-danger" id="confirmDeleteBtn">
-                    {{ trans('messages.payment_deadline_page.warning_delete') }}
-                </button>
+            <div class="nova-pagination">
+                {{ $settings->links() }}
             </div>
         </div>
     </div>
 </div>
 
-<form method="POST" id="deleteForm" style="display: none;">@csrf @method('DELETE')</form>
+<x-delete-modal modal-id="deleteModal" />
 
 @endsection
-
-@push('scripts')
-<script>
-    let deleteUrl = null;
-
-    function confirmDelete(url) {
-        deleteUrl = url;
-        document.getElementById('deleteModal').classList.add('show');
-    }
-
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.remove('show');
-        deleteUrl = null;
-    }
-
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-        if (!deleteUrl) {
-            return;
-        }
-
-        const form = document.getElementById('deleteForm');
-        form.action = deleteUrl;
-        form.submit();
-    });
-</script>
-@endpush

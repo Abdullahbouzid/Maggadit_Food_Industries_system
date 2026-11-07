@@ -231,23 +231,13 @@
                             </span>
                         @endif
                     </td>
-                    <td class="nova-text-end">
-                        <div class="nova-table-actions">
-                            <a href="{{ route('items.show', $item) }}"
-                               class="nova-icon-btn nova-btn-sm" title="عرض">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('items.edit', $item) }}"
-                               class="nova-icon-btn nova-btn-sm" title="تعديل">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button"
-                                    class="nova-icon-btn nova-btn-sm nova-text-danger"
-                                    title="حذف"
-                                    onclick="confirmحذف({{ $item->id }}, '{{ addslashes($item->name_en) }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
+<td class="nova-text-end">
+                        <x-table-actions
+                            :view-url="route('items.show', $item)"
+                            :edit-url="route('items.edit', $item)"
+                            :delete-url="route('items.destroy', $item)"
+                            :delete-name="$item->name_en"
+                            delete-modal="deleteItemModal" />
                     </td>
                 </tr>
                 @empty

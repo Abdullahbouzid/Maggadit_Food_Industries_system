@@ -89,8 +89,13 @@
                 </tbody>
             </table>
         </div>
-        <div class="nova-text-center nova-py-3">
-            {{ $packCapacities->links() }}
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                عرض {{ $packCapacities->firstItem() ?? 0 }} إلى {{ $packCapacities->lastItem() ?? 0 }} من أصل {{ $packCapacities->total() }} سجلاً
+            </div>
+            <div class="nova-pagination">
+                {{ $packCapacities->links() }}
+            </div>
         </div>
     </div>
 </div>

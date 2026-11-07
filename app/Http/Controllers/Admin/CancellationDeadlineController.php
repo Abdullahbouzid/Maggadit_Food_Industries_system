@@ -7,17 +7,19 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Models\InvoiceCancellationDeadline;
+
 use App\Models\User;
 use Illuminate\Http\Request;
 
 class CancellationDeadlineController extends Controller
 {
+
     public function index()
     {
+        $settings = InvoiceCancellationDeadline::orderBy('hours_limit')->get();   // ← بدل get()
+
         return view('dashboard.settings.cancellation-deadlines.index', [
-            'settings' => InvoiceCancellationDeadline::with('updatedBy')
-                ->orderBy('hours_limit')
-                ->get(),
+            'settings' => $settings,
             'statuses' => InvoiceStatus::cases(),
         ]);
     }

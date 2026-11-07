@@ -161,28 +161,12 @@
                                 </td>
                                 <td>
                                     <div class="branches-actions">
-                                        <a href="{{ route('branches.show', $branch) }}"
-                                           class="nova-btn nova-btn-sm nova-btn-outline"
-                                           title="عرض">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('branches.edit', $branch) }}"
-                                           class="nova-btn nova-btn-sm nova-btn-warning"
-                                           title="تعديل">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form method="POST"
-                                              action="{{ route('branches.destroy', $branch) }}"
-                                              onsubmit="return confirm('هل أنت متأكد من حذف هذا الفرع؟');"
-                                              style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    class="nova-btn nova-btn-sm nova-btn-danger"
-                                                    title="حذف">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        <x-table-actions
+                                            :view-url="route('branches.show', $branch)"
+                                            :edit-url="route('branches.edit', $branch)"
+                                            :delete-url="route('branches.destroy', $branch)"
+                                            :delete-name="$branch->name"
+                                            delete-modal="deleteBranchModal" />
                                     </div>
                                 </td>
                             </tr>
@@ -207,10 +191,17 @@
     {{-- Card Footer: Pagination --}}
     @if(($branches ?? collect())->hasPages())
         <div class="branches-pagination-wrap">
-            {{ $branches->links() }}
+            <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+                <div class="nova-text-muted nova-fs-sm">
+                    عرض {{ $branches->firstItem() ?? 0 }} إلى {{ $branches->lastItem() ?? 0 }} من أصل {{ $branches->total() }} سجلاً
+                </div>
+                {{ $branches->links() }}
+            </div>
         </div>
     @endif
 </div>
+
+<x-delete-modal modal-id="deleteBranchModal" />
 
 @endsection
 

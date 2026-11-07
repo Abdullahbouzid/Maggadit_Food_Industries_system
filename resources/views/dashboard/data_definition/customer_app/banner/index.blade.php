@@ -157,17 +157,12 @@
                         @endif
                     </td>
                     <td class="nova-text-end">
-                        <div class="nova-table-actions">
-                            <a href="{{ route('banners.show', $banner) }}" class="nova-icon-btn nova-btn-sm" title="عرض">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('banners.edit', $banner) }}" class="nova-icon-btn nova-btn-sm" title="تعديل">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="حذف" onclick="confirmحذف({{ $banner->id }}, '{{ addslashes($banner->title ?? 'Banner') }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
+                        <x-table-actions
+                            :view-url="route('banners.show', $banner)"
+                            :edit-url="route('banners.edit', $banner)"
+                            :delete-url="route('banners.destroy', $banner)"
+                            :delete-name="$banner->title ?? 'Banner'"
+                            delete-modal="deleteBannerModal" />
                     </td>
                 </tr>
                 @empty
@@ -201,26 +196,7 @@
     </div>
 </div>
 
-{{-- حذف تأكيدation Modal (لاva) --}}
-<div class="nova-modal-backdrop" id="deleteBannerModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete the banner <strong id="deleteBannerName" class="nova-text-danger"></strong>?<br>لا يمكن التراجع عن هذا الإجراء.</p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteBannerModal').classList.remove('show')">إلغاء</button>
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">حذف Forever</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<x-delete-modal modal-id="deleteBannerModal" />
 @endsection
 
 @push('scripts')
@@ -232,12 +208,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('filterForm').submit();
         });
     }
-
-    window.confirmحذف = function(id, name) {
-        document.getElementById('deleteBannerName').innerText = name;
-        document.getElementById('deleteForm').action = '/banners/' + id;
-        document.getElementById('deleteBannerModal').classList.add('show');
-    };
 
     setTimeout(function() {
         document.querySelectorالكل('.nova-alert').forEach(function(alert) {

@@ -3,10 +3,22 @@
 @section('title', 'Permissions Management')
 
 @section('content')
+
+@php
+    // حماية ضد اختلاف نوع $permissions (Collection vs Paginator)
+    $isPaginated = $permissions instanceof \Illuminate\Pagination\LengthAwarePaginator;
+    $totalCount  = $isPaginated ? $permissions->total() : $permissions->count();
+    $perPage     = $isPaginated ? $permissions->perPage() : max($permissions->count(), 1);
+    $currentPage = $isPaginated ? $permissions->currentPage() : 1;
+    $firstItem   = $isPaginated ? ($permissions->firstItem() ?? 0) : ($permissions->count() ? 1 : 0);
+    $lastItem    = $isPaginated ? ($permissions->lastItem()  ?? 0) : $permissions->count();
+@endphp
+
+{{-- ===== Action Bar ===== --}}
 <div class="nova-actionbar">
     <div>
         <h2 class="nova-actionbar-title">
-            <i class="fas fa-key" style="color: var(--nova-primary); margin-right: 0.5rem;"></i>
+            <i class="fas fa-key" style="color: var(--nova-primary); margin-inline-end: 0.5rem;"></i>
             System Permissions
         </h2>
         <p class="nova-page-subtitle" style="margin: 0.25rem 0 0;">Manage all available permissions in the system</p>
@@ -27,31 +39,27 @@
     </div>
 @endif
 
-{{-- Statistics --}}
-<div class="nova-row cols-3">
+{{-- ===== Statistics (2 columns now) ===== --}}
+<div class="nova-row cols-2">
     <div class="nova-stat">
         <div class="nova-stat-icon primary">
             <i class="fas fa-key"></i>
         </div>
         <p class="nova-stat-label">Total Permissions</p>
-        <p class="nova-stat-value">{{ $permissions->total() }}</p>
+        <p class="nova-stat-value">{{ $totalCount }}</p>
     </div>
     <div class="nova-stat">
         <div class="nova-stat-icon secondary">
             <i class="fas fa-users"></i>
         </div>
-        <p class="nova-stat-label">Assigned Roles</p>
+        <p class="nova-stat-label">Assigned Roles <small class="nova-text-muted">(this page)</small></p>
         <p class="nova-stat-value">
-            @php
-                $count = 0;
-                foreach($permissions as $p) { $count += $p->roles->count(); }
-                echo $count;
-            @endphp
+            {{ $permissions->sum(fn($p) => $p->roles->count()) }}
         </p>
     </div>
 </div>
 
-{{-- Permissions Table --}}
+{{-- ===== Permissions Table ===== --}}
 <div class="nova-table-wrapper">
     <div class="nova-toolbar">
         <div class="nova-toolbar-filters">
@@ -60,10 +68,16 @@
                 Permissions List
             </h3>
         </div>
-        <div class="nova-toolbar-search">
+
+        {{-- Search — wrapped in GET form so it actually works --}}
+        <form method="GET" action="{{ route('permissions.index') }}" class="nova-toolbar-search">
             <i class="fas fa-search"></i>
-            <input type="search" placeholder="Search permissions...">
-        </div>
+            <input type="search"
+                   name="search"
+                   placeholder="Search permissions..."
+                   value="{{ request('search') }}">
+        </form>
+
         <div class="nova-toolbar-actions">
             @can('create_permissions')
                 <a href="{{ route('permissions.create') }}" class="nova-btn nova-btn-primary nova-btn-sm">
@@ -72,6 +86,7 @@
             @endcan
         </div>
     </div>
+
     <div class="nova-table-scroll">
         <table class="nova-table">
             <thead>
@@ -80,44 +95,55 @@
                     <th>Permission Name</th>
                     <th>Guard</th>
                     <th style="text-align: center;">Assigned to Roles</th>
-                    <th style="text-align: right;">Actions</th>
+                    <th style="text-align: end;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($permissions as $perm)
                 <tr>
-                    <td>{{ $loop->iteration + ($permissions->currentPage() - 1) * $permissions->perPage() }}</td>
+                    {{-- # --}}
                     <td>
-                        <div class="nova-flex nova-items-center">
-                            <div class="nova-stat-icon primary nova-btn-sm" style="width: 32px; height: 32px; margin-right: 0.5rem;">
-                                <i class="fas fa-key"></i>
+                        {{ $loop->iteration + ($currentPage - 1) * $perPage }}
+                    </td>
+
+                    {{-- Permission Name --}}
+                    <td>
+                        <div style="display: inline-flex; align-items: center; gap: .5rem;">
+                            <div class="nova-stat-icon primary" style="width: 32px; height: 32px;">
+                                <i class="fas fa-key" style="font-size: .8rem;"></i>
                             </div>
                             <span class="nova-fw-semibold"><code>{{ $perm->name }}</code></span>
                         </div>
                     </td>
+
+                    {{-- Guard (كان معكوساً) --}}
                     <td>
-                        @php($rolesList = $perm->roles->pluck('name')->take(3)->join(', '))
-                        @if($rolesList)
-                            <span class="nova-badge secondary">{{ $rolesList }}</span>
-                            @if($perm->roles->count() > 3) <span class="nova-text-muted">...</span> @endif
+                        <code>{{ $perm->guard_name }}</code>
+                    </td>
+
+                    {{-- Assigned to Roles (كان معكوساً) --}}
+                    <td style="text-align: center;">
+                        @if($perm->roles->count())
+                            <div class="nova-chip-list" style="justify-content: center; display: inline-flex; flex-wrap: wrap; gap: .25rem;">
+                                @foreach($perm->roles->take(3) as $role)
+                                    <span class="nova-badge secondary">{{ $role->name }}</span>
+                                @endforeach
+                                @if($perm->roles->count() > 3)
+                                    <span class="nova-badge info">+{{ $perm->roles->count() - 3 }}</span>
+                                @endif
+                            </div>
                         @else
                             <span class="nova-text-muted">No roles</span>
                         @endif
                     </td>
-                    <td><code>{{ $perm->guard_name }}</code></td>
-                    <td class="nova-text-end">
-                        <div class="nova-table-actions">
-                            @can('edit_permissions')
-                                <a href="{{ route('permissions.edit', $perm) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            @endcan
-                            @can('delete_permissions')
-                                <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $perm->id }}', '{{ addslashes($perm->name) }}')">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            @endcan
-                        </div>
+
+                    {{-- Actions: edit + delete منفصلان، كل واحد بـ @can خاص به --}}
+<td style="text-align: end;">
+                        <x-table-actions
+                            :edit-url="route('permissions.edit', $perm)"
+                            :delete-url="route('permissions.destroy', $perm)"
+                            :delete-name="$perm->name"
+                            delete-modal="deleteModal" />
                     </td>
                 </tr>
                 @empty
@@ -141,49 +167,31 @@
             </tbody>
         </table>
     </div>
+
+    {{-- ===== Footer: count + pagination ===== --}}
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
-                Showing {{ $permissions->firstItem() ?? 0 }} to {{ $permissions->lastItem() ?? 0 }} of {{ $permissions->total() }} entries
+                Showing {{ $firstItem }} to {{ $lastItem }} of {{ $totalCount }} entries
             </div>
             <div class="nova-pagination">
-                {{ $permissions->appends(request()->query())->links() }}
+                @if ($isPaginated)
+                    {{ $permissions->appends(request()->query())->links() }}
+                @endif
             </div>
         </div>
     </div>
 </div>
+
 @endsection
 
-{{-- Delete Confirmation Modal (Nova) --}}
-<div class="nova-modal-backdrop" id="deletePermissionModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete permission <strong id="deletePermName" class="nova-text-danger"></strong>?<br>This might affect roles assigned to it.</p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePermissionModal').classList.remove('show')">Cancel</button>
-                <form id="deletePermForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+{{-- ===== Delete Modal — استخدام id بدل modal-id ===== --}}
+<x-delete-modal id="deleteModal" title="Delete Permission?" />
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
-        document.getElementById('deletePermName').innerText = name;
-        document.getElementById('deletePermForm').action = '/permissions/' + id;
-        document.getElementById('deletePermissionModal').classList.add('show');
-    };
-
+    // Auto-dismiss alerts
     setTimeout(function() {
         document.querySelectorAll('.nova-alert').forEach(function(alert) {
             alert.style.transition = 'opacity 0.3s, transform 0.3s';

@@ -111,9 +111,12 @@
                             <a href="{{ route('privacy-policies.edit', $policy) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                             <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $policy->id }}', '{{ addslashes($policy->title ?? ($policy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة')) }}')">
-                                 <i class="fas fa-trash-alt"></i>
-                             </button>
+                             <x-table-actions
+                                :view-url="null"
+                                :edit-url="null"
+                                :delete-url="route('privacy-policies.destroy', $policy)"
+                                :delete-name="$policy->title ?? ($policy->type == 'privacy_policy' ? 'سياسة الخصوصية' : 'شروط الخدمة')"
+                                delete-modal="deletePolicyModal" />
                         </div>
                     </td>
                 </tr>
@@ -137,51 +140,16 @@
         </table>
     </div>
     <div class="nova-card-footer">
-        <div class="nova-pagination">
+        <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
+            <div class="nova-text-muted nova-fs-sm">
+                عرض {{ $policies->firstItem() ?? 0 }} إلى {{ $policies->lastItem() ?? 0 }} من أصل {{ $policies->total() }} سجلاً
+            </div>
+            <div class="nova-pagination">
                 {{ $policies->appends(request()->query())->links() }}
+            </div>
         </div>
     </div>
 </div>
 @endsection
 
-{{-- Delete Confirmation Modal (Nova) --}}
-<div class="nova-modal-backdrop" id="deletePolicyModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete policy <strong id="deletePolicyName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deletePolicyModal').classList.remove('show')">Cancel</button>
-                <form id="deletePolicyForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
-        document.getElementById('deletePolicyName').innerText = name;
-        document.getElementById('deletePolicyForm').action = '/privacy-policies/' + id;
-        document.getElementById('deletePolicyModal').classList.add('show');
-    };
-
-    setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
-            alert.style.transition = 'opacity 0.3s, transform 0.3s';
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateY(-10px)';
-            setTimeout(() => alert.remove(), 300);
-        });
-    }, 5000);
-});
-</script>
-@endpush
+<x-delete-modal modal-id="deletePolicyModal" />

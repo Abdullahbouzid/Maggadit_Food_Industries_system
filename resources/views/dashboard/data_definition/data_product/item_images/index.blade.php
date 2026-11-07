@@ -132,23 +132,13 @@
                     </td>
                     <td>{{ $image->alt_text ?? '—' }}</td>
                     <td>{{ $image->sort_order }}</td>
-                    <td class="nova-text-end">
-                        <div class="nova-table-actions">
-                            <a href="{{ route('item-images.show', $image) }}"
-                               class="nova-icon-btn nova-btn-sm" title="عرض">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('item-images.edit', $image) }}"
-                               class="nova-icon-btn nova-btn-sm" title="تعديل">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button"
-                                    class="nova-icon-btn nova-btn-sm nova-text-danger"
-                                    title="حذف"
-                                    onclick="confirmحذف({{ $image->id }}, '{{ addslashes($image->alt_text ?? $image->item->name_en ?? 'image') }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
+<td class="nova-text-end">
+                        <x-table-actions
+                            :view-url="route('item-images.show', $image)"
+                            :edit-url="route('item-images.edit', $image)"
+                            :delete-url="route('item-images.destroy', $image)"
+                            :delete-name="$image->alt_text ?? $image->item->name_en ?? 'image'"
+                            delete-modal="globalحذفModal" />
                     </td>
                 </tr>
                 @empty
@@ -174,7 +164,7 @@
     <div class="nova-card-footer">
         <div class="nova-flex nova-justify-between nova-items-center nova-flex-wrap nova-gap-2">
             <div class="nova-text-muted nova-fs-sm">
-                عرض {{ $images->firstItem() ?? 0 }} to {{ $images->lastItem() ?? 0 }} من {{ $images->total() }} entries
+                عرض {{ $images->firstItem() ?? 0 }} إلى {{ $images->lastItem() ?? 0 }} من أصل {{ $images->total() }} سجلاً
             </div>
             <div class="nova-pagination">
                 {{ $images->appends(request()->query())->links() }}
@@ -183,35 +173,7 @@
     </div>
 </div>
 
-{{-- ============================================================
-     حذف تأكيدation Modal
-     ============================================================ --}}
-<div class="nova-modal-backdrop" id="globalحذفModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">تأكيد الحذف</h4>
-            <p class="nova-delete-modal-text">
-                Are you sure you want to delete item image
-                <strong id="deleteItemName" class="nova-text-danger"></strong>?<br>
-                لا يمكن التراجع عن هذا الإجراء.
-            </p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline"
-                        onclick="document.getElementById('globalحذفModal').classList.remove('show')">
-                    إلغاء
-                </button>
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">حذف</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<x-delete-modal modal-id="globalحذفModal" />
 @endsection
 
 @push('scripts')
@@ -227,19 +189,10 @@
             });
         }
 
-        /* ============================================================
-           حذف تأكيدation
-           ============================================================ */
-        window.confirmحذف = function(id, name) {
-            document.getElementById('deleteItemName').innerText = name;
-            document.getElementById('deleteForm').action = '/item-images/' + id;
-            document.getElementById('globalحذفModal').classList.add('show');
-        };
-
-        /* ============================================================
+/* ============================================================
            Auto-dismiss Alerts
            ============================================================ */
-        setTimeout(() => {
+         setTimeout(() => {
             document.querySelectorالكل('.nova-alert').forEach(alert => {
                 alert.style.transition = 'opacity 0.3s, transform 0.3s';
                 alert.style.opacity = '0';

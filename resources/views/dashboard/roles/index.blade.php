@@ -119,12 +119,12 @@
                     <td><code>web</code></td>
                     <td class="nova-text-end">
                         <div class="nova-table-actions">
-                            <a href="{{ route('roles.edit', $role) }}" class="nova-icon-btn nova-btn-sm" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" class="nova-icon-btn nova-btn-sm nova-text-danger" title="Delete" onclick="confirmDelete('{{ $role->id }}', '{{ addslashes($role->name) }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                            <x-table-actions
+                                :view-url="null"
+                                :edit-url="route('roles.edit', $role)"
+                                :delete-url="route('roles.destroy', $role)"
+                                :delete-name="$role->name"
+                                delete-modal="deleteRoleModal" />
                         </div>
                     </td>
                 </tr>
@@ -160,44 +160,4 @@
 </div>
 @endsection
 
-{{-- Delete Confirmation Modal (Nova) --}}
-<div class="nova-modal-backdrop" id="deleteRoleModal" tabindex="-1" aria-hidden="true">
-    <div class="nova-modal">
-        <div class="nova-delete-modal">
-            <div class="nova-delete-modal-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h4 class="nova-delete-modal-title">Confirm Deletion</h4>
-            <p class="nova-delete-modal-text">Are you sure you want to delete role <strong id="deleteRoleName" class="nova-text-danger"></strong>?<br>This action cannot be undone.</p>
-            <div class="nova-delete-modal-actions">
-                <button type="button" class="nova-btn nova-btn-outline" onclick="document.getElementById('deleteRoleModal').classList.remove('show')">Cancel</button>
-                <form id="deleteRoleForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nova-btn nova-btn-danger">Delete Forever</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    window.confirmDelete = function(id, name) {
-        document.getElementById('deleteRoleName').innerText = name;
-        document.getElementById('deleteRoleForm').action = '/roles/' + id;
-        document.getElementById('deleteRoleModal').classList.add('show');
-    };
-
-    setTimeout(function() {
-        document.querySelectorAll('.nova-alert').forEach(function(alert) {
-            alert.style.transition = 'opacity 0.3s, transform 0.3s';
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateY(-10px)';
-            setTimeout(() => alert.remove(), 300);
-        });
-    }, 5000);
-});
-</script>
-@endpush
+<x-delete-modal modal-id="deleteRoleModal" />
