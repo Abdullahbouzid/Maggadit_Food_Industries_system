@@ -295,7 +295,6 @@
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
                 
-                // Login without FCM token initially - it will be sent in background
                 const response = await fetch('/mobile/login', {
                     method: 'POST',
                     body: JSON.stringify(data),
@@ -312,18 +311,8 @@
                         localStorage.setItem('api_token', data.token);
                         localStorage.setItem('customer_token', data.token);
                     }
-                    // Bridge token to native Android SharedPreferences for FCM service
-                    if (typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.storeApiToken) {
-                        try {
-                            await AndroidBridge.storeApiToken(data.token);
-                        } catch (e) {
-                            console.warn('Failed to store token via native bridge:', e);
-                        }
-                    }
                     // Register push notification token after successful login
                     await registerPushNotifications(data.token);
-                    // Send FCM token to backend in background (non-blocking, 500ms delay)
-                    setTimeout(() => await sendFcmTokenWithRetry(data.token, 10, 2000), 500);
                     if (data.success && data.redirect) {
                         window.location.href = data.redirect;
                     } else {
@@ -344,35 +333,13 @@
         });
 
         // إذا كان هناك رسالة خطأ من الخادم (عند تحميل الصفحة لأول مرة مع session error)
-        window.addEventListener('DOMContentLoaded', async function() {
+        window.addEventListener('DOMContentLoaded', function() {
             const errorDiv = document.getElementById('server-error');
             if (errorDiv && errorDiv.innerText.trim() !== '') {
                 const t = translations[currentLang];
                 showToast(t.toast_error, true);
             }
-
-            // Sync FCM token from native Android SharedPreferences to localStorage
-            await syncFcmTokenFromNative();
         });
-
-        // Sync FCM token from native Android to localStorage
-        async function syncFcmTokenFromNative() {
-            try {
-                if (typeof AndroidBridge !== 'undefined' && AndroidBridge && AndroidBridge.getFcmToken) {
-                    const fcmToken = await AndroidBridge.getFcmToken();
-                    if (fcmToken && fcmToken !== '') {
-                        localStorage.setItem('fcm_token', fcmToken);
-                        console.log('✅ FCM token synced from native to localStorage:', fcmToken.substring(0, 20) + '...');
-                    } else {
-                        console.log('⚠️ No FCM token found in native SharedPreferences');
-                    }
-                } else {
-                    console.warn('AndroidBridge.getFcmToken not available');
-                }
-            } catch (error) {
-                console.warn('Failed to sync FCM token from native:', error);
-            }
-        }
 
         // تعيين اللغة الأولية
         setLanguage(currentLang);
@@ -408,35 +375,6 @@
             } catch (error) {
                 console.warn('Push notification setup warning (non-critical):', error);
             }
-        }
-
-        // Send FCM token to backend with retry logic
-        async function sendFcmTokenWithRetry(apiToken, maxRetries = 3, delay = 1000) {
-            if (typeof AndroidBridge === 'undefined' || !AndroidBridge || !AndroidBridge.sendFcmTokenToBackend) {
-                console.warn('AndroidBridge not available for FCM token sync');
-                return;
-            }
-            
-            for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                try {
-                    const sent = await AndroidBridge.sendFcmTokenToBackend();
-                    if (sent) {
-                        console.log('FCM token sent successfully on attempt', attempt);
-                        return;
-                    } else {
-                        console.log(`FCM token not yet available, fetch will retry on attempt`, attempt);
-                        if (attempt < maxRetries) {
-                            await new Promise(r => setTimeout(r, delay * attempt));
-                        }
-                    }
-                } catch (e) {
-                    console.warn(`FCM token send attempt ${attempt} failed:`, e);
-                    if (attempt < maxRetries) {
-                        await new Promise(r => setTimeout(r, delay * attempt));
-                    }
-                }
-            }
-            console.error('Failed to send FCM token after', maxRetries, 'attempts');
         }
 
 
