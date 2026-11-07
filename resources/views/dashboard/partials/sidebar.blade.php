@@ -2,10 +2,11 @@
     <div class="nova-sidebar-content">
         <!-- Brand Logo -->
         <div class="nova-sidebar-brand">
-            <a href="{{ route('dashboard') }}" class="nova-brand">
-                <div class="nova-brand-logo">M</div>
-                <span class="nova-brand-name">Maggadit<span>.</span></span>
-            </a>
+            <a href="{{ route('dashboard') }}" class="nova-brand" style="justify-content: center;">
+                <div class="nova-brand-logo">
+                <img src="{{ asset('img/icons/icon.png') }}" alt="Maggadit" style="height: 60px; width: 50px;">
+            </div>
+                  </a>
         </div>
 
         <br><br>

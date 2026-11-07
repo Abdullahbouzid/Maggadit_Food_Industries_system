@@ -11,8 +11,10 @@ $isArabic = app()->getLocale() === 'ar';
         </button>
 
         <a class="nova-brand" href="{{ route('dashboard') }}">
-            <div class="nova-brand-logo">M</div>
-            <span class="nova-brand-name">Maggadit<span>.</span></span>
+            <div class="nova-brand-logo">
+                <img src="{{ asset('img/icons/icon.png') }}" alt="Maggadit" style="height: 65px; width: 50px;">
+            </div>
+           
         </a>
     </div>
 

@@ -136,11 +136,12 @@ button {
     backdrop-filter: saturate(180%) blur(12px);
     -webkit-backdrop-filter: saturate(180%) blur(12px);
     border-bottom: 1px solid var(--nova-nav-border);
-    height: 64px;
+    
     padding: 0 1.5rem;
     display: flex;
     align-items: center;
     gap: 1.5rem;
+    height: 120px;
     transition: background-color 0.3s, border-color 0.3s;
 }
 
@@ -153,8 +154,8 @@ button {
 }
 
 .nova-brand-logo {
-    width: 36px;
-    height: 36px;
+    width: 80px;
+    height: 80px;
     border-radius: 10px;
     background: linear-gradient(135deg, var(--nova-primary), var(--nova-secondary));
     display: flex;
@@ -164,6 +165,13 @@ button {
     font-weight: 800;
     font-size: 1.1rem;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.nova-brand-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
 }
 
 .nova-brand-name {
@@ -2391,7 +2399,7 @@ button {
     backdrop-filter: saturate(180%) blur(12px);
     -webkit-backdrop-filter: saturate(180%) blur(12px);
     border-bottom: 1px solid var(--nova-nav-border);
-    height: 64px;
+    height: 120px;
     padding: 0 1.5rem;
     display: flex;
     align-items: center;
