@@ -4,6 +4,7 @@ import '../../core/formatters.dart';
 import '../../models/catalog.dart';
 import '../theme/app_theme.dart';
 import 'kit.dart';
+import '../../l10n/l10n.dart';
 
 class ProductCard extends StatelessWidget {
   const ProductCard({
@@ -65,7 +66,8 @@ class ProductCard extends StatelessWidget {
                   top: 6,
                   left: 6,
                   child: Tag(
-                    text: '${Fmt.percent((1 - product.price / product.oldPrice!) * 100)} -',
+                    text:
+                        '${Fmt.percent((1 - product.price / product.oldPrice!) * 100)} -',
                     color: Colors.white,
                     background: C.danger,
                   ),
@@ -101,9 +103,14 @@ class ProductCard extends StatelessWidget {
                         children: [
                           Text(
                             Fmt.price(product.price),
-                            style: ts(12, weight: FontWeight.w700, color: C.primaryDark),
+                            style: ts(
+                              12,
+                              weight: FontWeight.w700,
+                              color: C.primaryDark,
+                            ),
                           ),
-                          if (product.oldPrice != null && product.oldPrice! > product.price)
+                          if (product.oldPrice != null &&
+                              product.oldPrice! > product.price)
                             Text(
                               Fmt.price(product.oldPrice),
                               style: ts(8.5, color: C.muted).copyWith(
@@ -132,8 +139,14 @@ class ProductCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          child: Text('إضافة',
-                              style: ts(10, weight: FontWeight.w700, color: Colors.white)),
+                          child: Text(
+                            tr(context, 'إضافة'),
+                            style: ts(
+                              10,
+                              weight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                   ],
@@ -205,8 +218,11 @@ class CategoryChip extends StatelessWidget {
                 boxShadow: Sh.soft,
               ),
               child: category.image == null
-                  ? Icon(Icons.category_rounded,
-                      size: 22, color: selected ? Colors.white : C.primary)
+                  ? Icon(
+                      Icons.category_rounded,
+                      size: 22,
+                      color: selected ? Colors.white : C.primary,
+                    )
                   : ClipOval(
                       child: RemoteImage(
                         url: category.image,
@@ -223,8 +239,11 @@ class CategoryChip extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: ts(9, color: selected ? C.primaryDark : C.inkSoft,
-                  weight: selected ? FontWeight.w700 : FontWeight.w500),
+              style: ts(
+                9,
+                color: selected ? C.primaryDark : C.inkSoft,
+                weight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -257,9 +276,21 @@ class BrandTile extends StatelessWidget {
             ),
             child: Center(
               child: brand.logo == null
-                  ? Text(brand.name.substring(0, 1), style: ts(16, weight: FontWeight.w700, color: C.primaryDark))
-                  : RemoteImage(url: brand.logo, width: 44, height: 44, radius: 10,
-                      icon: Icons.storefront_rounded),
+                  ? Text(
+                      brand.name.substring(0, 1),
+                      style: ts(
+                        16,
+                        weight: FontWeight.w700,
+                        color: C.primaryDark,
+                      ),
+                    )
+                  : RemoteImage(
+                      url: brand.logo,
+                      width: 44,
+                      height: 44,
+                      radius: 10,
+                      icon: Icons.storefront_rounded,
+                    ),
             ),
           ),
           const SizedBox(height: 6),
@@ -306,7 +337,9 @@ class OfferCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  offer.description.isEmpty ? offer.productName : offer.description,
+                  offer.description.isEmpty
+                      ? offer.productName
+                      : offer.description,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: ts(9.5, color: C.muted, height: 1.5),
@@ -314,20 +347,29 @@ class OfferCard extends StatelessWidget {
                 const SizedBox(height: 7),
                 Row(
                   children: [
-                    Text(Fmt.price(offer.newPrice),
-                        style: ts(12.5, weight: FontWeight.w700, color: C.primaryDark)),
+                    Text(
+                      Fmt.price(offer.newPrice),
+                      style: ts(
+                        12.5,
+                        weight: FontWeight.w700,
+                        color: C.primaryDark,
+                      ),
+                    ),
                     const SizedBox(width: 6),
                     if (offer.oldPrice > offer.newPrice)
                       Text(
                         Fmt.price(offer.oldPrice),
-                        style: ts(9, color: C.muted).copyWith(
-                          decoration: TextDecoration.lineThrough,
-                        ),
+                        style: ts(
+                          9,
+                          color: C.muted,
+                        ).copyWith(decoration: TextDecoration.lineThrough),
                       ),
                     const SizedBox(width: 6),
                     if (offer.discountPercentage > 0)
                       Tag(
-                        text: 'خصم ${Fmt.percent(offer.discountPercentage)}',
+                        text: tArgs(context, 'خصم {0}', [
+                          Fmt.percent(offer.discountPercentage),
+                        ]),
                         color: Colors.white,
                         background: C.danger,
                       ),
@@ -335,8 +377,10 @@ class OfferCard extends StatelessWidget {
                 ),
                 if (offer.endDate != null) ...[
                   const SizedBox(height: 4),
-                  Text('ينتهي ${Fmt.dateTime(offer.endDate)}',
-                      style: ts(8.5, color: C.warning)),
+                  Text(
+                    tArgs(context, 'ينتهي {0}', [Fmt.dateTime(offer.endDate)]),
+                    style: ts(8.5, color: C.warning),
+                  ),
                 ],
               ],
             ),

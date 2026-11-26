@@ -6,6 +6,7 @@ import '../router.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -52,16 +53,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (ok) {
       Routes.home();
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(auth.error ?? 'تعذّر إنشاء الحساب')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(auth.error ?? tr(context, 'تعذّر إنشاء الحساب')),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return ScreenScaffold(
-      title: 'حساب جديد',
-      subtitle: 'سجّل بياناتك للبدء بالطلب',
+      title: tr(context, 'حساب جديد'),
+      subtitle: tr(context, 'سجّل بياناتك للبدء بالطلب'),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -69,19 +73,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 6),
-              _field('الاسم الكامل', _name, hint: 'الاسم'),
-              _field('اسم المستخدم', _username, hint: 'username'),
-              _field('البريد الإلكتروني', _email, hint: 'name@example.com',
-                  keyboard: TextInputType.emailAddress),
-              _field('كلمة المرور', _password, hint: '••••••••', obscure: true),
-              _field('تأكيد كلمة المرور', _confirm, hint: '••••••••', obscure: true,
-                  validator: (value) {
-                if (value != _password.text) return 'كلمتا المرور غير متطابقتين';
-                return null;
-              }),
+              _field(
+                tr(context, 'الاسم الكامل'),
+                _name,
+                hint: tr(context, 'الاسم'),
+              ),
+              _field(tr(context, 'اسم المستخدم'), _username, hint: 'username'),
+              _field(
+                tr(context, 'البريد الإلكتروني'),
+                _email,
+                hint: 'name@example.com',
+                keyboard: TextInputType.emailAddress,
+              ),
+              _field(
+                tr(context, 'كلمة المرور'),
+                _password,
+                hint: '••••••••',
+                obscure: true,
+              ),
+              _field(
+                tr(context, 'تأكيد كلمة المرور'),
+                _confirm,
+                hint: '••••••••',
+                obscure: true,
+                validator: (value) {
+                  if (value != _password.text)
+                    return tr(context, 'كلمتا المرور غير متطابقتين');
+                  return null;
+                },
+              ),
               const SizedBox(height: 8),
               PrimaryButton(
-                label: 'إنشاء الحساب',
+                label: tr(context, 'إنشاء الحساب'),
                 icon: Icons.person_add_alt_1_rounded,
                 loading: _busy,
                 onPressed: _submit,
@@ -89,9 +112,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 10),
               Center(
                 child: TextButton(
-                  onPressed: _busy ? null : () => Navigator.of(context).maybePop(),
-                  child: Text('لديك حساب؟ تسجيل الدخول',
-                      style: ts(11, color: C.primaryDark, weight: FontWeight.w600)),
+                  onPressed: _busy
+                      ? null
+                      : () => Navigator.of(context).maybePop(),
+                  child: Text(
+                    tr(context, 'لديك حساب؟ تسجيل الدخول'),
+                    style: ts(
+                      11,
+                      color: C.primaryDark,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -115,7 +146,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: ts(10.5, weight: FontWeight.w600, color: C.inkSoft)),
+          Text(
+            label,
+            style: ts(10.5, weight: FontWeight.w600, color: C.inkSoft),
+          ),
           const SizedBox(height: 6),
           TextFormField(
             controller: controller,
@@ -123,8 +157,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             keyboardType: keyboard,
             style: ts(12.5),
             decoration: InputDecoration(hintText: hint),
-            validator: validator ??
-                (value) => (value == null || value.trim().isEmpty) ? 'مطلوب' : null,
+            validator:
+                validator ??
+                (value) => (value == null || value.trim().isEmpty)
+                    ? tr(context, 'مطلوب')
+                    : null,
           ),
         ],
       ),

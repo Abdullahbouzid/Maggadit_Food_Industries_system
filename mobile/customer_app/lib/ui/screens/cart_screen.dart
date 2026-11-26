@@ -7,6 +7,7 @@ import '../router.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key, this.embedded = false});
@@ -20,9 +21,12 @@ class CartScreen extends StatelessWidget {
     final content = cart.isEmpty
         ? EmptyState(
             icon: Icons.shopping_cart_outlined,
-            title: 'سلة التسوق فارغة',
-            message: 'أضف منتجات من الرئيسية أو العروض للبدء بالطلب',
-            actionLabel: 'تصفّح المنتجات',
+            title: tr(context, 'سلة التسوق فارغة'),
+            message: tr(
+              context,
+              'أضف منتجات من الرئيسية أو العروض للبدء بالطلب',
+            ),
+            actionLabel: tr(context, 'تصفّح المنتجات'),
             onAction: () => Routes.products(),
           )
         : ListView.separated(
@@ -39,7 +43,7 @@ class CartScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: PrimaryButton(
-                    label: 'إتمام الطلب',
+                    label: tr(context, 'إتمام الطلب'),
                     icon: Icons.arrow_back_rounded,
                     onPressed: () => Routes.checkout(),
                   ),
@@ -49,9 +53,18 @@ class CartScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('${cart.count} أصناف', style: ts(8.5, color: C.muted)),
-                    Text(Fmt.price(cart.subtotal),
-                        style: ts(15, weight: FontWeight.w700, color: C.primaryDark)),
+                    Text(
+                      tArgs(context, '{0} أصناف', [cart.count]),
+                      style: ts(8.5, color: C.muted),
+                    ),
+                    Text(
+                      Fmt.price(cart.subtotal),
+                      style: ts(
+                        15,
+                        weight: FontWeight.w700,
+                        color: C.primaryDark,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -70,11 +83,17 @@ class CartScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text('سلة التسوق', style: ts(18, weight: FontWeight.w700)),
+                    Text(
+                      tr(context, 'سلة التسوق'),
+                      style: ts(18, weight: FontWeight.w700),
+                    ),
                     const Spacer(),
                     TextButton(
                       onPressed: cart.isEmpty ? null : () => cart.clear(),
-                      child: Text('تفريغ السلة', style: ts(10, color: C.danger)),
+                      child: Text(
+                        tr(context, 'تفريغ السلة'),
+                        style: ts(10, color: C.danger),
+                      ),
                     ),
                   ],
                 ),
@@ -89,13 +108,17 @@ class CartScreen extends StatelessWidget {
     }
 
     return ScreenScaffold(
-      title: 'سلة التسوق',
-      subtitle: cart.isEmpty ? null : '${cart.count} أصناف',
+      title: tr(context, 'سلة التسوق'),
+      subtitle: cart.isEmpty ? null : tArgs(context, '{0} أصناف', [cart.count]),
       actions: [
         if (!cart.isEmpty)
           IconButton(
             onPressed: () => cart.clear(),
-            icon: const Icon(Icons.delete_outline_rounded, size: 19, color: C.danger),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              size: 19,
+              color: C.danger,
+            ),
           ),
       ],
       child: content,
@@ -123,9 +146,12 @@ class _CartTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.name,
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: ts(12.5, weight: FontWeight.w700)),
+                Text(
+                  item.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ts(12.5, weight: FontWeight.w700),
+                ),
                 if (item.packName.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(item.packName, style: ts(9, color: C.muted)),
@@ -133,8 +159,14 @@ class _CartTile extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Text(Fmt.price(item.price),
-                        style: ts(11.5, weight: FontWeight.w700, color: C.primaryDark)),
+                    Text(
+                      Fmt.price(item.price),
+                      style: ts(
+                        11.5,
+                        weight: FontWeight.w700,
+                        color: C.primaryDark,
+                      ),
+                    ),
                     const Spacer(),
                     QtyStepper(
                       quantity: item.quantity,
@@ -151,7 +183,7 @@ class _CartTile extends StatelessWidget {
           IconButton(
             onPressed: () => cart.remove(item),
             icon: const Icon(Icons.close_rounded, size: 16, color: C.muted),
-            tooltip: 'إزالة',
+            tooltip: tr(context, 'إزالة'),
           ),
         ],
       ),

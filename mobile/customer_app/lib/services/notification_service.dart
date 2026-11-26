@@ -20,9 +20,9 @@ class NotificationService {
   Future<NotificationsResult> list() async {
     final json = await _api.get('$_prefix/notifications');
     return NotificationsResult(
-      items: asMapList(json['notifications'])
-          .map((e) => AppNotification.fromJson(e, baseUrl: _baseUrl))
-          .toList(),
+      items: asMapList(
+        json['notifications'],
+      ).map((e) => AppNotification.fromJson(e, baseUrl: _baseUrl)).toList(),
       unreadCount: asInt(json['unread_count']),
     );
   }
@@ -33,9 +33,9 @@ class NotificationService {
       '$_prefix/notifications/check-new',
       body: {'last_id': lastId},
     );
-    return asMapList(json['new_notifications'])
-        .map((e) => AppNotification.fromJson(e, baseUrl: _baseUrl))
-        .toList();
+    return asMapList(
+      json['new_notifications'],
+    ).map((e) => AppNotification.fromJson(e, baseUrl: _baseUrl)).toList();
   }
 
   Future<void> markRead(int id) async {

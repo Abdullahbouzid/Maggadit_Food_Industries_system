@@ -2,18 +2,17 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'config.dart';
-
-/// Persists the sanctum token, the cached customer payload and the API base url.
+/// Persists the sanctum token, the cached customer payload, the cart and the
+/// selected language.
 class SessionStore {
   SessionStore(this._prefs);
 
   static const _tokenKey = 'auth.token';
   static const _customerKey = 'auth.customer';
   static const _organizationsKey = 'auth.organizations';
-  static const _baseUrlKey = 'api.baseUrl';
   static const _cartKey = 'cart.items';
   static const _fcmTokenKey = 'push.fcmToken';
+  static const _languageKey = 'app.language';
 
   final SharedPreferences _prefs;
 
@@ -29,11 +28,6 @@ class SessionStore {
       await _prefs.setString(_tokenKey, value);
     }
   }
-
-  String get baseUrl => _prefs.getString(_baseUrlKey) ?? AppConfig.defaultApiBaseUrl;
-
-  Future<void> saveBaseUrl(String value) async =>
-      _prefs.setString(_baseUrlKey, value);
 
   Map<String, dynamic>? get customer {
     final raw = _prefs.getString(_customerKey);
@@ -66,12 +60,19 @@ class SessionStore {
 
   String? get cart => _prefs.getString(_cartKey);
 
-  Future<void> saveCart(String value) async => _prefs.setString(_cartKey, value);
+  Future<void> saveCart(String value) async =>
+      _prefs.setString(_cartKey, value);
 
   String? get fcmToken => _prefs.getString(_fcmTokenKey);
 
   Future<void> saveFcmToken(String value) async =>
       _prefs.setString(_fcmTokenKey, value);
+
+  /// `ar` (default) or `en`.
+  String get languageCode => _prefs.getString(_languageKey) ?? 'ar';
+
+  Future<void> saveLanguageCode(String code) async =>
+      _prefs.setString(_languageKey, code);
 
   Future<void> clearSession() async {
     await _prefs.remove(_tokenKey);

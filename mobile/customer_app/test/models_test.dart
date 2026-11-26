@@ -44,8 +44,12 @@ void main() {
     test('parses paginator, pack and absolute image url', () {
       final paginator = json['products']! as Map;
       final rows = (paginator['data']! as List)
-          .map((e) => Product.fromJson(Map<String, dynamic>.from(e as Map),
-              baseUrl: 'https://maggadit.ly/api'))
+          .map(
+            (e) => Product.fromJson(
+              Map<String, dynamic>.from(e as Map),
+              baseUrl: 'https://maggadit.ly/api',
+            ),
+          )
           .toList();
 
       final product = rows.single;
@@ -65,9 +69,18 @@ void main() {
         'id': 7,
         'name': 'عصير برتقال',
         'description': 'طبيعي 100%',
-        'images': ['https://cdn.maggadit.ly/a.png', 'https://cdn.maggadit.ly/b.png'],
+        'images': [
+          'https://cdn.maggadit.ly/a.png',
+          'https://cdn.maggadit.ly/b.png',
+        ],
         'packs': [
-          {'id': 1, 'name': 'عبوة', 'price': 4.75, 'quantity': 1, 'is_default': false},
+          {
+            'id': 1,
+            'name': 'عبوة',
+            'price': 4.75,
+            'quantity': 1,
+            'is_default': false,
+          },
         ],
         'category': 'العصائر',
         'brand': 'ماغديت',
@@ -207,11 +220,7 @@ void main() {
             'line_total': 50,
             'warehouse': 'المخزن الرئيسي',
           },
-          {
-            'name': 'حليب',
-            'quantity': 2,
-            'unit_price': 10,
-          },
+          {'name': 'حليب', 'quantity': 2, 'unit_price': 10},
         ],
         'quotation': {
           'id': 9,
@@ -231,10 +240,34 @@ void main() {
         'invoice': null,
       },
       'steps': [
-        {'key': 'submitted', 'label': 'تم إرسال الطلب', 'icon': 'fa-send', 'color': 'purple', 'state': 'done'},
-        {'key': 'review', 'label': 'قيد المراجعة', 'icon': 'fa-magnifying-glass', 'color': 'blue', 'state': 'done'},
-        {'key': 'quotation', 'label': 'عرض السعر', 'icon': 'fa-file-invoice-dollar', 'color': 'indigo', 'state': 'current'},
-        {'key': 'approval', 'label': 'موافقة العميل', 'icon': 'fa-user-check', 'color': 'emerald', 'state': 'pending'},
+        {
+          'key': 'submitted',
+          'label': 'تم إرسال الطلب',
+          'icon': 'fa-send',
+          'color': 'purple',
+          'state': 'done',
+        },
+        {
+          'key': 'review',
+          'label': 'قيد المراجعة',
+          'icon': 'fa-magnifying-glass',
+          'color': 'blue',
+          'state': 'done',
+        },
+        {
+          'key': 'quotation',
+          'label': 'عرض السعر',
+          'icon': 'fa-file-invoice-dollar',
+          'color': 'indigo',
+          'state': 'current',
+        },
+        {
+          'key': 'approval',
+          'label': 'موافقة العميل',
+          'icon': 'fa-user-check',
+          'color': 'emerald',
+          'state': 'pending',
+        },
       ],
       'timeline': [
         {'to': 'طلب جديد', 'by': 'النظام', 'date': '2026-11-10'},
@@ -341,8 +374,18 @@ void main() {
           'status': 'paid',
           'notes': null,
           'items': [
-            {'item_name_ar': 'شوكولاتة', 'quantity': 2, 'unit_price': 100, 'subtotal': 200},
-            {'item_name_ar': 'بسكويت', 'quantity': 2, 'unit_price': 50, 'subtotal': 100},
+            {
+              'item_name_ar': 'شوكولاتة',
+              'quantity': 2,
+              'unit_price': 100,
+              'subtotal': 200,
+            },
+            {
+              'item_name_ar': 'بسكويت',
+              'quantity': 2,
+              'unit_price': 50,
+              'subtotal': 100,
+            },
           ],
         },
       });

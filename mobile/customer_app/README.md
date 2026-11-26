@@ -1,8 +1,11 @@
 # تطبيق عملاء ماغديت — Maggadit Customer App
 
 تطبيق Flutter كامل لواجهة العميل، متصل بـ Laravel API عبر `routes/api.php` (بادئة `/api/customer`).
-الواجهة عربية بالكامل (RTL) وتتبع الهوية البصرية المستخدمة في `resources/views/app_android`
-والنماذج الجاهزة في `design/mockups/customer_app/`.
+الواجهة عربية (RTL) مع تبديل فوري إلى الإنجليزية (LTR) من زر واحد، وتتبع الهوية البصرية المستخدمة
+في `resources/views/app_android` والنماذج الجاهزة في `design/mockups/customer_app/`.
+
+**الخادم الافتراضي:** `https://blue-beaver-923812.hostingersite.com/api` (إنتاج)، ويمكن تجاوزه
+وقت البناء عبر `--dart-define=API_BASE_URL=...`.
 
 ---
 
@@ -10,18 +13,19 @@
 
 | المجلد | الوصف |
 | --- | --- |
+| `lib/l10n/` | الترجمة: القاموس الإنجليزي (`en_strings.dart`) ودوال `tr`/`tArgs` |
 | `lib/core/` | الإعدادات (`config.dart`)، عميل Dio (`api_client.dart`)، التخزين (`session_store.dart`)، التنسيقات (`formatters.dart`)، فتح الملفات (`file_opener.dart`) |
 | `lib/models/` | نماذج البيانات ومحلّلات JSON المطابقة لاستجابات الـ API |
 | `lib/services/` | خدمات الكتالوج والطلبات والاشتراكات والإشعارات و Firebase |
-| `lib/state/` | متحكّمات `provider` (الجلسة، السلة، المفضلة، الإشعارات) وحاوية التبعيات |
+| `lib/state/` | متحكّمات `provider` (الجلسة، السلة، المفضلة، الإشعارات، اللغة) وحاوية التبعيات |
 | `lib/ui/screens/` | 29 شاشة (القائمة أدناه) |
 | `lib/ui/widgets/` | مكوّنات مشتركة: بطاقات، هيكل الصفحة، عناصر النموذج، حالات الفراغ والخطأ |
-| `test/` | اختبارات النماذج والسلة والتنسيقات (16 اختباراً) |
+| `test/` | اختبارات النماذج والسلة والتنسيقات والترجمة (27 اختباراً) |
 
 ## الشاشات
 
 1. البداية (Splash)
-2. تسجيل الدخول — مع إمكانية تعديل عنوان الخادم
+2. تسجيل الدخول — مع مبدّل اللغة (عربي/إنجليزي)
 3. إنشاء حساب
 4. الهيكل الرئيسي وشريط التنقل السفلي (5 تبويبات)
 5. الرئيسية (بانرات، تصنيفات، ماركات، منتجات، عروض)
@@ -55,23 +59,34 @@
 ```bash
 cd mobile/customer_app
 flutter pub get
+flutter run              # يتصل مباشرة بخادم الإنتاج
+```
 
+للتطوير على خادم محلي:
+
+```bash
 # محاكي Android (10.0.2.2 = 127.0.0.1 على الجهاز المضيف)
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api
 
 # جهاز حقيقي على نفس الشبكة
 flutter run --dart-define=API_BASE_URL=http://192.168.1.20:8000/api
-
-# الإنتاج
-flutter run --dart-define=API_BASE_URL=https://app.maggadit.ly/api
 ```
 
-على iOS Simulator استخدم `http://127.0.0.1:8000/api`.
+على iOS Simulator استخدم `http://127.0.0.1:8000/api`، وعلى متصفح الويب `http://127.0.0.1:8000/api`
+(يجب السماح بـ CORS من Laravel).
+
+### اللغة
+
+اللغة الافتراضية العربية، وتُحفظ في `SharedPreferences` تحت `app.language`. المحوّل موجود في شاشة
+الدخول وفي شاشة الملف الشخصي، وتغييره يعيد بناء الواجهة كاملة (بما فيها اتجاه النص) دون إعادة تشغيل.
+
+لإضافة نص جديد: اكتب العربي داخل `tr(context, '...')` (أو `tArgs` مع `{0}` للمتغيّرات) ثم أضف
+الترجمة في `lib/l10n/en_strings.dart`. اختبار `test/l10n_test.dart` يفشل إذا بقي نص بلا ترجمة.
 
 ### بناء APK
 
 ```bash
-flutter build apk --release --dart-define=API_BASE_URL=https://app.maggadit.ly/api
+flutter build apk --release            # خادم الإنتاج الافتراضي
 # أو ملف تعريفات جاهز:
 cp firebase.env.example.json firebase.env.json   # ثم عبّئ القيم
 flutter build apk --release --dart-define-from-file=firebase.env.json
@@ -94,7 +109,6 @@ flutter build apk --release --dart-define-from-file=firebase.env.json
 
 ```bash
 flutter run \
-  --dart-define=API_BASE_URL=https://app.maggadit.ly/api \
   --dart-define=FIREBASE_API_KEY=... \
   --dart-define=FIREBASE_APP_ID=1:...:android:... \
   --dart-define=FIREBASE_SENDER_ID=... \

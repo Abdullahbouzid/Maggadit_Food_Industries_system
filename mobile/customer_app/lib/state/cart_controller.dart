@@ -17,15 +17,15 @@ class CartItem {
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
-        itemId: (json['item_id'] as num).toInt(),
-        packId: (json['pack_id'] as num?)?.toInt(),
-        name: json['name'] as String,
-        packName: (json['pack_name'] ?? '') as String,
-        price: (json['price'] as num).toDouble(),
-        quantity: (json['quantity'] as num).toDouble(),
-        image: json['image'] as String?,
-        uomName: json['uom_name'] as String?,
-      );
+    itemId: (json['item_id'] as num).toInt(),
+    packId: (json['pack_id'] as num?)?.toInt(),
+    name: json['name'] as String,
+    packName: (json['pack_name'] ?? '') as String,
+    price: (json['price'] as num).toDouble(),
+    quantity: (json['quantity'] as num).toDouble(),
+    image: json['image'] as String?,
+    uomName: json['uom_name'] as String?,
+  );
 
   final int itemId;
   final int? packId;
@@ -41,36 +41,36 @@ class CartItem {
   double get lineTotal => price * quantity;
 
   CartItem copyWith({double? quantity}) => CartItem(
-        itemId: itemId,
-        packId: packId,
-        name: name,
-        packName: packName,
-        price: price,
-        quantity: quantity ?? this.quantity,
-        image: image,
-        uomName: uomName,
-      );
+    itemId: itemId,
+    packId: packId,
+    name: name,
+    packName: packName,
+    price: price,
+    quantity: quantity ?? this.quantity,
+    image: image,
+    uomName: uomName,
+  );
 
   Map<String, dynamic> toJson() => {
-        'item_id': itemId,
-        'pack_id': packId,
-        'name': name,
-        'pack_name': packName,
-        'price': price,
-        'quantity': quantity,
-        'image': image,
-        'uom_name': uomName,
-      };
+    'item_id': itemId,
+    'pack_id': packId,
+    'name': name,
+    'pack_name': packName,
+    'price': price,
+    'quantity': quantity,
+    'image': image,
+    'uom_name': uomName,
+  };
 
   /// Shape expected by `POST /api/customer/checkout`.
   Map<String, dynamic> toCheckoutJson() => {
-        'id': itemId,
-        'quantity': quantity,
-        'pack_id': packId,
-        'pack_name': packName.isEmpty ? null : packName,
-        'uom_name': uomName,
-        'name': name,
-      };
+    'id': itemId,
+    'quantity': quantity,
+    'pack_id': packId,
+    'pack_name': packName.isEmpty ? null : packName,
+    'uom_name': uomName,
+    'name': name,
+  };
 }
 
 class CartController extends ChangeNotifier {
@@ -85,8 +85,7 @@ class CartController extends ChangeNotifier {
   int get count => _items.length;
   bool get isEmpty => _items.isEmpty;
 
-  double get subtotal =>
-      _items.fold(0, (sum, item) => sum + item.lineTotal);
+  double get subtotal => _items.fold(0, (sum, item) => sum + item.lineTotal);
 
   /// The backend applies taxes/discounts; this is a display estimate only.
   double get estimatedTotal => subtotal;
@@ -114,16 +113,18 @@ class CartController extends ChangeNotifier {
       final current = _items[index];
       _items[index] = current.copyWith(quantity: current.quantity + quantity);
     } else {
-      _items.add(CartItem(
-        itemId: itemId,
-        packId: packId,
-        name: name,
-        packName: packName,
-        price: price,
-        quantity: quantity,
-        image: image,
-        uomName: uomName,
-      ));
+      _items.add(
+        CartItem(
+          itemId: itemId,
+          packId: packId,
+          name: name,
+          packName: packName,
+          price: price,
+          quantity: quantity,
+          image: image,
+          uomName: uomName,
+        ),
+      );
     }
     _persist();
     notifyListeners();

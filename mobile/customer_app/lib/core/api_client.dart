@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
+import '../l10n/l10n.dart';
 import 'config.dart';
 
 /// Normalised error coming from the Laravel API.
@@ -70,8 +71,10 @@ class ApiClient {
     }
   }
 
-  Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? query}) =>
-      _request(() => _dio.get<dynamic>(path, queryParameters: _clean(query)));
+  Future<Map<String, dynamic>> get(
+    String path, {
+    Map<String, dynamic>? query,
+  }) => _request(() => _dio.get<dynamic>(path, queryParameters: _clean(query)));
 
   Future<Map<String, dynamic>> post(String path, {Object? body}) =>
       _request(() => _dio.post<dynamic>(path, data: body));
@@ -125,36 +128,38 @@ class ApiClient {
     final status = error.response?.statusCode;
     final data = error.response?.data;
 
-    String message = 'تعذّر الاتصال بالخادم، تحقّق من الإنترنت وحاول مرة أخرى.';
+    String message = L10n.tr(
+      'تعذّر الاتصال بالخادم، تحقّق من الإنترنت وحاول مرة أخرى.',
+    );
     Map<String, dynamic>? errors;
 
     if (data is Map) {
       final map = Map<String, dynamic>.from(data);
-      message = (map['message'] ?? map['error'] ?? message).toString();
+      message = L10n.tr((map['message'] ?? map['error'] ?? message).toString());
       if (map['errors'] is Map) {
         errors = Map<String, dynamic>.from(map['errors'] as Map);
         for (final value in errors.values) {
           if (value is List && value.isNotEmpty) {
-            message = value.first.toString();
+            message = L10n.tr(value.first.toString());
             break;
           }
         }
       }
       if (message.trim().isEmpty) {
-        message = 'حدث خطأ غير متوقع (${status ?? '—'}).';
+        message = L10n.args('حدث خطأ غير متوقع ({0}).', [status ?? '—']);
       }
     } else if (status == 401) {
-      message = 'انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى.';
+      message = L10n.tr('انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى.');
     } else if (status == 404) {
-      message = 'العنصر المطلوب غير موجود.';
+      message = L10n.tr('العنصر المطلوب غير موجود.');
     } else if (status != null && status >= 500) {
-      message = 'خطأ في الخادم، يرجى المحاولة لاحقاً.';
+      message = L10n.tr('خطأ في الخادم، يرجى المحاولة لاحقاً.');
     } else if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout) {
-      message = 'انتهت مهلة الاتصال بالخادم.';
+      message = L10n.tr('انتهت مهلة الاتصال بالخادم.');
     } else if (error.error is SocketException) {
-      message = 'لا يوجد اتصال بالشبكة.';
+      message = L10n.tr('لا يوجد اتصال بالشبكة.');
     }
 
     return ApiException(message, statusCode: status, errors: errors);

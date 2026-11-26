@@ -9,6 +9,7 @@ import 'favorites_screen.dart';
 import 'home_screen.dart';
 import 'more_screen.dart';
 import 'offers_screen.dart';
+import '../../l10n/l10n.dart';
 
 /// Bottom navigation shell (الرئيسية / العروض / السلة / المفضلة / المزيد).
 class MainShell extends StatefulWidget {
@@ -23,12 +24,24 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   late int _index = widget.initialIndex;
 
-  static const _tabs = [
-    _TabSpec('الرئيسية', Icons.home_rounded, Icons.home_outlined),
-    _TabSpec('العروض', Icons.local_offer_rounded, Icons.local_offer_outlined),
-    _TabSpec('السلة', Icons.shopping_cart_rounded, Icons.shopping_cart_outlined),
-    _TabSpec('المفضلة', Icons.favorite_rounded, Icons.favorite_border_rounded),
-    _TabSpec('المزيد', Icons.menu_rounded, Icons.menu_rounded),
+  List<_TabSpec> _tabs(BuildContext context) => [
+    _TabSpec(tr(context, 'الرئيسية'), Icons.home_rounded, Icons.home_outlined),
+    _TabSpec(
+      tr(context, 'العروض'),
+      Icons.local_offer_rounded,
+      Icons.local_offer_outlined,
+    ),
+    _TabSpec(
+      tr(context, 'السلة'),
+      Icons.shopping_cart_rounded,
+      Icons.shopping_cart_outlined,
+    ),
+    _TabSpec(
+      tr(context, 'المفضلة'),
+      Icons.favorite_rounded,
+      Icons.favorite_border_rounded,
+    ),
+    _TabSpec(tr(context, 'المزيد'), Icons.menu_rounded, Icons.menu_rounded),
   ];
 
   void _select(int index) {
@@ -58,7 +71,7 @@ class _MainShellState extends State<MainShell> {
         onTap: _select,
         cartCount: cartCount,
         unreadCount: unread,
-        tabs: _tabs,
+        tabs: _tabs(context),
       ),
     );
   }
@@ -147,14 +160,21 @@ class _BottomItem extends StatelessWidget {
                     color: active ? C.purpleSoft : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(active ? spec.activeIcon : spec.icon, size: 19, color: color),
+                  child: Icon(
+                    active ? spec.activeIcon : spec.icon,
+                    size: 19,
+                    color: color,
+                  ),
                 ),
                 if (badge > 0)
                   Positioned(
                     top: -3,
                     left: -2,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
                       constraints: const BoxConstraints(minWidth: 15),
                       decoration: BoxDecoration(
                         color: C.danger,
@@ -164,7 +184,12 @@ class _BottomItem extends StatelessWidget {
                       child: Text(
                         badge > 99 ? '99+' : '$badge',
                         textAlign: TextAlign.center,
-                        style: ts(7.5, weight: FontWeight.w700, color: Colors.white, height: 1.3),
+                        style: ts(
+                          7.5,
+                          weight: FontWeight.w700,
+                          color: Colors.white,
+                          height: 1.3,
+                        ),
                       ),
                     ),
                   ),
@@ -173,7 +198,11 @@ class _BottomItem extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               spec.label,
-              style: ts(8.5, weight: active ? FontWeight.w700 : FontWeight.w500, color: color),
+              style: ts(
+                8.5,
+                weight: active ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
             ),
           ],
         ),

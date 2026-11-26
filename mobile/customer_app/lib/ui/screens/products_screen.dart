@@ -11,19 +11,20 @@ import '../theme/app_theme.dart';
 import '../widgets/cards.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 /// Product listing with search + infinite scroll.
 /// Re-used for category / brand filtered lists.
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({
     super.key,
-    this.title = 'المنتجات',
+    this.title,
     this.initialSearch,
     this.categoryId,
     this.brandId,
   });
 
-  final String title;
+  final String? title;
   final String? initialSearch;
   final int? categoryId;
   final int? brandId;
@@ -33,8 +34,9 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  late final TextEditingController _searchController =
-      TextEditingController(text: widget.initialSearch ?? '');
+  late final TextEditingController _searchController = TextEditingController(
+    text: widget.initialSearch ?? '',
+  );
   final _scrollController = ScrollController();
 
   final List<Product> _products = [];
@@ -59,7 +61,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels > _scrollController.position.maxScrollExtent - 320) {
+    if (_scrollController.position.pixels >
+        _scrollController.position.maxScrollExtent - 320) {
       if (!_loadingMore && _page < _lastPage) _load(page: _page + 1);
     }
   }
@@ -113,8 +116,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final cart = context.watch<CartController>();
 
     return ScreenScaffold(
-      title: widget.title,
-      subtitle: '${_products.length} منتج',
+      title: widget.title ?? tr(context, 'المنتجات'),
+      subtitle: tArgs(context, '{0} منتج', [_products.length]),
       child: Column(
         children: [
           SearchField(
@@ -126,53 +129,54 @@ class _ProductsScreenState extends State<ProductsScreen> {
           const SizedBox(height: 12),
           Expanded(
             child: _loading
-                ? const LoadingState(label: 'جاري تحميل المنتجات')
+                ? LoadingState(label: tr(context, 'جاري تحميل المنتجات'))
                 : _error != null
-                    ? ErrorState(
-                        message: _error!,
-                        onRetry: () => _load(page: 1),
-                      )
-                    : _products.isEmpty
-                        ? EmptyState(
-                            icon: Icons.search_off_rounded,
-                            title: 'لا توجد نتائج',
-                            message: 'جرّب كلمة بحث أخرى أو تصفّح الفئات',
-                            actionLabel: 'إعادة التحميل',
-                            onAction: () => _load(page: 1),
-                          )
-                        : GridView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.only(bottom: 20),
-                            itemCount: _products.length + (_loadingMore ? 1 : 0),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 12,
-                              crossAxisSpacing: 12,
-                              childAspectRatio: 0.62,
-                            ),
-                            itemBuilder: (context, index) {
-                              if (index >= _products.length) {
-                                return const Center(child: LoadingState());
-                              }
-                              final product = _products[index];
-                              final pack = product.defaultPack;
-                              return ProductCard(
-                                product: product,
-                                isFavorite: favorites.isFavorite(product.id),
-                                onToggleFavorite: () => favorites.toggle(product.id),
-                                onTap: () => Routes.product(product.id, preview: product),
-                                onAdd: () => _add(context, product),
-                                quantityInCart: cart.quantityOf(product.id, pack?.id),
-                                onIncrement: () => _add(context, product),
-                                onDecrement: () {
-                                  final existing = cart.items.where(
-                                    (e) => e.itemId == product.id && e.packId == pack?.id,
-                                  );
-                                  if (existing.isNotEmpty) cart.decrement(existing.first);
-                                },
-                              );
-                            },
-                          ),
+                ? ErrorState(message: _error!, onRetry: () => _load(page: 1))
+                : _products.isEmpty
+                ? EmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: tr(context, 'لا توجد نتائج'),
+                    message: tr(context, 'جرّب كلمة بحث أخرى أو تصفّح الفئات'),
+                    actionLabel: tr(context, 'إعادة التحميل'),
+                    onAction: () => _load(page: 1),
+                  )
+                : GridView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.only(bottom: 20),
+                    itemCount: _products.length + (_loadingMore ? 1 : 0),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.62,
+                        ),
+                    itemBuilder: (context, index) {
+                      if (index >= _products.length) {
+                        return const Center(child: LoadingState());
+                      }
+                      final product = _products[index];
+                      final pack = product.defaultPack;
+                      return ProductCard(
+                        product: product,
+                        isFavorite: favorites.isFavorite(product.id),
+                        onToggleFavorite: () => favorites.toggle(product.id),
+                        onTap: () =>
+                            Routes.product(product.id, preview: product),
+                        onAdd: () => _add(context, product),
+                        quantityInCart: cart.quantityOf(product.id, pack?.id),
+                        onIncrement: () => _add(context, product),
+                        onDecrement: () {
+                          final existing = cart.items.where(
+                            (e) =>
+                                e.itemId == product.id && e.packId == pack?.id,
+                          );
+                          if (existing.isNotEmpty)
+                            cart.decrement(existing.first);
+                        },
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -182,13 +186,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
   void _add(BuildContext context, Product product) {
     final pack = product.defaultPack;
     context.read<CartController>().add(
-          itemId: product.id,
-          name: product.name,
-          price: pack?.price ?? product.price,
-          packId: pack?.id,
-          packName: pack?.name ?? '',
-          image: product.image,
-          uomName: pack?.uomName,
-        );
+      itemId: product.id,
+      name: product.name,
+      price: pack?.price ?? product.price,
+      packId: pack?.id,
+      packName: pack?.name ?? '',
+      image: product.image,
+      uomName: pack?.uomName,
+    );
   }
 }

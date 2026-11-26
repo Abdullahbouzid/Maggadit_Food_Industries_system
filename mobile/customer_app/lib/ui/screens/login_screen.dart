@@ -5,7 +5,9 @@ import '../../state/app_dependencies.dart';
 import '../../state/auth_controller.dart';
 import '../router.dart';
 import '../theme/app_theme.dart';
+import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -45,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (ok) {
       Routes.home();
     } else {
-      _snack(auth.error ?? 'تعذّر تسجيل الدخول');
+      _snack(auth.error ?? tr(context, 'تعذّر تسجيل الدخول'));
     }
   }
 
@@ -53,52 +55,6 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  Future<void> _editServer() async {
-    final deps = context.read<AppDependencies>();
-    final authController = context.read<AuthController>();
-    final controller = TextEditingController(text: deps.api.baseUrl);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text('عنوان الخادم', style: ts(14, weight: FontWeight.w700)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              textDirection: TextDirection.ltr,
-              style: ts(12),
-              decoration: const InputDecoration(hintText: 'https://example.com/api'),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'مثال: http://10.0.2.2:8000/api للمحاكي، أو رابط السيرفر الحقيقي مع /api',
-              style: ts(9.5, color: C.muted, height: 1.6),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('إلغاء', style: ts(12, color: C.muted)),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            style: FilledButton.styleFrom(backgroundColor: C.primary),
-            child: Text('حفظ', style: ts(12, color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result.isNotEmpty) {
-      await authController.changeServer(result);
-      if (!mounted) return;
-      _snack('تم تحديث عنوان الخادم');
-    }
   }
 
   @override
@@ -111,33 +67,40 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
-                  onPressed: _editServer,
-                  icon: const Icon(Icons.dns_rounded, size: 15, color: C.muted),
-                  label: Text('عنوان الخادم', style: ts(10, color: C.muted)),
-                ),
+              const Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: LanguageSwitcher(),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Center(
                 child: Container(
-                  width: 84,
-                  height: 84,
+                  width: 92,
+                  height: 92,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [C.primary, C.primaryDeep]),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(26),
                     boxShadow: Sh.card,
                   ),
-                  child: const Icon(Icons.local_mall_rounded, size: 38, color: Colors.white),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(26),
+                    child: Image.asset(
+                      'assets/images/logo_tile.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              Text('ماغديت',
-                  textAlign: TextAlign.center, style: ts(24, weight: FontWeight.w700)),
+              Text(
+                tr(context, 'ماغديت'),
+                textAlign: TextAlign.center,
+                style: ts(24, weight: FontWeight.w700),
+              ),
               const SizedBox(height: 4),
-              Text('للصناعات الغذائية',
-                  textAlign: TextAlign.center, style: ts(11, color: C.muted)),
+              Text(
+                tr(context, 'للصناعات الغذائية'),
+                textAlign: TextAlign.center,
+                style: ts(11, color: C.muted),
+              ),
               const SizedBox(height: 26),
               NovaCard(
                 padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
@@ -146,9 +109,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('تسجيل الدخول', style: ts(14, weight: FontWeight.w700)),
+                      Text(
+                        tr(context, 'تسجيل الدخول'),
+                        style: ts(14, weight: FontWeight.w700),
+                      ),
                       const SizedBox(height: 14),
-                      _Label('اسم المستخدم'),
+                      _Label(tr(context, 'اسم المستخدم')),
                       TextFormField(
                         controller: _username,
                         textInputAction: TextInputAction.next,
@@ -156,10 +122,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: ts(12.5),
                         decoration: const InputDecoration(hintText: 'username'),
                         validator: (value) =>
-                            (value == null || value.trim().isEmpty) ? 'مطلوب' : null,
+                            (value == null || value.trim().isEmpty)
+                            ? tr(context, 'مطلوب')
+                            : null,
                       ),
                       const SizedBox(height: 12),
-                      _Label('كلمة المرور'),
+                      _Label(tr(context, 'كلمة المرور')),
                       TextFormField(
                         controller: _password,
                         obscureText: _obscure,
@@ -169,20 +137,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: InputDecoration(
                           hintText: '••••••••',
                           suffixIcon: IconButton(
-                            onPressed: () => setState(() => _obscure = !_obscure),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
                             icon: Icon(
-                              _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                              _obscure
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
                               size: 18,
                               color: C.muted,
                             ),
                           ),
                         ),
-                        validator: (value) =>
-                            (value == null || value.isEmpty) ? 'مطلوب' : null,
+                        validator: (value) => (value == null || value.isEmpty)
+                            ? tr(context, 'مطلوب')
+                            : null,
                       ),
                       const SizedBox(height: 18),
                       PrimaryButton(
-                        label: 'تسجيل الدخول',
+                        label: tr(context, 'تسجيل الدخول'),
                         icon: Icons.login_rounded,
                         loading: _busy,
                         onPressed: _submit,
@@ -191,8 +163,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       Center(
                         child: TextButton(
                           onPressed: _busy ? null : () => Routes.register(),
-                          child: Text('ليس لديك حساب؟ إنشاء حساب جديد',
-                              style: ts(11, color: C.primaryDark, weight: FontWeight.w600)),
+                          child: Text(
+                            tr(context, 'ليس لديك حساب؟ إنشاء حساب جديد'),
+                            style: ts(
+                              11,
+                              color: C.primaryDark,
+                              weight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -200,8 +178,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 28),
-              Text('Maggadit Food Industries · v1.0.0',
-                  textAlign: TextAlign.center, style: ts(9, color: C.muted)),
+              Text(
+                'Maggadit Food Industries · v1.0.0',
+                textAlign: TextAlign.center,
+                style: ts(9, color: C.muted),
+              ),
             ],
           ),
         ),
@@ -218,7 +199,10 @@ class _Label extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: ts(10.5, weight: FontWeight.w600, color: C.inkSoft)),
+      child: Text(
+        text,
+        style: ts(10.5, weight: FontWeight.w600, color: C.inkSoft),
+      ),
     );
   }
 }

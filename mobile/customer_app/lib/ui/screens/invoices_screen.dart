@@ -8,6 +8,7 @@ import '../router.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class InvoicesScreen extends StatefulWidget {
   const InvoicesScreen({super.key});
@@ -32,16 +33,16 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   @override
   Widget build(BuildContext context) {
     return ScreenScaffold(
-      title: 'الفواتير',
-      subtitle: 'سجل الفواتير الصادرة',
+      title: tr(context, 'الفواتير'),
+      subtitle: tr(context, 'سجل الفواتير الصادرة'),
       onRefresh: () async => setState(_load),
       child: FutureView<List<InvoiceSummary>>(
         future: _future,
         onRetry: () => setState(_load),
         emptyCheck: (data) => data.isEmpty,
         emptyIcon: Icons.receipt_long_rounded,
-        emptyTitle: 'لا توجد فواتير',
-        loadingLabel: 'جاري تحميل الفواتير',
+        emptyTitle: tr(context, 'لا توجد فواتير'),
+        loadingLabel: tr(context, 'جاري تحميل الفواتير'),
         builder: (context, invoices) => ListView.separated(
           padding: const EdgeInsets.only(bottom: 16),
           itemCount: invoices.length,
@@ -59,33 +60,51 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                       color: C.purpleSoft,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.description_rounded,
-                        size: 18, color: C.primaryDark),
+                    child: const Icon(
+                      Icons.description_rounded,
+                      size: 18,
+                      color: C.primaryDark,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(invoice.number,
-                            style: ts(12, weight: FontWeight.w700),
-                            textDirection: TextDirection.ltr),
+                        Text(
+                          invoice.number,
+                          style: ts(12, weight: FontWeight.w700),
+                          textDirection: TextDirection.ltr,
+                        ),
                         const SizedBox(height: 2),
-                        Text('${Fmt.date(invoice.date)} · ${invoice.itemsCount} أصناف',
-                            style: ts(9, color: C.muted)),
+                        Text(
+                          tArgs(context, '{0} · {1} أصناف', [
+                            Fmt.date(invoice.date),
+                            invoice.itemsCount,
+                          ]),
+                          style: ts(9, color: C.muted),
+                        ),
                       ],
                     ),
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(Fmt.price(invoice.total),
-                          style: ts(12, weight: FontWeight.w700, color: C.primaryDark)),
+                      Text(
+                        Fmt.price(invoice.total),
+                        style: ts(
+                          12,
+                          weight: FontWeight.w700,
+                          color: C.primaryDark,
+                        ),
+                      ),
                       const SizedBox(height: 3),
                       Tag(
                         text: invoice.status,
                         color: StatusPalette.color(_statusKey(invoice.status)),
-                        background: StatusPalette.background(_statusKey(invoice.status)),
+                        background: StatusPalette.background(
+                          _statusKey(invoice.status),
+                        ),
                       ),
                     ],
                   ),

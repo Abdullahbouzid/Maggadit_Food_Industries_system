@@ -55,13 +55,17 @@ class FirebaseBootstrap {
     if (Platform.isIOS || Platform.isMacOS) {
       return FirebaseOptions(
         apiKey: AppConfig.firebaseApiKey,
-        appId: const String.fromEnvironment('FIREBASE_IOS_APP_ID',
-            defaultValue: ''),
+        appId: const String.fromEnvironment(
+          'FIREBASE_IOS_APP_ID',
+          defaultValue: '',
+        ),
         messagingSenderId: AppConfig.firebaseSenderId,
         projectId: AppConfig.firebaseProjectId,
         storageBucket: storageBucket,
-        iosBundleId: const String.fromEnvironment('FIREBASE_IOS_BUNDLE_ID',
-            defaultValue: 'com.maggadit.maggaditCustomer'),
+        iosBundleId: const String.fromEnvironment(
+          'FIREBASE_IOS_BUNDLE_ID',
+          defaultValue: 'com.maggadit.maggaditCustomer',
+        ),
       );
     }
 
@@ -120,7 +124,8 @@ class PushService {
   final void Function(PushPayload payload)? onForeground;
   final void Function(PushPayload payload)? onTap;
 
-  final FlutterLocalNotificationsPlugin _local = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _local =
+      FlutterLocalNotificationsPlugin();
   bool _ready = false;
   bool _initialisedLocally = false;
 
@@ -185,7 +190,9 @@ class PushService {
   Future<void> subscribeToBroadcastTopic() async {
     if (!_ready) return;
     try {
-      await FirebaseMessaging.instance.subscribeToTopic(AppConfig.broadcastTopic);
+      await FirebaseMessaging.instance.subscribeToTopic(
+        AppConfig.broadcastTopic,
+      );
     } catch (error) {
       debugPrint('[push] topic subscription failed: $error');
     }
@@ -202,7 +209,11 @@ class PushService {
     );
 
     await _local.initialize(
-      const InitializationSettings(android: android, iOS: darwin, macOS: darwin),
+      const InitializationSettings(
+        android: android,
+        iOS: darwin,
+        macOS: darwin,
+      ),
       onDidReceiveNotificationResponse: (response) {
         final raw = response.payload;
         if (raw == null || raw.isEmpty) return;
@@ -211,8 +222,10 @@ class PushService {
     );
 
     if (Platform.isAndroid) {
-      final androidPlugin = _local.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin = _local
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       await androidPlugin?.createNotificationChannel(
         const AndroidNotificationChannel(
           AppConfig.androidChannelId,
@@ -262,7 +275,9 @@ class PushService {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is Map) {
-        final data = decoded.map((key, value) => MapEntry(key.toString(), value.toString()));
+        final data = decoded.map(
+          (key, value) => MapEntry(key.toString(), value.toString()),
+        );
         return PushPayload(
           title: data['title'],
           body: data['body'],

@@ -9,6 +9,7 @@ import '../../state/auth_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
@@ -58,40 +59,48 @@ class _ContactScreenState extends State<ContactScreen> {
     setState(() => _sending = true);
     try {
       await context.read<AppDependencies>().catalogService.contactUs(
-            name: _name.text.trim(),
-            email: _email.text.trim(),
-            phone: _phone.text.trim(),
-            subject: _subject.text.trim(),
-            message: _message.text.trim(),
-          );
+        name: _name.text.trim(),
+        email: _email.text.trim(),
+        phone: _phone.text.trim(),
+        subject: _subject.text.trim(),
+        message: _message.text.trim(),
+      );
       if (!mounted) return;
       _message.clear();
       _subject.clear();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('تم إرسال رسالتك بنجاح')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr(context, 'تم إرسال رسالتك بنجاح'))),
+      );
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
 
-  Future<void> _open(String? value, {bool whatsapp = false, bool email = false}) async {
+  Future<void> _open(
+    String? value, {
+    bool whatsapp = false,
+    bool email = false,
+  }) async {
     if (value == null || value.isEmpty) return;
     final uri = email
         ? Uri(scheme: 'mailto', path: value)
         : whatsapp
-            ? Uri.parse('https://wa.me/${value.replaceAll(RegExp(r'[^0-9]'), '')}')
-            : Uri.parse('tel:$value');
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+        ? Uri.parse('https://wa.me/${value.replaceAll(RegExp(r'[^0-9]'), '')}')
+        : Uri.parse('tel:$value');
+    if (await canLaunchUrl(uri))
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
   Widget build(BuildContext context) {
     return ScreenScaffold(
-      title: 'اتصل بنا',
-      subtitle: 'نحن هنا لخدمتك',
+      title: tr(context, 'اتصل بنا'),
+      subtitle: tr(context, 'نحن هنا لخدمتك'),
       onRefresh: () async => setState(_load),
       child: Form(
         key: _formKey,
@@ -100,21 +109,21 @@ class _ContactScreenState extends State<ContactScreen> {
           children: [
             FutureView<ContactInfo>(
               future: _info,
-              loadingLabel: 'جاري تحميل بيانات التواصل',
+              loadingLabel: tr(context, 'جاري تحميل بيانات التواصل'),
               builder: (context, info) => NovaCard(
                 child: Column(
                   children: [
                     if (info.phone != null)
                       _ContactRow(
                         icon: Icons.call_rounded,
-                        label: 'هاتف',
+                        label: tr(context, 'هاتف'),
                         value: info.phone!,
                         onTap: () => _open(info.phone),
                       ),
                     if (info.whatsapp != null)
                       _ContactRow(
                         icon: Icons.chat_rounded,
-                        label: 'واتساب',
+                        label: tr(context, 'واتساب'),
                         value: info.whatsapp!,
                         color: C.success,
                         onTap: () => _open(info.whatsapp, whatsapp: true),
@@ -122,7 +131,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     if (info.email != null)
                       _ContactRow(
                         icon: Icons.alternate_email_rounded,
-                        label: 'البريد',
+                        label: tr(context, 'البريد'),
                         value: info.email!,
                         color: C.info,
                         onTap: () => _open(info.email, email: true),
@@ -130,7 +139,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     if (info.address != null)
                       _ContactRow(
                         icon: Icons.location_on_rounded,
-                        label: 'العنوان',
+                        label: tr(context, 'العنوان'),
                         value: info.address!,
                         color: C.rose,
                       ),
@@ -143,18 +152,32 @@ class _ContactScreenState extends State<ContactScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('أرسل رسالة', style: ts(13, weight: FontWeight.w700)),
+                  Text(
+                    tr(context, 'أرسل رسالة'),
+                    style: ts(13, weight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 12),
-                  _Field(label: 'الاسم', controller: _name),
-                  _Field(label: 'البريد الإلكتروني', controller: _email,
-                      keyboard: TextInputType.emailAddress),
-                  _Field(label: 'الهاتف', controller: _phone,
-                      keyboard: TextInputType.phone, required: false),
-                  _Field(label: 'الموضوع', controller: _subject),
-                  _Field(label: 'الرسالة', controller: _message, lines: 4),
+                  _Field(label: tr(context, 'الاسم'), controller: _name),
+                  _Field(
+                    label: tr(context, 'البريد الإلكتروني'),
+                    controller: _email,
+                    keyboard: TextInputType.emailAddress,
+                  ),
+                  _Field(
+                    label: tr(context, 'الهاتف'),
+                    controller: _phone,
+                    keyboard: TextInputType.phone,
+                    required: false,
+                  ),
+                  _Field(label: tr(context, 'الموضوع'), controller: _subject),
+                  _Field(
+                    label: tr(context, 'الرسالة'),
+                    controller: _message,
+                    lines: 4,
+                  ),
                   const SizedBox(height: 6),
                   PrimaryButton(
-                    label: 'إرسال',
+                    label: tr(context, 'إرسال'),
                     icon: Icons.send_rounded,
                     loading: _sending,
                     onPressed: _send,
@@ -207,9 +230,11 @@ class _ContactRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label, style: ts(9, color: C.muted)),
-                  Text(value,
-                      style: ts(11, weight: FontWeight.w600),
-                      textDirection: TextDirection.ltr),
+                  Text(
+                    value,
+                    style: ts(11, weight: FontWeight.w600),
+                    textDirection: TextDirection.ltr,
+                  ),
                 ],
               ),
             ),
@@ -253,8 +278,9 @@ class _Field extends StatelessWidget {
             minLines: 1,
             style: ts(11.5),
             decoration: InputDecoration(hintText: label),
-            validator: (value) => required && (value == null || value.trim().isEmpty)
-                ? 'مطلوب'
+            validator: (value) =>
+                required && (value == null || value.trim().isEmpty)
+                ? tr(context, 'مطلوب')
                 : null,
           ),
         ],

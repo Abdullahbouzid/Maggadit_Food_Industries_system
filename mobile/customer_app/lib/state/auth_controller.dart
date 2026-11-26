@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../core/api_client.dart';
 import '../core/formatters.dart';
 import '../core/session_store.dart';
+import '../l10n/l10n.dart';
 import '../models/account.dart';
 
 enum AuthStatus { unknown, anonymous, authenticated }
@@ -12,8 +13,8 @@ class AuthController extends ChangeNotifier {
     required ApiClient api,
     required SessionStore store,
     this.onSessionChanged,
-  })  : _api = api,
-        _store = store;
+  }) : _api = api,
+       _store = store;
 
   final ApiClient _api;
   final SessionStore _store;
@@ -33,7 +34,6 @@ class AuthController extends ChangeNotifier {
   String? get fcmToken => _fcmToken;
   String? get error => _error;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
-  String get baseUrl => _api.baseUrl;
 
   Organization? get activeOrganization {
     for (final org in _organizations) {
@@ -44,7 +44,6 @@ class AuthController extends ChangeNotifier {
 
   /// Restores token/customer from disk and validates it against the server.
   Future<void> bootstrap() async {
-    _api.baseUrl = _store.baseUrl;
     _fcmToken = _store.fcmToken;
 
     final token = _store.token;
@@ -66,7 +65,9 @@ class AuthController extends ChangeNotifier {
 
     try {
       final fresh = await _api.get('/customer/profile');
-      final payload = fresh['customer'] is Map ? fresh['customer'] as Map : fresh;
+      final payload = fresh['customer'] is Map
+          ? fresh['customer'] as Map
+          : fresh;
       _customer = Customer.fromJson(Map<String, dynamic>.from(payload));
       await _store.saveCustomer(_customer!.toJson());
       _status = AuthStatus.authenticated;
@@ -83,17 +84,23 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> login({required String username, required String password}) async {
+  Future<bool> login({
+    required String username,
+    required String password,
+  }) async {
     _error = null;
     notifyListeners();
     try {
       final token = _fcmToken ?? await _resolveFcmToken();
-      final result = await _api.post('/customer/login', body: {
-        'username': username,
-        'password': password,
-        if (token != null && token.isNotEmpty) 'fcm_token': token,
-        'device_name': 'mobile',
-      });
+      final result = await _api.post(
+        '/customer/login',
+        body: {
+          'username': username,
+          'password': password,
+          if (token != null && token.isNotEmpty) 'fcm_token': token,
+          'device_name': 'mobile',
+        },
+      );
       await _applySession(result);
       return true;
     } on ApiException catch (e) {
@@ -115,14 +122,17 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
     try {
       final token = _fcmToken ?? await _resolveFcmToken();
-      final result = await _api.post('/customer/register', body: {
-        'name': name,
-        'username': username,
-        'email': email,
-        'password': password,
-        'password_confirmation': passwordConfirmation,
-        if (token != null && token.isNotEmpty) 'fcm_token': token,
-      });
+      final result = await _api.post(
+        '/customer/register',
+        body: {
+          'name': name,
+          'username': username,
+          'email': email,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+          if (token != null && token.isNotEmpty) 'fcm_token': token,
+        },
+      );
       await _applySession(result);
       return true;
     } on ApiException catch (e) {
@@ -150,16 +160,19 @@ class AuthController extends ChangeNotifier {
     String? newPasswordConfirmation,
   }) async {
     try {
-      final json = await _api.post('/customer/profile/update', body: {
-        'name': name,
-        'email': email,
-        'username': username ?? _customer?.username ?? '',
-        if (oldPassword != null && oldPassword.isNotEmpty) ...{
-          'old_password': oldPassword,
-          'password': newPassword,
-          'password_confirmation': newPasswordConfirmation,
+      final json = await _api.post(
+        '/customer/profile/update',
+        body: {
+          'name': name,
+          'email': email,
+          'username': username ?? _customer?.username ?? '',
+          if (oldPassword != null && oldPassword.isNotEmpty) ...{
+            'old_password': oldPassword,
+            'password': newPassword,
+            'password_confirmation': newPasswordConfirmation,
+          },
         },
-      });
+      );
       final payload = json['customer'] is Map ? json['customer'] as Map : json;
       _customer = Customer.fromJson(Map<String, dynamic>.from(payload));
       await _store.saveCustomer(_customer!.toJson());
@@ -174,7 +187,10 @@ class AuthController extends ChangeNotifier {
 
   Future<bool> switchOrganization(int organizationId) async {
     try {
-      await _api.post('/customer/change-organization', body: {'organization_id': organizationId});
+      await _api.post(
+        '/customer/change-organization',
+        body: {'organization_id': organizationId},
+      );
       _organizations = await _loadOrganizations();
       final active = _organizations.where((o) => o.isActive);
       if (active.isNotEmpty) {
@@ -208,12 +224,6 @@ class AuthController extends ChangeNotifier {
     if (isAuthenticated) await _pushTokenToServer(token);
   }
 
-  Future<void> changeServer(String baseUrl) async {
-    _api.baseUrl = baseUrl;
-    await _store.saveBaseUrl(_api.baseUrl);
-    notifyListeners();
-  }
-
   Future<List<Organization>> _loadOrganizations() async {
     try {
       final json = await _api.get('/customer/organizations');
@@ -231,13 +241,13 @@ class AuthController extends ChangeNotifier {
   }
 
   Map<String, dynamic> _orgToJson(Organization org) => {
-        'id': org.id,
-        'name': org.name,
-        'code': org.code,
-        'is_active': org.isActive,
-        'organization_type': org.type,
-        'parent_id': org.parentId,
-      };
+    'id': org.id,
+    'name': org.name,
+    'code': org.code,
+    'is_active': org.isActive,
+    'organization_type': org.type,
+    'parent_id': org.parentId,
+  };
 
   Future<void> _applySession(Map<String, dynamic> json) async {
     final token = (json['token'] ?? '').toString();
@@ -291,8 +301,7 @@ class AuthController extends ChangeNotifier {
     onSessionChanged?.call();
   }
 
-  String get displayName => _customer?.name ?? 'زائر';
+  String get displayName => _customer?.name ?? L10n.tr('زائر');
 
   String get initials => Fmt.initials(_customer?.name);
-
 }

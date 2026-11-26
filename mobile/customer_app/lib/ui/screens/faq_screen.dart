@@ -6,6 +6,7 @@ import '../../state/app_dependencies.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class FaqScreen extends StatefulWidget {
   const FaqScreen({super.key});
@@ -30,16 +31,16 @@ class _FaqScreenState extends State<FaqScreen> {
   @override
   Widget build(BuildContext context) {
     return ScreenScaffold(
-      title: 'الأسئلة الشائعة',
-      subtitle: 'أجوبة سريعة لأكثر ما يسأل عنه العملاء',
+      title: tr(context, 'الأسئلة الشائعة'),
+      subtitle: tr(context, 'أجوبة سريعة لأكثر ما يسأل عنه العملاء'),
       onRefresh: () async => setState(_load),
       child: FutureView<List<FaqItem>>(
         future: _future,
         onRetry: () => setState(_load),
         emptyCheck: (data) => data.isEmpty,
         emptyIcon: Icons.help_outline_rounded,
-        emptyTitle: 'لا توجد أسئلة منشورة',
-        loadingLabel: 'جاري تحميل الأسئلة',
+        emptyTitle: tr(context, 'لا توجد أسئلة منشورة'),
+        loadingLabel: tr(context, 'جاري تحميل الأسئلة'),
         builder: (context, faqs) => ListView.separated(
           padding: const EdgeInsets.only(bottom: 16),
           itemCount: faqs.length,
@@ -47,17 +48,26 @@ class _FaqScreenState extends State<FaqScreen> {
           itemBuilder: (context, index) => NovaCard(
             padding: EdgeInsets.zero,
             child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                tilePadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 2,
+                ),
                 childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                 iconColor: C.primaryDark,
                 collapsedIconColor: C.muted,
-                title: Text(faqs[index].question,
-                    style: ts(11.5, weight: FontWeight.w700, height: 1.6)),
+                title: Text(
+                  faqs[index].question,
+                  style: ts(11.5, weight: FontWeight.w700, height: 1.6),
+                ),
                 children: [
-                  Text(faqs[index].answer,
-                      style: ts(10.5, color: C.inkSoft, height: 1.85)),
+                  Text(
+                    faqs[index].answer,
+                    style: ts(10.5, color: C.inkSoft, height: 1.85),
+                  ),
                 ],
               ),
             ),

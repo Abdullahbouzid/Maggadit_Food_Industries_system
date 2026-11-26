@@ -5,6 +5,7 @@ import '../../state/app_dependencies.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class PrivacyScreen extends StatefulWidget {
   const PrivacyScreen({super.key});
@@ -29,15 +30,15 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   @override
   Widget build(BuildContext context) {
     return ScreenScaffold(
-      title: 'سياسة الخصوصية',
-      subtitle: 'كيف نتعامل مع بياناتك',
+      title: tr(context, 'سياسة الخصوصية'),
+      subtitle: tr(context, 'كيف نتعامل مع بياناتك'),
       onRefresh: () async => setState(_load),
       child: FutureView<String>(
         future: _future,
         onRetry: () => setState(_load),
         emptyCheck: (data) => data.trim().isEmpty,
-        emptyTitle: 'لم تُنشر سياسة الخصوصية بعد',
-        loadingLabel: 'جاري التحميل',
+        emptyTitle: tr(context, 'لم تُنشر سياسة الخصوصية بعد'),
+        loadingLabel: tr(context, 'جاري التحميل'),
         builder: (context, content) => SingleChildScrollView(
           child: NovaCard(
             child: Column(
@@ -45,9 +46,16 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.shield_rounded, size: 18, color: C.primaryDark),
+                    const Icon(
+                      Icons.shield_rounded,
+                      size: 18,
+                      color: C.primaryDark,
+                    ),
                     const SizedBox(width: 8),
-                    Text('التزامنا بخصوصيتك', style: ts(13, weight: FontWeight.w700)),
+                    Text(
+                      tr(context, 'التزامنا بخصوصيتك'),
+                      style: ts(13, weight: FontWeight.w700),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),

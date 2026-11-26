@@ -1,3 +1,4 @@
+import '../l10n/l10n.dart';
 import 'json_utils.dart';
 
 class OrderLine {
@@ -19,13 +20,19 @@ class OrderLine {
       json['line_total'] ?? json['subtotal'],
       quantity * unitPrice,
     );
-    final name = [
-      json['name'],
-      json['item_name_ar'],
-      json['item_name'],
-      item['name_ar'],
-      item['name_en'],
-    ].map((value) => asString(value)).firstWhere((value) => value.isNotEmpty, orElse: () => 'منتج');
+    final name =
+        [
+              json['name'],
+              json['item_name_ar'],
+              json['item_name'],
+              item['name_ar'],
+              item['name_en'],
+            ]
+            .map((value) => asString(value))
+            .firstWhere(
+              (value) => value.isNotEmpty,
+              orElse: () => L10n.tr('منتج'),
+            );
     final packLabel = [json['pack'], json['pack_name'], packMap['display_name']]
         .whereType<String>()
         .map((value) => value.trim())
@@ -35,10 +42,14 @@ class OrderLine {
       name: name,
       quantity: quantity,
       unitPrice: unitPrice,
-      lineTotal: lineTotal == 0 && quantity != 0 ? quantity * unitPrice : lineTotal,
+      lineTotal: lineTotal == 0 && quantity != 0
+          ? quantity * unitPrice
+          : lineTotal,
       pack: packLabel.isEmpty ? null : packLabel,
-      image: mediaUrl(asString(json['image']).isEmpty ? null : asString(json['image']),
-          baseUrl: baseUrl),
+      image: mediaUrl(
+        asString(json['image']).isEmpty ? null : asString(json['image']),
+        baseUrl: baseUrl,
+      ),
     );
   }
 
@@ -83,7 +94,8 @@ class OrderStep {
 class OrderTimelineEntry {
   OrderTimelineEntry({required this.status, this.by, this.date});
 
-  factory OrderTimelineEntry.fromJson(Map<String, dynamic> json) => OrderTimelineEntry(
+  factory OrderTimelineEntry.fromJson(Map<String, dynamic> json) =>
+      OrderTimelineEntry(
         status: asString(json['to'] ?? json['status']),
         by: asString(json['by']).isEmpty ? null : asString(json['by']),
         date: asString(json['date']).isEmpty ? null : asString(json['date']),
@@ -125,16 +137,22 @@ class OrderSummary {
       statusText: asString(json['status_text']),
       statusClass: asString(json['status_class'], 'muted'),
       progress: asInt(json['progress']),
-      itemsCount: asInt(json['items_count'],
-          (json['items'] is List ? (json['items'] as List).length : 0)),
-      items: asMapList(json['items'])
-          .map((e) => OrderLine.fromJson(e, baseUrl: baseUrl))
-          .toList(),
-      branchName: asString(json['branch_name']).isEmpty ? null : asString(json['branch_name']),
-      invoiceNumber:
-          asString(json['invoice_number']).isEmpty ? null : asString(json['invoice_number']),
-      quotationNumber:
-          asString(json['quotation_number']).isEmpty ? null : asString(json['quotation_number']),
+      itemsCount: asInt(
+        json['items_count'],
+        (json['items'] is List ? (json['items'] as List).length : 0),
+      ),
+      items: asMapList(
+        json['items'],
+      ).map((e) => OrderLine.fromJson(e, baseUrl: baseUrl)).toList(),
+      branchName: asString(json['branch_name']).isEmpty
+          ? null
+          : asString(json['branch_name']),
+      invoiceNumber: asString(json['invoice_number']).isEmpty
+          ? null
+          : asString(json['invoice_number']),
+      quotationNumber: asString(json['quotation_number']).isEmpty
+          ? null
+          : asString(json['quotation_number']),
       canRespond: asBool(json['can_respond']),
       hasQuotation: asBool(json['has_quotation']),
       hasInvoice: asBool(json['has_invoice']),
@@ -212,12 +230,16 @@ class OrderDetail extends OrderSummary {
       deliveryAddress: asString(order['delivery_address']).isEmpty
           ? null
           : asString(order['delivery_address']),
-      deliveryPhone:
-          asString(order['delivery_phone']).isEmpty ? null : asString(order['delivery_phone']),
-      customerName:
-          asString(order['customer_name']).isEmpty ? null : asString(order['customer_name']),
+      deliveryPhone: asString(order['delivery_phone']).isEmpty
+          ? null
+          : asString(order['delivery_phone']),
+      customerName: asString(order['customer_name']).isEmpty
+          ? null
+          : asString(order['customer_name']),
       steps: asMapList(json['steps']).map(OrderStep.fromJson).toList(),
-      timeline: asMapList(json['timeline']).map(OrderTimelineEntry.fromJson).toList(),
+      timeline: asMapList(
+        json['timeline'],
+      ).map(OrderTimelineEntry.fromJson).toList(),
       quotation: asMap(order['quotation']).isEmpty
           ? null
           : Quotation.fromJson(asMap(order['quotation'])),
@@ -248,11 +270,11 @@ class QuotationLine {
   });
 
   factory QuotationLine.fromJson(Map<String, dynamic> json) => QuotationLine(
-        name: asString(json['item_name_ar'] ?? json['item_name_en']),
-        quantity: asDouble(json['quantity']),
-        unitPrice: asDouble(json['unit_price']),
-        lineTotal: asDouble(json['line_total']),
-      );
+    name: asString(json['item_name_ar'] ?? json['item_name_en']),
+    quantity: asDouble(json['quantity']),
+    unitPrice: asDouble(json['unit_price']),
+    lineTotal: asDouble(json['line_total']),
+  );
 
   final String name;
   final double quantity;
@@ -275,19 +297,21 @@ class Quotation {
   });
 
   factory Quotation.fromJson(Map<String, dynamic> json) => Quotation(
-        id: asInt(json['id']),
-        number: asString(json['quotation_number']),
-        status: asString(json['status']),
-        total: asDouble(json['total']),
-        subtotal: asDouble(json['subtotal']),
-        taxTotal: asDouble(json['tax_total']),
-        discountTotal: asDouble(json['discount_total']),
-        validUntil: asString(json['valid_until']).isEmpty ? null : asString(json['valid_until']),
-        customerResponse: asString(json['customer_response']).isEmpty
-            ? null
-            : asString(json['customer_response']),
-        items: asMapList(json['items']).map(QuotationLine.fromJson).toList(),
-      );
+    id: asInt(json['id']),
+    number: asString(json['quotation_number']),
+    status: asString(json['status']),
+    total: asDouble(json['total']),
+    subtotal: asDouble(json['subtotal']),
+    taxTotal: asDouble(json['tax_total']),
+    discountTotal: asDouble(json['discount_total']),
+    validUntil: asString(json['valid_until']).isEmpty
+        ? null
+        : asString(json['valid_until']),
+    customerResponse: asString(json['customer_response']).isEmpty
+        ? null
+        : asString(json['customer_response']),
+    items: asMapList(json['items']).map(QuotationLine.fromJson).toList(),
+  );
 
   final int id;
   final String number;
@@ -308,13 +332,13 @@ class OrderHistory {
   factory OrderHistory.fromJson(Map<String, dynamic> json, {String? baseUrl}) {
     final payload = asMap(json['data']).isEmpty ? json : asMap(json['data']);
     return OrderHistory(
-      rows: asMapList(payload['rows'])
-          .map((e) => OrderSummary.fromJson(e, baseUrl: baseUrl))
-          .toList(),
+      rows: asMapList(
+        payload['rows'],
+      ).map((e) => OrderSummary.fromJson(e, baseUrl: baseUrl)).toList(),
       stats: Map<String, int>.fromEntries(
-        asMap(payload['stats']).entries.map(
-          (e) => MapEntry(e.key, asInt(e.value)),
-        ),
+        asMap(
+          payload['stats'],
+        ).entries.map((e) => MapEntry(e.key, asInt(e.value))),
       ),
     );
   }
@@ -337,7 +361,10 @@ class CustomerReturn {
     this.items = const [],
   });
 
-  factory CustomerReturn.fromJson(Map<String, dynamic> json, {String? baseUrl}) {
+  factory CustomerReturn.fromJson(
+    Map<String, dynamic> json, {
+    String? baseUrl,
+  }) {
     final invoice = asMap(json['invoice']);
     return CustomerReturn(
       id: asInt(json['id']),
@@ -347,13 +374,16 @@ class CustomerReturn {
       reason: asString(json['reason']),
       totalRefund: asDouble(json['total_refund']),
       createdAt: asString(json['created_at']),
-      branchName: asString(json['branch_name']).isEmpty ? null : asString(json['branch_name']),
-      invoiceNumber: asString(json['invoice_number'] ?? invoice['invoice_number']).isEmpty
+      branchName: asString(json['branch_name']).isEmpty
+          ? null
+          : asString(json['branch_name']),
+      invoiceNumber:
+          asString(json['invoice_number'] ?? invoice['invoice_number']).isEmpty
           ? null
           : asString(json['invoice_number'] ?? invoice['invoice_number']),
-      items: asMapList(json['items'])
-          .map((e) => OrderLine.fromJson(e, baseUrl: baseUrl))
-          .toList(),
+      items: asMapList(
+        json['items'],
+      ).map((e) => OrderLine.fromJson(e, baseUrl: baseUrl)).toList(),
     );
   }
 
@@ -377,10 +407,12 @@ class OwnedBatch {
   });
 
   factory OwnedBatch.fromJson(Map<String, dynamic> json) => OwnedBatch(
-        batchNumber: asString(json['batch_number']),
-        quantity: asDouble(json['quantity']),
-        expiryDate: asString(json['expiry_date']).isEmpty ? null : asString(json['expiry_date']),
-      );
+    batchNumber: asString(json['batch_number']),
+    quantity: asDouble(json['quantity']),
+    expiryDate: asString(json['expiry_date']).isEmpty
+        ? null
+        : asString(json['expiry_date']),
+  );
 
   final String batchNumber;
   final double quantity;
@@ -399,14 +431,14 @@ class OwnedProduct {
   });
 
   factory OwnedProduct.fromJson(Map<String, dynamic> json) => OwnedProduct(
-        itemId: asInt(json['item_id']),
-        name: asString(json['name']),
-        code: asString(json['code']),
-        totalQuantity: asDouble(json['total_quantity']),
-        invoiceCount: asInt(json['invoice_count']),
-        totalValue: asDouble(json['total_value']),
-        batches: asMapList(json['batches']).map(OwnedBatch.fromJson).toList(),
-      );
+    itemId: asInt(json['item_id']),
+    name: asString(json['name']),
+    code: asString(json['code']),
+    totalQuantity: asDouble(json['total_quantity']),
+    invoiceCount: asInt(json['invoice_count']),
+    totalValue: asDouble(json['total_value']),
+    batches: asMapList(json['batches']).map(OwnedBatch.fromJson).toList(),
+  );
 
   final int itemId;
   final String name;

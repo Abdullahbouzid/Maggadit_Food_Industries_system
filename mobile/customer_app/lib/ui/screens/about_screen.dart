@@ -6,6 +6,7 @@ import '../../state/app_dependencies.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -30,13 +31,13 @@ class _AboutScreenState extends State<AboutScreen> {
   @override
   Widget build(BuildContext context) {
     return ScreenScaffold(
-      title: 'من نحن',
-      subtitle: 'ماغديت للصناعات الغذائية',
+      title: tr(context, 'من نحن'),
+      subtitle: tr(context, 'ماغديت للصناعات الغذائية'),
       onRefresh: () async => setState(_load),
       child: FutureView<AboutContent>(
         future: _future,
         onRetry: () => setState(_load),
-        loadingLabel: 'جاري تحميل البيانات',
+        loadingLabel: tr(context, 'جاري تحميل البيانات'),
         builder: (context, about) => ListView(
           padding: const EdgeInsets.only(bottom: 20),
           children: [
@@ -56,16 +57,20 @@ class _AboutScreenState extends State<AboutScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(about.title.isEmpty ? 'ماغديت' : about.title,
-                      style: ts(15, weight: FontWeight.w700)),
+                  Text(
+                    about.title.isEmpty ? tr(context, 'ماغديت') : about.title,
+                    style: ts(15, weight: FontWeight.w700),
+                  ),
                   if (about.subtitle.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(about.subtitle, style: ts(10, color: C.muted)),
                   ],
                   if (about.description.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    Text(about.description,
-                        style: ts(11, color: C.inkSoft, height: 1.9)),
+                    Text(
+                      about.description,
+                      style: ts(11, color: C.inkSoft, height: 1.9),
+                    ),
                   ],
                 ],
               ),
@@ -74,7 +79,7 @@ class _AboutScreenState extends State<AboutScreen> {
               const SizedBox(height: 12),
               _Block(
                 icon: Icons.visibility_rounded,
-                title: 'رؤيتنا',
+                title: tr(context, 'رؤيتنا'),
                 text: about.vision,
                 color: C.info,
                 background: C.infoSoft,
@@ -84,7 +89,7 @@ class _AboutScreenState extends State<AboutScreen> {
               const SizedBox(height: 12),
               _Block(
                 icon: Icons.flag_rounded,
-                title: 'رسالتنا',
+                title: tr(context, 'رسالتنا'),
                 text: about.mission,
                 color: C.success,
                 background: C.successSoft,
@@ -96,7 +101,10 @@ class _AboutScreenState extends State<AboutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('قيمنا', style: ts(12.5, weight: FontWeight.w700)),
+                    Text(
+                      tr(context, 'قيمنا'),
+                      style: ts(12.5, weight: FontWeight.w700),
+                    ),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
@@ -111,8 +119,11 @@ class _AboutScreenState extends State<AboutScreen> {
             ],
             const SizedBox(height: 18),
             Center(
-              child: Text('Maggadit Food Industries · v1.0.0',
-                  style: ts(9, color: C.muted), textDirection: TextDirection.ltr),
+              child: Text(
+                'Maggadit Food Industries · v1.0.0',
+                style: ts(9, color: C.muted),
+                textDirection: TextDirection.ltr,
+              ),
             ),
           ],
         ),
@@ -145,7 +156,10 @@ class _Block extends StatelessWidget {
           Container(
             width: 34,
             height: 34,
-            decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(11)),
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(11),
+            ),
             child: Icon(icon, size: 16, color: color),
           ),
           const SizedBox(width: 10),

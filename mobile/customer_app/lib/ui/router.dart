@@ -29,6 +29,7 @@ import 'screens/survey_fill_screen.dart';
 import 'screens/surveys_screen.dart';
 import 'screens/taxonomy_screen.dart';
 import 'screens/wallet_screen.dart';
+import '../l10n/l10n.dart';
 
 /// Centralised navigation so every screen can be opened from anywhere
 /// (including notification taps).
@@ -49,8 +50,7 @@ class Routes {
     }
   }
 
-  static Future<void> home() =>
-      _push(const MainShell(), replace: true);
+  static Future<void> home() => _push(const MainShell(), replace: true);
 
   static Future<void> login() => _push(const LoginScreen(), replace: true);
 
@@ -61,13 +61,14 @@ class Routes {
     String? search,
     int? categoryId,
     int? brandId,
-  }) =>
-      _push(ProductsScreen(
-        title: title ?? 'المنتجات',
-        initialSearch: search,
-        categoryId: categoryId,
-        brandId: brandId,
-      ));
+  }) => _push(
+    ProductsScreen(
+      title: title,
+      initialSearch: search,
+      categoryId: categoryId,
+      brandId: brandId,
+    ),
+  );
 
   static Future<void> product(int id, {Product? preview}) =>
       _push(ProductDetailScreen(productId: id, preview: preview));
@@ -100,7 +101,8 @@ class Routes {
 
   static Future<void> invoices() => _push(const InvoicesScreen());
 
-  static Future<void> invoice(int id) => _push(InvoiceDetailScreen(invoiceId: id));
+  static Future<void> invoice(int id) =>
+      _push(InvoiceDetailScreen(invoiceId: id));
 
   static Future<void> surveys() => _push(const SurveysScreen());
 

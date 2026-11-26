@@ -8,6 +8,7 @@ import '../router.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -20,7 +21,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
   late Future<OrderHistory> _future;
   int _tab = 0;
 
-  static const _tabs = ['الكل', 'قيد التنفيذ', 'مكتملة'];
+  List<String> _tabs(BuildContext context) => [
+    tr(context, 'الكل'),
+    tr(context, 'قيد التنفيذ'),
+    tr(context, 'مكتملة'),
+  ];
 
   @override
   void initState() {
@@ -38,19 +43,24 @@ class _OrdersScreenState extends State<OrdersScreen> {
     final danger = StatusPalette.color('danger');
     if (_tab == 1) {
       return rows
-          .where((o) =>
-              StatusPalette.color(o.statusClass) != success &&
-              StatusPalette.color(o.statusClass) != danger)
+          .where(
+            (o) =>
+                StatusPalette.color(o.statusClass) != success &&
+                StatusPalette.color(o.statusClass) != danger,
+          )
           .toList();
     }
-    return rows.where((o) => StatusPalette.color(o.statusClass) == success).toList();
+    return rows
+        .where((o) => StatusPalette.color(o.statusClass) == success)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final tabs = _tabs(context);
     return ScreenScaffold(
-      title: 'طلباتي',
-      subtitle: 'متابعة الطلبات والفواتير',
+      title: tr(context, 'طلباتي'),
+      subtitle: tr(context, 'متابعة الطلبات والفواتير'),
       onRefresh: () async => setState(_load),
       child: Column(
         children: [
@@ -63,7 +73,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
             ),
             child: Row(
               children: [
-                for (var i = 0; i < _tabs.length; i++)
+                for (var i = 0; i < tabs.length; i++)
                   Expanded(
                     child: GestureDetector(
                       onTap: () => setState(() => _tab = i),
@@ -75,11 +85,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Text(
-                          _tabs[i],
+                          tabs[i],
                           textAlign: TextAlign.center,
-                          style: ts(11,
-                              weight: FontWeight.w600,
-                              color: _tab == i ? Colors.white : C.inkSoft),
+                          style: ts(
+                            11,
+                            weight: FontWeight.w600,
+                            color: _tab == i ? Colors.white : C.inkSoft,
+                          ),
                         ),
                       ),
                     ),
@@ -94,16 +106,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
               onRetry: () => setState(_load),
               emptyCheck: (data) => data.rows.isEmpty,
               emptyIcon: Icons.receipt_long_rounded,
-              emptyTitle: 'لا توجد طلبات',
-              emptyMessage: 'ستظهر طلباتك هنا فور إرسالها',
-              loadingLabel: 'جاري تحميل الطلبات',
+              emptyTitle: tr(context, 'لا توجد طلبات'),
+              emptyMessage: tr(context, 'ستظهر طلباتك هنا فور إرسالها'),
+              loadingLabel: tr(context, 'جاري تحميل الطلبات'),
               builder: (context, history) {
                 final rows = _filter(history.rows);
                 if (rows.isEmpty) {
                   return EmptyState(
                     icon: Icons.filter_alt_off_rounded,
-                    title: 'لا توجد طلبات في هذا التصنيف',
-                    actionLabel: 'عرض الكل',
+                    title: tr(context, 'لا توجد طلبات في هذا التصنيف'),
+                    actionLabel: tr(context, 'عرض الكل'),
                     onAction: () => setState(() => _tab = 0),
                   );
                 }
@@ -114,7 +126,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     padding: const EdgeInsets.only(bottom: 16),
                     itemCount: rows.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) => _OrderCard(order: rows[index]),
+                    itemBuilder: (context, index) =>
+                        _OrderCard(order: rows[index]),
                   ),
                 );
               },
@@ -147,12 +160,19 @@ class _OrderCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(order.number,
-                        style: ts(12.5, weight: FontWeight.w700),
-                        textDirection: TextDirection.ltr),
+                    Text(
+                      order.number,
+                      style: ts(12.5, weight: FontWeight.w700),
+                      textDirection: TextDirection.ltr,
+                    ),
                     const SizedBox(height: 2),
-                    Text('${Fmt.date(order.date)} · ${order.itemsCount} أصناف',
-                        style: ts(9, color: C.muted)),
+                    Text(
+                      tArgs(context, '{0} · {1} أصناف', [
+                        Fmt.date(order.date),
+                        order.itemsCount,
+                      ]),
+                      style: ts(9, color: C.muted),
+                    ),
                   ],
                 ),
               ),
@@ -173,17 +193,26 @@ class _OrderCard extends StatelessWidget {
           Row(
             children: [
               if (order.branchName != null) ...[
-                const Icon(Icons.store_mall_directory_rounded, size: 13, color: C.muted),
+                const Icon(
+                  Icons.store_mall_directory_rounded,
+                  size: 13,
+                  color: C.muted,
+                ),
                 const SizedBox(width: 3),
                 Flexible(
-                  child: Text(order.branchName!,
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: ts(9, color: C.muted)),
+                  child: Text(
+                    order.branchName!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ts(9, color: C.muted),
+                  ),
                 ),
               ],
               const Spacer(),
-              Text(Fmt.price(order.total),
-                  style: ts(13, weight: FontWeight.w700, color: C.primaryDark)),
+              Text(
+                Fmt.price(order.total),
+                style: ts(13, weight: FontWeight.w700, color: C.primaryDark),
+              ),
             ],
           ),
           if (order.canRespond) ...[
@@ -196,13 +225,22 @@ class _OrderCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, size: 14, color: C.warning),
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 14,
+                    color: C.warning,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: Text('يوجد عرض سعر بانتظار موافقتك',
-                        style: ts(9.5, color: C.warning, weight: FontWeight.w600)),
+                    child: Text(
+                      tr(context, 'يوجد عرض سعر بانتظار موافقتك'),
+                      style: ts(9.5, color: C.warning, weight: FontWeight.w600),
+                    ),
                   ),
-                  Text('مراجعة', style: ts(9.5, weight: FontWeight.w700, color: C.warning)),
+                  Text(
+                    tr(context, 'مراجعة'),
+                    style: ts(9.5, weight: FontWeight.w700, color: C.warning),
+                  ),
                 ],
               ),
             ),

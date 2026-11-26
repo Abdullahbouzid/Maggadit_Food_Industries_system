@@ -7,6 +7,7 @@ import '../router.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 enum TaxonomyKind { categories, brands }
 
@@ -40,14 +41,18 @@ class _TaxonomyScreenState extends State<TaxonomyScreen> {
   Widget build(BuildContext context) {
     final isCategories = widget.kind == TaxonomyKind.categories;
     return ScreenScaffold(
-      title: isCategories ? 'الفئات' : 'الماركات',
-      subtitle: isCategories ? 'تصفّح المنتجات حسب الفئة' : 'تصفّح المنتجات حسب الماركة',
+      title: isCategories ? tr(context, 'الفئات') : tr(context, 'الماركات'),
+      subtitle: isCategories
+          ? tr(context, 'تصفّح المنتجات حسب الفئة')
+          : tr(context, 'تصفّح المنتجات حسب الماركة'),
       onRefresh: () async => setState(_load),
       child: FutureView<List<Object>>(
         future: _future,
         onRetry: () => setState(_load),
         emptyCheck: (data) => data.isEmpty,
-        emptyTitle: isCategories ? 'لا توجد فئات' : 'لا توجد ماركات',
+        emptyTitle: isCategories
+            ? tr(context, 'لا توجد فئات')
+            : tr(context, 'لا توجد ماركات'),
         builder: (context, data) => ListView.separated(
           itemCount: data.length,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
@@ -58,7 +63,10 @@ class _TaxonomyScreenState extends State<TaxonomyScreen> {
                 title: category.name,
                 image: category.image,
                 icon: Icons.category_rounded,
-                onTap: () => Routes.products(title: category.name, categoryId: category.id),
+                onTap: () => Routes.products(
+                  title: category.name,
+                  categoryId: category.id,
+                ),
               );
             }
             final brand = data[index] as AppBrand;
@@ -66,7 +74,8 @@ class _TaxonomyScreenState extends State<TaxonomyScreen> {
               title: brand.name,
               image: brand.logo,
               icon: Icons.storefront_rounded,
-              onTap: () => Routes.products(title: brand.name, brandId: brand.id),
+              onTap: () =>
+                  Routes.products(title: brand.name, brandId: brand.id),
             );
           },
         ),
@@ -95,12 +104,21 @@ class _TaxonomyTile extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       child: Row(
         children: [
-          RemoteImage(url: image, width: 52, height: 52, radius: 14, icon: icon),
+          RemoteImage(
+            url: image,
+            width: 52,
+            height: 52,
+            radius: 14,
+            icon: icon,
+          ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(title,
-                maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: ts(13, weight: FontWeight.w600)),
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ts(13, weight: FontWeight.w600),
+            ),
           ),
           const Icon(Icons.chevron_left_rounded, size: 20, color: C.muted),
         ],

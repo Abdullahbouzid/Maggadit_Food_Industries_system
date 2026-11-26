@@ -11,6 +11,7 @@ import '../../state/app_dependencies.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
@@ -32,32 +33,44 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   void _load() {
-    _future = context.read<AppDependencies>().orderService.order(widget.orderId);
+    _future = context.read<AppDependencies>().orderService.order(
+      widget.orderId,
+    );
   }
 
   Future<void> _respond(String response) async {
     setState(() => _busy = true);
     try {
       await context.read<AppDependencies>().orderService.respondToQuotation(
-            widget.orderId,
-            response,
-          );
+        widget.orderId,
+        response,
+      );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(response == 'approved' ? 'تم اعتماد عرض السعر' : 'تم رفض عرض السعر',
-            style: ts(11, color: Colors.white)),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            response == 'approved'
+                ? tr(context, 'تم اعتماد عرض السعر')
+                : tr(context, 'تم رفض عرض السعر'),
+            style: ts(11, color: Colors.white),
+          ),
+        ),
+      );
       setState(_load);
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _download(Future<List<int>> Function() loader, String fileName) async {
+  Future<void> _download(
+    Future<List<int>> Function() loader,
+    String fileName,
+  ) async {
     setState(() => _busy = true);
     try {
       final bytes = await loader();
@@ -68,13 +81,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       if (!mounted) return;
       if (!ok) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم حفظ الملف لكن تعذّر فتحه')),
+          SnackBar(content: Text(tr(context, 'تم حفظ الملف لكن تعذّر فتحه'))),
         );
       }
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -83,13 +97,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return ScreenScaffold(
-      title: 'تفاصيل الطلب',
-      subtitle: 'متابعة حالة الطلب والفاتورة',
+      title: tr(context, 'تفاصيل الطلب'),
+      subtitle: tr(context, 'متابعة حالة الطلب والفاتورة'),
       onRefresh: () async => setState(_load),
       child: FutureView<OrderDetail>(
         future: _future,
         onRetry: () => setState(_load),
-        loadingLabel: 'جاري تحميل الطلب',
+        loadingLabel: tr(context, 'جاري تحميل الطلب'),
         builder: (context, order) => ListView(
           padding: const EdgeInsets.only(bottom: 20),
           children: [
@@ -124,18 +138,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               invoiceNumber: order.invoiceNumber,
               busy: _busy,
               onOrderPdf: () => _download(
-                () => context.read<AppDependencies>().orderService.orderPdf(order.id),
+                () => context.read<AppDependencies>().orderService.orderPdf(
+                  order.id,
+                ),
                 pdfFileName('order', order.number),
               ),
               onInvoicePdf: order.invoiceNumber == null
                   ? null
                   : () => _download(
-                        () => context
-                            .read<AppDependencies>()
-                            .orderService
-                            .invoicePdf(order.id),
-                        pdfFileName('invoice', order.invoiceNumber!),
-                      ),
+                      () => context
+                          .read<AppDependencies>()
+                          .orderService
+                          .invoicePdf(order.id),
+                      pdfFileName('invoice', order.invoiceNumber!),
+                    ),
             ),
           ],
         ),
@@ -161,12 +177,19 @@ class _HeaderCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(order.number,
-                        style: ts(14, weight: FontWeight.w700),
-                        textDirection: TextDirection.ltr),
+                    Text(
+                      order.number,
+                      style: ts(14, weight: FontWeight.w700),
+                      textDirection: TextDirection.ltr,
+                    ),
                     const SizedBox(height: 3),
-                    Text('${Fmt.date(order.date)} · ${order.itemsCount} أصناف',
-                        style: ts(9.5, color: C.muted)),
+                    Text(
+                      tArgs(context, '{0} · {1} أصناف', [
+                        Fmt.date(order.date),
+                        order.itemsCount,
+                      ]),
+                      style: ts(9.5, color: C.muted),
+                    ),
                   ],
                 ),
               ),
@@ -180,11 +203,20 @@ class _HeaderCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              _Metric(label: 'الإجمالي', value: Fmt.price(order.total)),
+              _Metric(
+                label: tr(context, 'الإجمالي'),
+                value: Fmt.price(order.total),
+              ),
               _Divider(),
-              _Metric(label: 'التقدّم', value: '${order.progress}%'),
+              _Metric(
+                label: tr(context, 'التقدّم'),
+                value: '${order.progress}%',
+              ),
               _Divider(),
-              _Metric(label: 'الفرع', value: order.branchName ?? '—'),
+              _Metric(
+                label: tr(context, 'الفرع'),
+                value: order.branchName ?? '—',
+              ),
             ],
           ),
         ],
@@ -206,11 +238,13 @@ class _Metric extends StatelessWidget {
         children: [
           Text(label, style: ts(8.5, color: C.muted)),
           const SizedBox(height: 4),
-          Text(value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: ts(11, weight: FontWeight.w700)),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: ts(11, weight: FontWeight.w700),
+          ),
         ],
       ),
     );
@@ -246,10 +280,18 @@ class _StepsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('مراحل الطلب', style: ts(13, weight: FontWeight.w700)),
+              Text(
+                tr(context, 'مراحل الطلب'),
+                style: ts(13, weight: FontWeight.w700),
+              ),
               const Spacer(),
-              Text('${(currentIndex + 1).clamp(0, order.steps.length)} من ${order.steps.length}',
-                  style: ts(9.5, color: C.muted)),
+              Text(
+                tArgs(context, '{0} من {1}', [
+                  (currentIndex + 1).clamp(0, order.steps.length),
+                  order.steps.length,
+                ]),
+                style: ts(9.5, color: C.muted),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -266,7 +308,11 @@ class _StepsCard extends StatelessWidget {
 }
 
 class _StepRow extends StatelessWidget {
-  const _StepRow({required this.step, required this.isLast, required this.current});
+  const _StepRow({
+    required this.step,
+    required this.isLast,
+    required this.current,
+  });
 
   final OrderStep step;
   final bool isLast;
@@ -288,7 +334,9 @@ class _StepRow extends StatelessWidget {
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: reached ? StatusPalette.background(step.color) : const Color(0xFFF1F5F9),
+                    color: reached
+                        ? StatusPalette.background(step.color)
+                        : const Color(0xFFF1F5F9),
                     shape: BoxShape.circle,
                     border: Border.all(color: color, width: 1.4),
                   ),
@@ -300,7 +348,10 @@ class _StepRow extends StatelessWidget {
                 ),
                 if (!isLast)
                   Expanded(
-                    child: Container(width: 2, color: reached ? color : C.border),
+                    child: Container(
+                      width: 2,
+                      color: reached ? color : C.border,
+                    ),
                   ),
               ],
             ),
@@ -314,21 +365,32 @@ class _StepRow extends StatelessWidget {
                   Flexible(
                     child: Text(
                       step.label,
-                      style: ts(11,
-                          weight: current ? FontWeight.w700 : FontWeight.w500,
-                          color: reached ? C.ink : C.muted),
+                      style: ts(
+                        11,
+                        weight: current ? FontWeight.w700 : FontWeight.w500,
+                        color: reached ? C.ink : C.muted,
+                      ),
                     ),
                   ),
                   if (current) ...[
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: C.purpleSoft,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text('الآن',
-                          style: ts(7.5, weight: FontWeight.w700, color: C.primaryDark)),
+                      child: Text(
+                        tr(context, 'الآن'),
+                        style: ts(
+                          7.5,
+                          weight: FontWeight.w700,
+                          color: C.primaryDark,
+                        ),
+                      ),
                     ),
                   ],
                 ],
@@ -354,17 +416,29 @@ class _DeliveryCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.local_shipping_rounded, size: 16, color: C.primaryDark),
+              const Icon(
+                Icons.local_shipping_rounded,
+                size: 16,
+                color: C.primaryDark,
+              ),
               const SizedBox(width: 6),
-              Text('تفاصيل التوصيل', style: ts(12.5, weight: FontWeight.w700)),
+              Text(
+                tr(context, 'تفاصيل التوصيل'),
+                style: ts(12.5, weight: FontWeight.w700),
+              ),
             ],
           ),
           const SizedBox(height: 10),
           if (order.deliveryAddress != null)
-            _Row(label: 'العنوان', value: order.deliveryAddress!),
+            _Row(label: tr(context, 'العنوان'), value: order.deliveryAddress!),
           if (order.deliveryPhone != null)
-            _Row(label: 'الهاتف', value: order.deliveryPhone!, ltr: true),
-          if (order.customerName != null) _Row(label: 'العميل', value: order.customerName!),
+            _Row(
+              label: tr(context, 'الهاتف'),
+              value: order.deliveryPhone!,
+              ltr: true,
+            ),
+          if (order.customerName != null)
+            _Row(label: tr(context, 'العميل'), value: order.customerName!),
         ],
       ),
     );
@@ -385,12 +459,17 @@ class _Row extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 64, child: Text(label, style: ts(9.5, color: C.muted))),
+          SizedBox(
+            width: 64,
+            child: Text(label, style: ts(9.5, color: C.muted)),
+          ),
           Expanded(
-            child: Text(value,
-                textDirection: ltr ? TextDirection.ltr : null,
-                textAlign: ltr ? TextAlign.right : TextAlign.start,
-                style: ts(10.5, color: C.inkSoft)),
+            child: Text(
+              value,
+              textDirection: ltr ? TextDirection.ltr : null,
+              textAlign: ltr ? TextAlign.right : TextAlign.start,
+              style: ts(10.5, color: C.inkSoft),
+            ),
           ),
         ],
       ),
@@ -410,7 +489,10 @@ class _ItemsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('أصناف الطلب', style: ts(12.5, weight: FontWeight.w700)),
+          Text(
+            tr(context, 'أصناف الطلب'),
+            style: ts(12.5, weight: FontWeight.w700),
+          ),
           const SizedBox(height: 10),
           for (final line in order.items)
             Padding(
@@ -421,9 +503,12 @@ class _ItemsCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(line.name,
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: ts(11, weight: FontWeight.w600)),
+                        Text(
+                          line.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: ts(11, weight: FontWeight.w600),
+                        ),
                         Text(
                           '${Fmt.quantity(line.quantity)} × ${Fmt.price(line.unitPrice)}',
                           style: ts(9, color: C.muted),
@@ -431,8 +516,14 @@ class _ItemsCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Text(Fmt.price(line.lineTotal),
-                      style: ts(11, weight: FontWeight.w700, color: C.primaryDark)),
+                  Text(
+                    Fmt.price(line.lineTotal),
+                    style: ts(
+                      11,
+                      weight: FontWeight.w700,
+                      color: C.primaryDark,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -469,19 +560,29 @@ class _QuotationCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.description_rounded, size: 16, color: C.primaryDeep),
+              const Icon(
+                Icons.description_rounded,
+                size: 16,
+                color: C.primaryDeep,
+              ),
               const SizedBox(width: 6),
-              Text('عرض السعر ${quotation.number}',
-                  style: ts(12.5, weight: FontWeight.w700, color: C.primaryDeep)),
+              Text(
+                tArgs(context, 'عرض السعر {0}', [quotation.number]),
+                style: ts(12.5, weight: FontWeight.w700, color: C.primaryDeep),
+              ),
               const Spacer(),
-              Text(Fmt.price(quotation.total),
-                  style: ts(13, weight: FontWeight.w700, color: C.primaryDeep)),
+              Text(
+                Fmt.price(quotation.total),
+                style: ts(13, weight: FontWeight.w700, color: C.primaryDeep),
+              ),
             ],
           ),
           if (quotation.validUntil != null) ...[
             const SizedBox(height: 6),
-            Text('صالح حتى ${Fmt.date(quotation.validUntil)}',
-                style: ts(9, color: C.primaryDark)),
+            Text(
+              tArgs(context, 'صالح حتى {0}', [Fmt.date(quotation.validUntil)]),
+              style: ts(9, color: C.primaryDark),
+            ),
           ],
           const SizedBox(height: 10),
           for (final line in quotation.items.take(4))
@@ -490,11 +591,17 @@ class _QuotationCard extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text('${line.name} × ${Fmt.quantity(line.quantity)}',
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: ts(10, color: C.inkSoft)),
+                    child: Text(
+                      '${line.name} × ${Fmt.quantity(line.quantity)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ts(10, color: C.inkSoft),
+                    ),
                   ),
-                  Text(Fmt.price(line.lineTotal), style: ts(10, color: C.inkSoft)),
+                  Text(
+                    Fmt.price(line.lineTotal),
+                    style: ts(10, color: C.inkSoft),
+                  ),
                 ],
               ),
             ),
@@ -503,7 +610,7 @@ class _QuotationCard extends StatelessWidget {
             children: [
               Expanded(
                 child: GhostButton(
-                  label: 'تحميل PDF',
+                  label: tr(context, 'تحميل PDF'),
                   icon: Icons.picture_as_pdf_rounded,
                   color: C.primaryDeep,
                   onPressed: busy ? null : onDownload,
@@ -513,7 +620,7 @@ class _QuotationCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: GhostButton(
-                    label: 'رفض',
+                    label: tr(context, 'رفض'),
                     color: C.danger,
                     onPressed: busy ? null : onReject,
                   ),
@@ -521,7 +628,7 @@ class _QuotationCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: PrimaryButton(
-                    label: 'موافقة',
+                    label: tr(context, 'موافقة'),
                     height: 44,
                     loading: busy,
                     color: C.success,
@@ -560,13 +667,16 @@ class _DocumentsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('المستندات', style: ts(12.5, weight: FontWeight.w700)),
+          Text(
+            tr(context, 'المستندات'),
+            style: ts(12.5, weight: FontWeight.w700),
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: GhostButton(
-                  label: 'طلب PDF',
+                  label: tr(context, 'طلب PDF'),
                   icon: Icons.receipt_long_rounded,
                   onPressed: busy ? null : onOrderPdf,
                 ),
@@ -575,7 +685,7 @@ class _DocumentsCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: GhostButton(
-                    label: 'فاتورة $invoiceNumber',
+                    label: tArgs(context, 'فاتورة {0}', [invoiceNumber]),
                     icon: Icons.picture_as_pdf_rounded,
                     onPressed: busy ? null : onInvoicePdf,
                   ),

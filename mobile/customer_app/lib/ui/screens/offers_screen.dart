@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../widgets/cards.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class OffersScreen extends StatefulWidget {
   const OffersScreen({super.key, this.embedded = false});
@@ -38,9 +39,9 @@ class _OffersScreenState extends State<OffersScreen> {
       onRetry: () => setState(_load),
       emptyCheck: (data) => data.isEmpty,
       emptyIcon: Icons.local_offer_outlined,
-      emptyTitle: 'لا توجد عروض حالياً',
-      emptyMessage: 'تابعنا، سنضيف عروضاً جديدة قريباً',
-      loadingLabel: 'جاري تحميل العروض',
+      emptyTitle: tr(context, 'لا توجد عروض حالياً'),
+      emptyMessage: tr(context, 'تابعنا، سنضيف عروضاً جديدة قريباً'),
+      loadingLabel: tr(context, 'جاري تحميل العروض'),
       builder: (context, offers) => ListView.separated(
         padding: const EdgeInsets.only(bottom: 16),
         itemCount: offers.length,
@@ -63,14 +64,23 @@ class _OffersScreenState extends State<OffersScreen> {
           children: [
             Row(
               children: [
-                Text('العروض', style: ts(18, weight: FontWeight.w700)),
+                Text(
+                  tr(context, 'العروض'),
+                  style: ts(18, weight: FontWeight.w700),
+                ),
                 const SizedBox(width: 8),
-                const Tag(text: 'حصري', color: Colors.white, background: C.danger),
+                Tag(
+                  text: tr(context, 'حصري'),
+                  color: Colors.white,
+                  background: C.danger,
+                ),
               ],
             ),
             const SizedBox(height: 4),
-            Text('خصومات على منتجات مختارة لفترة محدودة',
-                style: ts(10, color: C.muted)),
+            Text(
+              tr(context, 'خصومات على منتجات مختارة لفترة محدودة'),
+              style: ts(10, color: C.muted),
+            ),
             const SizedBox(height: 14),
             SizedBox(height: 520, child: body),
           ],
@@ -79,8 +89,8 @@ class _OffersScreenState extends State<OffersScreen> {
     }
 
     return ScreenScaffold(
-      title: 'العروض',
-      subtitle: 'خصومات على منتجات مختارة لفترة محدودة',
+      title: tr(context, 'العروض'),
+      subtitle: tr(context, 'خصومات على منتجات مختارة لفترة محدودة'),
       onRefresh: () async => setState(_load),
       child: body,
     );

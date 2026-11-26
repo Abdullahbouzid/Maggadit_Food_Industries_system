@@ -39,7 +39,13 @@ void main() {
 
       cart.add(itemId: 1, name: 'حليب', price: 10, packId: 5, packName: 'عبوة');
       cart.add(itemId: 1, name: 'حليب', price: 10, packId: 5, packName: 'عبوة');
-      cart.add(itemId: 1, name: 'حليب', price: 100, packId: 6, packName: 'كرتون');
+      cart.add(
+        itemId: 1,
+        name: 'حليب',
+        price: 100,
+        packId: 6,
+        packName: 'كرتون',
+      );
 
       expect(cart.count, 2);
       expect(cart.quantityOf(1, 5), 2);
@@ -59,7 +65,14 @@ void main() {
 
     test('persists and restores the cart across sessions', () async {
       final cart = await buildCart();
-      cart.add(itemId: 9, name: 'زبدة', price: 30, packId: 2, packName: 'عبوة', quantity: 3);
+      cart.add(
+        itemId: 9,
+        name: 'زبدة',
+        price: 30,
+        packId: 2,
+        packName: 'عبوة',
+        quantity: 3,
+      );
 
       final restored = await buildCart();
       expect(restored.count, 1);
@@ -70,15 +83,25 @@ void main() {
       expect(line.lineTotal, 90);
     });
 
-    test('builds the checkout payload expected by POST /customer/checkout', () async {
-      final cart = await buildCart();
-      cart.add(itemId: 4, name: 'عصير', price: 6.5, packId: 8, packName: 'كرتون', quantity: 2);
+    test(
+      'builds the checkout payload expected by POST /customer/checkout',
+      () async {
+        final cart = await buildCart();
+        cart.add(
+          itemId: 4,
+          name: 'عصير',
+          price: 6.5,
+          packId: 8,
+          packName: 'كرتون',
+          quantity: 2,
+        );
 
-      final payload = cart.toCheckoutItems().single;
-      expect(payload['id'], 4);
-      expect(payload['quantity'], 2);
-      expect(payload['pack_id'], 8);
-      expect(payload['pack_name'], 'كرتون');
-    });
+        final payload = cart.toCheckoutItems().single;
+        expect(payload['id'], 4);
+        expect(payload['quantity'], 2);
+        expect(payload['pack_id'], 8);
+        expect(payload['pack_name'], 'كرتون');
+      },
+    );
   });
 }

@@ -37,7 +37,11 @@ Map<String, dynamic> asMap(Object? value) {
 
 List<Map<String, dynamic>> asMapList(Object? value) {
   if (value is! List) return const [];
-  return value.whereType<Object>().map(asMap).where((e) => e.isNotEmpty).toList();
+  return value
+      .whereType<Object>()
+      .map(asMap)
+      .where((e) => e.isNotEmpty)
+      .toList();
 }
 
 /// Resolves relative media paths coming from the API to absolute urls.
@@ -45,8 +49,15 @@ String? mediaUrl(String? path, {String? baseUrl}) {
   if (path == null) return null;
   final trimmed = path.trim();
   if (trimmed.isEmpty) return null;
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://'))
+    return trimmed;
   if (baseUrl == null || baseUrl.isEmpty) return trimmed;
   final root = baseUrl.replaceAll(RegExp(r'/api/?$'), '');
-  return '$root/${trimmed.replaceFirst(RegExp(r'^/+'), '')}';
+  // Every relative media path returned by the API is stored under /uploads.
+  final relative = trimmed.replaceFirst(RegExp(r'^/+'), '');
+  final needsUploads =
+      !relative.startsWith('uploads/') &&
+      !relative.startsWith('storage/') &&
+      !relative.startsWith('public/');
+  return '$root/${needsUploads ? 'uploads/' : ''}$relative';
 }

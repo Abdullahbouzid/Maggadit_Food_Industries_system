@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../state/locale_controller.dart';
 import '../theme/app_theme.dart';
 import 'kit.dart';
+import '../../l10n/l10n.dart';
 
 /// Standard page scaffold with the brand header (title + optional subtitle).
 class ScreenScaffold extends StatelessWidget {
@@ -43,7 +46,10 @@ class ScreenScaffold extends StatelessWidget {
         onRefresh: onRefresh!,
         child: body is SingleChildScrollView
             ? body
-            : ListView(physics: const AlwaysScrollableScrollPhysics(), children: [body]),
+            : ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [body],
+              ),
       );
     }
 
@@ -179,7 +185,12 @@ class IconBadge extends StatelessWidget {
               child: Text(
                 count > 99 ? '99+' : '$count',
                 textAlign: TextAlign.center,
-                style: ts(8, weight: FontWeight.w700, color: Colors.white, height: 1.3),
+                style: ts(
+                  8,
+                  weight: FontWeight.w700,
+                  color: Colors.white,
+                  height: 1.3,
+                ),
               ),
             ),
           ),
@@ -194,14 +205,14 @@ class SearchField extends StatelessWidget {
     required this.controller,
     this.onSubmitted,
     this.onChanged,
-    this.hint = 'ابحث عن منتج...',
+    this.hint,
     this.onClear,
   });
 
   final TextEditingController controller;
   final ValueChanged<String>? onSubmitted;
   final ValueChanged<String>? onChanged;
-  final String hint;
+  final String? hint;
   final VoidCallback? onClear;
 
   @override
@@ -220,23 +231,112 @@ class SearchField extends StatelessWidget {
         onChanged: onChanged,
         style: ts(12),
         decoration: InputDecoration(
-          hintText: hint,
+          hintText: hint ?? tr(context, 'ابحث عن منتج...'),
           filled: false,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          prefixIcon: const Icon(Icons.search_rounded, size: 19, color: C.muted),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            size: 19,
+            color: C.muted,
+          ),
           suffixIcon: controller.text.isEmpty
               ? null
               : IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 17, color: C.muted),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    size: 17,
+                    color: C.muted,
+                  ),
                   onPressed: () {
                     controller.clear();
                     onClear?.call();
                     onChanged?.call('');
                   },
                 ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Arabic/English picker shown on the login screen and in the profile card.
+class LanguageSwitcher extends StatelessWidget {
+  const LanguageSwitcher({super.key, this.compact = true});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = context.watch<LocaleController>();
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: C.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _Item(
+            label: 'العربية',
+            selected: locale.isArabic,
+            onTap: () => locale.setLanguage('ar'),
+            compact: compact,
+          ),
+          _Item(
+            label: 'English',
+            selected: !locale.isArabic,
+            onTap: () => locale.setLanguage('en'),
+            compact: compact,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Item extends StatelessWidget {
+  const _Item({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.compact,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 10 : 14,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? C.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Text(
+          label,
+          style: ts(
+            compact ? 10 : 11,
+            weight: FontWeight.w600,
+            color: selected ? Colors.white : C.muted,
+          ),
         ),
       ),
     );

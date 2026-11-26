@@ -8,6 +8,7 @@ import '../../state/notifications_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -31,8 +32,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final filters = NotificationFilter.values;
 
     return ScreenScaffold(
-      title: 'الإشعارات',
-      subtitle: controller.unreadCount > 0 ? '${controller.unreadCount} غير مقروء' : 'كل الإشعارات مقروءة',
+      title: tr(context, 'الإشعارات'),
+      subtitle: controller.unreadCount > 0
+          ? tArgs(context, '{0} غير مقروء', [controller.unreadCount])
+          : tr(context, 'كل الإشعارات مقروءة'),
       onRefresh: () => controller.load(),
       child: Column(
         children: [
@@ -48,16 +51,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 return GestureDetector(
                   onTap: () => controller.setFilter(filter),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: selected ? C.primary : Colors.white,
                       borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: selected ? C.primary : C.border),
+                      border: Border.all(
+                        color: selected ? C.primary : C.border,
+                      ),
                     ),
                     child: Text(
                       _label(filter),
-                      style: ts(10.5,
-                          weight: FontWeight.w600, color: selected ? Colors.white : C.inkSoft),
+                      style: ts(
+                        10.5,
+                        weight: FontWeight.w600,
+                        color: selected ? Colors.white : C.inkSoft,
+                      ),
                     ),
                   ),
                 );
@@ -67,30 +78,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           const SizedBox(height: 12),
           Expanded(
             child: controller.loading && controller.allItems.isEmpty
-                ? const LoadingState(label: 'جاري تحميل الإشعارات')
+                ? LoadingState(label: tr(context, 'جاري تحميل الإشعارات'))
                 : controller.error != null && controller.allItems.isEmpty
-                    ? ErrorState(message: controller.error!, onRetry: controller.load)
-                    : controller.visibleItems.isEmpty
-                        ? EmptyState(
-                            icon: Icons.notifications_none_rounded,
-                            title: 'لا توجد إشعارات',
-                            message: 'ستصلك هنا تحديثات الطلبات والعروض والفواتير',
-                            actionLabel: 'تحديث',
-                            onAction: controller.load,
-                          )
-                        : RefreshIndicator(
-                            color: C.primary,
-                            onRefresh: controller.load,
-                            child: ListView.separated(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              itemCount: controller.visibleItems.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 10),
-                              itemBuilder: (context, index) {
-                                final item = controller.visibleItems[index];
-                                return _NotificationTile(notification: item);
-                              },
-                            ),
-                          ),
+                ? ErrorState(
+                    message: controller.error!,
+                    onRetry: controller.load,
+                  )
+                : controller.visibleItems.isEmpty
+                ? EmptyState(
+                    icon: Icons.notifications_none_rounded,
+                    title: tr(context, 'لا توجد إشعارات'),
+                    message: tr(
+                      context,
+                      'ستصلك هنا تحديثات الطلبات والعروض والفواتير',
+                    ),
+                    actionLabel: tr(context, 'تحديث'),
+                    onAction: controller.load,
+                  )
+                : RefreshIndicator(
+                    color: C.primary,
+                    onRefresh: controller.load,
+                    child: ListView.separated(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      itemCount: controller.visibleItems.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final item = controller.visibleItems[index];
+                        return _NotificationTile(notification: item);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -100,13 +117,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String _label(NotificationFilter filter) {
     switch (filter) {
       case NotificationFilter.all:
-        return 'الكل';
+        return tr(context, 'الكل');
       case NotificationFilter.unread:
-        return 'غير مقروءة';
+        return tr(context, 'غير مقروءة');
       case NotificationFilter.starred:
-        return 'مهمة';
+        return tr(context, 'مهمة');
       case NotificationFilter.archived:
-        return 'مؤرشفة';
+        return tr(context, 'مؤرشفة');
     }
   }
 }
@@ -136,7 +153,11 @@ class _NotificationTile extends StatelessWidget {
                   color: _iconBackground(notification.iconType),
                   borderRadius: BorderRadius.circular(11),
                 ),
-                child: Icon(_icon(notification.iconType), size: 17, color: _iconColor(notification.iconType)),
+                child: Icon(
+                  _icon(notification.iconType),
+                  size: 17,
+                  color: _iconColor(notification.iconType),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -147,11 +168,16 @@ class _NotificationTile extends StatelessWidget {
                       notification.subject,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: ts(12,
-                          weight: isUnread ? FontWeight.w700 : FontWeight.w600),
+                      style: ts(
+                        12,
+                        weight: isUnread ? FontWeight.w700 : FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 2),
-                    Text(notification.createdAt, style: ts(8.5, color: C.muted)),
+                    Text(
+                      notification.createdAt,
+                      style: ts(8.5, color: C.muted),
+                    ),
                   ],
                 ),
               ),
@@ -159,7 +185,10 @@ class _NotificationTile extends StatelessWidget {
                 Container(
                   width: 7,
                   height: 7,
-                  decoration: const BoxDecoration(color: C.primary, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                    color: C.primary,
+                    shape: BoxShape.circle,
+                  ),
                 ),
             ],
           ),
@@ -176,8 +205,10 @@ class _NotificationTile extends StatelessWidget {
           Row(
             children: [
               _Action(
-                icon: notification.isStarred ? Icons.star_rounded : Icons.star_border_rounded,
-                label: 'مهم',
+                icon: notification.isStarred
+                    ? Icons.star_rounded
+                    : Icons.star_border_rounded,
+                label: tr(context, 'مهم'),
                 active: notification.isStarred,
                 onTap: () => controller.toggleStar(notification),
               ),
@@ -186,7 +217,9 @@ class _NotificationTile extends StatelessWidget {
                 icon: notification.isArchived
                     ? Icons.unarchive_rounded
                     : Icons.archive_outlined,
-                label: notification.isArchived ? 'استرجاع' : 'أرشفة',
+                label: notification.isArchived
+                    ? tr(context, 'استرجاع')
+                    : tr(context, 'أرشفة'),
                 active: notification.isArchived,
                 onTap: () => controller.toggleArchive(notification),
               ),
@@ -195,7 +228,9 @@ class _NotificationTile extends StatelessWidget {
                 icon: notification.isRead
                     ? Icons.mark_email_unread_outlined
                     : Icons.mark_email_read_outlined,
-                label: notification.isRead ? 'غير مقروء' : 'مقروء',
+                label: notification.isRead
+                    ? tr(context, 'غير مقروء')
+                    : tr(context, 'مقروء'),
                 active: false,
                 onTap: () => controller.toggleRead(notification),
               ),
@@ -275,7 +310,10 @@ class _Action extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 3),
-          Text(label, style: ts(8.5, color: color, weight: FontWeight.w600)),
+          Text(
+            label,
+            style: ts(8.5, color: color, weight: FontWeight.w600),
+          ),
         ],
       ),
     );

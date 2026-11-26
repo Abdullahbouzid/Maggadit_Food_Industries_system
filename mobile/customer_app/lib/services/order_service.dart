@@ -15,9 +15,9 @@ class OrderService {
 
   Future<List<OrderSummary>> orders() async {
     final json = await _api.get('$_prefix/orders');
-    return asMapList(json['orders'])
-        .map((e) => OrderSummary.fromJson(e, baseUrl: _baseUrl))
-        .toList();
+    return asMapList(
+      json['orders'],
+    ).map((e) => OrderSummary.fromJson(e, baseUrl: _baseUrl)).toList();
   }
 
   Future<OrderDetail> order(int id) async {
@@ -32,14 +32,20 @@ class OrderService {
 
   Future<Quotation> quotation(int orderId) async {
     final json = await _api.get('$_prefix/orders/$orderId/quotation');
-    return Quotation.fromJson(asMap(json['quotation']).isEmpty ? json : asMap(json['quotation']));
+    return Quotation.fromJson(
+      asMap(json['quotation']).isEmpty ? json : asMap(json['quotation']),
+    );
   }
 
-  Future<void> respondToQuotation(int orderId, String response, {String? notes}) async {
-    await _api.post('$_prefix/orders/$orderId/quotation/respond', body: {
-      'response': response,
-      'notes': notes,
-    });
+  Future<void> respondToQuotation(
+    int orderId,
+    String response, {
+    String? notes,
+  }) async {
+    await _api.post(
+      '$_prefix/orders/$orderId/quotation/respond',
+      body: {'response': response, 'notes': notes},
+    );
   }
 
   Future<List<CustomerReturn>> returns() async {
@@ -67,14 +73,17 @@ class OrderService {
     int? branchId,
     String? notes,
   }) async {
-    return _api.post('$_prefix/checkout', body: {
-      'items': items,
-      'delivery_address': deliveryAddress,
-      'delivery_phone': deliveryPhone,
-      'scheduled_delivery_date': scheduledDeliveryDate,
-      'branch_id': branchId,
-      'notes': notes,
-    });
+    return _api.post(
+      '$_prefix/checkout',
+      body: {
+        'items': items,
+        'delivery_address': deliveryAddress,
+        'delivery_phone': deliveryPhone,
+        'scheduled_delivery_date': scheduledDeliveryDate,
+        'branch_id': branchId,
+        'notes': notes,
+      },
+    );
   }
 
   Future<WalletStatement> financialStatement() async {
@@ -130,8 +139,11 @@ class SurveyService {
 
   /// answers: {questionId: answer} — matches `answers.*` validation on the API.
   Future<void> submit(int id, Map<int, String> answers) async {
-    await _api.post('$_prefix/surveys/$id/respond', body: {
-      'answers': answers.map((key, value) => MapEntry(key.toString(), value)),
-    });
+    await _api.post(
+      '$_prefix/surveys/$id/respond',
+      body: {
+        'answers': answers.map((key, value) => MapEntry(key.toString(), value)),
+      },
+    );
   }
 }

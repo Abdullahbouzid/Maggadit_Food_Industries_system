@@ -6,6 +6,7 @@ import '../../state/auth_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 /// Organization / branch switcher (scopes the catalog per company).
 class OrganizationsScreen extends StatefulWidget {
@@ -32,9 +33,15 @@ class _OrganizationsScreenState extends State<OrganizationsScreen> {
     final ok = await auth.switchOrganization(organization.id);
     if (!mounted) return;
     setState(() => _busy = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? 'تم التبديل إلى ${organization.name}' : (auth.error ?? 'تعذّر التبديل')),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok
+              ? tArgs(context, 'تم التبديل إلى {0}', [organization.name])
+              : (auth.error ?? tr(context, 'تعذّر التبديل')),
+        ),
+      ),
+    );
   }
 
   @override
@@ -43,19 +50,22 @@ class _OrganizationsScreenState extends State<OrganizationsScreen> {
     final organizations = auth.organizations;
 
     return ScreenScaffold(
-      title: 'الفروع والمنظمات',
-      subtitle: 'اختر الجهة التي تتسوّق باسمها',
+      title: tr(context, 'الفروع والمنظمات'),
+      subtitle: tr(context, 'اختر الجهة التي تتسوّق باسمها'),
       child: RefreshIndicator(
         color: C.primary,
         onRefresh: auth.loadOrganizations,
         child: organizations.isEmpty
             ? ListView(
-                children: const [
+                children: [
                   SizedBox(height: 60),
                   EmptyState(
                     icon: Icons.apartment_rounded,
-                    title: 'لا توجد منظمات مرتبطة بحسابك',
-                    message: 'تواصل مع الإدارة لربط حسابك بفرع أو شركة',
+                    title: tr(context, 'لا توجد منظمات مرتبطة بحسابك'),
+                    message: tr(
+                      context,
+                      'تواصل مع الإدارة لربط حسابك بفرع أو شركة',
+                    ),
                   ),
                 ],
               )
@@ -66,7 +76,9 @@ class _OrganizationsScreenState extends State<OrganizationsScreen> {
                 itemBuilder: (context, index) {
                   final organization = organizations[index];
                   return NovaCard(
-                    onTap: _busy || organization.isActive ? null : () => _switch(organization),
+                    onTap: _busy || organization.isActive
+                        ? null
+                        : () => _switch(organization),
                     color: organization.isActive ? C.purpleSoft : Colors.white,
                     child: Row(
                       children: [
@@ -74,13 +86,17 @@ class _OrganizationsScreenState extends State<OrganizationsScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: organization.isActive ? C.primary : const Color(0xFFF1F5F9),
+                            color: organization.isActive
+                                ? C.primary
+                                : const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
                             Icons.apartment_rounded,
                             size: 18,
-                            color: organization.isActive ? Colors.white : C.muted,
+                            color: organization.isActive
+                                ? Colors.white
+                                : C.muted,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -88,14 +104,20 @@ class _OrganizationsScreenState extends State<OrganizationsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(organization.name,
-                                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                                  style: ts(12, weight: FontWeight.w700)),
+                              Text(
+                                organization.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: ts(12, weight: FontWeight.w700),
+                              ),
                               const SizedBox(height: 2),
                               Text(
                                 [
-                                  'كود ${organization.code}',
-                                  if (organization.type != null) organization.type!,
+                                  tArgs(context, 'كود {0}', [
+                                    organization.code,
+                                  ]),
+                                  if (organization.type != null)
+                                    organization.type!,
                                 ].join(' · '),
                                 style: ts(9, color: C.muted),
                               ),
@@ -103,9 +125,17 @@ class _OrganizationsScreenState extends State<OrganizationsScreen> {
                           ),
                         ),
                         if (organization.isActive)
-                          const Tag(text: 'الحالية', color: C.primaryDark, background: Colors.white)
+                          Tag(
+                            text: tr(context, 'الحالية'),
+                            color: C.primaryDark,
+                            background: Colors.white,
+                          )
                         else
-                          const Icon(Icons.swap_horiz_rounded, size: 18, color: C.muted),
+                          const Icon(
+                            Icons.swap_horiz_rounded,
+                            size: 18,
+                            color: C.muted,
+                          ),
                       ],
                     ),
                   );

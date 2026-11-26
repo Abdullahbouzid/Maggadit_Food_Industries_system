@@ -5,6 +5,7 @@ import '../../state/auth_controller.dart';
 import '../router.dart';
 import '../theme/app_theme.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -44,26 +45,39 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 96,
-              height: 96,
+              width: 112,
+              height: 112,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(30),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+                boxShadow: Sh.card,
               ),
-              child: const Icon(Icons.local_mall_rounded, size: 44, color: Colors.white),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: Image.asset(
+                  'assets/images/logo_tile.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
             const SizedBox(height: 20),
-            Text('ماغديت',
-                style: ts(26, weight: FontWeight.w700, color: Colors.white)),
+            Text(
+              tr(context, 'ماغديت'),
+              style: ts(26, weight: FontWeight.w700, color: Colors.white),
+            ),
             const SizedBox(height: 4),
-            Text('للصناعات الغذائية',
-                style: ts(11, color: Colors.white.withValues(alpha: 0.8))),
+            Text(
+              tr(context, 'للصناعات الغذائية'),
+              style: ts(11, color: Colors.white.withValues(alpha: 0.8)),
+            ),
             const SizedBox(height: 30),
             const SizedBox(
               width: 22,
               height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+              child: CircularProgressIndicator(
+                strokeWidth: 2.2,
+                color: Colors.white,
+              ),
             ),
           ],
         ),

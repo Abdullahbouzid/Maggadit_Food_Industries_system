@@ -16,7 +16,10 @@ class AppNotification {
     this.image,
   });
 
-  factory AppNotification.fromJson(Map<String, dynamic> json, {String? baseUrl}) {
+  factory AppNotification.fromJson(
+    Map<String, dynamic> json, {
+    String? baseUrl,
+  }) {
     return AppNotification(
       id: asInt(json['id']),
       subject: asString(json['subject']),
@@ -26,8 +29,10 @@ class AppNotification {
       isStarred: asBool(json['is_starred']),
       isArchived: asBool(json['is_archived']),
       createdAt: asString(json['created_at']),
-      image: mediaUrl(asString(json['image']).isEmpty ? null : asString(json['image']),
-          baseUrl: baseUrl),
+      image: mediaUrl(
+        asString(json['image']).isEmpty ? null : asString(json['image']),
+        baseUrl: baseUrl,
+      ),
     );
   }
 
@@ -65,14 +70,14 @@ class Customer {
   });
 
   factory Customer.fromJson(Map<String, dynamic> json) => Customer(
-        id: asInt(json['id']),
-        name: asString(json['name']),
-        username: asString(json['username']),
-        email: asString(json['email']),
-        activeOrganizationId: json['active_organization_id'] == null
-            ? null
-            : asInt(json['active_organization_id']),
-      );
+    id: asInt(json['id']),
+    name: asString(json['name']),
+    username: asString(json['username']),
+    email: asString(json['email']),
+    activeOrganizationId: json['active_organization_id'] == null
+        ? null
+        : asInt(json['active_organization_id']),
+  );
 
   final int id;
   final String name;
@@ -81,12 +86,12 @@ class Customer {
   final int? activeOrganizationId;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'username': username,
-        'email': email,
-        'active_organization_id': activeOrganizationId,
-      };
+    'id': id,
+    'name': name,
+    'username': username,
+    'email': email,
+    'active_organization_id': activeOrganizationId,
+  };
 }
 
 class Organization {
@@ -100,15 +105,15 @@ class Organization {
   });
 
   factory Organization.fromJson(Map<String, dynamic> json) => Organization(
-        id: asInt(json['id']),
-        name: asString(json['name']),
-        code: asString(json['code']),
-        isActive: asBool(json['is_active']),
-        type: asString(json['organization_type']).isEmpty
-            ? null
-            : asString(json['organization_type']),
-        parentId: json['parent_id'] == null ? null : asInt(json['parent_id']),
-      );
+    id: asInt(json['id']),
+    name: asString(json['name']),
+    code: asString(json['code']),
+    isActive: asBool(json['is_active']),
+    type: asString(json['organization_type']).isEmpty
+        ? null
+        : asString(json['organization_type']),
+    parentId: json['parent_id'] == null ? null : asInt(json['parent_id']),
+  );
 
   final int id;
   final String name;
@@ -143,10 +148,16 @@ class WalletTransaction {
       label: asString(json['label']),
       amount: asDouble(json['amount'], signed.abs()).abs(),
       isDeposit: isDeposit,
-      reference: asString(json['reference']).isEmpty ? null : asString(json['reference']),
-      method: asString(json['method']).isEmpty ? null : asString(json['method']),
+      reference: asString(json['reference']).isEmpty
+          ? null
+          : asString(json['reference']),
+      method: asString(json['method']).isEmpty
+          ? null
+          : asString(json['method']),
       notes: asString(json['notes']).isEmpty ? null : asString(json['notes']),
-      balanceAfter: json['balance_after'] == null ? null : asDouble(json['balance_after']),
+      balanceAfter: json['balance_after'] == null
+          ? null
+          : asDouble(json['balance_after']),
     );
   }
 
@@ -210,14 +221,14 @@ class InvoiceSummary {
   });
 
   factory InvoiceSummary.fromJson(Map<String, dynamic> json) => InvoiceSummary(
-        id: asInt(json['id']),
-        number: asString(json['invoice_number']),
-        date: asString(json['invoice_date']),
-        total: asDouble(json['total_amount']),
-        status: asString(json['status']),
-        itemsCount: asInt(json['items_count']),
-        notes: asString(json['notes']).isEmpty ? null : asString(json['notes']),
-      );
+    id: asInt(json['id']),
+    number: asString(json['invoice_number']),
+    date: asString(json['invoice_date']),
+    total: asDouble(json['total_amount']),
+    status: asString(json['status']),
+    itemsCount: asInt(json['items_count']),
+    notes: asString(json['notes']).isEmpty ? null : asString(json['notes']),
+  );
 
   final int id;
   final String number;
@@ -239,8 +250,10 @@ class InvoiceDetail {
         quantity: asDouble(e['quantity']),
         unitPrice: asDouble(e['unit_price']),
         lineTotal: asDouble(e['subtotal']),
-        image: mediaUrl(asString(e['item_image']).isEmpty ? null : asString(e['item_image']),
-            baseUrl: baseUrl),
+        image: mediaUrl(
+          asString(e['item_image']).isEmpty ? null : asString(e['item_image']),
+          baseUrl: baseUrl,
+        ),
       );
     }).toList();
 
@@ -278,15 +291,19 @@ class SurveySummary {
   });
 
   factory SurveySummary.fromJson(Map<String, dynamic> json) => SurveySummary(
-        id: asInt(json['id']),
-        title: asString(json['title']),
-        description: asString(json['description']),
-        questionsCount: asInt(json['questions_count']),
-        estimatedMinutes: asInt(json['estimated_minutes']),
-        isAnswered: asBool(json['is_answered']),
-        startsAt: asString(json['starts_at']).isEmpty ? null : asString(json['starts_at']),
-        endsAt: asString(json['ends_at']).isEmpty ? null : asString(json['ends_at']),
-      );
+    id: asInt(json['id']),
+    title: asString(json['title']),
+    description: asString(json['description']),
+    questionsCount: asInt(json['questions_count']),
+    estimatedMinutes: asInt(json['estimated_minutes']),
+    isAnswered: asBool(json['is_answered']),
+    startsAt: asString(json['starts_at']).isEmpty
+        ? null
+        : asString(json['starts_at']),
+    endsAt: asString(json['ends_at']).isEmpty
+        ? null
+        : asString(json['ends_at']),
+  );
 
   final int id;
   final String title;
@@ -321,7 +338,9 @@ class SurveyQuestion {
     if (rawOptions is List) {
       for (final option in rawOptions) {
         if (option is Map) {
-          options.add(asString(option['label'] ?? option['text'] ?? option['value']));
+          options.add(
+            asString(option['label'] ?? option['text'] ?? option['value']),
+          );
         } else if (option != null) {
           options.add(option.toString());
         }
@@ -362,8 +381,12 @@ class SurveyDetail {
       id: asInt(survey['id'] ?? json['id']),
       title: asString(survey['title'] ?? json['title']),
       description: asString(survey['description'] ?? json['description']),
-      estimatedMinutes: asInt(survey['estimated_minutes'] ?? json['estimated_minutes']),
-      questions: asMapList(json['questions']).map(SurveyQuestion.fromJson).toList(),
+      estimatedMinutes: asInt(
+        survey['estimated_minutes'] ?? json['estimated_minutes'],
+      ),
+      questions: asMapList(
+        json['questions'],
+      ).map(SurveyQuestion.fromJson).toList(),
     );
   }
 
@@ -378,9 +401,9 @@ class FaqItem {
   FaqItem({required this.question, required this.answer});
 
   factory FaqItem.fromJson(Map<String, dynamic> json) => FaqItem(
-        question: asString(json['question'] ?? json['title']),
-        answer: asString(json['answer'] ?? json['content'] ?? json['body']),
-      );
+    question: asString(json['question'] ?? json['title']),
+    answer: asString(json['answer'] ?? json['content'] ?? json['body']),
+  );
 
   final String question;
   final String answer;
@@ -401,10 +424,16 @@ class ContactInfo {
     final data = asMap(json['data']).isEmpty ? json : asMap(json['data']);
     return ContactInfo(
       phone: asString(data['phone']).isEmpty ? null : asString(data['phone']),
-      whatsapp: asString(data['whatsapp']).isEmpty ? null : asString(data['whatsapp']),
+      whatsapp: asString(data['whatsapp']).isEmpty
+          ? null
+          : asString(data['whatsapp']),
       email: asString(data['email']).isEmpty ? null : asString(data['email']),
-      website: asString(data['website']).isEmpty ? null : asString(data['website']),
-      address: asString(data['address']).isEmpty ? null : asString(data['address']),
+      website: asString(data['website']).isEmpty
+          ? null
+          : asString(data['website']),
+      address: asString(data['address']).isEmpty
+          ? null
+          : asString(data['address']),
       latitude: data['latitude'] == null ? null : asDouble(data['latitude']),
       longitude: data['longitude'] == null ? null : asDouble(data['longitude']),
     );
@@ -432,7 +461,9 @@ class AboutContent {
   });
 
   factory AboutContent.fromJson(Map<String, dynamic> json, {String? baseUrl}) {
-    final content = asMap(json['content']).isEmpty ? json : asMap(json['content']);
+    final content = asMap(json['content']).isEmpty
+        ? json
+        : asMap(json['content']);
     final values = content['values'];
     return AboutContent(
       title: asString(content['title']),
@@ -441,14 +472,26 @@ class AboutContent {
       vision: asString(content['vision']),
       mission: asString(content['mission']),
       values: values is List
-          ? values.map((e) => e is Map ? asString(e['title'] ?? e['name'] ?? e) : asString(e)).toList()
+          ? values
+                .map(
+                  (e) => e is Map
+                      ? asString(e['title'] ?? e['name'] ?? e)
+                      : asString(e),
+                )
+                .toList()
           : const [],
-      image: mediaUrl(asString(content['image_url'] ?? content['image']).isEmpty
-          ? null
-          : asString(content['image_url'] ?? content['image']), baseUrl: baseUrl),
-      coverImage: mediaUrl(asString(content['cover_image_url'] ?? content['cover_image']).isEmpty
-          ? null
-          : asString(content['cover_image_url'] ?? content['cover_image']), baseUrl: baseUrl),
+      image: mediaUrl(
+        asString(content['image_url'] ?? content['image']).isEmpty
+            ? null
+            : asString(content['image_url'] ?? content['image']),
+        baseUrl: baseUrl,
+      ),
+      coverImage: mediaUrl(
+        asString(content['cover_image_url'] ?? content['cover_image']).isEmpty
+            ? null
+            : asString(content['cover_image_url'] ?? content['cover_image']),
+        baseUrl: baseUrl,
+      ),
     );
   }
 
@@ -472,12 +515,14 @@ class Branch {
   });
 
   factory Branch.fromJson(Map<String, dynamic> json) => Branch(
-        id: asInt(json['id']),
-        name: asString(json['name']),
-        phone: asString(json['phone']).isEmpty ? null : asString(json['phone']),
-        address: asString(json['address']).isEmpty ? null : asString(json['address']),
-        isActive: asBool(json['is_active'], true),
-      );
+    id: asInt(json['id']),
+    name: asString(json['name']),
+    phone: asString(json['phone']).isEmpty ? null : asString(json['phone']),
+    address: asString(json['address']).isEmpty
+        ? null
+        : asString(json['address']),
+    isActive: asBool(json['is_active'], true),
+  );
 
   final int id;
   final String name;

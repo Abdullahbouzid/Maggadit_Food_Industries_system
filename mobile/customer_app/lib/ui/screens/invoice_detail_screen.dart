@@ -10,6 +10,7 @@ import '../../state/app_dependencies.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class InvoiceDetailScreen extends StatefulWidget {
   const InvoiceDetailScreen({super.key, required this.invoiceId});
@@ -31,7 +32,9 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   }
 
   void _load() {
-    _future = context.read<AppDependencies>().orderService.invoice(widget.invoiceId);
+    _future = context.read<AppDependencies>().orderService.invoice(
+      widget.invoiceId,
+    );
   }
 
   Future<void> _download(InvoiceSummary invoice) async {
@@ -47,7 +50,9 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -56,12 +61,12 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return ScreenScaffold(
-      title: 'تفاصيل الفاتورة',
+      title: tr(context, 'تفاصيل الفاتورة'),
       onRefresh: () async => setState(_load),
       child: FutureView<InvoiceDetail>(
         future: _future,
         onRetry: () => setState(_load),
-        loadingLabel: 'جاري تحميل الفاتورة',
+        loadingLabel: tr(context, 'جاري تحميل الفاتورة'),
         builder: (context, detail) {
           final invoice = detail.invoice;
           return ListView(
@@ -76,20 +81,34 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(invoice.number,
-                                  style: ts(14, weight: FontWeight.w700),
-                                  textDirection: TextDirection.ltr),
+                              Text(
+                                invoice.number,
+                                style: ts(14, weight: FontWeight.w700),
+                                textDirection: TextDirection.ltr,
+                              ),
                               const SizedBox(height: 3),
-                              Text(Fmt.date(invoice.date), style: ts(9.5, color: C.muted)),
+                              Text(
+                                Fmt.date(invoice.date),
+                                style: ts(9.5, color: C.muted),
+                              ),
                             ],
                           ),
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('الإجمالي', style: ts(8.5, color: C.muted)),
-                            Text(Fmt.price(invoice.total),
-                                style: ts(17, weight: FontWeight.w700, color: C.primaryDark)),
+                            Text(
+                              tr(context, 'الإجمالي'),
+                              style: ts(8.5, color: C.muted),
+                            ),
+                            Text(
+                              Fmt.price(invoice.total),
+                              style: ts(
+                                17,
+                                weight: FontWeight.w700,
+                                color: C.primaryDark,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -103,8 +122,10 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                           color: C.warningSoft,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(invoice.notes!,
-                            style: ts(9.5, color: C.inkSoft, height: 1.6)),
+                        child: Text(
+                          invoice.notes!,
+                          style: ts(9.5, color: C.inkSoft, height: 1.6),
+                        ),
                       ),
                     ],
                   ],
@@ -115,11 +136,16 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('الأصناف (${detail.items.length})',
-                        style: ts(12.5, weight: FontWeight.w700)),
+                    Text(
+                      tArgs(context, 'الأصناف ({0})', [detail.items.length]),
+                      style: ts(12.5, weight: FontWeight.w700),
+                    ),
                     const SizedBox(height: 10),
                     if (detail.items.isEmpty)
-                      Text('لا توجد أصناف مسجلة', style: ts(10, color: C.muted))
+                      Text(
+                        tr(context, 'لا توجد أصناف مسجلة'),
+                        style: ts(10, color: C.muted),
+                      )
                     else
                       for (final line in detail.items)
                         Padding(
@@ -130,9 +156,12 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(line.name,
-                                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: ts(11, weight: FontWeight.w600)),
+                                    Text(
+                                      line.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: ts(11, weight: FontWeight.w600),
+                                    ),
                                     Text(
                                       '${Fmt.quantity(line.quantity)} × ${Fmt.price(line.unitPrice)}',
                                       style: ts(9, color: C.muted),
@@ -140,8 +169,10 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                   ],
                                 ),
                               ),
-                              Text(Fmt.price(line.lineTotal),
-                                  style: ts(11, weight: FontWeight.w700)),
+                              Text(
+                                Fmt.price(line.lineTotal),
+                                style: ts(11, weight: FontWeight.w700),
+                              ),
                             ],
                           ),
                         ),
@@ -150,7 +181,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
               ),
               const SizedBox(height: 16),
               PrimaryButton(
-                label: 'تحميل الفاتورة PDF',
+                label: tr(context, 'تحميل الفاتورة PDF'),
                 icon: Icons.picture_as_pdf_rounded,
                 loading: _busy,
                 onPressed: () => _download(invoice),

@@ -117,6 +117,10 @@ ThemeData buildTheme() {
         borderSide: const BorderSide(color: C.danger),
       ),
     ),
-    dividerTheme: const DividerThemeData(color: C.border, thickness: 1, space: 1),
+    dividerTheme: const DividerThemeData(
+      color: C.border,
+      thickness: 1,
+      space: 1,
+    ),
   );
 }

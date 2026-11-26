@@ -10,10 +10,12 @@ class AuthResult {
   });
 
   factory AuthResult.fromJson(Map<String, dynamic> json) => AuthResult(
-        token: asString(json['token']),
-        customer: Customer.fromJson(asMap(json['customer'])),
-        organizations: asMapList(json['organizations']).map(Organization.fromJson).toList(),
-      );
+    token: asString(json['token']),
+    customer: Customer.fromJson(asMap(json['customer'])),
+    organizations: asMapList(
+      json['organizations'],
+    ).map(Organization.fromJson).toList(),
+  );
 
   final String token;
   final Customer customer;
@@ -31,12 +33,15 @@ class AuthService {
     required String password,
     String? fcmToken,
   }) async {
-    final json = await _api.post('$_prefix/login', body: {
-      'username': username,
-      'password': password,
-      if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
-      'device_name': 'mobile',
-    });
+    final json = await _api.post(
+      '$_prefix/login',
+      body: {
+        'username': username,
+        'password': password,
+        if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
+        'device_name': 'mobile',
+      },
+    );
     return AuthResult.fromJson(json);
   }
 
@@ -48,14 +53,17 @@ class AuthService {
     required String passwordConfirmation,
     String? fcmToken,
   }) async {
-    final json = await _api.post('$_prefix/register', body: {
-      'name': name,
-      'username': username,
-      'email': email,
-      'password': password,
-      'password_confirmation': passwordConfirmation,
-      if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
-    });
+    final json = await _api.post(
+      '$_prefix/register',
+      body: {
+        'name': name,
+        'username': username,
+        'email': email,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+        if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
+      },
+    );
     return AuthResult.fromJson(json);
   }
 
@@ -69,7 +77,9 @@ class AuthService {
 
   Future<Customer> profile() async {
     final json = await _api.get('$_prefix/profile');
-    final payload = asMap(json['customer']).isEmpty ? json : asMap(json['customer']);
+    final payload = asMap(json['customer']).isEmpty
+        ? json
+        : asMap(json['customer']);
     return Customer.fromJson(payload);
   }
 
@@ -80,16 +90,21 @@ class AuthService {
     String? newPassword,
     String? newPasswordConfirmation,
   }) async {
-    final json = await _api.post('$_prefix/profile/update', body: {
-      'name': name,
-      'email': email,
-      if (currentPassword != null && currentPassword.isNotEmpty) ...{
-        'current_password': currentPassword,
-        'password': newPassword,
-        'password_confirmation': newPasswordConfirmation,
+    final json = await _api.post(
+      '$_prefix/profile/update',
+      body: {
+        'name': name,
+        'email': email,
+        if (currentPassword != null && currentPassword.isNotEmpty) ...{
+          'current_password': currentPassword,
+          'password': newPassword,
+          'password_confirmation': newPasswordConfirmation,
+        },
       },
-    });
-    final payload = asMap(json['customer']).isEmpty ? json : asMap(json['customer']);
+    );
+    final payload = asMap(json['customer']).isEmpty
+        ? json
+        : asMap(json['customer']);
     return Customer.fromJson(payload);
   }
 
@@ -99,7 +114,10 @@ class AuthService {
   }
 
   Future<void> switchOrganization(int organizationId) async {
-    await _api.post('$_prefix/change-organization', body: {'organization_id': organizationId});
+    await _api.post(
+      '$_prefix/change-organization',
+      body: {'organization_id': organizationId},
+    );
   }
 
   Future<void> updateFcmToken(String token) async {

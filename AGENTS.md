@@ -29,10 +29,20 @@ Laravel-based inventory/warehouse management system with a dashboard admin panel
 - Push: `App\Services\Customer\FcmNotificationService` sends FCM HTTP v1 with Android channel `maggadit_channel`
 
 ## Flutter customer app (`mobile/customer_app/`)
-- Flutter 3.x app, Arabic RTL UI, provider state, Dio client; mirrors the API above
+- Flutter 3.x app, Arabic RTL UI with a live Arabic/English switch, provider state, Dio client; mirrors the API above
+- Default API root is production `https://blue-beaver-923812.hostingersite.com/api`
+  (`lib/core/config.dart`); override at build time with `--dart-define=API_BASE_URL=...`
+- Relative media paths from the API resolve under `/uploads` (`lib/models/json_utils.dart` → `mediaUrl`)
+- Localisation: write Arabic inside `tr(context, '...')` (or `tArgs(context, '... {0} ...', [v])`),
+  add the English copy to `lib/l10n/en_strings.dart`; `test/l10n_test.dart` fails on a missing key
+- Locale is stored in `SharedPreferences` key `app.language` via `LocaleController` (`lib/state/`)
+- Server messages are Arabic; `ApiClient` passes them through `L10n.tr` so known ones render in English
+- Branding: `public/icon.png` is the source; run the launcher/logo generation to refresh
+  `assets/images/logo_tile.png` and the Android/iOS/web icon sets
 - Build: `cd mobile/customer_app && flutter pub get && flutter analyze && flutter test`
 - Without an Android SDK use `flutter build web --release` as the full compile check
-- Server URL and Firebase options are injected with `--dart-define` (see `lib/core/config.dart`)
+- Firebase options are injected with `--dart-define` (see `lib/core/config.dart`)
 - `android/app/google-services.json` and `ios/Runner/GoogleService-Info.plist` are gitignored; the
   google-services Gradle plugin is applied only when the json file exists
-- Tests: `test/models_test.dart` (real API payload shapes), `test/cart_and_formatters_test.dart`
+- Tests: `test/models_test.dart` (real API payload shapes), `test/cart_and_formatters_test.dart`,
+  `test/media_url_test.dart`, `test/l10n_test.dart`, `test/locale_controller_test.dart`

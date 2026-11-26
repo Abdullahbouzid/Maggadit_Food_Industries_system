@@ -13,6 +13,7 @@ import '../theme/app_theme.dart';
 import '../widgets/cards.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.onNavigate});
@@ -79,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 cartCount: cartCount,
                 onNotifications: () => Routes.notifications(),
                 onCart: () => Routes.cart(),
-                onSearch: () => Routes.products(title: 'البحث'),
+                onSearch: () => Routes.products(title: tr(context, 'البحث')),
                 onProfile: () => Routes.profile(),
               ),
               const SizedBox(height: 14),
@@ -107,7 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     onBannerChanged: (i) => setState(() => _bannerIndex = i),
                     onOpenCategories: () => Routes.categories(),
                     onOpenBrands: () => Routes.brands(),
-                    onOpenAllProducts: () => Routes.products(title: 'كل المنتجات'),
+                    onOpenAllProducts: () =>
+                        Routes.products(title: tr(context, 'كل المنتجات')),
                     onOpenOffers: () {
                       final navigate = widget.onNavigate;
                       if (navigate != null) {
@@ -158,13 +160,17 @@ class _Header extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [C.primary, C.primaryDeep]),
+              gradient: const LinearGradient(
+                colors: [C.primary, C.primaryDeep],
+              ),
               borderRadius: BorderRadius.circular(15),
               boxShadow: Sh.soft,
             ),
             child: Center(
-              child: Text(Fmt.initials(name),
-                  style: ts(15, weight: FontWeight.w700, color: Colors.white)),
+              child: Text(
+                Fmt.initials(name),
+                style: ts(15, weight: FontWeight.w700, color: Colors.white),
+              ),
             ),
           ),
         ),
@@ -173,22 +179,34 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('مرحباً، $name',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: ts(13.5, weight: FontWeight.w700)),
-              Text(organization ?? 'ماغديت للصناعات الغذائية',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: ts(9.5, color: C.muted)),
+              Text(
+                tArgs(context, 'مرحباً، {0}', [name]),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: ts(13.5, weight: FontWeight.w700),
+              ),
+              Text(
+                organization ?? tr(context, 'ماغديت للصناعات الغذائية'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: ts(9.5, color: C.muted),
+              ),
             ],
           ),
         ),
         IconBadge(icon: Icons.search_rounded, onTap: onSearch),
         const SizedBox(width: 8),
-        IconBadge(icon: Icons.notifications_none_rounded, onTap: onNotifications, count: unread),
+        IconBadge(
+          icon: Icons.notifications_none_rounded,
+          onTap: onNotifications,
+          count: unread,
+        ),
         const SizedBox(width: 8),
-        IconBadge(icon: Icons.shopping_cart_outlined, onTap: onCart, count: cartCount),
+        IconBadge(
+          icon: Icons.shopping_cart_outlined,
+          onTap: onCart,
+          count: cartCount,
+        ),
       ],
     );
   }
@@ -239,8 +257,11 @@ class _FeedBody extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        RemoteImage(url: banner.image, radius: 20,
-                            icon: Icons.campaign_rounded),
+                        RemoteImage(
+                          url: banner.image,
+                          radius: 20,
+                          icon: Icons.campaign_rounded,
+                        ),
                         if (banner.image == null)
                           Container(
                             decoration: const BoxDecoration(
@@ -255,12 +276,22 @@ class _FeedBody extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text('ماغديت للصناعات الغذائية',
-                                    style: ts(15, weight: FontWeight.w700, color: Colors.white)),
+                                Text(
+                                  tr(context, 'ماغديت للصناعات الغذائية'),
+                                  style: ts(
+                                    15,
+                                    weight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
                                 const SizedBox(height: 6),
-                                Text('منتجات طازجة تُوصَل إلى بابك',
-                                    style: ts(10,
-                                        color: Colors.white.withValues(alpha: 0.85))),
+                                Text(
+                                  tr(context, 'منتجات طازجة تُوصَل إلى بابك'),
+                                  style: ts(
+                                    10,
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -290,7 +321,11 @@ class _FeedBody extends StatelessWidget {
           ),
           const SizedBox(height: 16),
         ],
-        SectionTitle(title: 'الفئات', actionLabel: 'عرض الكل', onAction: onOpenCategories),
+        SectionTitle(
+          title: tr(context, 'الفئات'),
+          actionLabel: tr(context, 'عرض الكل'),
+          onAction: onOpenCategories,
+        ),
         SizedBox(
           height: 92,
           child: ListView.separated(
@@ -301,14 +336,21 @@ class _FeedBody extends StatelessWidget {
               final category = feed.categories[index];
               return CategoryChip(
                 category: category,
-                onTap: () => Routes.products(title: category.name, categoryId: category.id),
+                onTap: () => Routes.products(
+                  title: category.name,
+                  categoryId: category.id,
+                ),
               );
             },
           ),
         ),
         const SizedBox(height: 14),
         if (feed.brands.isNotEmpty) ...[
-          SectionTitle(title: 'ماركات شهيرة', actionLabel: 'عرض الكل', onAction: onOpenBrands),
+          SectionTitle(
+            title: tr(context, 'ماركات شهيرة'),
+            actionLabel: tr(context, 'عرض الكل'),
+            onAction: onOpenBrands,
+          ),
           SizedBox(
             height: 96,
             child: ListView.separated(
@@ -319,19 +361,27 @@ class _FeedBody extends StatelessWidget {
                 final brand = feed.brands[index];
                 return BrandTile(
                   brand: brand,
-                  onTap: () => Routes.products(title: brand.name, brandId: brand.id),
+                  onTap: () =>
+                      Routes.products(title: brand.name, brandId: brand.id),
                 );
               },
             ),
           ),
           const SizedBox(height: 14),
         ],
-        SectionTitle(title: 'أفضل المنتجات', actionLabel: 'عرض الكل', onAction: onOpenAllProducts),
+        SectionTitle(
+          title: tr(context, 'أفضل المنتجات'),
+          actionLabel: tr(context, 'عرض الكل'),
+          onAction: onOpenAllProducts,
+        ),
         if (feed.products.isEmpty)
-          const EmptyState(
+          EmptyState(
             icon: Icons.inventory_2_rounded,
-            title: 'لا توجد منتجات',
-            message: 'سيتم عرض المنتجات بعد إضافتها من لوحة التحكم',
+            title: tr(context, 'لا توجد منتجات'),
+            message: tr(
+              context,
+              'سيتم عرض المنتجات بعد إضافتها من لوحة التحكم',
+            ),
           )
         else
           GridView.builder(
@@ -376,21 +426,25 @@ class _FeedBody extends StatelessWidget {
   void _addToCart(BuildContext context, Product product) {
     final pack = product.defaultPack;
     context.read<CartController>().add(
-          itemId: product.id,
-          name: product.name,
-          price: pack?.price ?? product.price,
-          packId: pack?.id,
-          packName: pack?.name ?? '',
-          image: product.image,
-          uomName: pack?.uomName,
-        );
+      itemId: product.id,
+      name: product.name,
+      price: pack?.price ?? product.price,
+      packId: pack?.id,
+      packName: pack?.name ?? '',
+      image: product.image,
+      uomName: pack?.uomName,
+    );
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text('تمت إضافة ${product.name} إلى السلة',
-            style: ts(11, color: Colors.white)),
-        duration: const Duration(milliseconds: 1400),
-      ));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            tArgs(context, 'تمت إضافة {0} إلى السلة', [product.name]),
+            style: ts(11, color: Colors.white),
+          ),
+          duration: const Duration(milliseconds: 1400),
+        ),
+      );
   }
 }
 
@@ -412,20 +466,36 @@ class _OffersShortcut extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.local_offer_rounded, color: Colors.white, size: 22),
+            const Icon(
+              Icons.local_offer_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('عروض حصرية هذا الأسبوع',
-                      style: ts(12.5, weight: FontWeight.w700, color: Colors.white)),
-                  Text('خصومات على تشكيلة المنتجات الطازجة',
-                      style: ts(9.5, color: Colors.white.withValues(alpha: 0.85))),
+                  Text(
+                    tr(context, 'عروض حصرية هذا الأسبوع'),
+                    style: ts(
+                      12.5,
+                      weight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    tr(context, 'خصومات على تشكيلة المنتجات الطازجة'),
+                    style: ts(9.5, color: Colors.white.withValues(alpha: 0.85)),
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 20),
+            const Icon(
+              Icons.chevron_left_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
           ],
         ),
       ),

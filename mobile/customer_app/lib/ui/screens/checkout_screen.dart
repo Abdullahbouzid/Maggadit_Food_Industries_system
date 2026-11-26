@@ -11,6 +11,7 @@ import '../router.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chrome.dart';
 import '../widgets/kit.dart';
+import '../../l10n/l10n.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -50,7 +51,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _loadBranches() async {
     setState(() => _loadingBranches = true);
     try {
-      final branches = await context.read<AppDependencies>().catalogService.branches();
+      final branches = await context
+          .read<AppDependencies>()
+          .catalogService
+          .branches();
       if (!mounted) return;
       setState(() {
         _branches = branches;
@@ -80,19 +84,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final cart = context.read<CartController>();
     if (cart.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('السلة فارغة')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr(context, 'السلة فارغة'))));
       return;
     }
 
     setState(() => _submitting = true);
     try {
-      final result = await context.read<AppDependencies>().orderService.checkout(
+      final result = await context
+          .read<AppDependencies>()
+          .orderService
+          .checkout(
             items: cart.toCheckoutItems(),
             deliveryAddress: _address.text.trim(),
             deliveryPhone: _phone.text.trim(),
-            scheduledDeliveryDate:
-                _scheduledDate == null ? null : Fmt.apiDate(_scheduledDate!),
+            scheduledDeliveryDate: _scheduledDate == null
+                ? null
+                : Fmt.apiDate(_scheduledDate!),
             branchId: _branch?.id,
             notes: _notes.text.trim(),
           );
@@ -100,19 +109,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       if (!mounted) return;
       cart.clear();
       await _showSuccess(
-        orderNumber: (result['order_number'] ?? result['order']?['order_number'] ?? '').toString(),
+        orderNumber:
+            (result['order_number'] ?? result['order']?['order_number'] ?? '')
+                .toString(),
         rejected: (result['rejected'] as List?)?.length ?? 0,
       );
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
   }
 
-  Future<void> _showSuccess({required String orderNumber, required int rejected}) async {
+  Future<void> _showSuccess({
+    required String orderNumber,
+    required int rejected,
+  }) async {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -124,26 +139,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Container(
               width: 64,
               height: 64,
-              decoration: const BoxDecoration(color: C.successSoft, shape: BoxShape.circle),
-              child: const Icon(Icons.check_rounded, color: C.success, size: 32),
+              decoration: const BoxDecoration(
+                color: C.successSoft,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_rounded,
+                color: C.success,
+                size: 32,
+              ),
             ),
             const SizedBox(height: 14),
-            Text('تم إرسال الطلب', style: ts(15, weight: FontWeight.w700)),
+            Text(
+              tr(context, 'تم إرسال الطلب'),
+              style: ts(15, weight: FontWeight.w700),
+            ),
             const SizedBox(height: 6),
             if (orderNumber.isNotEmpty)
-              Text('رقم الطلب: $orderNumber',
-                  style: ts(11, color: C.inkSoft), textDirection: TextDirection.ltr),
+              Text(
+                tArgs(context, 'رقم الطلب: {0}', [orderNumber]),
+                style: ts(11, color: C.inkSoft),
+                textDirection: TextDirection.ltr,
+              ),
             if (rejected > 0) ...[
               const SizedBox(height: 8),
-              Text('$rejected صنف لم يتوفر وتم استبعاده',
-                  textAlign: TextAlign.center, style: ts(10.5, color: C.warning)),
+              Text(
+                tArgs(context, '{0} صنف لم يتوفر وتم استبعاده', [rejected]),
+                textAlign: TextAlign.center,
+                style: ts(10.5, color: C.warning),
+              ),
             ],
             const SizedBox(height: 18),
             Row(
               children: [
                 Expanded(
                   child: GhostButton(
-                    label: 'الرئيسية',
+                    label: tr(context, 'الرئيسية'),
                     onPressed: () {
                       Navigator.of(dialogContext).pop();
                       Routes.home();
@@ -153,7 +184,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: PrimaryButton(
-                    label: 'تتبّع الطلب',
+                    label: tr(context, 'تتبّع الطلب'),
                     height: 44,
                     onPressed: () {
                       Navigator.of(dialogContext).pop();
@@ -174,8 +205,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final cart = context.watch<CartController>();
 
     return ScreenScaffold(
-      title: 'إتمام الطلب',
-      subtitle: '${cart.count} أصناف · ${Fmt.price(cart.subtotal)}',
+      title: tr(context, 'إتمام الطلب'),
+      subtitle: tArgs(context, '{0} أصناف · {1}', [
+        cart.count,
+        Fmt.price(cart.subtotal),
+      ]),
       child: Form(
         key: _formKey,
         child: ListView(
@@ -185,38 +219,58 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('تفاصيل التوصيل', style: ts(13, weight: FontWeight.w700)),
+                  Text(
+                    tr(context, 'تفاصيل التوصيل'),
+                    style: ts(13, weight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 12),
-                  Text('الفرع', style: ts(10, color: C.muted)),
+                  Text(tr(context, 'الفرع'), style: ts(10, color: C.muted)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<Branch>(
                     initialValue: _branch,
                     isExpanded: true,
                     decoration: InputDecoration(
-                      hintText: _loadingBranches ? 'جاري التحميل...' : 'اختر الفرع',
+                      hintText: _loadingBranches
+                          ? tr(context, 'جاري التحميل...')
+                          : tr(context, 'اختر الفرع'),
                     ),
                     items: _branches
-                        .map((branch) => DropdownMenuItem(
-                              value: branch,
-                              child: Text(branch.name,
-                                  style: ts(11.5), overflow: TextOverflow.ellipsis),
-                            ))
+                        .map(
+                          (branch) => DropdownMenuItem(
+                            value: branch,
+                            child: Text(
+                              branch.name,
+                              style: ts(11.5),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
                         .toList(),
                     onChanged: (value) => setState(() => _branch = value),
                   ),
                   const SizedBox(height: 12),
-                  Text('عنوان التوصيل', style: ts(10, color: C.muted)),
+                  Text(
+                    tr(context, 'عنوان التوصيل'),
+                    style: ts(10, color: C.muted),
+                  ),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _address,
                     maxLines: 2,
                     style: ts(12),
-                    decoration: const InputDecoration(hintText: 'الشارع، الحي، أقرب علامة'),
+                    decoration: InputDecoration(
+                      hintText: tr(context, 'الشارع، الحي، أقرب علامة'),
+                    ),
                     validator: (value) =>
-                        (value == null || value.trim().isEmpty) ? 'العنوان مطلوب' : null,
+                        (value == null || value.trim().isEmpty)
+                        ? tr(context, 'العنوان مطلوب')
+                        : null,
                   ),
                   const SizedBox(height: 12),
-                  Text('رقم الهاتف', style: ts(10, color: C.muted)),
+                  Text(
+                    tr(context, 'رقم الهاتف'),
+                    style: ts(10, color: C.muted),
+                  ),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _phone,
@@ -225,15 +279,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     style: ts(12),
                     decoration: const InputDecoration(hintText: '09xxxxxxxx'),
                     validator: (value) =>
-                        (value == null || value.trim().length < 9) ? 'رقم غير صحيح' : null,
+                        (value == null || value.trim().length < 9)
+                        ? tr(context, 'رقم غير صحيح')
+                        : null,
                   ),
                   const SizedBox(height: 12),
-                  Text('موعد التوصيل (اختياري)', style: ts(10, color: C.muted)),
+                  Text(
+                    tr(context, 'موعد التوصيل (اختياري)'),
+                    style: ts(10, color: C.muted),
+                  ),
                   const SizedBox(height: 6),
                   GestureDetector(
                     onTap: _pickDate,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(14),
@@ -241,32 +303,46 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.calendar_month_rounded, size: 17, color: C.muted),
+                          const Icon(
+                            Icons.calendar_month_rounded,
+                            size: 17,
+                            color: C.muted,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             _scheduledDate == null
-                                ? 'اختر التاريخ'
+                                ? tr(context, 'اختر التاريخ')
                                 : Fmt.date(_scheduledDate),
-                            style: ts(11.5, color: _scheduledDate == null ? C.muted : C.ink),
+                            style: ts(
+                              11.5,
+                              color: _scheduledDate == null ? C.muted : C.ink,
+                            ),
                           ),
                           const Spacer(),
                           if (_scheduledDate != null)
                             GestureDetector(
-                              onTap: () => setState(() => _scheduledDate = null),
-                              child: const Icon(Icons.close_rounded, size: 15, color: C.muted),
+                              onTap: () =>
+                                  setState(() => _scheduledDate = null),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                size: 15,
+                                color: C.muted,
+                              ),
                             ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text('ملاحظات', style: ts(10, color: C.muted)),
+                  Text(tr(context, 'ملاحظات'), style: ts(10, color: C.muted)),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _notes,
                     maxLines: 2,
                     style: ts(12),
-                    decoration: const InputDecoration(hintText: 'أي تعليمات إضافية للطلب'),
+                    decoration: InputDecoration(
+                      hintText: tr(context, 'أي تعليمات إضافية للطلب'),
+                    ),
                   ),
                 ],
               ),
@@ -276,7 +352,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('ملخص الطلب', style: ts(13, weight: FontWeight.w700)),
+                  Text(
+                    tr(context, 'ملخص الطلب'),
+                    style: ts(13, weight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 10),
                   for (final item in cart.items)
                     Padding(
@@ -284,33 +363,52 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text('${item.name} × ${Fmt.quantity(item.quantity)}',
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: ts(10.5, color: C.inkSoft)),
+                            child: Text(
+                              '${item.name} × ${Fmt.quantity(item.quantity)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: ts(10.5, color: C.inkSoft),
+                            ),
                           ),
-                          Text(Fmt.price(item.lineTotal),
-                              style: ts(10.5, weight: FontWeight.w600)),
+                          Text(
+                            Fmt.price(item.lineTotal),
+                            style: ts(10.5, weight: FontWeight.w600),
+                          ),
                         ],
                       ),
                     ),
                   const Divider(height: 18),
                   Row(
                     children: [
-                      Text('الإجمالي التقديري', style: ts(12, weight: FontWeight.w700)),
+                      Text(
+                        tr(context, 'الإجمالي التقديري'),
+                        style: ts(12, weight: FontWeight.w700),
+                      ),
                       const Spacer(),
-                      Text(Fmt.price(cart.subtotal),
-                          style: ts(15, weight: FontWeight.w700, color: C.primaryDark)),
+                      Text(
+                        Fmt.price(cart.subtotal),
+                        style: ts(
+                          15,
+                          weight: FontWeight.w700,
+                          color: C.primaryDark,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text('الضرائب والخصومات تُحسب من الخادم عند تأكيد الطلب',
-                      style: ts(8.5, color: C.muted)),
+                  Text(
+                    tr(
+                      context,
+                      'الضرائب والخصومات تُحسب من الخادم عند تأكيد الطلب',
+                    ),
+                    style: ts(8.5, color: C.muted),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             PrimaryButton(
-              label: 'تأكيد الطلب',
+              label: tr(context, 'تأكيد الطلب'),
               icon: Icons.check_circle_outline_rounded,
               loading: _submitting,
               onPressed: _submit,

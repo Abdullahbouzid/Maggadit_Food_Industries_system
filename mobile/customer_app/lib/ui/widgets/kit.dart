@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../../l10n/l10n.dart';
 
 class NovaCard extends StatelessWidget {
   const NovaCard({
@@ -77,13 +78,18 @@ class PrimaryButton extends StatelessWidget {
           disabledBackgroundColor: color.withValues(alpha: 0.4),
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
         child: loading
             ? const SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
@@ -97,7 +103,11 @@ class PrimaryButton extends StatelessWidget {
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: ts(13, weight: FontWeight.w700, color: Colors.white),
+                      style: ts(
+                        13,
+                        weight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
@@ -133,7 +143,9 @@ class GhostButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: color,
           side: BorderSide(color: color.withValues(alpha: 0.35)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           backgroundColor: Colors.white,
         ),
         child: Row(
@@ -143,7 +155,10 @@ class GhostButton extends StatelessWidget {
               Icon(icon, size: 16, color: color),
               const SizedBox(width: 6),
             ],
-            Text(label, style: ts(12, weight: FontWeight.w600, color: color)),
+            Text(
+              label,
+              style: ts(12, weight: FontWeight.w600, color: color),
+            ),
           ],
         ),
       ),
@@ -180,7 +195,10 @@ class Tag extends StatelessWidget {
             Icon(icon, size: 11, color: color),
             const SizedBox(width: 4),
           ],
-          Text(text, style: ts(9.5, weight: FontWeight.w700, color: color)),
+          Text(
+            text,
+            style: ts(9.5, weight: FontWeight.w700, color: color),
+          ),
         ],
       ),
     );
@@ -193,19 +211,29 @@ class StatusPalette {
 
   static String _normalize(String key) {
     final value = key.toLowerCase();
-    if (value.contains('emerald') || value.contains('green') || value.contains('success')) {
+    if (value.contains('emerald') ||
+        value.contains('green') ||
+        value.contains('success')) {
       return 'success';
     }
-    if (value.contains('amber') || value.contains('warning') || value.contains('orange')) {
+    if (value.contains('amber') ||
+        value.contains('warning') ||
+        value.contains('orange')) {
       return 'warning';
     }
-    if (value.contains('red') || value.contains('danger') || value.contains('rose')) {
+    if (value.contains('red') ||
+        value.contains('danger') ||
+        value.contains('rose')) {
       return 'danger';
     }
-    if (value.contains('blue') || value.contains('info') || value.contains('sky')) {
+    if (value.contains('blue') ||
+        value.contains('info') ||
+        value.contains('sky')) {
       return 'info';
     }
-    if (value.contains('purple') || value.contains('indigo') || value.contains('primary')) {
+    if (value.contains('purple') ||
+        value.contains('indigo') ||
+        value.contains('primary')) {
       return 'primary';
     }
     return 'muted';
@@ -286,9 +314,20 @@ class SectionTitle extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               child: Row(
                 children: [
-                  Text(actionLabel!, style: ts(10.5, weight: FontWeight.w600, color: C.primaryDark)),
+                  Text(
+                    actionLabel!,
+                    style: ts(
+                      10.5,
+                      weight: FontWeight.w600,
+                      color: C.primaryDark,
+                    ),
+                  ),
                   const SizedBox(width: 2),
-                  const Icon(Icons.chevron_left_rounded, size: 16, color: C.primaryDark),
+                  const Icon(
+                    Icons.chevron_left_rounded,
+                    size: 16,
+                    color: C.primaryDark,
+                  ),
                 ],
               ),
             ),
@@ -325,15 +364,25 @@ class EmptyState extends StatelessWidget {
             Container(
               width: 74,
               height: 74,
-              decoration: const BoxDecoration(color: C.purpleSoft, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: C.purpleSoft,
+                shape: BoxShape.circle,
+              ),
               child: Icon(icon, size: 32, color: C.primary),
             ),
             const SizedBox(height: 16),
-            Text(title, textAlign: TextAlign.center, style: ts(14, weight: FontWeight.w700)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: ts(14, weight: FontWeight.w700),
+            ),
             if (message != null) ...[
               const SizedBox(height: 6),
-              Text(message!,
-                  textAlign: TextAlign.center, style: ts(11, color: C.muted, height: 1.6)),
+              Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: ts(11, color: C.muted, height: 1.6),
+              ),
             ],
             if (actionLabel != null) ...[
               const SizedBox(height: 18),
@@ -362,11 +411,18 @@ class ErrorState extends StatelessWidget {
           children: [
             const Icon(Icons.cloud_off_rounded, size: 42, color: C.muted),
             const SizedBox(height: 14),
-            Text(message,
-                textAlign: TextAlign.center, style: ts(12, color: C.inkSoft, height: 1.7)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: ts(12, color: C.inkSoft, height: 1.7),
+            ),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              GhostButton(label: 'إعادة المحاولة', icon: Icons.refresh_rounded, onPressed: onRetry),
+              GhostButton(
+                label: tr(context, 'إعادة المحاولة'),
+                icon: Icons.refresh_rounded,
+                onPressed: onRetry,
+              ),
             ],
           ],
         ),
@@ -408,7 +464,7 @@ class FutureView<T> extends StatelessWidget {
     required this.future,
     required this.builder,
     this.emptyCheck,
-    this.emptyTitle = 'لا توجد بيانات',
+    this.emptyTitle,
     this.emptyMessage,
     this.emptyIcon = Icons.inbox_rounded,
     this.onRetry,
@@ -418,7 +474,7 @@ class FutureView<T> extends StatelessWidget {
   final Future<T> future;
   final Widget Function(BuildContext context, T data) builder;
   final bool Function(T data)? emptyCheck;
-  final String emptyTitle;
+  final String? emptyTitle;
   final String? emptyMessage;
   final IconData emptyIcon;
   final VoidCallback? onRetry;
@@ -433,14 +489,25 @@ class FutureView<T> extends StatelessWidget {
           return LoadingState(label: loadingLabel);
         }
         if (snapshot.hasError) {
-          return ErrorState(message: snapshot.error.toString(), onRetry: onRetry);
+          return ErrorState(
+            message: snapshot.error.toString(),
+            onRetry: onRetry,
+          );
         }
         final data = snapshot.data;
         if (data == null) {
-          return EmptyState(icon: emptyIcon, title: emptyTitle, message: emptyMessage);
+          return EmptyState(
+            icon: emptyIcon,
+            title: emptyTitle ?? tr(context, 'لا توجد بيانات'),
+            message: emptyMessage,
+          );
         }
         if (emptyCheck != null && emptyCheck!(data)) {
-          return EmptyState(icon: emptyIcon, title: emptyTitle, message: emptyMessage);
+          return EmptyState(
+            icon: emptyIcon,
+            title: emptyTitle ?? tr(context, 'لا توجد بيانات'),
+            message: emptyMessage,
+          );
         }
         return builder(context, data);
       },
@@ -479,7 +546,11 @@ class RemoteImage extends StatelessWidget {
           colors: [Color(0xFFEDE4F6), Color(0xFFF7F3FB)],
         ),
       ),
-      child: Icon(icon, size: (width ?? 60) * 0.36, color: C.primary.withValues(alpha: 0.55)),
+      child: Icon(
+        icon,
+        size: (width ?? 60) * 0.36,
+        color: C.primary.withValues(alpha: 0.55),
+      ),
     );
 
     if (url == null || url!.isEmpty) return placeholder;
@@ -524,7 +595,11 @@ class QtyStepper extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _RoundIcon(icon: Icons.remove_rounded, size: size, onTap: onDecrement),
+          _RoundIcon(
+            icon: Icons.remove_rounded,
+            size: size,
+            onTap: onDecrement,
+          ),
           SizedBox(
             width: compact ? 28 : 36,
             child: Text(
@@ -557,7 +632,10 @@ class _RoundIcon extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
         child: Icon(icon, size: size * 0.55, color: C.primaryDark),
       ),
     );
@@ -595,7 +673,9 @@ class _ReadMoreTextState extends State<ReadMoreText> {
               widget.text,
               style: style,
               maxLines: _expanded ? null : widget.maxLines,
-              overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+              overflow: _expanded
+                  ? TextOverflow.visible
+                  : TextOverflow.ellipsis,
             ),
             if (overflows)
               GestureDetector(
@@ -603,8 +683,14 @@ class _ReadMoreTextState extends State<ReadMoreText> {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    _expanded ? 'عرض أقل' : 'عرض المزيد',
-                    style: ts(10.5, weight: FontWeight.w700, color: C.primaryDark),
+                    _expanded
+                        ? tr(context, 'عرض أقل')
+                        : tr(context, 'عرض المزيد'),
+                    style: ts(
+                      10.5,
+                      weight: FontWeight.w700,
+                      color: C.primaryDark,
+                    ),
                   ),
                 ),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../l10n/l10n.dart';
 import '../models/account.dart';
 import '../services/notification_service.dart';
 
@@ -137,7 +138,11 @@ class NotificationsController extends ChangeNotifier {
   }
 
   /// Adds a notification received through FCM while the app is running.
-  void prependFromPush({required String title, required String body, String? image}) {
+  void prependFromPush({
+    required String title,
+    required String body,
+    String? image,
+  }) {
     final notification = AppNotification(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       subject: title,
@@ -146,7 +151,7 @@ class NotificationsController extends ChangeNotifier {
       isRead: false,
       isStarred: false,
       isArchived: false,
-      createdAt: 'الآن',
+      createdAt: L10n.tr('الآن'),
       image: image,
     );
     _items = [notification, ..._items];

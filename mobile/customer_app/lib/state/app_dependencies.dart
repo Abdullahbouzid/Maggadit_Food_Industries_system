@@ -1,13 +1,16 @@
 import '../core/api_client.dart';
+import '../core/config.dart';
 import '../core/session_store.dart';
 import '../services/auth_service.dart';
 import '../services/catalog_service.dart';
 import '../services/notification_service.dart';
 import '../services/order_service.dart';
 import '../services/push_service.dart';
+import '../l10n/l10n.dart';
 import 'auth_controller.dart';
 import 'cart_controller.dart';
 import 'favorites_controller.dart';
+import 'locale_controller.dart';
 import 'notifications_controller.dart';
 
 /// Composition root: one instance per app process.
@@ -23,6 +26,7 @@ class AppDependencies {
   late final SurveyService surveyService;
   late final NotificationService notificationService;
 
+  late final LocaleController locale;
   late final AuthController auth;
   late final CartController cart;
   late final FavoritesController favorites;
@@ -36,7 +40,7 @@ class AppDependencies {
     final store = await SessionStore.open();
     final deps = AppDependencies._(ApiClient(), store);
 
-    deps.api.baseUrl = store.baseUrl;
+    deps.api.baseUrl = AppConfig.defaultApiBaseUrl;
     deps.api.token = store.token;
 
     deps.authService = AuthService(deps.api);
@@ -45,6 +49,7 @@ class AppDependencies {
     deps.surveyService = SurveyService(deps.api);
     deps.notificationService = NotificationService(deps.api);
 
+    deps.locale = LocaleController(store);
     deps.cart = CartController(store);
     deps.favorites = FavoritesController(deps.catalogService);
     deps.notifications = NotificationsController(deps.notificationService);
@@ -67,7 +72,7 @@ class AppDependencies {
       onToken: (token) => deps.auth.setFcmToken(token),
       onForeground: (payload) {
         deps.notifications.prependFromPush(
-          title: payload.title ?? 'إشعار جديد',
+          title: payload.title ?? L10n.tr('إشعار جديد'),
           body: payload.body ?? '',
         );
       },

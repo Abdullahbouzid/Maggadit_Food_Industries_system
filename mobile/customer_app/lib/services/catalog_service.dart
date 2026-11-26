@@ -19,16 +19,16 @@ class CatalogService {
 
   Future<List<AppCategory>> categories() async {
     final json = await _api.get('$_prefix/categories');
-    return asMapList(json['categories'])
-        .map((e) => AppCategory.fromJson(e, baseUrl: _baseUrl))
-        .toList();
+    return asMapList(
+      json['categories'],
+    ).map((e) => AppCategory.fromJson(e, baseUrl: _baseUrl)).toList();
   }
 
   Future<List<AppBrand>> brands() async {
     final json = await _api.get('$_prefix/brands');
-    return asMapList(json['brands'])
-        .map((e) => AppBrand.fromJson(e, baseUrl: _baseUrl))
-        .toList();
+    return asMapList(
+      json['brands'],
+    ).map((e) => AppBrand.fromJson(e, baseUrl: _baseUrl)).toList();
   }
 
   Future<Paged<Product>> products({
@@ -47,9 +47,9 @@ class CatalogService {
       },
     );
     final paginator = asMap(json['products']);
-    final rows = asMapList(paginator['data'])
-        .map((e) => Product.fromJson(e, baseUrl: _baseUrl))
-        .toList();
+    final rows = asMapList(
+      paginator['data'],
+    ).map((e) => Product.fromJson(e, baseUrl: _baseUrl)).toList();
     return Paged(
       items: rows,
       currentPage: asInt(paginator['current_page'], page),
@@ -66,30 +66,30 @@ class CatalogService {
   /// Products of a category (the API returns them inside the category payload).
   Future<List<Product>> categoryProducts(int id) async {
     final json = await _api.get('$_prefix/categories/$id');
-    return asMapList(json['items'])
-        .map((e) => Product.fromJson(e, baseUrl: _baseUrl))
-        .toList();
+    return asMapList(
+      json['items'],
+    ).map((e) => Product.fromJson(e, baseUrl: _baseUrl)).toList();
   }
 
   Future<List<Product>> brandProducts(int id) async {
     final json = await _api.get('$_prefix/brands/$id');
-    return asMapList(json['items'])
-        .map((e) => Product.fromJson(e, baseUrl: _baseUrl))
-        .toList();
+    return asMapList(
+      json['items'],
+    ).map((e) => Product.fromJson(e, baseUrl: _baseUrl)).toList();
   }
 
   Future<List<Offer>> offers() async {
     final json = await _api.get('$_prefix/offers');
-    return asMapList(json['offers'])
-        .map((e) => Offer.fromJson(e, baseUrl: _baseUrl))
-        .toList();
+    return asMapList(
+      json['offers'],
+    ).map((e) => Offer.fromJson(e, baseUrl: _baseUrl)).toList();
   }
 
   Future<List<Product>> favorites() async {
     final json = await _api.get('$_prefix/favorites');
-    return asMapList(json['data'])
-        .map((e) => Product.fromJson(e, baseUrl: _baseUrl))
-        .toList();
+    return asMapList(
+      json['data'],
+    ).map((e) => Product.fromJson(e, baseUrl: _baseUrl)).toList();
   }
 
   Future<Set<int>> favoriteIds() async {
@@ -101,7 +101,10 @@ class CatalogService {
 
   /// Returns the new favorite state.
   Future<bool> toggleFavorite(int itemId) async {
-    final json = await _api.post('$_prefix/favorites/toggle', body: {'item_id': itemId});
+    final json = await _api.post(
+      '$_prefix/favorites/toggle',
+      body: {'item_id': itemId},
+    );
     return asBool(json['is_favorite']);
   }
 
@@ -111,7 +114,10 @@ class CatalogService {
     if (raw is Map) {
       // {question: answer}
       return raw.entries
-          .map((e) => FaqItem(question: e.key.toString(), answer: e.value.toString()))
+          .map(
+            (e) =>
+                FaqItem(question: e.key.toString(), answer: e.value.toString()),
+          )
           .toList();
     }
     return asMapList(raw).map(FaqItem.fromJson).toList();
@@ -139,13 +145,16 @@ class CatalogService {
     required String subject,
     required String message,
   }) async {
-    await _api.post('$_prefix/contact-us', body: {
-      'name': name,
-      'email': email,
-      'phone': phone,
-      'subject': subject,
-      'message': message,
-    });
+    await _api.post(
+      '$_prefix/contact-us',
+      body: {
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'subject': subject,
+        'message': message,
+      },
+    );
   }
 
   Future<List<Branch>> branches() async {

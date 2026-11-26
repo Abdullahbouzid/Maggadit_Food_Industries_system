@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../l10n/l10n.dart';
+
 /// Formatting helpers shared by every screen (Arabic friendly, latin digits).
 class Fmt {
   const Fmt._();
@@ -8,14 +10,27 @@ class Fmt {
   static final NumberFormat _integerFormat = NumberFormat('#,##0', 'en');
   static final DateFormat _apiDateFormat = DateFormat('yyyy-MM-dd');
 
-  static const months = <String>[
-    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+  static const _arabicMonths = <String>[
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
   ];
+
+  /// Month names in the language currently selected by the user.
+  static List<String> get months => [for (final m in _arabicMonths) L10n.tr(m)];
 
   static String money(num? value) => _moneyFormat.format(value ?? 0);
 
-  static String price(num? value) => '${money(value)} ر.س';
+  static String price(num? value) => '${money(value)} ${L10n.tr('ر.س')}';
 
   static String integer(num? value) => _integerFormat.format(value ?? 0);
 
@@ -55,7 +70,7 @@ class Fmt {
 
   static String initials(String? name) {
     final trimmed = (name ?? '').trim();
-    if (trimmed.isEmpty) return '؟';
+    if (trimmed.isEmpty) return L10n.tr('؟');
     final parts = trimmed.split(RegExp(r'\s+'));
     if (parts.length == 1) return parts.first.substring(0, 1);
     return parts.first.substring(0, 1) + parts[1].substring(0, 1);
@@ -74,6 +89,8 @@ class Fmt {
     if (RegExp(r'^\d{4}/\d{1,2}/\d{1,2}').hasMatch(text)) {
       text = text.replaceFirst('/', '-').replaceFirst('/', '-');
     }
-    return DateTime.tryParse(text.contains(' ') ? text.replaceFirst(' ', 'T') : text);
+    return DateTime.tryParse(
+      text.contains(' ') ? text.replaceFirst(' ', 'T') : text,
+    );
   }
 }

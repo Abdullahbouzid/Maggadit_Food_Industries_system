@@ -1,3 +1,4 @@
+import '../l10n/l10n.dart';
 import 'json_utils.dart';
 
 class AppCategory {
@@ -10,9 +11,12 @@ class AppCategory {
       name: asString(json['name_ar']).isNotEmpty
           ? asString(json['name_ar'])
           : asString(json['name'] ?? json['name_en']),
-      image: mediaUrl(asString(json['image_url'] ?? json['image']).isEmpty
-          ? null
-          : asString(json['image_url'] ?? json['image']), baseUrl: baseUrl),
+      image: mediaUrl(
+        asString(json['image_url'] ?? json['image']).isEmpty
+            ? null
+            : asString(json['image_url'] ?? json['image']),
+        baseUrl: baseUrl,
+      ),
     );
   }
 
@@ -30,9 +34,12 @@ class AppBrand {
       name: asString(json['name_ar']).isNotEmpty
           ? asString(json['name_ar'])
           : asString(json['name'] ?? json['name_en']),
-      logo: mediaUrl(asString(json['logo_url'] ?? json['logo']).isEmpty
-          ? null
-          : asString(json['logo_url'] ?? json['logo']), baseUrl: baseUrl),
+      logo: mediaUrl(
+        asString(json['logo_url'] ?? json['logo']).isEmpty
+            ? null
+            : asString(json['logo_url'] ?? json['logo']),
+        baseUrl: baseUrl,
+      ),
     );
   }
 
@@ -56,7 +63,7 @@ class ProductPack {
       id: asInt(json['id']),
       name: asString(json['name']).isNotEmpty
           ? asString(json['name'])
-          : asString(json['display_name'], 'عبوة'),
+          : asString(json['display_name'], L10n.tr('عبوة')),
       price: asDouble(json['price']),
       quantity: asDouble(json['quantity'], 1),
       isDefault: asBool(json['is_default']),
@@ -94,8 +101,10 @@ class Product {
         .map((e) => mediaUrl(asString(e), baseUrl: baseUrl))
         .whereType<String>()
         .toList();
-    final mainImage = mediaUrl(asString(json['image']).isEmpty ? null : asString(json['image']),
-        baseUrl: baseUrl);
+    final mainImage = mediaUrl(
+      asString(json['image']).isEmpty ? null : asString(json['image']),
+      baseUrl: baseUrl,
+    );
 
     return Product(
       id: asInt(json['id']),
@@ -110,12 +119,28 @@ class Product {
       packs: packs,
       description: asString(json['description']),
       images: gallery,
-      categoryName: asString(json['category'] is Map ? asMap(json['category'])['name'] : json['category']).isEmpty
+      categoryName:
+          asString(
+            json['category'] is Map
+                ? asMap(json['category'])['name']
+                : json['category'],
+          ).isEmpty
           ? null
-          : asString(json['category'] is Map ? asMap(json['category'])['name'] : json['category']),
-      brandName: asString(json['brand'] is Map ? asMap(json['brand'])['name'] : json['brand']).isEmpty
+          : asString(
+              json['category'] is Map
+                  ? asMap(json['category'])['name']
+                  : json['category'],
+            ),
+      brandName:
+          asString(
+            json['brand'] is Map ? asMap(json['brand'])['name'] : json['brand'],
+          ).isEmpty
           ? null
-          : asString(json['brand'] is Map ? asMap(json['brand'])['name'] : json['brand']),
+          : asString(
+              json['brand'] is Map
+                  ? asMap(json['brand'])['name']
+                  : json['brand'],
+            ),
     );
   }
 
@@ -136,19 +161,19 @@ class Product {
       packs.where((p) => p.isDefault).firstOrNull ?? packs.firstOrNull;
 
   Product copyWith({bool? isFavorite}) => Product(
-        id: id,
-        name: name,
-        price: price,
-        image: image,
-        oldPrice: oldPrice,
-        rate: rate,
-        isFavorite: isFavorite ?? this.isFavorite,
-        packs: packs,
-        description: description,
-        images: images,
-        categoryName: categoryName,
-        brandName: brandName,
-      );
+    id: id,
+    name: name,
+    price: price,
+    image: image,
+    oldPrice: oldPrice,
+    rate: rate,
+    isFavorite: isFavorite ?? this.isFavorite,
+    packs: packs,
+    description: description,
+    images: images,
+    categoryName: categoryName,
+    brandName: brandName,
+  );
 }
 
 extension _FirstOrNull<T> on Iterable<T> {
@@ -176,14 +201,20 @@ class Offer {
       title: asString(json['title']),
       description: asString(json['description']),
       itemId: asInt(json['item_id']),
-      itemPackId: json['item_pack_id'] == null ? null : asInt(json['item_pack_id']),
+      itemPackId: json['item_pack_id'] == null
+          ? null
+          : asInt(json['item_pack_id']),
       productName: asString(json['name']),
       oldPrice: asDouble(json['old_price']),
       newPrice: asDouble(json['new_price']),
       discountPercentage: asDouble(json['discount_percentage']),
-      image: mediaUrl(asString(json['image']).isEmpty ? null : asString(json['image']),
-          baseUrl: baseUrl),
-      endDate: asString(json['end_date']).isEmpty ? null : asString(json['end_date']),
+      image: mediaUrl(
+        asString(json['image']).isEmpty ? null : asString(json['image']),
+        baseUrl: baseUrl,
+      ),
+      endDate: asString(json['end_date']).isEmpty
+          ? null
+          : asString(json['end_date']),
     );
   }
 
@@ -206,8 +237,10 @@ class HomeBanner {
   factory HomeBanner.fromJson(Map<String, dynamic> json, {String? baseUrl}) {
     return HomeBanner(
       id: asInt(json['id']),
-      image: mediaUrl(asString(json['image']).isEmpty ? null : asString(json['image']),
-          baseUrl: baseUrl),
+      image: mediaUrl(
+        asString(json['image']).isEmpty ? null : asString(json['image']),
+        baseUrl: baseUrl,
+      ),
       url: asString(json['url']).isEmpty ? null : asString(json['url']),
     );
   }
@@ -231,18 +264,18 @@ class HomeFeed {
   factory HomeFeed.fromJson(Map<String, dynamic> json, {String? baseUrl}) {
     final dashboard = asMap(json['dashboard']);
     return HomeFeed(
-      banners: asMapList(json['banners'])
-          .map((e) => HomeBanner.fromJson(e, baseUrl: baseUrl))
-          .toList(),
-      categories: asMapList(json['categories'])
-          .map((e) => AppCategory.fromJson(e, baseUrl: baseUrl))
-          .toList(),
-      brands: asMapList(json['brands'])
-          .map((e) => AppBrand.fromJson(e, baseUrl: baseUrl))
-          .toList(),
-      products: asMapList(json['products'])
-          .map((e) => Product.fromJson(e, baseUrl: baseUrl))
-          .toList(),
+      banners: asMapList(
+        json['banners'],
+      ).map((e) => HomeBanner.fromJson(e, baseUrl: baseUrl)).toList(),
+      categories: asMapList(
+        json['categories'],
+      ).map((e) => AppCategory.fromJson(e, baseUrl: baseUrl)).toList(),
+      brands: asMapList(
+        json['brands'],
+      ).map((e) => AppBrand.fromJson(e, baseUrl: baseUrl)).toList(),
+      products: asMapList(
+        json['products'],
+      ).map((e) => Product.fromJson(e, baseUrl: baseUrl)).toList(),
       totalOrders: asInt(dashboard['total_orders']),
       totalFavorites: asInt(dashboard['total_favorites']),
     );

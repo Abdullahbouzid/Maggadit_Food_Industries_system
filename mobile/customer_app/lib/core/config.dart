@@ -11,7 +11,7 @@ class AppConfig {
   /// Laravel API root (routes/api.php -> /api/customer/...).
   static const String defaultApiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000/api',
+    defaultValue: 'https://blue-beaver-923812.hostingersite.com/api',
   );
 
   static const Duration connectTimeout = Duration(seconds: 20);
@@ -22,20 +22,28 @@ class AppConfig {
     'FIREBASE_PROJECT_ID',
     defaultValue: 'maggaditfoodsystem',
   );
-  static const String firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
+  static const String firebaseApiKey = String.fromEnvironment(
+    'FIREBASE_API_KEY',
+  );
   static const String firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
-  static const String firebaseSenderId = String.fromEnvironment('FIREBASE_SENDER_ID');
-  static const String firebaseStorageBucket =
-      String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+  static const String firebaseSenderId = String.fromEnvironment(
+    'FIREBASE_SENDER_ID',
+  );
+  static const String firebaseStorageBucket = String.fromEnvironment(
+    'FIREBASE_STORAGE_BUCKET',
+  );
 
   /// Must match the channel id used by the Laravel push sender.
   static const String androidChannelId = 'maggadit_channel';
   static const String androidChannelName = 'إشعارات ماغديت';
-  static const String androidChannelDescription = 'تحديثات الطلبات والعروض والفواتير';
+  static const String androidChannelDescription =
+      'تحديثات الطلبات والعروض والفواتير';
 
   /// Topic used by the dashboard for broadcast notifications.
   static const String broadcastTopic = 'customers';
 
   static bool get hasFirebaseDartDefine =>
-      firebaseApiKey.isNotEmpty && firebaseAppId.isNotEmpty && firebaseSenderId.isNotEmpty;
+      firebaseApiKey.isNotEmpty &&
+      firebaseAppId.isNotEmpty &&
+      firebaseSenderId.isNotEmpty;
 }
