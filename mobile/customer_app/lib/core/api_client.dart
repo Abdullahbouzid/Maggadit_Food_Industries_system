@@ -137,6 +137,8 @@ class ApiClient {
     final status = error.response?.statusCode;
     final data = error.response?.data;
 
+    print('🚨 API Error on ${error.requestOptions.uri}: type=${error.type}, message=${error.message}, error=${error.error}');
+
     String message = L10n.tr(
       'تعذّر الاتصال بالخادم، تحقّق من الإنترنت وحاول مرة أخرى.',
     );
