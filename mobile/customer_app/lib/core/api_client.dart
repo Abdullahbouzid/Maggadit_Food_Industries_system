@@ -46,12 +46,14 @@ class ApiClient {
         },
       ),
     );
-    // Accept all SSL certificates (for development/testing)
-    (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-        (HttpClient client) {
-      client.badCertificateCallback = (cert, host, port) => true;
-      return client;
-    };
+    // Accept all SSL certificates (for development/testing with self-signed certs)
+    _dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: () {
+        final client = HttpClient();
+        client.badCertificateCallback = (cert, host, port) => true;
+        return client;
+      },
+    );
   }
 
   late final Dio _dio;
