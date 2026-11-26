@@ -1,0 +1,30 @@
+{
+  "_comment": "Download the real file from Firebase console > Project settings > Your apps > Android (package com.maggadit.maggadit_customer) and save it as android/app/google-services.json. The build applies the google-services Gradle plugin only when that file exists.",
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "maggaditfoodsystem",
+    "storage_bucket": "maggaditfoodsystem.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "com.maggadit.maggadit_customer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "REPLACE_WITH_FIREBASE_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -110,6 +110,33 @@ class FcmNotificationService
                         'click_action' => $clickAction ?? 'OPEN_NOTIFICATION',
                         'timestamp' => now()->toIso8601String(),
                     ], $data),
+                    // Heads-up popup on Android: the Flutter app creates this
+                    // channel with Importance.max (see AppConfig.androidChannelId).
+                    'android' => [
+                        'priority' => 'HIGH',
+                        'notification' => [
+                            'channel_id' => 'maggadit_channel',
+                            'sound' => 'default',
+                            'default_vibrate_timings' => true,
+                            'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                        ],
+                    ],
+                    'apns' => [
+                        'headers' => [
+                            'apns-priority' => '10',
+                        ],
+                        'payload' => [
+                            'aps' => [
+                                'alert' => [
+                                    'title' => $title,
+                                    'body' => $body,
+                                ],
+                                'sound' => 'default',
+                                'badge' => 1,
+                                'content-available' => 1,
+                            ],
+                        ],
+                    ],
                 ],
             ];
 
