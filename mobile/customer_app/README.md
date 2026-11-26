@@ -160,3 +160,23 @@ flutter build web        # تحقّق من الترجمة الكاملة
 ```
 
 `flutter build apk` يحتاج Android SDK (غير متوفّر في بيئة التطوير الحالية).
+
+## Troubleshooting: "تعذّر الاتصال بالخادم"
+
+The login screen prints the server host it targets (`Server: …`) under the
+version line, so a stale build is obvious at a glance.
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Host reads `blue-beaver-923812.hostingersite.com` but calls still fail | device has no internet, or the API is down | check `curl -s -o /dev/null -w "%{http_code}" https://blue-beaver-923812.hostingersite.com/api/customer/categories` |
+| Host reads `10.0.2.2` / `localhost` | APK built before the production default | rebuild: `flutter build apk --release` |
+| Error names a status code, e.g. `رفض الخادم الطلب (403)` | server/WAF rejected the request | check the Laravel logs |
+
+Build prerequisites that are easy to miss on Android:
+
+- `flutter_local_notifications` 19.x needs **core library desugaring**; it is
+  enabled in `android/app/build.gradle.kts` (`desugar_jdk_libs:2.1.4`).
+- Run Gradle with **JDK 17 or 21**; the AGP lint task crashes with a
+  `NoSuchMethodError: java.util.List.removeLast()` on older JDKs.
+- `android/app/google-services.json` is optional; without it Firebase options
+  come from `--dart-define` and push stays disabled.

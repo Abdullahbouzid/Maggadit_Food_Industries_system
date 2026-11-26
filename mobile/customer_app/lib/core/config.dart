@@ -14,6 +14,10 @@ class AppConfig {
     defaultValue: 'https://blue-beaver-923812.hostingersite.com/api',
   );
 
+  /// Host shown on the login screen so a stale build is easy to spot.
+  static String get apiHost =>
+      Uri.tryParse(defaultApiBaseUrl)?.host ?? defaultApiBaseUrl;
+
   static const Duration connectTimeout = Duration(seconds: 20);
   static const Duration receiveTimeout = Duration(seconds: 30);
 

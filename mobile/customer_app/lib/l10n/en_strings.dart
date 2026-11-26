@@ -369,4 +369,15 @@ const Map<String, String> enStrings = {
   'تم إرسال إجاباتك بنجاح! شكراً لمشاركتك.':
       "Your answers were sent. Thanks for taking part!",
   'تم إنشاء الطلبية بنجاح': "Order created",
+
+  // connection diagnostics
+  'تعذّر الاتصال بالخادم ({0}). تحقّق من الإنترنت وحاول مرة أخرى.':
+      "Couldn't reach the server ({0}). Check your connection and try again.",
+  'رفض الخادم الطلب ({0}).': "The server rejected the request ({0}).",
+  'شهادة الخادم غير موثوقة ({0}).':
+      "The server certificate isn't trusted ({0}).",
+  'انتهت مهلة الاتصال بالخادم ({0}).':
+      "The connection to the server timed out ({0}).",
+  'لا يوجد اتصال بالشبكة ({0}).': "No network connection ({0}).",
+  'الخادم: {0}': "Server: {0}",
 };

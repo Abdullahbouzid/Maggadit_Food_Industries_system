@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/config.dart';
 import '../../state/app_dependencies.dart';
 import '../../state/auth_controller.dart';
 import '../router.dart';
@@ -181,6 +182,13 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Maggadit Food Industries · v1.0.0',
                 textAlign: TextAlign.center,
+                style: ts(9, color: C.muted),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                tArgs(context, 'الخادم: {0}', [AppConfig.apiHost]),
+                textAlign: TextAlign.center,
+                textDirection: TextDirection.ltr,
                 style: ts(9, color: C.muted),
               ),
             ],

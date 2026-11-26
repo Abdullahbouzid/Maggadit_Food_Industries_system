@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 
 import '../l10n/l10n.dart';
 import 'config.dart';
@@ -36,8 +35,10 @@ class ApiException implements Exception {
 /// Thin Dio wrapper: JSON in, JSON out, unified errors, bearer token.
 class ApiClient {
   ApiClient() {
+    _baseUrl = normalizeBaseUrl(AppConfig.defaultApiBaseUrl);
     _dio = Dio(
       BaseOptions(
+        baseUrl: _baseUrl,
         connectTimeout: AppConfig.connectTimeout,
         receiveTimeout: AppConfig.receiveTimeout,
         headers: {
@@ -46,29 +47,34 @@ class ApiClient {
         },
       ),
     );
-    // Accept all SSL certificates (for development/testing with self-signed certs)
-    _dio.httpClientAdapter = IOHttpClientAdapter(
-      createHttpClient: () {
-        final client = HttpClient();
-        client.badCertificateCallback = (cert, host, port) => true;
-        return client;
-      },
-    );
   }
 
   late final Dio _dio;
-  String _baseUrl = AppConfig.defaultApiBaseUrl;
+  late String _baseUrl;
   String? _token;
 
+  /// Accepts `host`, `host/api` or `host/api/` and returns the canonical root
+  /// so a hand-written `--dart-define` cannot produce `/api//customer/login`.
+  static String normalizeBaseUrl(String value) {
+    var normalised = value.trim().replaceAll(RegExp(r'/+$'), '');
+    if (normalised.isEmpty) return normalised;
+    if (!normalised.endsWith('/api')) normalised = '$normalised/api';
+    return normalised;
+  }
+
   String get baseUrl => _baseUrl;
+
+  /// The value Dio actually resolves paths against; kept public for diagnostics.
+  String get requestBaseUrl => _dio.options.baseUrl;
+
+  /// Bare host used in error messages, e.g. `blue-beaver…hostingersite.com`.
+  String get host => Uri.tryParse(_baseUrl)?.host ?? _baseUrl;
 
   String? get token => _token;
 
   set baseUrl(String value) {
-    final normalised = value.trim().replaceAll(RegExp(r'/+$'), '');
-    if (normalised == _baseUrl) return;
-    _baseUrl = normalised;
-    _dio.options.baseUrl = normalised;
+    _baseUrl = normalizeBaseUrl(value);
+    _dio.options.baseUrl = _baseUrl;
   }
 
   set token(String? value) {
@@ -137,10 +143,9 @@ class ApiClient {
     final status = error.response?.statusCode;
     final data = error.response?.data;
 
-    print('🚨 API Error on ${error.requestOptions.uri}: type=${error.type}, message=${error.message}, error=${error.error}');
-
-    String message = L10n.tr(
-      'تعذّر الاتصال بالخادم، تحقّق من الإنترنت وحاول مرة أخرى.',
+    String message = L10n.args(
+      'تعذّر الاتصال بالخادم ({0}). تحقّق من الإنترنت وحاول مرة أخرى.',
+      [host],
     );
     Map<String, dynamic>? errors;
 
@@ -165,12 +170,16 @@ class ApiClient {
       message = L10n.tr('العنصر المطلوب غير موجود.');
     } else if (status != null && status >= 500) {
       message = L10n.tr('خطأ في الخادم، يرجى المحاولة لاحقاً.');
+    } else if (status != null) {
+      message = L10n.args('رفض الخادم الطلب ({0}).', [status]);
+    } else if (error.type == DioExceptionType.badCertificate) {
+      message = L10n.args('شهادة الخادم غير موثوقة ({0}).', [host]);
     } else if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout) {
-      message = L10n.tr('انتهت مهلة الاتصال بالخادم.');
+      message = L10n.args('انتهت مهلة الاتصال بالخادم ({0}).', [host]);
     } else if (error.error is SocketException) {
-      message = L10n.tr('لا يوجد اتصال بالشبكة.');
+      message = L10n.args('لا يوجد اتصال بالشبكة ({0}).', [host]);
     }
 
     return ApiException(message, statusCode: status, errors: errors);

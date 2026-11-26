@@ -46,3 +46,8 @@ Laravel-based inventory/warehouse management system with a dashboard admin panel
   google-services Gradle plugin is applied only when the json file exists
 - Tests: `test/models_test.dart` (real API payload shapes), `test/cart_and_formatters_test.dart`,
   `test/media_url_test.dart`, `test/l10n_test.dart`, `test/locale_controller_test.dart`
+- APK: `flutter build apk --release` (JDK 17/21; core-library desugaring is required by `flutter_local_notifications`). `flutter build web --release` is the quick full-compile check
+- Android toolchain installed in this sandbox (survives restarts? /workspace only):
+  `JAVA_HOME=/workspace/tools/jdk/jdk-21.0.13.1+2`,
+  `ANDROID_HOME=/workspace/tools/android-sdk`; build with
+  `flutter build apk --release --split-per-abi`
