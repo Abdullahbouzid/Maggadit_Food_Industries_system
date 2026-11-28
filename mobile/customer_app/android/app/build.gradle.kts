@@ -45,6 +45,12 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // AGP 9.3.1 lint crashes on List.removeLast() (Java 21 API) during
+    // lintVitalAnalyzeRelease for firebase_core. Skip the release lint pass.
+    lint {
+        checkReleaseBuilds = false
+    }
 }
 
 kotlin {
